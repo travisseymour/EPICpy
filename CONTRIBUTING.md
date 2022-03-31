@@ -98,11 +98,11 @@ For security reasons, GIT may ask you to create a Personal Access Token to use i
 
 10. Your changes are currently only on your computer, so let's push them up to your fork on Github:
     ```bash
-    # switch back to the main branch
+    # Switch back to the main branch
     $ git checkout main
-    # remind yourself what your branch is called if you forgot
+    # Remind yourself what your branch is called if you forgot
     $ git branch
-    # push your changes up to your fork repo
+    # Push your changes up to your fork repo
     $ push origin YOUR-BRANCH-NAME
     ```
 12. Go back to your browser and navigate to `https://github.com/YOUR-USERNAME/EPICpy` and click the **Pull Requests** tab. Now click the green **New Pull Request** button. Github will check your EPICpy fork against the official EPICpy repository and highlight the changed files. Double-check the title (and optionally add a longer description -- usually not needed) and then press the green button to submit your pull request.
