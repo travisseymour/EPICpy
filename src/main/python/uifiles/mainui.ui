@@ -172,12 +172,33 @@
     <addaction name="actionFindNext"/>
     <addaction name="actionFindPrevious"/>
    </widget>
+   <widget class="QMenu" name="menuTests">
+    <property name="title">
+     <string>Tests</string>
+    </property>
+    <widget class="QMenu" name="menuRun_Tests">
+     <property name="font">
+      <font>
+       <family>Consolas</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="title">
+      <string>Run Tests</string>
+     </property>
+     <addaction name="actionStandard_Run"/>
+     <addaction name="actionEncoder_Run"/>
+     <addaction name="actionAll_Runs"/>
+    </widget>
+    <addaction name="menuRun_Tests"/>
+   </widget>
    <addaction name="menuFiles"/>
    <addaction name="menuSearch"/>
    <addaction name="menuSettings"/>
    <addaction name="menuRun"/>
    <addaction name="menuWindows"/>
    <addaction name="menuHelp"/>
+   <addaction name="menuTests"/>
   </widget>
   <widget class="QStatusBar" name="statusbar">
    <property name="font">
@@ -722,6 +743,39 @@
    </property>
    <property name="text">
     <string>Unload Auditory Encoder</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Consolas</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionStandard_Run">
+   <property name="text">
+    <string>Standard Run</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Consolas</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionEncoder_Run">
+   <property name="text">
+    <string>Encoder Run</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Consolas</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionAll_Runs">
+   <property name="text">
+    <string>All Runs</string>
    </property>
    <property name="font">
     <font>

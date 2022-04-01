@@ -18,6 +18,7 @@ from itertools import chain
 import pandas as pd
 from PySide2 import QtWidgets
 
+import fitness
 from dialogs.aboutwindow import AboutWin
 from dialogs.fontsizewindow import FontSizeDialog
 from uifiles.mainui import Ui_MainWindow
@@ -43,6 +44,7 @@ from PySide2.QtWidgets import (
     QApplication,
     QPlainTextEdit,
     QInputDialog,
+    QAction,
 )
 import cppyy
 from pathlib import Path
@@ -341,6 +343,15 @@ class MainWin(QMainWindow):
         self.ui.actionPause.setShortcut("Ctrl+Alt+P")
         self.ui.actionAbout.triggered.connect(self.about_dialog)
         self.ui.actionHelp.triggered.connect(self.open_help_file)
+        self.ui.actionStandard_Run.triggered.connect(
+            partial(self.run_tests, kind="StandardRun")
+        )
+        self.ui.actionEncoder_Run.triggered.connect(
+            partial(self.run_tests, kind="EncoderRun")
+        )
+        self.ui.actionAll_Runs.triggered.connect(
+            partial(self.run_tests, kind="AllRuns")
+        )
         self.ui.actionDisplay_Controls.triggered.connect(
             self.show_display_settings_dialogs
         )
@@ -1366,7 +1377,17 @@ class MainWin(QMainWindow):
         about_window = AboutWin(self, self.context)
         about_window.show()
 
-    @staticmethod
+    def run_tests(self, kind: str):
+        if kind == "StandardRun":
+            fitness.clear_results()
+            fitness.run_model_test(self, load_encoders=False, close_on_finish=False)
+        elif kind == "EncoderRun":
+            fitness.clear_results()
+            fitness.run_model_test(self, load_encoders=True, close_on_finish=False)
+        elif kind == "AllRuns":
+            fitness.clear_results()
+            fitness.run_all_model_tests(self, close_on_finish=False)
+
     def open_help_file(self):
         url = "https://travisseymour.github.io/EPICpyDocs/"
         if webbrowser.open(url):
