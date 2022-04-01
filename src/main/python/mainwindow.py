@@ -1379,14 +1379,17 @@ class MainWin(QMainWindow):
 
     def run_tests(self, kind: str):
         if kind == "StandardRun":
-            fitness.clear_results()
-            fitness.run_model_test(self, load_encoders=False, close_on_finish=False)
+            if fitness.setup_test_device_folder(self):
+                fitness.clear_results()
+                fitness.run_model_test(self, load_encoders=False, close_on_finish=False)
         elif kind == "EncoderRun":
-            fitness.clear_results()
-            fitness.run_model_test(self, load_encoders=True, close_on_finish=False)
+            if fitness.setup_test_device_folder(self):
+                fitness.clear_results()
+                fitness.run_model_test(self, load_encoders=True, close_on_finish=False)
         elif kind == "AllRuns":
-            fitness.clear_results()
-            fitness.run_all_model_tests(self, close_on_finish=False)
+            if fitness.setup_test_device_folder(self):
+                fitness.clear_results()
+                fitness.run_all_model_tests(self, close_on_finish=False)
 
     def open_help_file(self):
         url = "https://travisseymour.github.io/EPICpyDocs/"

@@ -2,11 +2,13 @@ import re
 import tempfile
 import time
 import timeit
+import zipfile
 from pathlib import Path
 from typing import Tuple, Optional
 import webbrowser
 
 import pandas as pd
+import requests
 from PySide2.QtCore import QTimer
 from PySide2.QtWidgets import QAction, QMainWindow
 from pynput.keyboard import Key, Controller
@@ -17,18 +19,67 @@ from cachedplaintextedit import CachedPlainTextEdit
 Code for testing various EPICpy functionality
 """
 
-# TODO: Change device filenames below to refer to a device version we
-#       put in a temporary folder
-
-
 keyboard = Controller()
 TEST_RESULTS = []
 TEMP_DIR = tempfile.mkdtemp()
 BUSY = False
+TEST_DEVICE_FOLDER = ""
 
 """
 helper functions
 """
+
+
+def setup_test_device_folder(window: QMainWindow):
+    global TEST_DEVICE_FOLDER, TEMP_DIR
+    window.write("Initializing EPICpy Testing...")
+    if TEST_DEVICE_FOLDER and Path(TEST_DEVICE_FOLDER).is_dir():
+        window.write("  Testing already initialized.")
+        return True
+
+    try:
+        assert Path(TEMP_DIR).is_dir()
+    except AssertionError:
+        TEMP_DIR = tempfile.mkdtemp()
+
+    window.write("  Retrieving Files For EPICpy Testing...")
+    url = "https://people.ucsc.edu/~nogard/software/epicpy/devices.zip"
+    response = requests.get(url)
+    if not response.ok:
+        window.write(
+            f'ERROR: Unable to download test device package from website: "{response.reason}". Unable to perform test.'
+        )
+        return False
+
+    try:
+        with open(Path(TEMP_DIR, "devices.zip"), "wb") as outfile:
+            outfile.write(response.content)
+        assert Path(
+            TEMP_DIR, "devices.zip"
+        ).is_file(), (
+            "Downloaded file devices.zip could not be located in temporary folder."
+        )
+    except Exception as e:
+        window.write(f"ERROR: {e}")
+        return False
+
+    window.write("  Unzipping test device package...")
+    try:
+        with zipfile.ZipFile(Path(TEMP_DIR, "devices.zip"), "r") as infile:
+            infile.extractall(Path(TEMP_DIR))
+        assert Path(
+            TEMP_DIR, "devices"
+        ).is_dir(), (
+            "Uncompressed folder devices could not be located in temporary folder."
+        )
+    except Exception as e:
+        window.write(f"ERROR: {e}")
+        return False
+
+    TEST_DEVICE_FOLDER = str(Path(TEMP_DIR, "devices").resolve())
+
+    window.write("  Completed Successfully!")
+    return True
 
 
 def show_results():
@@ -170,7 +221,7 @@ def wait_for_output(
             ]
         ):
             result = True
-            outcome = "Operation Successful."
+            outcome = "Success"
             break
         elif all(
             [
@@ -179,7 +230,7 @@ def wait_for_output(
             ]
         ):
             result = False
-            outcome = "Operation Failed."
+            outcome = "Fail"
             break
 
     return result, outcome
@@ -203,9 +254,7 @@ def run_model_test(
     device_loaded, rules_compiled, settings_entered, model_run = None, None, None, None
 
     # clear out old data
-    data_file = Path(
-        "/home/nogard/Dropbox/Documents/EPICSTUFF/EPICpy/devices/choice/data_output.csv"
-    )
+    data_file = Path(TEST_DEVICE_FOLDER, "choice/data_output.csv")
     data_file.unlink(missing_ok=True)
 
     # Load Device
@@ -237,20 +286,20 @@ def run_model_test(
 
                     if model_run:
                         # Check Stats output
-                        # example: "N=10, CORRECT=5 INCORRECT=0 MEAN_RT=573 ACCURACY=100.00%"
+                        # "N=10, CORRECT=5 INCORRECT=0 MEAN_RT=573 ACCURACY=100.00%"
                         text = window.stats_win.ui.statsTextBrowser.toPlainText()
                         correct_N = "N=10" in text
+                        correct_ACCURACY = "ACCURACY=100.00" in text
                         if load_encoders:
-                            correct_ACCURACY = "ACCURACY=100.00" not in text
-                        else:
-                            correct_ACCURACY = "ACCURACY=100.00" in text
+                            correct_ACCURACY = not correct_ACCURACY
+
                         add_result(
-                            "StatsWindowOutput.1",
+                            "StatsWindow: N == 10",
                             correct_N,
                             "Success" if correct_N else "Failed",
                         )
                         add_result(
-                            "StatsWindowOutput.2",
+                            f"StatsWindow: ACC {'!=' if load_encoders else '=='} 100.00%",
                             correct_ACCURACY,
                             "Success" if correct_N else "Failed",
                         )
@@ -292,19 +341,20 @@ def run_model_test(
                             correct_header = False
                             correct_accuracy_range = False
                         add_result(
-                            "DataFileCheck.1",
+                            f"DataFile: Able To Read Data",
                             can_read_data,
-                            "Success" if correct_N else "Failed",
+                            "Success" if can_read_data else "Failed",
                         )
                         add_result(
-                            "DataFileCheck.2",
+                            "DataFile: Data Has Correct Header",
                             correct_header,
-                            "Success" if correct_N else "Failed",
+                            "Success" if correct_header else "Failed",
                         )
                         add_result(
-                            "DataFileCheck.3",
+                            f"DataFile: {'NOT' if load_encoders else ''} "
+                            f"All trial 'CORRECT'",
                             correct_accuracy_range,
-                            "Success" if correct_N else "Failed",
+                            "Success" if correct_accuracy_range else "Failed",
                         )
 
     if see_results:
@@ -346,8 +396,8 @@ Component Tests
 
 
 def test_load_device(window: QMainWindow) -> Tuple[bool, str]:
-    dev_path = "/home/nogard/Dropbox/Documents/EPICSTUFF/EPICpy/devices/choice/choice_device.py\n"
-    QTimer.singleShot(1000, lambda: keyboard.type(dev_path))
+    dev_path = str(Path(TEST_DEVICE_FOLDER, "choice/choice_device.py").resolve())
+    QTimer.singleShot(1000, lambda: keyboard.type(dev_path + "\n"))
 
     window.findChild(QAction, "actionLoad_Device").trigger()
 
@@ -361,8 +411,10 @@ def test_load_device(window: QMainWindow) -> Tuple[bool, str]:
 
 
 def test_compile_rules(window: QMainWindow) -> Tuple[bool, str]:
-    rule_path = "/home/nogard/Dropbox/Documents/EPICSTUFF/EPICpy/devices/choice/rules/choicetask_rules_VM.prs\n"
-    QTimer.singleShot(1000, lambda: keyboard.type(rule_path))
+    rule_path = str(
+        Path(TEST_DEVICE_FOLDER, "choice/rules/choicetask_rules_VM.prs").resolve()
+    )
+    QTimer.singleShot(1000, lambda: keyboard.type(rule_path + "\n"))
 
     window.findChild(QAction, "actionCompile_Rules").trigger()
 
@@ -376,8 +428,10 @@ def test_compile_rules(window: QMainWindow) -> Tuple[bool, str]:
 
 
 def test_load_encoder(window: QMainWindow) -> Tuple[bool, str]:
-    encoder_path = "/home/nogard/Dropbox/Documents/EPICSTUFF/EPICpy/devices/choice/encoders/donders_visual_encoder.py\n"
-    QTimer.singleShot(1000, lambda: keyboard.type(encoder_path))
+    encoder_path = str(
+        Path(TEST_DEVICE_FOLDER, "choice/encoders/donders_visual_encoder.py").resolve()
+    )
+    QTimer.singleShot(1000, lambda: keyboard.type(encoder_path + "\n"))
 
     window.findChild(QAction, "actionLoad_Visual_Encoder").trigger()
 
