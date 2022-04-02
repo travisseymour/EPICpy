@@ -12,7 +12,7 @@ See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with Foobar.
 If not, see <https://www.gnu.org/licenses/>.
 """
-
+import os
 from itertools import chain
 
 import pandas as pd
@@ -343,15 +343,23 @@ class MainWin(QMainWindow):
         self.ui.actionPause.setShortcut("Ctrl+Alt+P")
         self.ui.actionAbout.triggered.connect(self.about_dialog)
         self.ui.actionHelp.triggered.connect(self.open_help_file)
-        self.ui.actionStandard_Run.triggered.connect(
-            partial(self.run_tests, kind="StandardRun")
-        )
-        self.ui.actionEncoder_Run.triggered.connect(
-            partial(self.run_tests, kind="EncoderRun")
-        )
-        self.ui.actionAll_Runs.triggered.connect(
-            partial(self.run_tests, kind="AllRuns")
-        )
+        try:
+            assert ('RUNCONTEXT' not in os.environ) or (os.environ['RUNCONTEXT'] != 'DOCKER')
+            self.ui.actionStandard_Run.triggered.connect(
+                partial(self.run_tests, kind="StandardRun")
+            )
+            self.ui.actionEncoder_Run.triggered.connect(
+                partial(self.run_tests, kind="EncoderRun")
+            )
+            self.ui.actionAll_Runs.triggered.connect(
+                partial(self.run_tests, kind="AllRuns")
+            )
+        except (AssertionError, KeyError):
+            # gui tests don't work in DOCKER
+            for action in (self.ui.actionStandard_Run, self.ui.actionEncoder_Run, self.ui.actionAll_Runs):
+                action.setEnabled(False)
+                action.setToolTip('This Test Disabled In Docker!')
+
         self.ui.actionDisplay_Controls.triggered.connect(
             self.show_display_settings_dialogs
         )
