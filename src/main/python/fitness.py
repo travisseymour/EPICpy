@@ -1,3 +1,4 @@
+import platform
 import re
 import tempfile
 import time
@@ -146,7 +147,12 @@ def show_results():
     html_file = Path(TEMP_DIR, "results.html")
     html_file.write_text(html)
 
-    webbrowser.open(html_file.as_uri())
+    if platform.system() == "Darwin":
+        # without this, webbroser.open() crashed trying to find chrome.
+        # rather than solve that issue, just force Safari use
+        webbrowser.get(using="Safari").open(html_file.as_uri(), new=0, autoraise=True)
+    else:
+        webbrowser.open(html_file.as_uri(), new=0, autoraise=True)
 
 
 def add_string(name: str):
@@ -397,9 +403,7 @@ Component Tests
 
 def test_load_device(window: QMainWindow) -> Tuple[bool, str]:
     dev_path = str(Path(TEST_DEVICE_FOLDER, "choice/choice_device.py").resolve())
-    QTimer.singleShot(1000, lambda: keyboard.type(dev_path + "\n"))
-
-    window.findChild(QAction, "actionLoad_Device").trigger()
+    window.on_load_device(file=dev_path)
 
     return wait_for_output(
         window=window,
@@ -414,9 +418,7 @@ def test_compile_rules(window: QMainWindow) -> Tuple[bool, str]:
     rule_path = str(
         Path(TEST_DEVICE_FOLDER, "choice/rules/choicetask_rules_VM.prs").resolve()
     )
-    QTimer.singleShot(1000, lambda: keyboard.type(rule_path + "\n"))
-
-    window.findChild(QAction, "actionCompile_Rules").trigger()
+    window.simulation.choose_rules(files=[rule_path])
 
     return wait_for_output(
         window=window,
@@ -431,9 +433,7 @@ def test_load_encoder(window: QMainWindow) -> Tuple[bool, str]:
     encoder_path = str(
         Path(TEST_DEVICE_FOLDER, "choice/encoders/donders_visual_encoder.py").resolve()
     )
-    QTimer.singleShot(1000, lambda: keyboard.type(encoder_path + "\n"))
-
-    window.findChild(QAction, "actionLoad_Visual_Encoder").trigger()
+    window.simulation.on_load_encoder(kind="Visual", file=encoder_path)
 
     return wait_for_output(
         window=window,
