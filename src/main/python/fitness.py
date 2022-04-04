@@ -4,6 +4,7 @@ import tempfile
 import time
 import timeit
 import zipfile
+from copy import deepcopy
 from pathlib import Path
 from typing import Tuple, Optional
 import webbrowser
@@ -14,6 +15,7 @@ from PySide2.QtCore import QTimer
 from PySide2.QtWidgets import QAction, QMainWindow
 from pynput.keyboard import Key, Controller
 
+import config
 from cachedplaintextedit import CachedPlainTextEdit
 
 """
@@ -29,6 +31,53 @@ TEST_DEVICE_FOLDER = ""
 """
 helper functions
 """
+
+
+def setup_test_device_config():
+    config.device_cfg.log_normal_out = False
+    config.device_cfg.log_trace_out = False
+    config.device_cfg.run_command = "run_until_done"
+    config.device_cfg.run_command_value = 1
+    config.device_cfg.display_refresh = "after_each_step"
+    config.device_cfg.text_refresh = "after_each_step"
+    config.device_cfg.display_refresh_value = 1
+    config.device_cfg.text_refresh_value = 2
+    config.device_cfg.trace_visual = False
+    config.device_cfg.trace_auditory = False
+    config.device_cfg.trace_cognitive = True
+    config.device_cfg.trace_ocular = False
+    config.device_cfg.trace_manual = False
+    config.device_cfg.trace_vocal = False
+    config.device_cfg.trace_temporal = False
+    config.device_cfg.trace_device = True
+    config.device_cfg.trace_pps = True
+    config.device_cfg.output_compiler_messages = False
+    config.device_cfg.output_compiler_details = False
+    config.device_cfg.output_run_messages = True
+    config.device_cfg.output_run_details = False
+    config.device_cfg.output_run_memory_contents = True
+    config.device_cfg.sound_text_kind = True
+    config.device_cfg.sound_text_stream = False
+    config.device_cfg.sound_text_timbre = True
+    config.device_cfg.sound_text_loudness = False
+    config.device_cfg.speech_text_kind = True
+    config.device_cfg.speech_text_stream = False
+    config.device_cfg.speech_text_pitch = False
+    config.device_cfg.speech_text_loudness = False
+    config.device_cfg.speech_text_content = True
+    config.device_cfg.speech_text_speaker = False
+    config.device_cfg.speech_text_gender = False
+    config.device_cfg.step_time_delay = 0
+    config.device_cfg.setting_run_for_real_secs = 50
+    config.device_cfg.setting_run_until_msecs = 600
+    config.device_cfg.setting_run_cycles = 1
+    config.device_cfg.setting_refresh_secs = 1.0
+    config.device_cfg.device_params = "10 4 Hard Draft"
+    config.device_cfg.spatial_scale_degree = 10
+    config.device_cfg.calibration_grid = False
+    config.device_cfg.center_dot = False
+    config.device_cfg.describe_parameters = False
+    config.device_cfg.allow_device_images = False
 
 
 def setup_test_device_folder(window: QMainWindow):
@@ -257,11 +306,14 @@ def run_model_test(
     window.findChild(QAction, "actionClear_Output_Windows").trigger()
 
     # init
-    device_loaded, rules_compiled, settings_entered, model_run = None, None, None, None
+    device_loaded, rules_compiled, model_run = None, None, None
 
     # clear out old data
     data_file = Path(TEST_DEVICE_FOLDER, "choice/data_output.csv")
     data_file.unlink(missing_ok=True)
+
+    # save app_settings last device so we can put it back
+    last_device_file = config.app_cfg.last_device_file
 
     # Load Device
     device_loaded, outcome = test_load_device(window)
@@ -273,12 +325,12 @@ def run_model_test(
         add_result("Compiling Rules", rules_compiled, outcome)
 
         if rules_compiled:
-            # Enter Settings
-            settings_entered, outcome = test_settings_dialog(window)
-            add_result("Enter Settings", settings_entered, outcome)
-
-            if settings_entered:
-
+            # Store Current Device Run Settings...we have to put them back
+            device_run_settings = deepcopy(config.device_cfg)
+            # Fiddle With Device Run Settings
+            setup_test_device_config()
+            try:
+                # Do Test(s)
                 if load_encoders:
                     encoder_loaded, outcome = test_load_encoder(window)
                     add_result("Load Encoder", encoder_loaded, outcome)
@@ -362,6 +414,12 @@ def run_model_test(
                             correct_accuracy_range,
                             "Success" if correct_accuracy_range else "Failed",
                         )
+            finally:
+                # restore app's' last device setting
+                config.app_cfg.last_device_file = last_device_file
+                # restore device run settings
+                config.device_cfg = device_run_settings
+
 
     if see_results:
         wait(window, 2)
@@ -376,13 +434,13 @@ def run_model_test(
 def run_all_model_tests(
     window: QMainWindow, close_on_finish: bool = True, see_results: bool = True
 ):
-    add_string("RUNNING MODEL WITHOUT ENCODER")
+    add_string("RUNNING MODEL WITHOUT ENCODER (Expecting 100% Accuracy)")
     _ = run_model_test(
         window, load_encoders=False, close_on_finish=False, see_results=False
     )
 
     wait(window, 2)
-    add_string("RUNNING MODEL WITH ENCODER")
+    add_string("RUNNING MODEL WITH VISUAL ENCODER (Expecting <100% Accuracy)")
     _ = run_model_test(
         window, load_encoders=True, close_on_finish=False, see_results=False
     )
@@ -440,80 +498,6 @@ def test_load_encoder(window: QMainWindow) -> Tuple[bool, str]:
         text_edit=window.ui.plainTextEditOutput,
         target="Visualencoder was created successfully",
         sigil="Failed to create new Visual encoder",
-        timeout_secs=5.0,
-    )
-
-
-def test_settings_dialog(window: QMainWindow) -> Tuple[bool, str]:
-    down = Key.down
-    up = Key.up
-    tab = Key.tab
-    enter = Key.enter
-
-    sequence = [
-        down,
-        down,
-        down,
-        down,
-        tab,
-        down,
-        down,
-        tab,
-        down,
-        down,
-        up,
-        tab,
-        "2",
-        tab,
-        "0",
-        tab,
-        tab,
-        tab,
-        "10 4 Hard Draft",
-        tab,
-        enter,
-        tab,
-        enter,
-        tab,
-        enter,
-    ]
-
-    sequence = [
-        down,
-        down,
-        down,
-        tab,
-        down,
-        down,
-        up,
-        up,
-        tab,
-        down,
-        down,
-        up,
-        tab,
-        "2",
-        tab,
-        "0",
-        tab,
-        tab,
-        tab,
-        "10 4 Hard Draft",
-        tab,
-        tab,
-        tab,
-        enter,
-    ]
-
-    QTimer.singleShot(1500, lambda: enter_sequence(sequence, 0, window))
-
-    window.findChild(QAction, "actionRun_Settings").trigger()
-
-    return wait_for_output(
-        window=window,
-        text_edit=window.ui.plainTextEditOutput,
-        target="Settings changes accepted",
-        sigil="Settings changes ignored",
         timeout_secs=5.0,
     )
 
