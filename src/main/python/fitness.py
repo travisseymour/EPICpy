@@ -1,7 +1,6 @@
 import platform
 import re
 import tempfile
-import time
 import timeit
 import zipfile
 from copy import deepcopy
@@ -11,9 +10,7 @@ import webbrowser
 
 import pandas as pd
 import requests
-from PySide2.QtCore import QTimer
 from PySide2.QtWidgets import QAction, QMainWindow
-from pynput.keyboard import Key, Controller
 
 import config
 from cachedplaintextedit import CachedPlainTextEdit
@@ -22,7 +19,6 @@ from cachedplaintextedit import CachedPlainTextEdit
 Code for testing various EPICpy functionality
 """
 
-keyboard = Controller()
 TEST_RESULTS = []
 TEMP_DIR = tempfile.mkdtemp()
 BUSY = False
@@ -226,25 +222,6 @@ def add_result(name: str, worked: bool, outcome: str):
             "Kind": "Result",
         }
     )
-
-
-def enter_sequence(
-    sequence: list,
-    key_delay_sec: float = 0,
-    window_for_delay: Optional[QMainWindow] = None,
-):
-    using_delay = key_delay_sec and window_for_delay is not None
-    for item in sequence:
-        if isinstance(item, str):
-            keyboard.type(item)
-        else:
-            keyboard.press(item)
-            keyboard.release(item)
-        if using_delay:
-            start = timeit.default_timer()
-            while timeit.default_timer() - start < key_delay_sec:
-                window_for_delay.context.app.processEvents()
-
 
 def wait(window: QMainWindow, duration: float):
     start = timeit.default_timer()
