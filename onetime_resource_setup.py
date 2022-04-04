@@ -18,6 +18,9 @@ Really only needed once per OS when changing Python versions
 OS = platform.system()
 PV = '.'.join(platform.python_version().split('.')[:2])
 
+log.remove()
+log.add(sys.stderr, format="{message}", level='INFO')
+
 log.info('ONETIME RESOURCE SETUP FOR EPICPY')
 log.info('---------------------------------')
 log.info('Run when:')
