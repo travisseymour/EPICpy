@@ -1,4 +1,5 @@
 ## EPICpy
+### A Python Interface for EPIC Computational Cognitive Modeling
 Travis L. Seymour, PhD
 
 ---
