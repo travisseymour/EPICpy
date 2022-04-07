@@ -145,3 +145,6 @@ If you are like most programmers, you are making multiple commits to a branch be
 
 Squashing is not required, but if you are liberal with commits, you might consider the work required by the maintainers to read through 40 commits to understand a single pull-request.
 
+# Communicating With Us
+
+Feel free to comment on code or discuss issues with EPICpy's current operation (or request features) on the repository's Issue Tracker. For more general points and conversations, please use the Discussion page. We may move topics posted on either page to the other one if we feel a topic has either been misplaced, or the discussion evolves to the point where it would be better hosted on the other.
