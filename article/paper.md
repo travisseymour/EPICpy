@@ -16,15 +16,6 @@ date: 04 April 2022
 bibliography: paper.bib
 ---
 
-## Temporary Note To Editors
-EPICpy is written in Python, but includes all the C++ files from the existing EPICLib by David Kieras, including .cpp files (for reference only) and .h (headers needed to use compiled EPICLib dynamic library) files in its Resources folder. In fact, EPICpy includes the C++ files for 2 versions of EPICLib which is a total of 405 files, and 73629 lines of C++ code. 
-
-To get an assessment of what I actually wrote to produce EPICpy (the tool described below), please consider only the Python files which span 55 files and 11,278 lines of code.
-
-The fastest way to obtain an EPICpy installer is via this webpage: https://cogmodlab.ucsc.edu/2022/03/14/epic/
-
-The fastest way to run an EPICpy model is to start EPICpy and from the menu choose **TESTS->RUN_TESTS->STANDARD_RUN**. This page of the documentation explains what's being simulated in the ChoiceTask model: https://travisseymour.github.io/EPICpyDocs/example/
-
 # Summary
 
 Executive-Process Interactive Control (EPIC) is a computational cognitive architecture that specifies a theory of human performance and a facility to create behavioral simulations using that theory [@Meyer&Kieras1997a; @Meyer&Kieras1997b]. EPIC compacts decades of psychological theory and findings into a rich set of processors, including those that model sensory, perceptual, motor, cognitive, and memory subsystems of the human mind. EPIC is particularly suited to stimulus-response type human performance tasks including those involving multitasking and task-switching. Although many research articles, technical reports, talks, and conference presentations have been published using EPIC, these have been produced by a relatively small number of researchers. One reason EPIC has not been used more widely is due to its complex design and basis in the C++ programming language. Another challenge is the complete lack of documentation on how to set up and use its development environment. A final limitation is that EPIC is only available for MacOS. None of these issues are a problem for an experienced C++ developer, but they can be significant hurdles for those with little or limited C++ expertise, a state that is exceedingly common in the cognitive science community most likely to be interested in using EPIC. 
