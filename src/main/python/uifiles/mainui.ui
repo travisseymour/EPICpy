@@ -86,6 +86,8 @@
      <font>
       <family>Consolas</family>
       <pointsize>12</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="title">
@@ -181,6 +183,8 @@
       <font>
        <family>Consolas</family>
        <pointsize>12</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
       </font>
      </property>
      <property name="title">

@@ -17,6 +17,7 @@ If not, see <https://www.gnu.org/licenses/>.
 Useful Emojis and ascii symbols
 (for new ones, consult https://textkool.com/en/symbols/)
 """
+import ascii_frame
 
 e_notepad = "\U0001f4cb"
 e_dark_bang = "\u2757"
@@ -43,84 +44,23 @@ e_right_arrow2 = "⟹"
 e_right_arrow3 = "⟹"
 
 
-def emoji_box(text: str, width: int = 0, line="thin") -> str:
+def emoji_box(text: str, width: int = 105, padding: int = 1, line="thin") -> str:
     assert line in ("thin", "thick", "double")
-    symbols = {
-        "thin": {
-            "v_line": "│",
-            "h_line": "─",
-            "ul": "┌",
-            "ur": "┐",
-            "ll": "└",
-            "lr": "┘",
-        },
-        "thick": {
-            "v_line": "┃",
-            "h_line": "━",
-            "ul": "┏",
-            "ur": "┓",
-            "ll": "┗",
-            "lr": "┛",
-        },
-        "double": {
-            "v_line": "║",
-            "h_line": "═",
-            "ul": "╔",
-            "ur": "╗",
-            "ll": "╚",
-            "lr": "╝",
-        },
-    }
-    v_line, h_line, ul, ur, ll, lr = symbols[line].values()
 
-    gap = 4
-    output = ""
-    string_list = text.strip().splitlines()
-    box_width = width if width else max([len(aline) for aline in string_list]) + gap
+    # pattern is UR, LR, LL, UL
+    corners = {"thin": "┐┘└┌", "thick": "┓┛┗┏", "double": "╗╝╚╔"}[line]
+    edges = {"thin": "─│", "thick": "━┃", "double": "═║"}[line]
 
-    output += f"{ul}{h_line * (box_width - gap // 2)}{ur}\n"
-    for line in string_list:
-        output += f"{v_line} {line:<{box_width - gap}} {v_line}\n"
-    output += f"{ll}{h_line * (box_width - gap // 2)}{lr}\n"
+    wid, pad = width, padding
+    try:
+        assert wid > 0 and wid > pad
+    except AssertionError:
+        wid = 50
+        pad = 1 if padding else 0
 
-    return output
-
-
-if __name__ == "__main__":
-    for emoji in (
-        e_notepad,
-        e_dark_bang,
-        e_light_bang,
-        e_light_check,
-        e_dark_check,
-        e_boxed_x,
-        e_boxed_check,
-        e_heavy_check,
-        e_heavy_x,
-        e_bangbang,
-        e_graph,
-        e_hourglass,
-        e_230,
-        e_info,
-        e_boxed_ok,
-    ):
-        print(emoji, end=" ")
-    print()
-    s = """
-        This is some text for you to ponder. This text is long and should be taken 
-        quite seriously. Then again, you can take it as seriously as you think you 
-        should. Bye now.
-        """
-    print(emoji_box(s))
-    print()
-    print(emoji_box(s, 25))
-    print()
-
-    s2 = """
-        One two three four
-        fix size seven eight
-        """
-    print(emoji_box(s2))
-
-    print()
-    print(emoji_box("RULE FILE: choicetask_rules_VM.prs", line="double"))
+    longest = max(len(row) for row in text.splitlines())
+    wid = min(wid + padding * 2, longest)
+    if wid > 105:
+        wid = 105
+    lines = [line for line in ascii_frame.wrap( text.splitlines(keepends=False), width=wid + (pad * 2), padding=pad, corners=corners, edges=edges) if line]
+    return '\n'.join(lines)

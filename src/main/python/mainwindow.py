@@ -505,7 +505,7 @@ class MainWin(QMainWindow):
         except Exception as e:
             self.write(
                 emoji_box(
-                    f"{e_boxed_x} ERROR: Unable to reload last session:\n" f"  {e}",
+                    f"ERROR: Unable to reload last session:\n" f"  {e}",
                     line="thick",
                 )
             )
@@ -519,7 +519,7 @@ class MainWin(QMainWindow):
                 for i, rule_file in enumerate(config.device_cfg.rule_files):
                     p = Path(rule_file)
                     if p.is_file():
-                        status = "({e_boxed_check} Found)"
+                        status = f"({e_boxed_check} Found)"
                     else:
                         status = f"({e_boxed_x} Missing)"
                     self.write(f"   {p.name} ({status})")
@@ -625,7 +625,7 @@ class MainWin(QMainWindow):
             except Exception as e:
                 self.write(
                     emoji_box(
-                        f"{e_boxed_x} ERROR: Unable to set Normal Output logging to\n"
+                        f"ERROR: Unable to set Normal Output logging to\n"
                         f"  {config.device_cfg.normal_out_file} [{e}]",
                         line="thick",
                     )
@@ -646,7 +646,7 @@ class MainWin(QMainWindow):
             except Exception as e:
                 self.write(
                     emoji_box(
-                        f"{e_boxed_x} ERROR: Unable to set Trace logging to\n"
+                        f"ERROR: Unable to set Trace logging to\n"
                         f"  {config.device_cfg.trace_out_file} [{e}]",
                         line="thick",
                     )
@@ -1476,8 +1476,7 @@ class MainWin(QMainWindow):
         else:
             self.write(
                 emoji_box(
-                    f"{e_boxed_x} ERROR: Unable to write {name.title()} Output text to\n"
-                    f"  {out_file})",
+                    f"ERROR: Unable to write {name.title()} Output text to {out_file})",
                     line="thick",
                 )
             )
@@ -1952,9 +1951,8 @@ class MainWin(QMainWindow):
                 file_path = None
                 self.write(
                     emoji_box(
-                        f"{e_boxed_x} ERROR: Unable to open production rules in external"
-                        f" text editor:\n  [There are possibly no rules currently "
-                        f"loaded.]",
+                        f"ERROR: Unable to open production rules in external text "
+                        f"editor: [There are possibly no rules currently loaded.]",
                         line="thick",
                     )
                 )
@@ -1972,15 +1970,14 @@ class MainWin(QMainWindow):
             except FileNotFoundError:
                 file_path = None
                 err_msg = (
-                    f"{e_boxed_x} ERROR: Device data file does not appear to exist on "
-                    f"disk, or is not readable."
-                    f"\n   [{str(self.simulation.device.data_filepath)}]"
+                    f"ERROR: Device data file does not appear to exist on disk, or is "
+                    f"not readable. [{str(self.simulation.device.data_filepath)}]"
                 )
             except Exception as e:
                 file_path = None
                 err_msg = (
-                    f"{e_boxed_x} ERROR: Unexpected error during attempt to open data "
-                    f"file:\n   {e}\n   [{str(self.simulation.device.data_filepath)}]"
+                    f"ERROR: Unexpected error during attempt to open data file: {e} "
+                    f"[{str(self.simulation.device.data_filepath)}]"
                 )
             if err_msg:
                 self.write(emoji_box(err_msg, line="thick"))
@@ -1995,8 +1992,8 @@ class MainWin(QMainWindow):
                 p = file_path if isinstance(file_path, Path) else Path(file_path)
                 self.write(
                     emoji_box(
-                        f"{e_boxed_x} ERROR: Unable to open {which_file} file {p.name} "
-                        f"in\n  external text editor: [{e}]",
+                        f"ERROR: Unable to open {which_file} file {p.name} in external "
+                        f"text editor: [{e}]",
                         line="thick",
                     )
                 )

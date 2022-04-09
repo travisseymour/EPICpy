@@ -223,6 +223,7 @@ def add_result(name: str, worked: bool, outcome: str):
         }
     )
 
+
 def wait(window: QMainWindow, duration: float):
     start = timeit.default_timer()
     while True:
@@ -396,7 +397,6 @@ def run_model_test(
                 config.app_cfg.last_device_file = last_device_file
                 # restore device run settings
                 config.device_cfg = device_run_settings
-
 
     if see_results:
         wait(window, 2)

@@ -8,6 +8,7 @@ python-dateutil
 ulid
 pingouin
 plum-dispatch
+ascii_frame
 
 # Platform Specific
 # -----------------
