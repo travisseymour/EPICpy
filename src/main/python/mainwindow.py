@@ -505,7 +505,7 @@ class MainWin(QMainWindow):
         except Exception as e:
             self.write(
                 emoji_box(
-                    f"ERROR: Unable to reload last session:\n" f"  {e}",
+                    f"ERROR: Unable to reload last session:\n{e}",
                     line="thick",
                 )
             )
@@ -626,7 +626,8 @@ class MainWin(QMainWindow):
                 self.write(
                     emoji_box(
                         f"ERROR: Unable to set Normal Output logging to\n"
-                        f"  {config.device_cfg.normal_out_file} [{e}]",
+                        f"{config.device_cfg.normal_out_file}:\n"
+                        f"{e}",
                         line="thick",
                     )
                 )
@@ -647,7 +648,8 @@ class MainWin(QMainWindow):
                 self.write(
                     emoji_box(
                         f"ERROR: Unable to set Trace logging to\n"
-                        f"  {config.device_cfg.trace_out_file} [{e}]",
+                        f"{config.device_cfg.trace_out_file}:"
+                        f"{e}",
                         line="thick",
                     )
                 )
@@ -1476,7 +1478,10 @@ class MainWin(QMainWindow):
         else:
             self.write(
                 emoji_box(
-                    f"ERROR: Unable to write {name.title()} Output text to {out_file})",
+                    f"ERROR: Unable to write output text from "
+                    f"{name.title()} "
+                    f"to"
+                    f"{out_file})",
                     line="thick",
                 )
             )
@@ -1951,7 +1956,7 @@ class MainWin(QMainWindow):
                 file_path = None
                 self.write(
                     emoji_box(
-                        f"ERROR: Unable to open production rules in external text "
+                        f"ERROR: Unable to open production rules in external text\n"
                         f"editor: [There are possibly no rules currently loaded.]",
                         line="thick",
                     )
@@ -1970,14 +1975,16 @@ class MainWin(QMainWindow):
             except FileNotFoundError:
                 file_path = None
                 err_msg = (
-                    f"ERROR: Device data file does not appear to exist on disk, or is "
-                    f"not readable. [{str(self.simulation.device.data_filepath)}]"
+                    f"ERROR: Device data file does not appear to exist on disk,\n"
+                    f"or is not readable:\n"
+                    f"{str(self.simulation.device.data_filepath)}"
                 )
             except Exception as e:
                 file_path = None
                 err_msg = (
-                    f"ERROR: Unexpected error during attempt to open data file: {e} "
-                    f"[{str(self.simulation.device.data_filepath)}]"
+                    f"ERROR: Unexpected error during attempt to open data file\n"
+                    f"{str(self.simulation.device.data_filepath)}:\n"
+                    f"{e}"
                 )
             if err_msg:
                 self.write(emoji_box(err_msg, line="thick"))
@@ -1992,8 +1999,9 @@ class MainWin(QMainWindow):
                 p = file_path if isinstance(file_path, Path) else Path(file_path)
                 self.write(
                     emoji_box(
-                        f"ERROR: Unable to open {which_file} file {p.name} in external "
-                        f"text editor: [{e}]",
+                        f"ERROR: Unable to open {which_file} file\n"
+                        f"{p.name} in external text editor:\n"
+                        f"{e}",
                         line="thick",
                     )
                 )

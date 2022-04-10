@@ -163,7 +163,8 @@ class Simulation:
         except Exception as e:
             self.write(
                 emoji_box(
-                    f"ERROR: Failed to update EPIC output or trace settings: {e}",
+                    f"ERROR: Failed to update EPIC output or trace settings:\n"
+                    f"{e}",
                     line="thick",
                 )
             )
@@ -269,10 +270,10 @@ class Simulation:
                 except IOError:
                     self.write(
                         emoji_box(
-                            f"ERROR: Unable to create needed file: "
-                            f'"{str(Path(device_file_root, "__init__.py"))}". If your '
-                            f"device may not load correctly, you may need to obtain "
-                            f"write access to the device folder.",
+                            f'ERROR: Unable to create needed file \n'
+                            f'"{str(Path(device_file_root, "__init__.py"))}".\n'
+                            f'If your device does not load correctly, you may need to\n'
+                            f'obtain write access to the device folder.',
                             line="thick",
                         )
                     )
@@ -319,8 +320,9 @@ class Simulation:
             except AssertionError as e:
                 self.write(
                     emoji_box(
-                        f"ERROR: Failed to create new EpicDevice from "
-                        f"{device_file_p.name}! [{e}]",
+                        f"ERROR: Failed to create new EpicDevice from\n"
+                        f"{device_file_p.name}!\n"
+                        f"{e}",
                         line="thick",
                     )
                 )
@@ -328,8 +330,9 @@ class Simulation:
                 return
             except IOError as e:
                 self.write(
-                    f"ERROR: Unable to write to file "
-                    f"{str(self.tempmod_path.parent)} ({e})."
+                    f"ERROR: Unable to write to file\n"
+                    f"{str(self.tempmod_path.parent)}:\n"
+                    f"{e}"
                 )
             except Exception as e:
                 log.error(
@@ -389,8 +392,9 @@ class Simulation:
             except Exception as e:
                 self.write(
                     emoji_box(
-                        f"ERROR: Failed to create new EpicDevice from "
-                        f"{device_file_p.name}! [{e}]",
+                        f"ERROR: Failed to create new EpicDevice from\n"
+                        f"{device_file_p.name}!\n"
+                        f"{e}",
                         line="thick",
                     )
                 )
@@ -450,7 +454,8 @@ class Simulation:
             except Exception as e:
                 self.write(
                     emoji_box(
-                        f"ERROR: Unable to properly connect new device and model [{e}]",
+                        f"ERROR: Unable to properly connect new device and model:\n"
+                        f"{e}",
                         line="thick",
                     )
                 )
@@ -540,8 +545,9 @@ class Simulation:
         except Exception as e:
             self.write(
                 emoji_box(
-                    f"ERROR: Unable to unload {kind} encoder! [{e}] However, it won't "
-                    f"be loaded the next time this device is loaded.",
+                    f"ERROR: Unable to unload {kind} encoder!\n"
+                    f"[{e}]\n"
+                    f"However, it won't be loaded the next time this device is loaded.",
                     line="thick",
                 )
             )
@@ -606,8 +612,9 @@ class Simulation:
             except Exception as e:
                 self.write(
                     emoji_box(
-                        f"ERROR: Failed to create new {kind} encoder from "
-                        f"{encoder_file_p.name}! [{e}]",
+                        f"ERROR: Failed to create new {kind} encoder from\n"
+                        f"{encoder_file_p.name}:\n"
+                        f"{e}",
                         line="thick",
                     )
                 )
@@ -660,8 +667,9 @@ class Simulation:
             except Exception as e:
                 self.write(
                     emoji_box(
-                        f"ERROR: Failed to create new {kind}Encoder from "
-                        f"{encoder_file_p.name}! [{e}]",
+                        f"ERROR: Failed to create new {kind}Encoder from\n"
+                        f"{encoder_file_p.name}:"
+                        f"{e}",
                         line="thick",
                     )
                 )
@@ -692,8 +700,9 @@ class Simulation:
             except Exception as e:
                 self.write(
                     emoji_box(
-                        f"ERROR: Created new {kind} encoder, but connection to "
-                        f"Human_processor failed! [{e}]",
+                        f"ERROR: Created new {kind} encoder, but connection to\n"
+                        f"Human_processor failed:\n"
+                        f"{e}",
                         line="thick",
                     )
                 )
@@ -726,7 +735,7 @@ class Simulation:
         else:
             self.write(
                 emoji_box(
-                    f"ERROR: Rule recompile failed because former rule file no longer "
+                    f"ERROR: Rule recompile failed because former rule file no longer\n"
                     f"exists or is not readable.",
                     line="thick",
                 )
@@ -790,7 +799,8 @@ class Simulation:
         except Exception as e:
             self.write(
                 emoji_box(
-                    f"ERROR: Unable to compile ruleset file\n{rule_path.name}! ({e})",
+                    f"ERROR: Unable to compile ruleset file\n{rule_path.name}:\n"
+                    f"{e}",
                     line="thick",
                 )
             )
@@ -805,7 +815,8 @@ class Simulation:
         else:
             self.write(
                 emoji_box(
-                    f"ERROR: Unable to (re)compile ruleset file {rule_path.name}!",
+                    f"ERROR: Unable to (re)compile ruleset file\n"
+                    f"{rule_path.name}!",
                     line="thick",
                 )
             )
@@ -839,7 +850,8 @@ class Simulation:
             self.run_time = self.model.get_time()
         except Exception as e:
             run_result = False
-            self.write(emoji_box(f"ERROR: {e}", line="thick"))
+            self.write(emoji_box(f"ERROR:\n"
+                                 f"{e}", line="thick"))
             return
 
         if not run_result:
@@ -854,7 +866,7 @@ class Simulation:
             # This shouldn't be possible
             self.write(
                 emoji_box(
-                    f"ERROR: Unable to run simulation because model is not yet RUNNABLE "
+                    f"ERROR: Unable to run simulation because model is not yet RUNNABLE\n"
                     f"(device successfully loaded and rules successfully compiled)",
                     line="thick",
                 )
@@ -976,7 +988,10 @@ class Simulation:
             run_result = False
             self.write(
                 emoji_box(
-                    f"ERROR: Run of {self.device.rule_filename} Stopped With Error: {e}",
+                    f"ERROR: Run of\n"
+                    f"{self.device.rule_filename}\n"
+                    f"Stopped With Error:\n"
+                    f"{e}",
                     line="thick",
                 )
             )
