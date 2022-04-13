@@ -14,7 +14,7 @@ If not, see <https://www.gnu.org/licenses/>.
 """
 
 # year.month.version
-__version__ = "2022.3.5"
+__version__ = "2022.4.1"
 
 __loglevel__ = "INFO"
 
