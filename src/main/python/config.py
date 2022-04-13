@@ -200,18 +200,13 @@ def save_app_config(quiet: bool = False) -> bool:
     config_dir = Path("~", ".config", "epicpy").expanduser()
     config_file = Path(config_dir, "global_config.json")
 
-    log.debug(
-        f'attempting to save app configuration file "{config_file.name}" to '
-        f'"{str(config_dir)}"'
-    )
-
     try:
         config_file.write_text(json.dumps(app_cfg.__dict__, indent=4))
         return True
     except Exception as e:
         if not quiet:
-            log.debug(
-                f'attempting to read app configuration file "{config_file.name}" to '
+            log.error(
+                f'ERROR attempting to read app configuration file "{config_file.name}" to '
                 f'"{str(config_dir)}: {e}"'
             )
         return False
@@ -227,11 +222,6 @@ def get_device_config(device: Optional[Path]):
     device_folder = device.parent
     device_name = device.stem.strip().replace(" ", "_")
     device_config_file = f"{device_name}_config.json"
-
-    log.debug(
-        f'attempting to read device configuration file "{device_config_file}" from '
-        f'"{str(device_folder)}"'
-    )
 
     try:
         config = json.loads(Path(device_folder, device_config_file).read_text())
@@ -254,7 +244,7 @@ def get_device_config(device: Optional[Path]):
             device_cfg = DeviceConfig(current=current)
     except FileNotFoundError:
         log.info(
-            f"Unable to find device configuration file "
+            f"ERROR: Unable to find device configuration file "
             f'"{device_config_file}" in "{str(device_folder)}". '
             f"Creating default configuration instead."
         )
@@ -271,11 +261,6 @@ def save_config(quiet: bool = False):
     device_folder = device.parent
     device_name = device.stem.strip().replace(" ", "_")
     device_config_file = f"{device_name}_config.json"
-
-    log.debug(
-        f'attempting to write device configuration to "{device_config_file}" to '
-        f'"{str(device_folder)}"'
-    )
 
     cfg = {
         key: value for key, value in device_cfg.__dict__.items() if not key == "current"
