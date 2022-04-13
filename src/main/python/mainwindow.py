@@ -1866,14 +1866,14 @@ class MainWin(QMainWindow):
 
         if self.search_dialog.ok:
             self.search_pattern = (
-                self.search_dialog.ui.plainTextEditSearchText.toPlainText().strip()
+                self.search_dialog.ui.lineEditSearchText.text().strip()
             )
             self.search_using_regex = self.search_dialog.ui.checkBoxRegEx.isChecked()
             self.search_ignore_case = (
                 self.search_dialog.ui.checkBoxIgnoreCase.isChecked()
             )
             self.search_active = True
-            self.do_search()
+            self.do_search(backwards=self.search_dialog.backwards)
 
     # start text cursor utility functions --------
     def get_text_cursor(self):

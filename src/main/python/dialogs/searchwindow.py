@@ -12,6 +12,7 @@ See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with Foobar.
 If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 
 import config
 from uifiles.searchui import Ui_DialogSearch
@@ -25,9 +26,12 @@ class SearchWin(QDialog):
         self.ok = False
         self.ui = Ui_DialogSearch()
         self.ui.setupUi(self)
+        self.backwards: bool = False
 
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
-        self.ui.pushButtonSearch.clicked.connect(self.clicked_ok_button)
+        self.ui.pushButtonSearchForward.clicked.connect(self.clicked_ok_button)
+        self.ui.pushButtonSearchBackward.clicked.connect(partial(self.clicked_ok_button, backwards=True))
+        self.ui.lineEditSearchText.editingFinished.connect(self.clicked_ok_button)
 
         self.setStyleSheet(
             'QWidget {font: "'
@@ -57,7 +61,8 @@ class SearchWin(QDialog):
         self.ok = False
         self.hide()
 
-    def clicked_ok_button(self):
+    def clicked_ok_button(self, backwards: bool=False):
+        self.backwards = backwards
         self.ok = True
         self.hide()
 

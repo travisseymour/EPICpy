@@ -58,15 +58,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QPlainTextEdit" name="plainTextEditSearchText">
-         <property name="font">
-          <font>
-           <family>Consolas</family>
-           <pointsize>14</pointsize>
-          </font>
-         </property>
-         <property name="styleSheet">
-          <string notr="true"/>
+        <widget class="QLineEdit" name="lineEditSearchText">
+         <property name="clearButtonEnabled">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -139,7 +133,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButtonSearch">
+        <widget class="QPushButton" name="pushButtonSearchBackward">
          <property name="font">
           <font>
            <family>Consolas</family>
@@ -149,7 +143,27 @@
           </font>
          </property>
          <property name="text">
-          <string>Search</string>
+          <string>Search
+Backward</string>
+         </property>
+         <property name="default">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButtonSearchForward">
+         <property name="font">
+          <font>
+           <family>Consolas</family>
+           <pointsize>14</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Search
+Forward</string>
          </property>
          <property name="default">
           <bool>true</bool>
