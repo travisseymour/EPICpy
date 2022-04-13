@@ -1810,7 +1810,7 @@ class MainWin(QMainWindow):
             EditDataAction = None
         else:
             stopAction = None
-            searchQuit = contextMenu.addAction("Quit")
+
             clearAction = contextMenu.addAction("Clear")
             searchAction = contextMenu.addAction("Search")
             selectAllAction = contextMenu.addAction("Select All")
@@ -1833,6 +1833,7 @@ class MainWin(QMainWindow):
                 if self.run_state > UNREADY
                 else None
             )
+            searchQuit = contextMenu.addAction("Quit")
 
         action = contextMenu.exec_(self.mapToGlobal(event))
 
