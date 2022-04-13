@@ -28,8 +28,8 @@ def setup_cppyy(context: ApplicationContext) -> Optional[EPICLIB_INFO]:
 
     info, libname, headerpath, epiclib_files = get_epiclib_files(context)
 
-    log.debug(f"Attempting to load EPICLib file {libname}")
-    log.debug(f"Using EPICLib header files in {headerpath}")
+    log.info(f"Attempting to load EPICLib file {libname}")
+    log.info(f"Using EPICLib header files in {headerpath}")
 
     try:
         cppyy.load_library(context.get_resource(f"epiclib/{libname}"))
