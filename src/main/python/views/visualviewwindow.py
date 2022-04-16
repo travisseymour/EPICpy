@@ -654,7 +654,7 @@ class VisualViewWin(QMainWindow):
         """
         box = QRectF(x, y, w, h)
         center = box.center()
-        length = 2.0 * (w if w > h else h)
+        length = 1.5 * (w if w > h else h)
         _leader = leader.split("_")[0]
         if inverted:
             _leader = {
@@ -662,19 +662,35 @@ class VisualViewWin(QMainWindow):
                 "South": "North",
                 "East": "West",
                 "West": "East",
+                "NorthEast": "SouthWest",
+                "SouthEast": "NorthWest",
+                "NorthWest": "SouthEast",
+                "SouthWest": "NorthEast",
             }[_leader]
-        if "North" in _leader:
+        if _leader == "North":
             path.moveTo(center.x(), center.y())
             path.lineTo(center.x(), center.y() - length)
-        elif "East" in _leader:
+        elif _leader == "East":
             path.moveTo(center.x(), center.y())
             path.lineTo(center.x() + length, center.y())
-        elif "South" in _leader:
+        elif _leader == "South":
             path.moveTo(center.x(), center.y())
             path.lineTo(center.x(), center.y() + length)
-        elif "West" in _leader:
+        elif _leader == "West":
             path.moveTo(center.x(), center.y())
             path.lineTo(center.x() - length, center.y())
+        elif _leader == "NorthWest":
+            path.moveTo(center.x(), center.y())
+            path.lineTo(center.x() - length, center.y() - length)
+        elif _leader == "NorthEast":
+            path.moveTo(center.x(), center.y())
+            path.lineTo(center.x() + length, center.y() + length)
+        elif _leader == "SouthWest":
+            path.moveTo(center.x(), center.y())
+            path.lineTo(center.x() - length, center.y() - length)
+        elif _leader == "SouthEast":
+            path.moveTo(center.x(), center.y())
+            path.lineTo(center.x() + length, center.y() - length)
         else:
             return
 
