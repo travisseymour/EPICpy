@@ -135,6 +135,8 @@
     <addaction name="actionRun_One_Step"/>
     <addaction name="actionPause"/>
     <addaction name="actionStop"/>
+    <addaction name="separator"/>
+    <addaction name="actionDelete_Datafile"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -786,6 +788,11 @@
      <family>Consolas</family>
      <pointsize>12</pointsize>
     </font>
+   </property>
+  </action>
+  <action name="actionDelete_Datafile">
+   <property name="text">
+    <string>Delete Datafile</string>
    </property>
   </action>
  </widget>

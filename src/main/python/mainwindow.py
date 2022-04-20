@@ -410,7 +410,7 @@ class MainWin(QMainWindow):
         self.ui.actionSet_Application_Font.triggered.connect(self.set_application_font)
         self.ui.actionDark_Mode_Toggle.triggered.connect(self.toggle_darkmode)
         self.ui.actionDark_Mode_Toggle.setChecked(config.app_cfg.dark_mode)
-
+        self.ui.actionDelete_Datafile.triggered.connect(self.delete_datafile)
     def window_focus_changed(self, win: QMainWindow):
         if not win or not self.manage_z_order:
             return
@@ -1485,6 +1485,12 @@ class MainWin(QMainWindow):
                     line="thick",
                 )
             )
+
+    def delete_datafile(self):
+        if self.simulation.device and self.simulation.model:
+            if hasattr(self.simulation.device, "delete_data_file"):
+                self.simulation.device.delete_data_file()
+
 
     # ============================================
     # Dark Mode Theme Switching
