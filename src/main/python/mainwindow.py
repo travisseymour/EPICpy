@@ -943,6 +943,7 @@ class MainWin(QMainWindow):
         self.ui.actionReload_Session.setEnabled(False)
 
         self.ui.actionEPICLib_Settings.setEnabled(False)
+        self.ui.actionDelete_Datafile.setEnabled(False)
 
     def set_ui_paused(self):
         has_rules = (
@@ -997,6 +998,8 @@ class MainWin(QMainWindow):
 
         self.ui.actionEPICLib_Settings.setEnabled(False)
 
+        self.ui.actionDelete_Datafile.setEnabled(False)
+
     def set_ui_not_running(self):
         runnable = self.run_state == RUNNABLE
         has_rules = (
@@ -1050,6 +1053,7 @@ class MainWin(QMainWindow):
         self.ui.actionReload_Session.setEnabled(True)
 
         self.ui.actionEPICLib_Settings.setEnabled(has_device)
+        self.ui.actionDelete_Datafile.setEnabled(has_device)
 
     def update_title(self):
         if self.simulation and self.simulation.device and self.simulation.model:

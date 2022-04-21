@@ -794,6 +794,12 @@
    <property name="text">
     <string>Delete Datafile</string>
    </property>
+   <property name="font">
+    <font>
+     <family>Consolas</family>
+     <pointsize>14</pointsize>
+    </font>
+   </property>
   </action>
  </widget>
  <customwidgets>
