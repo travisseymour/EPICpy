@@ -592,7 +592,8 @@ class Simulation:
                 encoder_code = encoder_file_p.read_text()
                 assert encoder_code.strip(), "Encoder appears to be empty!"
                 if kind == "Visual":
-                    pattern = r"class VisualEncoder *\( *Visual_encoder_base *\) *\:"
+                    pattern = r"class VisualEncoder *" \
+                              r"\( *(Visual_encoder_base|EPICPyVisualEncoder) *\) *\:"
                     regex_error = (
                         "Unable to find class VisualEncoder subclassed from "
                         "Visual_encoder_base"
@@ -601,7 +602,8 @@ class Simulation:
                     self.tempenc_v_path.write_text(encoder_code)
                 else:
                     pattern = (
-                        r"class AuditoryEncoder *\( *Auditory_encoder_base *\) *\:"
+                        r"class AuditoryEncoder *"
+                        r"\( *(Auditory_encoder_base|EPICPyAuditoryEncoder) *\) *\:"
                     )
                     regex_error = (
                         "Unable to find class AuditoryEncoder subclassed from "
@@ -857,6 +859,7 @@ class Simulation:
         if not run_result:
             self.parent.run_state = RUNNABLE
         else:
+            self.parent.run_state = PAUSED
             self.parent.run_state = PAUSED
 
     def run_all(self, clear_ui: bool = True):
