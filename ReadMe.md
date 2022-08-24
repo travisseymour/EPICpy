@@ -2,6 +2,8 @@
 ### A Python Interface for EPIC Computational Cognitive Modeling
 Travis L. Seymour, PhD
 
+[![DOI](https://zenodo.org/badge/470709861.svg)](https://zenodo.org/badge/latestdoi/470709861)
+
 ---
 
 **Background**
