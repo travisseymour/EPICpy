@@ -44,7 +44,7 @@ Many studies have been published with EPIC models created using the existing EPI
 - @SeymourEMG used an EPIC model for an exclude-recognition task to predict electromyographic signals during performance.
 - @Meyer20Questions2001 showed how EPIC can be parameterized to simulate human performance in older adults and revealed that some supposed age-related declines are actually due to strategic choices.
 
-# Statement of need
+# Statement of Need
 
 There are several issues that motivate a new approach to EPIC modeling. One is that it is currently not easy to publicly obtain a working copy of the EPICapp software. What is available is the C++ source code for EPICLib and EPICapp for MacOS. This code is available on a Github website [@EPICappGithub], but it contains no information about how to set up or use the required development environment. Furthermore, there is no information on how to program devices, or encoders for use with EPICapp. Without instructions, use of this code would likely be restricted to experienced C++ programmers capable of reading through the source code and extracting the necessary information.
 
