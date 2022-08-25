@@ -26,9 +26,9 @@ Rather than C++, the current approach uses the popular Python programing languag
 
 Interest in using computational cognitive architectures to understand human cognitive performance has hardly waned for 40 years [@Kotseruba2020]. Among the 50 or so actively used cognitive architectures, EPIC is one of the few allowing high-fidelity modeling of tasks relying on perceptual, motor, and control processes. Despite this, it can be challenging to create new EPIC simulations for many cognitive scientists. The overview of an EPIC stimulation can be seen in Figure 1.
 
-![Figure 1. Overview of EPICapp Modeling.\label{fig:epicappoverview}](files/epicapp_overview.png)
+![Overview of EPICapp's C++ Based Modeling.\label{fig:epicappoverview}](files/epicapp_overview.png)
 
-The EPIC Architecture exists as a compiled dynamically-linked library (a MacOS .dylib file) called _EPICLib_ and is based on 64,000 lines of C++ code across 321 files. It embodies both the psychological model of a human performer and the code that allows one to use that model to create simulations. EPICapp is a MacOS Graphical User Interface (GUI) application that allows users to load various model components and control EPIC simulations. EPICapp is written in C++ and Objective-C. Standard EPIC modeling involves working with some subset of the following components:
+The EPIC Architecture exists as a compiled dynamically-linked library (a MacOS .dylib file) called _EPICLib_ and is based on 64,000 lines of C++ code across 321 files. It embodies both the psychological model of a human performer and the code that allows one to use that model to create simulations. EPICapp is a MacOS Graphical User Interface (GUI) application that allows users to load various model components and control EPIC simulations. EPICapp is written in C++ and Objective-C. Standard EPIC modeling involves working with some subset of the following components (see Figure 1):
 
 - **Task Device**. In EPIC a device is a simulated task environment that typically emulates a related human task. It includes virtual outputs such as a computer screen capable of displaying arbitrary graphics and text, virtual sound sources (speakers, headphones, human voice, etc.), and a variety of input devices such as a keyboard, mouse, joystick, button box, microphone. EPIC devices are written in C++.
 - **Perceptual Encoders**. Although EPIC already models how visual and auditory information from the device is encoded by the virtual performer, an EPIC modeler can specify alternate models for how visual and/or auditory information is encoded in the task being studied. Perpetual encoders are written in C++.
@@ -38,7 +38,7 @@ The EPIC Architecture exists as a compiled dynamically-linked library (a MacOS .
 
 Many studies have been published with EPIC models created using the existing EPICapp application^[For a larger curated list, see https://travisseymour.github.io/EPICpyDocs/epicresources/, and for a more complete collection, see https://www.researchgate.net/profile/David-Kieras].
 
-- @Kieras2018 presented a new EPIC modeling approach using "Explanatory Sequences" with which he showed classic visual search tasks can be explained without visual attention.
+- @Kieras2018 presented a new EPIC modeling approach using "Explanatory Sequences" with which the author showed classic visual search tasks can be explained without visual attention.
 - @Kieras2014 proposed a novel computational account of how people can follow individual streams of speech in a context full of irrelevant speech (i.e., the Cocktail Party Effect)
 - @Zhang2014 used a computer-cluster to search in parallel for parameter combinations that helped reveal the subtle ways in which micro-strategy choices in complex multitasking environments can lead to individual differences in performance.
 - @SeymourEMG used an EPIC model for an exclude-recognition task to predict electromyographic signals during performance.
@@ -62,7 +62,7 @@ EPICpy offers a new cross-platform GUI application for EPIC modeling, with exect
 
 EPICpy is based on the Python programming language instead of C++ and follows the structure shown in Figure 2.
 
-![Figure 2. Overview of EPICpy Modeling.\label{fig:epicpyoverview}](files/epicpy_overview.png)
+![Overview of EPICpy's Python-Based Modeling.\label{fig:epicpyoverview}](files/epicpy_overview.png)
 
 Although EPICLib (the compiled library containing the EPIC architecture) is still programmed in C++, all other components of the simulation system are programmed in Python. This means that modellers can program new task devices and perceptual encoders in Python. It is important to note that devices and encoders do not need to be compiled in EPICpy -- they are loaded as raw Python files directly into the application (along with a set of production rules). Thus, most EPIC modellers can use EPICapp without needing to set up the EPICpy development environment. This also means that devices and encoders can be shared between EPIC modelers without regards to operating system. To make it easy to create new devices and encoders, two demo models (including devices, encoders, and rulesets) are provided that can be edited and extended as necessary. Because the EPICpy GUI application is itself programmed in Python, those wishing to alter or extend EPICpy can do so, but in this case, EPICpy's development environment will need to be set up. Whether using one of the available EPICpy binaries, or running EPICpy from the development environment, detailed step-by-step instructions for getting started are available on the EPICpy documentation website [@EPICpyDocs].
 
