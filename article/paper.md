@@ -36,7 +36,7 @@ The EPIC Architecture exists as a compiled dynamically-linked library (a MacOS .
 
 # Previous Research Using EPIC via EPICapp
 
-Many studies have been published with EPIC models created using the existing EPICapp application^[For a larger curated list, see https://travisseymour.github.io/EPICpyDocs/epicresources/, and for a more complete collection, see https://www.researchgate.net/profile/David-Kieras].
+Many studies have been published with EPIC models created using the existing EPICapp application^[For a larger curated list, see https://travisseymour.github.io/EPICpyDocs/epicresources/, and for a more complete collection, see https://www.researchgate.net/profile/David-Kieras]:
 
 - @Kieras2018 presented a new EPIC modeling approach using "Explanatory Sequences" with which the author showed classic visual search tasks can be explained without visual attention.
 - @Kieras2014 proposed a novel computational account of how people can follow individual streams of speech in a context full of irrelevant speech (i.e., the Cocktail Party Effect)
@@ -58,7 +58,7 @@ Finally, EPIC only allows for basic descriptive statistics such as arithmetic me
 
 # A New Approach Using EPICpy
 
-EPICpy offers a new cross-platform GUI application for EPIC modeling, with exectuables and detailed instructions made publicly available for Linux (Ubuntu v18 and newer, and related Debian-based distributions), MacOS (Catalina v10.15 and newer), as well as Windows (v10.21H2 and newer via the Window Subsystem for Linux v2). For potential users on other operating systems, a Dockerfile is also provided for containerized EPIC modeling.
+EPICpy offers a new cross-platform GUI application for EPIC modeling, with executables and detailed instructions made publicly available for Linux (Ubuntu v18 and newer, and related Debian-based distributions), MacOS (Catalina v10.15 and newer), as well as Windows (v10.21H2 and newer via the Window Subsystem for Linux v2). For potential users on other operating systems, a Dockerfile is also provided for containerized EPIC modeling.
 
 EPICpy is based on the Python programming language instead of C++ and follows the structure shown in Figure 2.
 
