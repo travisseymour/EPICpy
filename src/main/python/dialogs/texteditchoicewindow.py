@@ -118,10 +118,3 @@ class TextEditChoiceWin(QDialog):
 
         if file_name:
             self.ui.plainTextEditPath.setPlainText(file_name)
-
-    # TODO:
-    #      get into the event for text box and checkbox.
-    #      if box checked, then OK is enabled
-    #      if box unchecked, then OK is enabled if textbox has valid url
-    #      if textbox is changed (can only be changed when cb is unchecked), then ok button depends on validity of url
-    #      -> this way, OK only pressed when something real has been chosen.

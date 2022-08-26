@@ -1973,7 +1973,7 @@ class MainWin(QMainWindow):
                     + str(time.time()).split(".")[-1]
             )
             file_path = Path(
-                self.tmp_folder.name, f"TMP_EPICPY_NORMALOUT_{file_id}.txt"
+                self.tmp_folder.name, f"TEMP_EPICPY_NORMALOUT_{file_id}.txt"
             )
             file_path.write_text(self.ui.plainTextEditOutput.toPlainText())
         elif which_file == "RuleFile":
@@ -2028,15 +2028,20 @@ class MainWin(QMainWindow):
             file_path = None
 
         if file_path is not None:
+            editor_path = config.app_cfg.text_editor.strip()
             try:
-                webbrowser.open(file_path.as_uri())
-            except (FileNotFoundError, IOError) as e:
-                subprocess.call(["open", str(file_path)])
-                p = file_path if isinstance(file_path, Path) else Path(file_path)
+                if not editor_path:
+                    # user wants to use the BUILT-IN editor
+                    ...
+                else:
+                    # user has specified an external editor
+                    subprocess.run([editor_path, str(file_path.resolve())])
+            except Exception as e:
                 self.write(
                     emoji_box(
                         f"ERROR: Unable to open {which_file} file\n"
-                        f"{p.name} in external text editor:\n"
+                        f"{file_path.name} in {'internal' if not editor_path else 'external'} text editor\n"
+                        f"({'BUILT-IN [EPICcoder]' if not editor_path else str(editor_path)}):\n"
                         f"{e}",
                         line="thick",
                     )
