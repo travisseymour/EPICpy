@@ -21,6 +21,7 @@ from PySide2 import QtWidgets
 import fitness
 from dialogs.aboutwindow import AboutWin
 from dialogs.fontsizewindow import FontSizeDialog
+from dialogs.texteditchoicewindow import TextEditChoiceWin
 from uifiles.mainui import Ui_MainWindow
 from dialogs.sndtextsettingswindow import SoundTextSettingsWin
 from statswindow import StatsWin
@@ -114,7 +115,7 @@ class StateChangeWatcher(QObject):
     """
 
     def __init__(
-        self, parent=None, minimize_func: Callable = None, restore_func: Callable = None
+            self, parent=None, minimize_func: Callable = None, restore_func: Callable = None
     ):
         super(StateChangeWatcher, self).__init__(parent)
         self.minimize_func = minimize_func
@@ -224,6 +225,7 @@ class MainWin(QMainWindow):
         self.epiclib_settings_dialog = None
         self.sound_text_settings_dialog = None
         self.font_size_dialog = None
+        self.text_editor_dialog = None
 
         # setup state change watcher so all min or max together
         # note: this has to go before self.setup_view()
@@ -298,9 +300,9 @@ class MainWin(QMainWindow):
         try:
             self.manage_z_order = False
             for win in chain(
-                [self, self.trace_win, self.stats_win],
-                self.visual_views.values(),
-                self.auditory_views.values(),
+                    [self, self.trace_win, self.stats_win],
+                    self.visual_views.values(),
+                    self.auditory_views.values(),
             ):
                 if win.isVisible():
                     #     or win.windowState() == Qt.WindowMinimized:
@@ -411,6 +413,11 @@ class MainWin(QMainWindow):
         self.ui.actionDark_Mode_Toggle.triggered.connect(self.toggle_darkmode)
         self.ui.actionDark_Mode_Toggle.setChecked(config.app_cfg.dark_mode)
         self.ui.actionDelete_Datafile.triggered.connect(self.delete_datafile)
+
+        self.ui.actionText_Editor.triggered.connect(self.choose_text_editor)
+        te_path = Path(config.app_cfg.text_editor)
+        self.ui.actionText_Editor.setText(f"Text Editor: {te_path.name if te_path.is_file() else 'BUILT-IN'}")
+
     def window_focus_changed(self, win: QMainWindow):
         if not win or not self.manage_z_order:
             return
@@ -734,12 +741,12 @@ class MainWin(QMainWindow):
         )
 
         for win in (
-            self.visual_physical_view,
-            self.visual_sensory_view,
-            self.visual_perceptual_view,
-            self.auditory_physical_view,
-            self.auditory_sensory_view,
-            self.auditory_perceptual_view,
+                self.visual_physical_view,
+                self.visual_sensory_view,
+                self.visual_perceptual_view,
+                self.auditory_physical_view,
+                self.auditory_sensory_view,
+                self.auditory_perceptual_view,
         ):
             win.set_changed()
 
@@ -795,13 +802,13 @@ class MainWin(QMainWindow):
             if self.simulation.tempmod_path and self.simulation.tempmod_path.is_file():
                 self.simulation.tempmod_path.unlink()
             if (
-                self.simulation.tempenc_v_path
-                and self.simulation.tempenc_v_path.is_file()
+                    self.simulation.tempenc_v_path
+                    and self.simulation.tempenc_v_path.is_file()
             ):
                 self.simulation.tempenc_v_path.unlink()
             if (
-                self.simulation.tempenc_a_path
-                and self.simulation.tempenc_a_path.is_file()
+                    self.simulation.tempenc_a_path
+                    and self.simulation.tempenc_a_path.is_file()
             ):
                 self.simulation.tempenc_a_path.unlink()
 
@@ -831,7 +838,7 @@ class MainWin(QMainWindow):
             self.manage_z_order = True
 
     def set_view_background_image(
-        self, view_type: str, img_filename: str, scaled: bool = True
+            self, view_type: str, img_filename: str, scaled: bool = True
     ):
         if not config.device_cfg.allow_device_images:
             return
@@ -871,12 +878,12 @@ class MainWin(QMainWindow):
         self.trace_win.ui.plainTextEditOutput.cache_text = not enable
 
     def clear_ui(
-        self,
-        visual_views: bool = True,
-        auditory_views: bool = True,
-        normal_output: bool = True,
-        trace_output: bool = True,
-        stats_output: bool = True,
+            self,
+            visual_views: bool = True,
+            auditory_views: bool = True,
+            normal_output: bool = True,
+            trace_output: bool = True,
+            stats_output: bool = True,
     ):
         if visual_views:
             for view in self.visual_views.values():
@@ -949,8 +956,8 @@ class MainWin(QMainWindow):
         has_rules = (
             True
             if self.simulation
-            and self.simulation.model
-            and self.simulation.model.get_prs_filename() != ""
+               and self.simulation.model
+               and self.simulation.model.get_prs_filename() != ""
             else False
         )
         has_device = (
@@ -958,14 +965,14 @@ class MainWin(QMainWindow):
         )
 
         has_visual_encoder = (
-            self.simulation
-            and (self.simulation.visual_encoder is not None)
-            and (not hasattr(self.simulation.visual_encoder, "is_null_encoder"))
+                self.simulation
+                and (self.simulation.visual_encoder is not None)
+                and (not hasattr(self.simulation.visual_encoder, "is_null_encoder"))
         )
         has_auditory_encoder = (
-            self.simulation
-            and (self.simulation.auditory_encoder is not None)
-            and (not hasattr(self.simulation.auditory_encoder, "is_null_encoder"))
+                self.simulation
+                and (self.simulation.auditory_encoder is not None)
+                and (not hasattr(self.simulation.auditory_encoder, "is_null_encoder"))
         )
 
         self.ui.actionStop.setEnabled(True)
@@ -1005,8 +1012,8 @@ class MainWin(QMainWindow):
         has_rules = (
             True
             if self.simulation
-            and self.simulation.model
-            and self.simulation.model.get_prs_filename() != ""
+               and self.simulation.model
+               and self.simulation.model.get_prs_filename() != ""
             else False
         )
         has_device = (
@@ -1014,14 +1021,14 @@ class MainWin(QMainWindow):
         )
 
         has_visual_encoder = (
-            self.simulation
-            and (self.simulation.visual_encoder is not None)
-            and (not hasattr(self.simulation.visual_encoder, "is_null_encoder"))
+                self.simulation
+                and (self.simulation.visual_encoder is not None)
+                and (not hasattr(self.simulation.visual_encoder, "is_null_encoder"))
         )
         has_auditory_encoder = (
-            self.simulation
-            and (self.simulation.auditory_encoder is not None)
-            and (not hasattr(self.simulation.auditory_encoder, "is_null_encoder"))
+                self.simulation
+                and (self.simulation.auditory_encoder is not None)
+                and (not hasattr(self.simulation.auditory_encoder, "is_null_encoder"))
         )
 
         self.ui.actionStop.setEnabled(False)
@@ -1075,11 +1082,11 @@ class MainWin(QMainWindow):
 
         encoders = []
         if self.simulation.visual_encoder and not isinstance(
-            self.simulation.visual_encoder, NullVisualEncoder
+                self.simulation.visual_encoder, NullVisualEncoder
         ):
             encoders.append("Visual")
         if self.simulation.auditory_encoder and not isinstance(
-            self.simulation.auditory_encoder, NullAuditoryEncoder
+                self.simulation.auditory_encoder, NullAuditoryEncoder
         ):
             encoders.append("Auditory")
         if encoders:
@@ -1303,6 +1310,25 @@ class MainWin(QMainWindow):
         else:
             self.write(f"{e_info} No changes made to application font size.")
 
+    def choose_text_editor(self):
+        if self.text_editor_dialog is not None:
+            self.text_editor_dialog.close()
+            self.text_editor_dialog = None
+        self.text_editor_dialog = TextEditChoiceWin(self.context)
+        self.text_editor_dialog.setup_options()
+        self.text_editor_dialog.setModal(True)
+        self.text_editor_dialog.exec()  # needed to make it modal?!
+
+        if self.text_editor_dialog.ok:
+            config.app_cfg.text_editor = self.text_editor_dialog.ui.plainTextEditPath.toPlainText() if not self.text_editor_dialog.ui.checkBoxUseBuiltin.isChecked() else ''
+            config.save_app_config(quiet=True)
+            self.write(f"{e_info} EPICpy's text editor setting is set to \"{config.app_cfg.text_editor if config.app_cfg.text_editor else 'BUILT-IN'}\".")
+        else:
+            self.write(f"{e_info} No changes made to application EPICpy's text editor setting.")
+
+        editor = 'BUILT-IN' if not config.app_cfg.text_editor.strip() else Path(config.app_cfg.text_editor.strip()).name
+        self.ui.actionText_Editor.setText(f"Text Editor: {editor}")
+
     def toggle_darkmode(self, dark_mode: bool):
         config.app_cfg.dark_mode = dark_mode
 
@@ -1341,9 +1367,9 @@ class MainWin(QMainWindow):
         try:
             self.manage_z_order = False
             for win in chain(
-                [self, self.trace_win, self.stats_win],
-                (self.visual_views.values()),
-                self.auditory_views.values(),
+                    [self, self.trace_win, self.stats_win],
+                    (self.visual_views.values()),
+                    self.auditory_views.values(),
             ):
                 if not win.isVisible():
                     continue
@@ -1359,9 +1385,9 @@ class MainWin(QMainWindow):
         try:
             self.manage_z_order = False
             for win in chain(
-                [self, self.trace_win, self.stats_win],
-                self.visual_views.values(),
-                self.auditory_views.values(),
+                    [self, self.trace_win, self.stats_win],
+                    self.visual_views.values(),
+                    self.auditory_views.values(),
             ):
                 if not win.isVisible():
                     continue
@@ -1495,7 +1521,6 @@ class MainWin(QMainWindow):
             if hasattr(self.simulation.device, "delete_data_file"):
                 self.simulation.device.delete_data_file()
 
-
     # ============================================
     # Dark Mode Theme Switching
     # ============================================
@@ -1545,9 +1570,9 @@ class MainWin(QMainWindow):
 
         # save window states
         for win in chain(
-            [self, self.trace_win, self.stats_win],
-            self.visual_views.values(),
-            self.auditory_views.values(),
+                [self, self.trace_win, self.stats_win],
+                self.visual_views.values(),
+                self.auditory_views.values(),
         ):
             obj_name = win.objectName().replace(" ", "")
 
@@ -1596,9 +1621,9 @@ class MainWin(QMainWindow):
         try:
             # reposition/size windows according to saved values
             for win in chain(
-                [self, self.trace_win, self.stats_win],
-                self.visual_views.values(),
-                self.auditory_views.values(),
+                    [self, self.trace_win, self.stats_win],
+                    self.visual_views.values(),
+                    self.auditory_views.values(),
             ):
                 obj_name = win.objectName().replace(" ", "")
 
@@ -1703,7 +1728,7 @@ class MainWin(QMainWindow):
             gap = 4
             view_width, view_height = 390, 301
             norm_width, norm_height = (view_width + gap) * 3, sh - (
-                (view_height + gap) * 2
+                    (view_height + gap) * 2
             ) - 45
 
         elif sw >= 1280 and sh >= 800:
@@ -1713,8 +1738,8 @@ class MainWin(QMainWindow):
             hide_extra = True
             view_width, view_height = 390, 301
             norm_width, norm_height = (
-                view_width + gap
-            ) * 3, sh - view_height - gap - 45
+                                              view_width + gap
+                                      ) * 3, sh - view_height - gap - 45
 
         else:
             # Auto adjust based on available space,
@@ -1725,8 +1750,8 @@ class MainWin(QMainWindow):
             view_width, view_height = 390, 301  # minimum, can't go any lower
             remaining_width = sw - ((view_width + gap) * 3)
             norm_width, norm_height = (
-                view_width + gap
-            ) * 3, sh - view_height - gap - 45
+                                              view_width + gap
+                                      ) * 3, sh - view_height - gap - 45
             stat_width, stat_height = 710, view_height
             hide_extra = remaining_width < stat_width
             hide_auditory = True
@@ -1743,17 +1768,17 @@ class MainWin(QMainWindow):
             if view_frame_geometry is None:
                 view_frame_geometry = view.frameGeometry()
                 view_title_height = (
-                    view.frameGeometry().height() - view.normalGeometry().height()
+                        view.frameGeometry().height() - view.normalGeometry().height()
                 )
             if view_frame_size is None:
                 view_frame_size = view.frameSize()
 
         vertical_adjust_visual_row = (
-            view_frame_size.height() + gap + view_title_height * 2
+                view_frame_size.height() + gap + view_title_height * 2
         )
         vertical_adjust_auditory_row = view_frame_size.height() + gap
         vertical_adjust_both_rows = (
-            vertical_adjust_visual_row + vertical_adjust_auditory_row
+                vertical_adjust_visual_row + vertical_adjust_auditory_row
         )
 
         for i, view in enumerate(self.auditory_views.values()):
@@ -1825,7 +1850,7 @@ class MainWin(QMainWindow):
             searchAction = contextMenu.addAction("Search")
             selectAllAction = contextMenu.addAction("Select All")
             if self.ui.plainTextEditOutput.copyAvailable and len(
-                self.ui.plainTextEditOutput.toPlainText()
+                    self.ui.plainTextEditOutput.toPlainText()
             ):
                 copyAction = contextMenu.addAction("Copy")
             else:
@@ -1944,8 +1969,8 @@ class MainWin(QMainWindow):
     def launchEditor(self, which_file: str = "NormalOut"):
         if which_file == "NormalOut":
             file_id = (
-                datetime.datetime.now().ctime().replace(" ", "").replace(":", "")
-                + str(time.time()).split(".")[-1]
+                    datetime.datetime.now().ctime().replace(" ", "").replace(":", "")
+                    + str(time.time()).split(".")[-1]
             )
             file_path = Path(
                 self.tmp_folder.name, f"TMP_EPICPY_NORMALOUT_{file_id}.txt"
@@ -1961,7 +1986,7 @@ class MainWin(QMainWindow):
                     file_path = Path(
                         self.simulation.rule_files[
                             self.simulation.current_rule_index - 1
-                        ]
+                            ]
                     )
             else:
                 file_path = None

@@ -43,6 +43,7 @@ class AppConfig:
     auto_load_last_device: bool = (
         False  # only True when changing epiclib_version from UI
     )
+    text_editor: str = "BUILT-IN"
 
 
 @dataclass
