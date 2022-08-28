@@ -65,9 +65,9 @@ class TextEditChoiceWin(QDialog):
 
     def setup_options(self):
         te_path = config.app_cfg.text_editor.strip()
-        if te_path.lower() == 'built-in':
-            te_path = ''
-        print('>>>', te_path)
+        if te_path.lower() == "built-in":
+            te_path = ""
+        print(">>>", te_path)
         using_builtin = not te_path
         self.ui.checkBoxUseBuiltin.setChecked(using_builtin)
         self.ui.plainTextEditPath.setPlainText(te_path)
@@ -84,7 +84,7 @@ class TextEditChoiceWin(QDialog):
         te_path = self.ui.plainTextEditPath.toPlainText().strip()
 
         if self.ui.checkBoxUseBuiltin.isChecked():
-            config.app_cfg.text_editor = ''
+            config.app_cfg.text_editor = ""
             config.save_app_config(True)
             self.ok = True
             self.hide()
@@ -95,11 +95,13 @@ class TextEditChoiceWin(QDialog):
             self.hide()
         else:
             self.ok = False
-            ret = QMessageBox.critical(self,
-                                       'Invalid Text Editor Path',
-                                       f'"{te_path}" is not a valid text editor executable!\nEither choose '
-                                       f'a new text editor, or choose the BUILT-IN text editor option.',
-                                       QMessageBox.Ok)
+            ret = QMessageBox.critical(
+                self,
+                "Invalid Text Editor Path",
+                f'"{te_path}" is not a valid text editor executable!\nEither choose '
+                f"a new text editor, or choose the BUILT-IN text editor option.",
+                QMessageBox.Ok,
+            )
 
     def clicked_checkbox(self, event):
         self.ui.label.setEnabled(not event)
@@ -108,11 +110,14 @@ class TextEditChoiceWin(QDialog):
 
     def clicked_dot_button(self, event):
         start = self.ui.plainTextEditPath.toPlainText().strip()
-        start = start if Path(start).is_file() or Path(start).is_dir() else str(Path('~').expanduser().resolve())
-        file_name, o = QFileDialog.getOpenFileName(self,
-                                                   caption='Choose A Text Editor Executable',
-                                                   dir=start
-                                                   )
+        start = (
+            start
+            if Path(start).is_file() or Path(start).is_dir()
+            else str(Path("~").expanduser().resolve())
+        )
+        file_name, o = QFileDialog.getOpenFileName(
+            self, caption="Choose A Text Editor Executable", dir=start
+        )
         if isinstance(file_name, (list, tuple)):
             file_name = file_name[0]
 
