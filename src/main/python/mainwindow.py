@@ -787,6 +787,11 @@ class MainWin(QMainWindow):
             event.ignore()
             return
 
+        try:
+            self.editor_window.close()
+        except:
+            ...
+
         self.manage_z_order = False
         self.closing = True
 

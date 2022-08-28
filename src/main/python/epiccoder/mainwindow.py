@@ -66,6 +66,7 @@ class MainEditorWindow(QMainWindow):
         super(QMainWindow, self).__init__()
 
         self.context = context
+        self.force_close: bool = False
 
         # add before init
         self.side_bar_clr = "#282c34"
@@ -635,21 +636,21 @@ class MainEditorWindow(QMainWindow):
         self.settings.setValue("main_window_height", self.size().height())
 
     def closeEvent(self, event: QCloseEvent):
-        for i in range(self.tab_view.count()):
-            if str(self.tab_view.tabText(i)).startswith("*"):
+        if not self.force_close:
+            for i in range(self.tab_view.count()):
+                if str(self.tab_view.tabText(i)).startswith("*"):
 
-                ret = QMessageBox.question(
-                    self,
-                    "Changed File Alert!",
-                    "Really Close Application and Ignore Changes?",
-                    buttons=QMessageBox.Yes | QMessageBox.No,
-                )
-                if ret == QMessageBox.Yes:
-                    event.accept()
-                else:
-                    event.ignore()
-                return
+                    ret = QMessageBox.question(
+                        self,
+                        "Changed File Alert!",
+                        "Really Close Application and Ignore Changes?",
+                        buttons=QMessageBox.Yes | QMessageBox.No,
+                    )
+                    if ret == QMessageBox.Yes:
+                        event.accept()
+                    else:
+                        event.ignore()
+                    return
 
-                # self.tab_view.setTabText(i, f"*{self.tab_view.tabText(i).strip('*')}")
-
+                    # self.tab_view.setTabText(i, f"*{self.tab_view.tabText(i).strip('*')}")
         event.accept()
