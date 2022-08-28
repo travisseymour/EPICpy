@@ -21,6 +21,7 @@ from PySide2 import QtWidgets
 import fitness
 from dialogs.aboutwindow import AboutWin
 from dialogs.fontsizewindow import FontSizeDialog
+from dialogs.texteditchoicewindow import TextEditChoiceWin
 from uifiles.mainui import Ui_MainWindow
 from dialogs.sndtextsettingswindow import SoundTextSettingsWin
 from statswindow import StatsWin
@@ -224,6 +225,7 @@ class MainWin(QMainWindow):
         self.epiclib_settings_dialog = None
         self.sound_text_settings_dialog = None
         self.font_size_dialog = None
+        self.text_editor_dialog = None
 
         # setup state change watcher so all min or max together
         # note: this has to go before self.setup_view()
@@ -411,6 +413,13 @@ class MainWin(QMainWindow):
         self.ui.actionDark_Mode_Toggle.triggered.connect(self.toggle_darkmode)
         self.ui.actionDark_Mode_Toggle.setChecked(config.app_cfg.dark_mode)
         self.ui.actionDelete_Datafile.triggered.connect(self.delete_datafile)
+
+        self.ui.actionText_Editor.triggered.connect(self.choose_text_editor)
+        te_path = Path(config.app_cfg.text_editor)
+        self.ui.actionText_Editor.setText(
+            f"Text Editor: {te_path.name if te_path.is_file() else 'BUILT-IN'}"
+        )
+
     def window_focus_changed(self, win: QMainWindow):
         if not win or not self.manage_z_order:
             return
@@ -1303,6 +1312,37 @@ class MainWin(QMainWindow):
         else:
             self.write(f"{e_info} No changes made to application font size.")
 
+    def choose_text_editor(self):
+        if self.text_editor_dialog is not None:
+            self.text_editor_dialog.close()
+            self.text_editor_dialog = None
+        self.text_editor_dialog = TextEditChoiceWin(self.context)
+        self.text_editor_dialog.setup_options()
+        self.text_editor_dialog.setModal(True)
+        self.text_editor_dialog.exec()  # needed to make it modal?!
+
+        if self.text_editor_dialog.ok:
+            config.app_cfg.text_editor = (
+                self.text_editor_dialog.ui.plainTextEditPath.toPlainText()
+                if not self.text_editor_dialog.ui.checkBoxUseBuiltin.isChecked()
+                else ""
+            )
+            config.save_app_config(quiet=True)
+            self.write(
+                f"{e_info} EPICpy's text editor setting is set to \"{config.app_cfg.text_editor if config.app_cfg.text_editor else 'BUILT-IN'}\"."
+            )
+        else:
+            self.write(
+                f"{e_info} No changes made to application EPICpy's text editor setting."
+            )
+
+        editor = (
+            "BUILT-IN"
+            if not config.app_cfg.text_editor.strip()
+            else Path(config.app_cfg.text_editor.strip()).name
+        )
+        self.ui.actionText_Editor.setText(f"Text Editor: {editor}")
+
     def toggle_darkmode(self, dark_mode: bool):
         config.app_cfg.dark_mode = dark_mode
 
@@ -1494,7 +1534,6 @@ class MainWin(QMainWindow):
         if self.simulation.device and self.simulation.model:
             if hasattr(self.simulation.device, "delete_data_file"):
                 self.simulation.device.delete_data_file()
-
 
     # ============================================
     # Dark Mode Theme Switching
@@ -1948,7 +1987,7 @@ class MainWin(QMainWindow):
                 + str(time.time()).split(".")[-1]
             )
             file_path = Path(
-                self.tmp_folder.name, f"TMP_EPICPY_NORMALOUT_{file_id}.txt"
+                self.tmp_folder.name, f"TEMP_EPICPY_NORMALOUT_{file_id}.txt"
             )
             file_path.write_text(self.ui.plainTextEditOutput.toPlainText())
         elif which_file == "RuleFile":
@@ -2003,15 +2042,25 @@ class MainWin(QMainWindow):
             file_path = None
 
         if file_path is not None:
+            editor_path = config.app_cfg.text_editor.strip()
             try:
-                webbrowser.open(file_path.as_uri())
-            except (FileNotFoundError, IOError) as e:
-                subprocess.call(["open", str(file_path)])
-                p = file_path if isinstance(file_path, Path) else Path(file_path)
+                if not editor_path:
+                    # user wants to use the BUILT-IN editor
+                    _ = QMessageBox.critical(
+                        self,
+                        "OOPS, Nothing Here Yet!",
+                        "EPICpy's BUILT-IN Editor feature has not yet be programmed.\n"
+                        "Check with Travis about this.",
+                    )
+                else:
+                    # user has specified an external editor
+                    subprocess.run([editor_path, str(file_path.resolve())])
+            except Exception as e:
                 self.write(
                     emoji_box(
                         f"ERROR: Unable to open {which_file} file\n"
-                        f"{p.name} in external text editor:\n"
+                        f"{file_path.name} in {'internal' if not editor_path else 'external'} text editor\n"
+                        f"({'BUILT-IN [EPICcoder]' if not editor_path else str(editor_path)}):\n"
                         f"{e}",
                         line="thick",
                     )
