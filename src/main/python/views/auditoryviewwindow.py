@@ -15,7 +15,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 from copy import deepcopy
 
-from PySide2.QtGui import (
+from PyQt5.QtGui import (
     QPainter,
     QPainterPath,
     QBrush,
@@ -27,8 +27,8 @@ from PySide2.QtGui import (
     QImage,
     QPixmap,
 )
-from PySide2.QtCore import Qt, QRect, QSize
-from PySide2.QtWidgets import QMainWindow
+from PyQt5.QtCore import Qt, QRect, QSize
+from PyQt5.QtWidgets import QMainWindow
 from localmunch import Munch, DefaultMunch
 from loguru import logger as log
 from apputils import LIBNAME, Point, Size, Rect

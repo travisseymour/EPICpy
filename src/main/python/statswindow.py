@@ -16,11 +16,11 @@ If not, see <https://www.gnu.org/licenses/>.
 from datetime import datetime
 from functools import partial
 
-from PySide2.QtCore import QTimer
+from PyQt5.QtCore import QTimer
 
 from uifiles.statsui import Ui_StatsWindow
-from PySide2.QtGui import QCloseEvent, QFont
-from PySide2.QtWidgets import QMainWindow
+from PyQt5.QtGui import QCloseEvent, QFont
+from PyQt5.QtWidgets import QMainWindow
 import config
 
 

@@ -14,7 +14,7 @@ If not, see <https://www.gnu.org/licenses/>.
 """
 
 from uifiles.tracesettingsui import Ui_DialogTraceSettings
-from PySide2.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog
 import config
 
 

@@ -21,11 +21,11 @@ import platform
 
 from loguru import logger as log
 
-from PySide2.QtGui import QFontDatabase
-from PySide2.QtWidgets import QMessageBox
-from PySide2.QtCore import qInstallMessageHandler
+from PyQt5.QtGui import QFontDatabase
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import qInstallMessageHandler
 
-from fbs_runtime.application_context.PySide2 import ApplicationContext
+from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
 import apputils
 import config
@@ -34,7 +34,7 @@ from cppyysetup import setup_cppyy
 
 os.environ["OUTDATED_IGNORE"] = "1"
 
-# fix problem on mac starting with Big Sur (needed until I switch to pyside6)
+# TODO: On MacOS BigSur, need to fix problem, but not sure if needed now that we switched to PyQt5
 os.environ["QT_MAC_WANTS_LAYER"] = "1"
 
 apputils.CONTEXT = None

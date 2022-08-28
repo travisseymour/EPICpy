@@ -15,7 +15,7 @@ If not, see <https://www.gnu.org/licenses/>.
 from pathlib import Path
 
 from uifiles.texteditorui import Ui_TextEditorChooser
-from PySide2.QtWidgets import QDialog, QMessageBox, QFileDialog
+from PyQt5.QtWidgets import QDialog, QMessageBox, QFileDialog
 import config
 
 

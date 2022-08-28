@@ -13,10 +13,10 @@ You should have received a copy of the GNU General Public License along with EPI
 If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PySide2.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap
 
 from uifiles.aboutui import Ui_aboutDialog
-from PySide2.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog
 import version
 
 

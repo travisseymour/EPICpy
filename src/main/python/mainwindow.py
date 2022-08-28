@@ -16,7 +16,7 @@ import os
 from itertools import chain
 
 import pandas as pd
-from PySide2 import QtWidgets
+from PyQt5 import QtWidgets
 
 import fitness
 from dialogs.aboutwindow import AboutWin
@@ -26,7 +26,7 @@ from uifiles.mainui import Ui_MainWindow
 from dialogs.sndtextsettingswindow import SoundTextSettingsWin
 from statswindow import StatsWin
 from tracewindow import TraceWin
-from PySide2.QtGui import (
+from PyQt5.QtGui import (
     QTextCursor,
     QTextDocumentWriter,
     QTextDocument,
@@ -36,8 +36,8 @@ from PySide2.QtGui import (
     QMouseEvent,
     QFont,
 )
-from PySide2.QtCore import QTimer, QByteArray, QRegExp, Qt, QSettings, QRect, QObject
-from PySide2.QtWidgets import (
+from PyQt5.QtCore import QTimer, QByteArray, QRegExp, Qt, QSettings, QRect, QObject
+from PyQt5.QtWidgets import (
     QMessageBox,
     QFileDialog,
     QMainWindow,

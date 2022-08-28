@@ -1,7 +1,7 @@
 import platform
 from pathlib import Path
 
-from fbs_runtime.application_context.PySide2 import ApplicationContext
+from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
 import config
 import pandas as pd

@@ -7,7 +7,7 @@ from plumbum.colors import cyan, yellow, red, green, bold
 from plumbum import local
 
 """
-This converts .ui files to .py files for Pyside2, but to keep GIT history accurate, 
+This converts .ui files to .py files for PyQt5, but to keep GIT history accurate, 
 I only want to process ui files that actually changed.
 """
 
@@ -27,8 +27,8 @@ for ui in ui_files:
         found_anything = True
         print(f"Converting {ui.name} to {py.name}" | cyan)
         try:
-            # pyside2-uic "$f" -o "${f%.ui}.py"
-            local["pyside2-uic"]([str(ui.resolve()), "-o", str(py.resolve())])
+            # PyQt5-uic "$f" -o "${f%.ui}.py"
+            local["PyQt5-uic"]([str(ui.resolve()), "-o", str(py.resolve())])
             print(f"\tSuccess!" | green)
         except Exception as e:
             print(f"\tERROR: {e}" | red & bold)

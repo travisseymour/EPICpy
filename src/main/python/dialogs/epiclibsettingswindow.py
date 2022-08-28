@@ -16,7 +16,7 @@ If not, see <https://www.gnu.org/licenses/>.
 import pandas as pd
 
 from uifiles.epiclibsettingsui import Ui_DialogEPICLibSettings
-from PySide2.QtWidgets import QDialog, QMessageBox
+from PyQt5.QtWidgets import QDialog, QMessageBox
 from functools import partial
 import config
 

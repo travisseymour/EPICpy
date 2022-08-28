@@ -14,7 +14,7 @@ If not, see <https://www.gnu.org/licenses/>.
 """
 
 from uifiles.displaycontrolsui import Ui_DialogDisplayControls
-from PySide2.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog
 import config
 
 

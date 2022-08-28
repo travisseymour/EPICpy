@@ -13,8 +13,8 @@ You should have received a copy of the GNU General Public License along with EPI
 If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PySide2.QtCore import Qt
-from PySide2.QtGui import QColor
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
 from localmunch import Munch
 
 """

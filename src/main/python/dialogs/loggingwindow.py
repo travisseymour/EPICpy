@@ -15,7 +15,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 import config
 from uifiles.loggingui import Ui_DialogLoggingSettings
-from PySide2.QtWidgets import QDialog, QFileDialog
+from PyQt5.QtWidgets import QDialog, QFileDialog
 from pathlib import Path
 from functools import partial
 

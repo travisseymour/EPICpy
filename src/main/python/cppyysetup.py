@@ -3,7 +3,7 @@ from collections import namedtuple
 from pathlib import Path
 from typing import Optional
 
-from fbs_runtime.application_context.PySide2 import ApplicationContext
+from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from loguru import logger as log
 
 from epiclibfiles import get_epiclib_files

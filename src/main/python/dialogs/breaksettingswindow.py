@@ -15,7 +15,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 import config
 from uifiles.breaksettingsui import Ui_DialogRuleBreak
-from PySide2.QtWidgets import QDialog, QCheckBox, QListWidgetItem
+from PyQt5.QtWidgets import QDialog, QCheckBox, QListWidgetItem
 
 
 class BreakSettingsWin(QDialog):

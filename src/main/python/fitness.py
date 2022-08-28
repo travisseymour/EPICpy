@@ -10,7 +10,7 @@ import webbrowser
 
 import pandas as pd
 import requests
-from PySide2.QtWidgets import QAction, QMainWindow
+from PyQt5.QtWidgets import QAction, QMainWindow
 
 import config
 from cachedplaintextedit import CachedPlainTextEdit

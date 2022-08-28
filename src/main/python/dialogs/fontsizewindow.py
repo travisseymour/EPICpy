@@ -13,11 +13,11 @@ You should have received a copy of the GNU General Public License along with EPI
 If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PySide2.QtCore import QSize
-from PySide2.QtGui import QShowEvent, QFont
+from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QShowEvent, QFont
 
 from uifiles.fontsizeui import Ui_DialogFontSize
-from PySide2.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog
 import config
 
 

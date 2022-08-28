@@ -16,7 +16,7 @@ If not, see <https://www.gnu.org/licenses/>.
 from itertools import chain
 from typing import Optional
 
-from PySide2.QtGui import (
+from PyQt5.QtGui import (
     QPainter,
     QPainterPath,
     QBrush,
@@ -29,8 +29,8 @@ from PySide2.QtGui import (
     QPixmap,
     QPolygonF,
 )
-from PySide2.QtCore import Qt, QPoint, QRect, QRectF, QSize
-from PySide2.QtWidgets import QMainWindow, QGraphicsTextItem
+from PyQt5.QtCore import Qt, QPoint, QRect, QRectF, QSize
+from PyQt5.QtWidgets import QMainWindow, QGraphicsTextItem
 from localmunch import Munch, DefaultMunch
 from loguru import logger as log
 from apputils import LIBNAME, Point, Size, Rect

@@ -16,8 +16,8 @@ from functools import partial
 
 import config
 from uifiles.searchui import Ui_DialogSearch
-from PySide2.QtWidgets import QDialog
-from PySide2.QtCore import Qt
+from PyQt5.QtWidgets import QDialog
+from PyQt5.QtCore import Qt
 
 
 class SearchWin(QDialog):

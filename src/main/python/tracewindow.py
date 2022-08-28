@@ -14,8 +14,8 @@ If not, see <https://www.gnu.org/licenses/>.
 """
 
 from uifiles.traceui import Ui_TraceWindow
-from PySide2.QtGui import QCloseEvent, QFont
-from PySide2.QtWidgets import QMainWindow
+from PyQt5.QtGui import QCloseEvent, QFont
+from PyQt5.QtWidgets import QMainWindow
 import datetime
 import config
 

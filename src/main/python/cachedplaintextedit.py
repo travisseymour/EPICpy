@@ -15,8 +15,8 @@ If not, see <https://www.gnu.org/licenses/>.
 
 from functools import partial
 
-from PySide2.QtCore import QTimer
-from PySide2.QtWidgets import QPlainTextEdit
+from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QPlainTextEdit
 
 from emoji import emoji_box, e_hourglass
 

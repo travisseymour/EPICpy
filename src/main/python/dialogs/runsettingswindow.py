@@ -14,7 +14,7 @@ If not, see <https://www.gnu.org/licenses/>.
 """
 
 from uifiles.runsettingsui import Ui_DialogRunSettings
-from PySide2.QtWidgets import QDialog, QButtonGroup, QMessageBox
+from PyQt5.QtWidgets import QDialog, QButtonGroup, QMessageBox
 import config
 from typing import Callable
 
