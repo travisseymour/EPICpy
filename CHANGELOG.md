@@ -1,17 +1,19 @@
 
 # EPICpy Changelog
-#### (lasted updated Sun Aug 28 15:30:36 2022)
+#### (lasted updated Sun Aug 28 15:40:35 2022)
 
 ---
 
-#### 1. NEW FEATURE: Built-in editor is available (based on the EPICcoder project)
+#### 1. FIXED: editor won't close automatically if any open file has changed.
 
-#### 2. CHANGE: EPICpy license changed to GPLv3 due to use of PyQT5.
+#### 2. NEW FEATURE: Built-in editor is available (based on the EPICcoder project)
 
-#### 3. CHANGE: EPICpy GUI qt-bindings switched from Pyside2 to PyQt5
+#### 3. CHANGE: EPICpy license changed to GPLv3 due to use of PyQT5.
+
+#### 4. CHANGE: EPICpy GUI qt-bindings switched from Pyside2 to PyQt5
 
 
-## VERSION: 2022.10.1
+## VERSION: 2022.8.1
 
 ---
 1. Fixed typo in EVERY instance of short license statement.
