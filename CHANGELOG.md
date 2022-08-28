@@ -1,8 +1,12 @@
 
 # EPICpy Changelog
-#### (lasted updated Sun Aug 28 11:24:22 2022)
+#### (lasted updated Sun Aug 28 13:54:01 2022)
 
 ---
+
+#### 1. CHANGE: EPICpy license changed to GPLv3 due to use of PyQT5.
+
+#### 2. CHANGE: EPICpy GUI qt-bindings switched from Pyside2 to PyQt5
 
 
 ## VERSION: 2022.10.1

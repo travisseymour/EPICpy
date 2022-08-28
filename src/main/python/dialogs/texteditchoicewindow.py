@@ -72,7 +72,6 @@ class TextEditChoiceWin(QDialog):
         te_path = config.app_cfg.text_editor.strip()
         if te_path.lower() == "built-in":
             te_path = ""
-        print(">>>", te_path)
         using_builtin = not te_path
         self.ui.checkBoxUseBuiltin.setChecked(using_builtin)
         self.ui.plainTextEditPath.setPlainText(te_path)

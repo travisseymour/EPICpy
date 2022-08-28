@@ -28,7 +28,7 @@ from loguru import logger as log
 
 from PyQt5.QtGui import QFontDatabase
 from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtCore import qInstallMessageHandler
+from PyQt5.QtCore import qInstallMessageHandler, QCoreApplication
 
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
@@ -65,15 +65,16 @@ class AppContext(ApplicationContext):
         config.get_device_config(None)
 
         fontDatabase = QFontDatabase()
-        for font_file in (
-            "Consolas_Regular.ttf",
-            "Consolas_Bold.ttf",
-            "Consolas_Italic.ttf",
-            "Consolas_Bold_Italic.ttf",
-        ):
-            fontDatabase.addApplicationFont(
-                self.get_resource("fonts", "Consolas", font_file)
-            )
+
+        fontDatabase.addApplicationFont(self.get_resource("fonts", "Consolas", "Consolas_Regular.ttf"))
+        fontDatabase.addApplicationFont(self.get_resource("fonts", "Consolas", "Consolas_Bold.ttf"))
+        fontDatabase.addApplicationFont(self.get_resource("fonts", "Consolas", "Consolas_Italic.ttf"))
+        fontDatabase.addApplicationFont(self.get_resource("fonts", "Consolas", "Consolas_Bold_Italic.ttf"))
+
+        fontDatabase.addApplicationFont(self.get_resource("fonts", "FiraCode", "FiraCode-Regular.ttf"))
+        fontDatabase.addApplicationFont(self.get_resource("fonts", "FiraCode", "FiraCode-Bold.ttf"))
+        fontDatabase.addApplicationFont(self.get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Regular.ttf"))
+        fontDatabase.addApplicationFont(self.get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Bold.ttf"))
 
     def run(self):
         OS = platform.system()
@@ -139,6 +140,15 @@ if __name__ == "__main__":
 
         # Disable pyqt warnings when not developing
         qInstallMessageHandler(handler)
+
+    # -------------------------------------------------------------------------
+    # init QSettings once so we can use default constructor throughout project
+    # -------------------------------------------------------------------------
+    # TODO: At the moment, this is underutilized and instead we're managing all settings manually in the config module
+    #       However, it *is* being used, e.g., in the built-in editor.
+    QCoreApplication.setOrganizationName("TravisSeymour")
+    QCoreApplication.setOrganizationDomain("travisseymour.com")
+    QCoreApplication.setApplicationName("EPICpy")
 
     # ==============================
     # =====      Run App       =====

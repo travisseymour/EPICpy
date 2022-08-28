@@ -64,6 +64,7 @@ from views.visualviewwindow import VisualViewWin
 from views.auditoryviewwindow import AuditoryViewWin
 from dialogs.epiclibsettingswindow import EPICLibSettingsWin
 from dialogs.searchwindow import SearchWin
+from epiccoder.mainwindow import MainEditorWindow
 from encoderpassthru import NullVisualEncoder, NullAuditoryEncoder
 import datetime
 import time
@@ -231,6 +232,7 @@ class MainWin(QMainWindow):
         self.sound_text_settings_dialog = None
         self.font_size_dialog = None
         self.text_editor_dialog = None
+        self.editor_window: Optional[MainEditorWindow] = None
 
         # setup state change watcher so all min or max together
         # note: this has to go before self.setup_view()
@@ -1378,6 +1380,15 @@ class MainWin(QMainWindow):
                 self.reveal_windows("visual")
                 self.reveal_windows("auditory")
                 self.reveal_windows("stats")
+
+                if self.editor_window is not None:
+                    try:
+                        self.editor_window.setHidden(False)
+                        self.editor_window.raise_()
+                        self.editor_window.activateWindow()
+                    except:
+                        ...
+
             self.raise_()
         finally:
             self.manage_z_order = True
@@ -1987,10 +1998,7 @@ class MainWin(QMainWindow):
 
     def launchEditor(self, which_file: str = "NormalOut"):
         if which_file == "NormalOut":
-            file_id = (
-                datetime.datetime.now().ctime().replace(" ", "").replace(":", "")
-                + str(time.time()).split(".")[-1]
-            )
+            file_id = datetime.datetime.now().strftime("%m%d%y_%H%M%S")
             file_path = Path(
                 self.tmp_folder.name, f"TEMP_EPICPY_NORMALOUT_{file_id}.txt"
             )
@@ -2050,13 +2058,32 @@ class MainWin(QMainWindow):
             editor_path = config.app_cfg.text_editor.strip()
             try:
                 if not editor_path:
-                    # user wants to use the BUILT-IN editor
-                    _ = QMessageBox.critical(
-                        self,
-                        "OOPS, Nothing Here Yet!",
-                        "EPICpy's BUILT-IN Editor feature has not yet be programmed.\n"
-                        "Check with Travis about this.",
-                    )
+                    # If there is no current editor, create one
+                    if (self.editor_window is None) or (not hasattr(self.editor_window, 'isVisible')) or (not self.editor_window.isVisible()):
+                        try:
+                            self.editor_window.close()
+                        except AttributeError:
+                            ...
+                        self.editor_window = None
+                        self.editor_window = MainEditorWindow(context=self.context)
+                        # FIXME: vvv this should open to current device folder if possible
+
+                        if self.simulation and self.simulation.device and Path(config.device_cfg.device_file).is_file():
+                            self.editor_window.set_folder(Path(config.device_cfg.device_file).parent)
+                        else:
+                            # if all else fails, set wd to file parent
+                            self.editor_window.set_folder(file_path if file_path.is_dir() else file_path.parent)
+
+                    # In case editor was open prior to opening a device, make sure editor path is set to device path
+                    if self.simulation and self.simulation.device and Path(self.editor_window.model.rootPath()) != Path(config.device_cfg.device_file).parent:
+                        self.editor_window.set_folder(Path(config.device_cfg.device_file).parent)
+
+                    # Time to actually open the file
+                    if file_path.is_file():
+                        self.editor_window.open_file(file_path)
+                    self.editor_window.show()
+                    self.editor_window.activateWindow()
+
                 else:
                     # user has specified an external editor
                     subprocess.run([editor_path, str(file_path.resolve())])
