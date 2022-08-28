@@ -179,7 +179,7 @@ do_release.py
 do_pseudo_release.py
 freeze_and_run.sh
 freeze_and_run_macos.sh
-update_changelog.sh
+update_version.py
 
 # fbs related stuff that needs to stay on my machine
 *.gpg
