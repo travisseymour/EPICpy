@@ -4,6 +4,8 @@ Travis L. Seymour, PhD
 
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.04533/status.svg)](https://doi.org/10.21105/joss.04533)
 
+_Seymour, T. L., (2022). **EPICpy: A Python Interface for EPIC Computational Cognitive Modeling**. Journal of Open Source Software, 7(76), 4533, https://doi.org/10.21105/joss.04533_
+
 ---
 
 **Background**
