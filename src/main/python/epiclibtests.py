@@ -1,5 +1,6 @@
 import re
 import sys
+from collections import OrderedDict
 from functools import partial
 from typing import Optional
 
@@ -10,6 +11,8 @@ from pprint import pprint
 from apputils import LIBNAME
 import random
 from io import StringIO  ## for Python 3
+
+
 
 # ------------------------------------------------------
 # Load Various Include files and objects we will need
@@ -38,6 +41,7 @@ epiclib_include("Utility Classes/Output_tee.h")
 epiclib_include("Utility Classes/Geometry.h")
 epiclib_include("Utility Classes/Statistics.h")
 epiclib_include("Utility Classes/Point.h")
+epiclib_include("Utility Classes/Random_utilities.h")
 epiclib_include("Standard_Symbols.h")
 epiclib_include("PPS/PPS Interface classes/PPS_globals.h")
 epiclib_include("Framework classes/Device_event_types.h")
@@ -48,8 +52,22 @@ from cppyy.gbl import Model
 from cppyy.gbl import Coordinator
 from cppyy.gbl import Normal_out
 from cppyy.gbl import Geometry_Utilities as GU
+from cppyy.gbl import Mean_accumulator
+from cppyy.gbl import set_random_number_generator_seed
 
+# set seed so results are reproducible
+random.seed(1138)
+set_random_number_generator_seed(1138)
 
+MARKERS = {
+    'long': 'random.randint(0, 100)',
+    'double': 'random.uniform(0.0, 100.0)',
+    'GU.Point': 'random_point()',
+    'GU.Line_segment': 'random_line_segment()',
+    'GU.Polar_vector': 'random_polar_vector()',
+    'GU.Size': 'random_size()',
+    'GU.Cartesian_vector': 'random_cartesian_vector()'
+}
 
 def random_point(maximum: float = 100.00) -> GU.Point:
     return GU.Point(
@@ -70,7 +88,7 @@ def random_line_segment(maximum: float = 100.00) -> GU.Line_segment:
     p2 = GU.Point(p1.x + random.uniform(0.0, maximum), p1.y + random.uniform(0.0, maximum))
     return GU.Line_segment(p1, p2)
 
-def random_polar_vector(kind: str)->GU.Polar_vector:
+def random_polar_vector(kind: str='double,double')->GU.Polar_vector:
     if kind == 'double,double':
         return GU.Polar_vector(random.uniform(0.0,100.00), random.uniform(0.0,100.00))
     elif kind == 'point,point':
@@ -80,7 +98,7 @@ def random_polar_vector(kind: str)->GU.Polar_vector:
     else:
         raise NotImplementedError(f'no random pv for {kind=}')
 
-def random_cartesian_vector(kind: str)->GU.Cartesian_vector:
+def random_cartesian_vector(kind: str='double,double')->GU.Cartesian_vector:
     if kind == 'double,double':
         return GU.Cartesian_vector(random.uniform(0.0, 100.0), random.uniform(0.0, 100.0))
     elif kind == 'point,point':
@@ -90,151 +108,6 @@ def random_cartesian_vector(kind: str)->GU.Cartesian_vector:
     else:
         raise NotImplementedError(f'no random cv for {kind=}')
 
-def test_geometry():
-    random.seed(1138)
-    data = list()
-
-
-
-    '''
-    staticmethods
-    '''
-    data.append(
-        ['to_radians()'] +
-        [GU.to_radians(theta_d) for theta_d in [random.uniform(0.0, 100.00) for _ in range(10)]]
-    )
-    data.append(
-        ['to_degrees()'] +
-        [GU.to_radians(theta_d) for theta_d in [random.uniform(0.0, 100.00) for _ in range(10)]]
-    )
-    data.append(
-        ['degrees_subtended()'] +
-        [GU.degrees_subtended(size_measure, distance_measure) for size_measure, distance_measure in
-         [(random.uniform(0.0, 100.00), random.uniform(0.0, 100.00)) for _ in range(10)]]
-    )
-    data.append(
-        ['units_per_degree_subtended()'] +
-        [GU.units_per_degree_subtended(size_measure, distance_measure) for size_measure, distance_measure in
-         [(random.uniform(0.0, 100.00), random.uniform(0.0, 100.00)) for _ in range(10)]]
-    )
-    data.append(
-        ['cartesian_distance()'] +
-        [GU.cartesian_distance(p1, p2) for p1, p2 in [(random_point(), random_point()) for _ in range(10)]]
-    )
-
-    data.append(
-        ['is_point_inside_rectangle()'] +
-        [GU.is_point_inside_rectangle(random_point(), random_point(), random_size()) for _ in
-         [random.random() for _ in range(10)]]
-    )
-
-    data.append(
-        ['clip_line_to_rectangle()'] +
-        [str(GU.clip_line_to_rectangle(random_line_segment(), random_point(), random_size())) for _ in
-         [random.random() for _ in range(10)]]
-    )
-
-    # SKIPPING: compute_center_intersecting_line
-
-    data.append(
-        ['closest_distance()'] +
-        [GU.closest_distance(random_point(), random_point(), random_size()) for _ in
-         [random.random() for _ in range(10)]]
-    )
-
-
-    '''
-    testing equalities
-    '''
-
-    data.append(
-        ['Point Equalities a a'] +
-        [(a == a, a < a, a > a, a != a, a <= a, a >= a) for a in [random_point(10) for _ in range(10)]]
-    )
-
-    data.append(
-        ['Point Equalities a b'] +
-        [(a == b, a < b, a > b, a != b, a <= b, a >= b) for a, b in
-         [(random_point(10), random_point(10)) for _ in range(10)]]
-    )
-
-    data.append(
-        ['Size Equalities a'] +
-        [(a == a, a != a) for a in [random_size(10) for _ in range(10)]]
-
-    )
-
-    data.append(
-        ['Size Equalities a b'] +
-        [(a == b, a != b) for a, b in [(random_size(10), random_size(10)) for _ in range(10)]]
-    )
-
-
-    '''
-    testing class initializers
-    '''
-
-    data.append(
-        ['Cartesian_vector(dbl,dbl)'] +
-        [(cv.delta_x, cv.delta_y) for cv in [random_cartesian_vector('double,double') for _ in range(10)]]
-    )
-
-    data.append(
-        ['Cartesian_vector(point,point)'] +
-        [(cv.delta_x, cv.delta_y) for cv in [random_cartesian_vector('point,point') for _ in range(10)]]
-    )
-
-    data.append(
-        ['Cartesian_vector(point,point)'] +
-        [(cv.delta_x, cv.delta_y) for cv in [random_cartesian_vector('Polar_vector') for _ in range(10)]]
-    )
-
-    data.append(
-        ['Polar_vector(dbl,dbl)'] +
-        [(cv.r, cv.theta) for cv in [random_polar_vector('double,double') for _ in range(10)]]
-    )
-
-    data.append(
-        ['Polar_vector(point,point)'] +
-        [(cv.r, cv.theta) for cv in [random_polar_vector('point,point') for _ in range(10)]]
-    )
-
-    data.append(
-        ['Polar_vector(point,point)'] +
-        [(cv.r, cv.theta) for cv in [random_polar_vector('Cartesian_vector') for _ in range(10)]]
-    )
-
-    data.append(
-        ['Size(double,double)'] +
-        [(sz.h, sz.v) for sz in [random_size() for _ in range(10)]]
-    )
-
-    '''
-    testing class methods
-    '''
-
-    data.append(
-        ['Line_segment()'] +
-        [(str(ls.get_p1()), str(ls.get_p2()), str(ls.get_dx()), str(ls.get_dy()), str(ls.get_center()), str(ls.get_size()), str(ls.get_A()), str(ls.get_B()), str(ls.get_C()), ls.is_horizontal(), ls.is_vertical(), ls.is_on_infinite_lint(random_point()), ls.closest_point_on_infinite_line(random_point()), ls.distance_from_infinite_line(random_point())) for ls in [random_line_segment() for _ in range(10)]]
-    )
-
-
-
-
-
-
-
-
-
-
-
-
-    '''
-    print it for now
-    '''
-
-    for datum in data:
-        print(datum)
 
 def get_help_text(obj)->str:
     io = StringIO('')
@@ -265,19 +138,26 @@ def get_weakref_properties(help_text:str)->list:
     properties = [aline.strip() for aline in lines if aline and not aline.startswith(' ')]
     return list(set(properties))
 
-def get_methods(methods_text:str)->list:
+def get_methods(methods_text:str, namespace:str='')->list:
     # split by section so we can remove __assign__(...) and __init__(...) sections
     methods  = [method for method in methods_text.strip().split('\n\n') if not method.startswith('__')]
     # put back together for line by line processing
     methods = '\n\n'.join(methods).splitlines(keepends=False)
     # remove stubs
     methods = [aline.removeprefix('    ') for aline in methods if aline.startswith('    ') and not aline.endswith('.')]
+    # remove return and namespace
+    methods2 = []
+    for method in methods:
+        left_side, right_side = re.split(r'\(', method, maxsplit=1)  # before and after first left-parens
+        left_side = re.sub(r'^\w+ ', '', re.sub(r'\w+::', '', left_side))
+        methods2.append(f"{left_side}({right_side}")
+
     # clean
-    methods = [cleanup(method) for method in methods]
-    return list(set(methods))
+    methods2 = [cleanup(method, namespace) for method in methods2]
+    return list(set(methods2))
 
 
-def get_initializers(methods_text:str)->list:
+def get_initializers(methods_text:str, namespace:str='')->list:
     # split by section so we can only accept __init__(...) section
     methods  = [method for method in methods_text.strip().split('\n\n') if method.startswith('__init__')]
     # put back together for line by line processing
@@ -285,7 +165,7 @@ def get_initializers(methods_text:str)->list:
     # remove stubs
     methods = [aline.removeprefix('    ') for aline in methods if aline.startswith('    ')]
     # clean
-    methods = [cleanup(method) for method in methods]
+    methods = [cleanup(method, namespace, is_init=True) for method in methods]
     return list(set(methods))
 
 def get_properties(methods_text:str)->list:
@@ -298,12 +178,15 @@ def get_properties(methods_text:str)->list:
     properties = [prop.strip() for prop in properties]
     return properties
 
-def cleanup(text:str)->str:
+def cleanup(text:str, namespace:str='', is_init:bool=False)->str:
     # removals
     txt = re.sub(r'(&| *const *| *extern *)', '', text).replace('  ', ' ')
     # replacements
-    txt = txt.replace('Geometry_Utilities', 'GU')
-    txt = re.sub(r"\w+::", '', txt)
+    txt = txt.replace('Geometry_Utilities::', 'GU.')
+    if is_init:
+        txt = re.sub(r"\b(\w+)::\1", rf'{namespace}.\1' if namespace else r'\1', txt) # initializers may be Point::Point()
+    else:
+        txt = re.sub(r"\w+::", '', txt)
     return txt
 
 def get_func_sig(method_text:str)->Optional[tuple]:
@@ -338,13 +221,36 @@ def get_calls(func_sigs:list, type_makers: dict, prefix:str='')->list:
         calls.append(func_sig)
     return calls
 
-def exercise_namespace(namespace)->list:
+def exercise_namespace(namespace, ns_name)->list:
     '''
     Like exercise_object but where you are just exercise staticmethods in a namespace
     '''
-    ...
+    global MARKERS
 
-def exercise_object(obj, init_properties:Optional[list]=None)->list:
+    # get all available info about the object
+    obj_help_text = get_help_text(namespace)
+    methods_text = get_methods_text(obj_help_text)
+    the_methods = get_methods(methods_text, namespace)
+
+    # get python calls we can make with eval/exec to exercise initializers and methods
+    method_calls = get_calls(the_methods, MARKERS, prefix=f'{ns_name}.')
+
+    print('\n\n*** METHOD CALLS ***')
+    pprint(method_calls, width=100)
+
+
+    print('\nEXERCISING OBJECT...')
+    results = []
+
+
+    for func_call in method_calls:
+        res = eval(func_call, globals(), locals())
+        res = str(res)
+        results.append(OrderedDict({'object': ns_name, 'init': 'namespace', 'kind': 'method', func_call: res}))
+
+    return results
+
+def exercise_object(obj, obj_name:str, init_properties:Optional[list]=None, namespace:str='')->list:
     '''
     Given an object, exercise its initializers and methods.
     Note that these are not tests because there is no target.
@@ -358,27 +264,19 @@ def exercise_object(obj, init_properties:Optional[list]=None)->list:
     ['x', 'y']
     '''
 
-    makers = {
-        'long': partial(random.randint,a=0,b=100),
-        'double': 'random.uniform()',
-        'Point': 'random_point()',
-        'Line_segment': 'random_line_segment()',
-        'Polar_vector': 'random_polar_vector()',
-        'Size': 'random_size()',
-        'Cartesian_vector': 'random_cartesian_vector()'
-    }
+    global MARKERS
 
     # get all available info about the object
     obj_help_text = get_help_text(obj)
     methods_text = get_methods_text(obj_help_text)
-    the_inits = get_initializers(methods_text)
-    the_methods = get_methods(methods_text)
+    the_inits = get_initializers(methods_text, namespace)
+    the_methods = get_methods(methods_text, namespace)
     the_properties = get_weakref_properties(obj_help_text)
-    the_properties = [f'obj.{prop}' for prop in the_properties] if the_properties else None
+    the_properties = [f'obj.{prop}' for prop in the_properties]
 
     # get python calls we can make with eval/exec to exercise initializers and methods
-    init_calls = get_calls(the_inits, makers, prefix='') if the_inits else None
-    method_calls = get_calls(the_methods, makers, prefix='obj.') if the_methods else None
+    init_calls = get_calls(the_inits, MARKERS, prefix='')
+    method_calls = get_calls(the_methods, MARKERS, prefix='obj.')
 
     print('*** INIT CALLS ***')
     pprint(init_calls, width=100)
@@ -392,24 +290,51 @@ def exercise_object(obj, init_properties:Optional[list]=None)->list:
 
     for init_call in init_calls:
         # initialize obj
-        exec(init_call)  # get error bc Point doesn't exist
+        obj = eval(init_call)  # get error bc Point doesn't exist
         for prop_call in the_properties:
-            res = eval(prop_call)
-            results.append({'init': init_call, prop_call: res})
+            res = eval(prop_call, globals(), locals())
+            res = str(res)
+            results.append(OrderedDict({'object': obj_name, 'init': init_call, 'kind': 'property',  prop_call: res}))
+        for func_call in method_calls:
+            res = eval(func_call, globals(), locals())
+            res = str(res)
+            results.append(OrderedDict({'object': obj_name, 'init': init_call, 'kind': 'method', func_call: res}))
 
     return results
 
 
 
 def run_tests():
-    p = GU.Point()
-    res = exercise_object(p)
+
+
+    # exec('''p = GU.Point(random.uniform(0.0, 100.0), random.uniform(0.0, 100.0)); print(p.x, p.y)''')
+    # help(GU.Polar_vector)
+    # p = GU.Polar_vector(34.3, 99.6)
+    # print(str(p))
+    # sys.exit()
+
+
+    o = GU.Point()
+    res = exercise_object(o, obj_name='GU.Point', namespace='GU')
     print('RESULTS:')
-    print(res)
+    pprint(res, width=100)
     print('\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n')
-    ls = GU.Line_segment()
-    res = exercise_object(ls)
+
+    o = GU.Line_segment()
+    res = exercise_object(o, obj_name='GU.Line_segment', namespace='GU')
     print('RESULTS:')
-    print(res)
+    pprint(res, width=1000)
+    print('\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n')
+
+    o = GU.Polar_vector()
+    res = exercise_object(o, obj_name='GU.Polar_vector', namespace='GU')
+    print('RESULTS:')
+    pprint(res, width=1000)
+    print('\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n')
+
+    o = GU
+    res = exercise_namespace(o, ns_name='GU')
+    print('RESULTS:')
+    pprint(res, width=1000)
 
     sys.exit()
