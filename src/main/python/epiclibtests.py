@@ -263,7 +263,7 @@ def get_weakref_properties(help_text:str)->list:
     section = sections[0][sections[0].find('__weakref__'):].replace('__weakref__', '')
     lines = section.splitlines(keepends=False)
     properties = [aline.strip() for aline in lines if aline and not aline.startswith(' ')]
-    return properties
+    return list(set(properties))
 
 def get_methods(methods_text:str)->list:
     # split by section so we can remove __assign__(...) and __init__(...) sections
@@ -274,7 +274,7 @@ def get_methods(methods_text:str)->list:
     methods = [aline.removeprefix('    ') for aline in methods if aline.startswith('    ') and not aline.endswith('.')]
     # clean
     methods = [cleanup(method) for method in methods]
-    return methods
+    return list(set(methods))
 
 
 def get_initializers(methods_text:str)->list:
@@ -286,7 +286,7 @@ def get_initializers(methods_text:str)->list:
     methods = [aline.removeprefix('    ') for aline in methods if aline.startswith('    ')]
     # clean
     methods = [cleanup(method) for method in methods]
-    return methods
+    return list(set(methods))
 
 def get_properties(methods_text:str)->list:
     '''AFAIK, these properties only show up in structs (like Point). Otherwise DK uses get_xxx() methods'''
@@ -325,26 +325,26 @@ def get_func_sig(method_text:str)->Optional[tuple]:
         log.exception(e)
         return None
 
-def get_calls(func_sigs:list, type_makers: dict)->list:
+def get_calls(func_sigs:list, type_makers: dict, prefix:str='')->list:
     calls = list()
     for method in func_sigs:
         func, params = get_func_sig(method)
         if not params:
-            func_sig = f"{func}()"
+            func_sig = f"{prefix}{func}()"
         else:
             rparams = [type_makers[param] for param in params]
             rparams = ', '.join(rparams)
-            func_sig = f"{func}({rparams})"
+            func_sig = f"{prefix}{func}({rparams})"
         calls.append(func_sig)
     return calls
 
-def test_namespace(namespace)->list:
+def exercise_namespace(namespace)->list:
     '''
-    Like test_object but where you are just exercise staticmethods in a namespace
+    Like exercise_object but where you are just exercise staticmethods in a namespace
     '''
     ...
 
-def test_object(obj, init_properties:Optional[list]=None)->list:
+def exercise_object(obj, init_properties:Optional[list]=None)->list:
     '''
     Given an object, exercise its initializers and methods.
     Note that these are not tests because there is no target.
@@ -373,13 +373,12 @@ def test_object(obj, init_properties:Optional[list]=None)->list:
     methods_text = get_methods_text(obj_help_text)
     the_inits = get_initializers(methods_text)
     the_methods = get_methods(methods_text)
-    the_properties = get_properties(methods_text)
     the_properties = get_weakref_properties(obj_help_text)
-    the_properties = the_properties if the_properties else None
+    the_properties = [f'obj.{prop}' for prop in the_properties] if the_properties else None
 
     # get python calls we can make with eval/exec to exercise initializers and methods
-    init_calls = get_calls(the_inits, makers) if the_inits else None
-    method_calls = get_calls(the_methods, makers) if the_methods else None
+    init_calls = get_calls(the_inits, makers, prefix='') if the_inits else None
+    method_calls = get_calls(the_methods, makers, prefix='obj.') if the_methods else None
 
     print('*** INIT CALLS ***')
     pprint(init_calls, width=100)
@@ -388,12 +387,29 @@ def test_object(obj, init_properties:Optional[list]=None)->list:
     print('\n\n*** OBJECT PROPERTIES ***')
     pprint(the_properties, width=100)
 
+    print('\nEXERCISING OBJECT...')
+    results = []
+
+    for init_call in init_calls:
+        # initialize obj
+        exec(init_call)  # get error bc Point doesn't exist
+        for prop_call in the_properties:
+            res = eval(prop_call)
+            results.append({'init': init_call, prop_call: res})
+
+    return results
+
+
 
 def run_tests():
     p = GU.Point()
-    test_object(p)
+    res = exercise_object(p)
+    print('RESULTS:')
+    print(res)
     print('\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n')
     ls = GU.Line_segment()
-    test_object(ls)
+    res = exercise_object(ls)
+    print('RESULTS:')
+    print(res)
 
     sys.exit()
