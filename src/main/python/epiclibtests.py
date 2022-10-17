@@ -15,7 +15,6 @@ import random
 from io import StringIO  ## for Python 3
 from epiclibwords import words
 
-
 # ------------------------------------------------------
 # Load Various Include files and objects we will need
 # The location of the library depends on OS, this is
@@ -64,33 +63,50 @@ from cppyy.gbl import Symbol, concatenate_to_Symbol
 random.seed(1138)
 set_random_number_generator_seed(1138)
 
-MARKERS = {
-    'int': 'random.randint(0, 100)',
-    'long': 'random.randint(0, 100)',
-    'double': 'random.uniform(0.0, 100.0)',
-    'GU.Point': 'random_point()',
-    'GU.Line_segment': 'random_line_segment()',
-    'GU.Polar_vector': 'random_polar_vector()',
-    'GU.Size': 'random_size()',
-    'GU.Cartesian_vector': 'random_cartesian_vector()',
-    'str': 'random_string()',
-    'Symbol': 'random_symbol()',
-    'bool': 'int(random.choice((True, False)))'
-}
 
-def random_list(kind)->str:
-    global MARKERS
-    assert kind in MARKERS
-    return f'[{MARKERS[kind]}zzzz{MARKERS[kind]}]'.replace('(', '{').replace(')', '}')
+def get_marker(key: str) -> str:
+    minimum, maximum = 0, 100
+    if key in ('int', 'long'):
+        return f"{random.randint(minimum, maximum):0.3f}"
+    elif key in ('double', 'real'):
+        return f'{random.randint(minimum, maximum):0.3f}'
+    elif key == 'bool':
+        return str(int(random.choice((True, False))))
+    elif key == 'str':
+        return f'"{random_string()}"'
+    elif key == 'GU.Point':
+        return f'GU.Point({random.uniform(minimum, maximum):0.3f}, {random.uniform(minimum, maximum):0.3f})'
+    elif key == 'GU.Line_segment':
+        r1, r2 = random.uniform(minimum, maximum), random.uniform(minimum, maximum)
+        dx = random.uniform(minimum, maximum)
+        return f'GU.Line_segment(GU.Point({r1:0.3f}, {r2:0.3f}), GU.Point({r1 + dx:0.3f}, {r2 + dx:0.3f}))'
+    elif key == 'GU.Polar_vector':
+        return f'GU.Polar_vector({random.uniform(minimum, maximum):0.3f}, {random.uniform(minimum, maximum):0.3f})'
+    elif key == 'GU.Size':
+        return f'GU.Size({random.uniform(minimum, maximum):0.3f},{random.uniform(minimum, maximum):0.3f})'
+    elif key == 'GU.Cartesian_vector':
+        return f'GU.Cartesian_vector({random.uniform(minimum, maximum):0.3f},{random.uniform(minimum, maximum):0.3f})'
+    elif key == 'Symbol':
+        return f'Symbol("{random_string()}")'
 
-def random_symbol(max_words: int=1, add_number:bool=False)->Symbol:
+
+def random_list(kind) -> str:
+    assert kind in ['int', 'long', 'double', 'GU.Point', 'GU.Line_segment', 'GU.Polar_vector', 'GU.Size',
+                    'GU.Cartesian_vector', 'str', 'Symbol', 'bool']
+
+    return f'[{get_marker(kind)}zzzz{get_marker(kind)}]'.replace('(', '{').replace(')', '}').replace(', ', 'zzzz')
+
+
+def random_symbol(max_words: int = 1, add_number: bool = False) -> Symbol:
     if add_number:
         return concatenate_to_Symbol(''.join(random.sample(words, max_words)), random.randint(0, 99))
     else:
         return Symbol(''.join(random.sample(words, max_words)))
 
-def random_string(max_words: int=2)->str:
+
+def random_string(max_words: int = 2) -> str:
     return ''.join(random.sample(words, max_words))
+
 
 def random_point(maximum: float = 100.00) -> GU.Point:
     return GU.Point(
@@ -100,10 +116,7 @@ def random_point(maximum: float = 100.00) -> GU.Point:
 
 
 def random_size(maximum: float = 100.00) -> GU.Point:
-    return GU.Size(
-        random.uniform(0.0, maximum),
-        random.uniform(0.0, maximum)
-    )
+    return GU.Size(random.uniform(0.0, maximum), random.uniform(0.0, maximum))
 
 
 def random_line_segment(maximum: float = 100.00) -> GU.Line_segment:
@@ -111,9 +124,10 @@ def random_line_segment(maximum: float = 100.00) -> GU.Line_segment:
     p2 = GU.Point(p1.x + random.uniform(0.0, maximum), p1.y + random.uniform(0.0, maximum))
     return GU.Line_segment(p1, p2)
 
-def random_polar_vector(kind: str='double,double')->GU.Polar_vector:
+
+def random_polar_vector(kind: str = 'double,double') -> GU.Polar_vector:
     if kind == 'double,double':
-        return GU.Polar_vector(random.uniform(0.0,100.00), random.uniform(0.0,100.00))
+        return GU.Polar_vector(random.uniform(0.0, 100.00), random.uniform(0.0, 100.00))
     elif kind == 'point,point':
         return GU.Polar_vector(random_point(), random_point())
     elif kind == 'Cartesian_vector':
@@ -121,7 +135,8 @@ def random_polar_vector(kind: str='double,double')->GU.Polar_vector:
     else:
         raise NotImplementedError(f'no random pv for {kind=}')
 
-def random_cartesian_vector(kind: str='double,double')->GU.Cartesian_vector:
+
+def random_cartesian_vector(kind: str = 'double,double') -> GU.Cartesian_vector:
     if kind == 'double,double':
         return GU.Cartesian_vector(random.uniform(0.0, 100.0), random.uniform(0.0, 100.0))
     elif kind == 'point,point':
@@ -132,19 +147,21 @@ def random_cartesian_vector(kind: str='double,double')->GU.Cartesian_vector:
         raise NotImplementedError(f'no random cv for {kind=}')
 
 
-def get_help_text(obj)->str:
+def get_help_text(obj) -> str:
     io = StringIO('')
     sys.stdout = io
     help(obj)
     sys.stdout = sys.__stdout__
     return io.getvalue().replace(' |  ', '')
 
-def get_methods_text(help_text:str)->str:
+
+def get_methods_text(help_text: str) -> str:
     txt = help_text.replace('Methods defined here:', '-' * 70)
     sections = txt.split('-' * 70)
     return sections[1].strip()
 
-def get_weakref_properties(help_text:str)->list:
+
+def get_weakref_properties(help_text: str) -> list:
     top = 'Data descriptors defined here:'
     if top not in help_text:
         return []
@@ -161,9 +178,10 @@ def get_weakref_properties(help_text:str)->list:
     properties = [aline.strip() for aline in lines if aline and not aline.startswith(' ')]
     return list(set(properties))
 
-def get_methods(methods_text:str, namespace:str='')->list:
+
+def get_methods(methods_text: str, namespace: str = '') -> list:
     # split by section so we can remove __assign__(...) and __init__(...) sections
-    methods  = [method for method in methods_text.strip().split('\n\n') if not method.startswith('__')]
+    methods = [method for method in methods_text.strip().split('\n\n') if not method.startswith('__')]
     # put back together for line by line processing
     methods = '\n\n'.join(methods).splitlines(keepends=False)
     # remove stubs
@@ -180,9 +198,9 @@ def get_methods(methods_text:str, namespace:str='')->list:
     return list(set(methods2))
 
 
-def get_initializers(methods_text:str, namespace:str='')->list:
+def get_initializers(methods_text: str, namespace: str = '') -> list:
     # split by section so we can only accept __init__(...) section
-    methods  = [method for method in methods_text.strip().split('\n\n') if method.startswith('__init__')]
+    methods = [method for method in methods_text.strip().split('\n\n') if method.startswith('__init__')]
     # put back together for line by line processing
     methods = '\n\n'.join(methods).splitlines(keepends=False)
     # remove stubs
@@ -191,23 +209,26 @@ def get_initializers(methods_text:str, namespace:str='')->list:
     methods = [cleanup(method, namespace, is_init=True) for method in methods]
     return list(set(methods))
 
-def get_properties(methods_text:str)->list:
+
+def get_properties(methods_text: str) -> list:
     '''AFAIK, these properties only show up in structs (like Point). Otherwise DK uses get_xxx() methods'''
     # split by section so we can only accept __weakref__(...) section
-    methods  = [method for method in methods_text.strip().split('\n\n') if method.startswith('__weakref__')]
+    methods = [method for method in methods_text.strip().split('\n\n') if method.startswith('__weakref__')]
     # put back together for line by line processing
     properties = '\n\n'.join(methods).splitlines(keepends=False)
     # clean
     properties = [prop.strip() for prop in properties]
     return properties
 
-def cleanup(text:str, namespace:str='', is_init:bool=False)->str:
+
+def cleanup(text: str, namespace: str = '', is_init: bool = False) -> str:
     # removals
     txt = re.sub(r'(&| *const *| *extern *)', '', text).replace('  ', ' ')
     # replacements
     txt = txt.replace('Geometry_Utilities::', 'GU.')
     if is_init:
-        txt = re.sub(r"\b(\w+)::\1", rf'{namespace}.\1' if namespace else r'\1', txt) # initializers may be Point::Point()
+        txt = re.sub(r"\b(\w+)::\1", rf'{namespace}.\1' if namespace else r'\1',
+                     txt)  # initializers may be Point::Point()
     else:
         txt = re.sub(r"\w+::", '', txt)
 
@@ -228,10 +249,10 @@ def cleanup(text:str, namespace:str='', is_init:bool=False)->str:
         # NEW
         txt = txt.replace(whole, random_list(item_type))
 
-
     return txt
 
-def get_func_sig(method_text:str)->Optional[tuple]:
+
+def get_func_sig(method_text: str) -> Optional[tuple]:
     try:
         func, params = re.search(r'([^\(]+)\(([^\)]*)\)', method_text).groups()
         func = func.split(' ')[-1]
@@ -250,42 +271,29 @@ def get_func_sig(method_text:str)->Optional[tuple]:
         log.exception(e)
         return None
 
-def brackets2parens(param:str)->str:
+
+def brackets2parens(param: str) -> str:
     return param.replace('[', '(').replace(']', ')')
 
-def get_calls(func_sigs:list, type_makers: dict, prefix:str='')->list:
+
+def get_calls(func_sigs: list, prefix: str = '') -> list:
     calls = list()
     for method in func_sigs:
         func, params = get_func_sig(method)
         if not params:
             func_sig = f"{prefix}{func}()"
         else:
-            # old
-            rparams = [param if param.startswith('[') else type_makers[param] for param in params]
-
-            # new
-            # basic_types = 'int', 'long', 'double', 'str', 'bool'
-            # rparams = [eval(type_makers[param]) if param in basic_types else type_makers[param] for param in params]
-            # rparams = []
-            # for param in params:
-            #     print('--->', param)
-            #     if type_makers[param] in basic_types:
-            #         print('-------> in basic types, going to eval!')
-            #         rparams.append(eval(type_makers[param]))
-            #     else:
-            #         rparams.append(type_makers[param])
-
-
+            rparams = [param if param.startswith('[') else get_marker(param) for param in params]
             rparams = ', '.join(rparams)
             func_sig = f"{prefix}{func}({rparams})"
         calls.append(func_sig)
     return calls
 
-def exercise_namespace(namespace, ns_name)->list:
+
+def exercise_namespace(namespace, ns_name) -> list:
     '''
     Like exercise_object but where you are just exercise staticmethods in a namespace
     '''
-    global MARKERS
 
     # get all available info about the object
     obj_help_text = get_help_text(namespace)
@@ -293,15 +301,13 @@ def exercise_namespace(namespace, ns_name)->list:
     the_methods = get_methods(methods_text, namespace)
 
     # get python calls we can make with eval/exec to exercise initializers and methods
-    method_calls = get_calls(the_methods, MARKERS, prefix=f'{ns_name}.')
+    method_calls = get_calls(the_methods, prefix=f'{ns_name}.')
 
     print('\n\n*** METHOD CALLS ***')
     pprint(method_calls, width=100)
 
-
     print('\nEXERCISING OBJECT...')
     results = []
-
 
     for func_call in method_calls:
         res = eval(func_call, globals(), locals())
@@ -310,7 +316,8 @@ def exercise_namespace(namespace, ns_name)->list:
 
     return results
 
-def exercise_object(obj, obj_name:str, init_properties:Optional[list]=None, namespace:str='')->list:
+
+def exercise_object(obj, obj_name: str, init_properties: Optional[list] = None, namespace: str = '') -> list:
     '''
     Given an object, exercise its initializers and methods.
     Note that these are not tests because there is no target.
@@ -324,8 +331,6 @@ def exercise_object(obj, obj_name:str, init_properties:Optional[list]=None, name
     ['x', 'y']
     '''
 
-    global MARKERS
-
     # get all available info about the object
     obj_help_text = get_help_text(obj)
     methods_text = get_methods_text(obj_help_text)
@@ -334,20 +339,19 @@ def exercise_object(obj, obj_name:str, init_properties:Optional[list]=None, name
     the_properties = get_weakref_properties(obj_help_text)
     the_properties = [f'obj.{prop}' for prop in the_properties]
 
-
-
     # get python calls we can make with eval/exec to exercise initializers and methods
-    init_calls = get_calls(the_inits, MARKERS, prefix='')
-    method_calls = get_calls(the_methods, MARKERS, prefix='obj.')
+    init_calls = get_calls(the_inits, prefix='')
+    method_calls = get_calls(the_methods, prefix='obj.')
 
     # random_list() makes lists like this [something{}xxxxsomething{}] instead of [something(), something()] so
     # that the list survives other parsing s. Here we need to fix that:
-    def list_fix(text:str)->str:
+    def list_fix(text: str) -> str:
         print(text)
         if 'zzzz' in text:
             return text.replace('{', '(').replace('}', ')').replace('zzzz', ', ')
         else:
             return text
+
     init_calls = [list_fix(item) for item in init_calls]
     method_calls = [list_fix(item) for item in method_calls]
 
@@ -368,7 +372,8 @@ def exercise_object(obj, obj_name:str, init_properties:Optional[list]=None, name
         for prop_call in the_properties:
             res = eval(prop_call, globals(), locals())
             res = str(res)
-            results.append({'object': obj_name, 'init': init_call, 'kind': 'property',  'call':prop_call, 'result': res})
+            results.append(
+                {'object': obj_name, 'init': init_call, 'kind': 'property', 'call': prop_call, 'result': res})
         for func_call in method_calls:
             print('--->', func_call)
             try:
@@ -376,14 +381,12 @@ def exercise_object(obj, obj_name:str, init_properties:Optional[list]=None, name
                 res = str(res)
             except Exception as e:
                 res = str(e)
-            results.append({'object': obj_name, 'init': init_call, 'kind': 'method',  'call':func_call, 'result': res})
+            results.append({'object': obj_name, 'init': init_call, 'kind': 'method', 'call': func_call, 'result': res})
 
     return results
 
 
-
 def run_tests():
-
     # >>>> DEBUG STUFF
     # exec('''p = GU.Point(random.uniform(0.0, 100.0), random.uniform(0.0, 100.0)); print(p.x, p.y)''')
     # help(GU.Polar_vector)
@@ -439,10 +442,10 @@ def run_tests():
     # first cleanup =>\n that you get when results are exceptions
     out_data = []
     for data_dict in data:
-        out_data.append({k:clean_result(v) if k == 'result' else v for k, v in data_dict.items()})
+        out_data.append({k: clean_result(v) if k == 'result' else v for k, v in data_dict.items()})
 
     # now save the data
     df = pd.DataFrame(out_data)
-    df.to_csv('code_exercise_results.csv', sep='\t',index=False)
+    df.to_csv('../../../code_exercise_results.csv', sep='\t', index=False)
 
     sys.exit()
