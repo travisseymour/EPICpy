@@ -1,10 +1,6 @@
 import re
 import sys
-from collections import OrderedDict
-from functools import partial
 from typing import Optional
-
-import pandas as pd
 
 from cppinclude import epiclib_include
 import cppyy
@@ -26,17 +22,7 @@ from epiclibwords import words
 print(f"{LIBNAME=}")
 cppyy.load_library(LIBNAME)
 
-epiclib_include("Model-View Classes/View_base.h")
-epiclib_include("Model-View Classes/Model.h")
-epiclib_include("Framework classes/Output_tee_globals.h")
-epiclib_include("Framework classes/Device_base.h")
-epiclib_include("Framework classes/Device_exception.h")
-epiclib_include("Framework classes/Device_processor.h")
-epiclib_include("Framework classes/Human_base.h")
-epiclib_include("Framework classes/Human_processor.h")
 epiclib_include("Framework classes/Parameter.h")
-epiclib_include("Framework classes/Coordinator.h")
-epiclib_include("Framework classes/Processor.h")
 epiclib_include("Utility Classes/Symbol.h")
 epiclib_include("Utility Classes/Symbol_utilities.h")
 epiclib_include("Utility Classes/Output_tee.h")
@@ -44,18 +30,9 @@ epiclib_include("Utility Classes/Geometry.h")
 epiclib_include("Utility Classes/Statistics.h")
 epiclib_include("Utility Classes/Point.h")
 epiclib_include("Utility Classes/Random_utilities.h")
-
 epiclib_include("Standard_Symbols.h")
-epiclib_include("PPS/PPS Interface classes/PPS_globals.h")
-epiclib_include("Framework classes/Device_event_types.h")
-epiclib_include("Motor Classes/Manual_actions.h")
-epiclib_include("Motor Classes/Manual_processor.h")
 
-from cppyy.gbl import Model
-from cppyy.gbl import Coordinator
-from cppyy.gbl import Normal_out
 from cppyy.gbl import Geometry_Utilities as GU
-from cppyy.gbl import Mean_accumulator
 from cppyy.gbl import set_random_number_generator_seed
 from cppyy.gbl import Symbol, concatenate_to_Symbol
 
@@ -82,19 +59,30 @@ def get_marker(key: str) -> str:
         return f'GU.Line_segment(GU.Point({r1:0.3f}, {r2:0.3f}), GU.Point({r1 + dx:0.3f}, {r2 + dx:0.3f}))'
     elif key == 'GU.Polar_vector':
         return f'GU.Polar_vector({random.uniform(minimum, maximum):0.3f}, {random.uniform(minimum, maximum):0.3f})'
+    elif key == 'GU.Cartesian_vector':
+        return f'GU.Cartesian_vector({random.uniform(minimum, maximum):0.3f}, {random.uniform(minimum, maximum):0.3f})'
     elif key == 'GU.Size':
         return f'GU.Size({random.uniform(minimum, maximum):0.3f},{random.uniform(minimum, maximum):0.3f})'
-    elif key == 'GU.Cartesian_vector':
-        return f'GU.Cartesian_vector({random.uniform(minimum, maximum):0.3f},{random.uniform(minimum, maximum):0.3f})'
+    elif key == 'GU.Polygon':
+        return f'GU.Polygon({random_list("GU.Point", length=3)})'
     elif key == 'Symbol':
         return f'Symbol("{random_string()}")'
+    else:
+        raise ValueError('unknown marker passed to get_marker()')
 
 
-def random_list(kind) -> str:
+def random_list(kind, length:int=2) -> str:
     assert kind in ['int', 'long', 'double', 'GU.Point', 'GU.Line_segment', 'GU.Polar_vector', 'GU.Size',
                     'GU.Cartesian_vector', 'str', 'Symbol', 'bool']
 
-    return f'[{get_marker(kind)}zzzz{get_marker(kind)}]'.replace('(', '{').replace(')', '}').replace(', ', 'zzzz')
+    if length == 1:
+        return f'[{get_marker(kind)}]'.replace('(', '{').replace(')', '}').replace(', ', 'zzzz')
+    elif length == 2:
+        return f'[{get_marker(kind)}zzzz{get_marker(kind)}]'.replace('(', '{').replace(')', '}').replace(', ', 'zzzz')
+    else:
+        # for polygon
+        p1, p2 = get_marker(kind), get_marker(kind)
+        return f'[{p1}zzzz{p2}zzzz{p1}]'.replace('(', '{').replace(')', '}').replace(', ', 'zzzz')
 
 
 def random_symbol(max_words: int = 1, add_number: bool = False) -> Symbol:
@@ -262,9 +250,6 @@ def get_func_sig(method_text: str) -> Optional[tuple]:
             # We just want the types
             params = [param.split(' ')[0].strip() for param in re.split(r' *, *', params)]
 
-        # print(f'{func=}')
-        # print(f'{params=}')
-
         return func, params
 
     except Exception as e:
@@ -290,7 +275,7 @@ def get_calls(func_sigs: list, prefix: str = '') -> list:
     return calls
 
 
-def exercise_namespace(namespace, ns_name) -> list:
+def exercise_namespace(namespace, ns_name, print_result: bool = False) -> list:
     '''
     Like exercise_object but where you are just exercise staticmethods in a namespace
     '''
@@ -314,10 +299,15 @@ def exercise_namespace(namespace, ns_name) -> list:
         res = str(res)
         results.append({'object': ns_name, 'init': 'namespace', 'kind': 'method', 'call': func_call, 'result': res})
 
+    if print_result:
+        print(f'\n============================{ns_name}============================')
+        pprint(results, width=max(len(str(item)) for item in results) + 5)
+
     return results
 
 
-def exercise_object(obj, obj_name: str, init_properties: Optional[list] = None, namespace: str = '') -> list:
+def exercise_object(obj, obj_name: str, init_properties: Optional[list] = None, namespace: str = '',
+                    print_result: bool = False) -> list:
     '''
     Given an object, exercise its initializers and methods.
     Note that these are not tests because there is no target.
@@ -346,7 +336,6 @@ def exercise_object(obj, obj_name: str, init_properties: Optional[list] = None, 
     # random_list() makes lists like this [something{}xxxxsomething{}] instead of [something(), something()] so
     # that the list survives other parsing s. Here we need to fix that:
     def list_fix(text: str) -> str:
-        print(text)
         if 'zzzz' in text:
             return text.replace('{', '(').replace('}', ')').replace('zzzz', ', ')
         else:
@@ -355,7 +344,7 @@ def exercise_object(obj, obj_name: str, init_properties: Optional[list] = None, 
     init_calls = [list_fix(item) for item in init_calls]
     method_calls = [list_fix(item) for item in method_calls]
 
-    print('*** INIT CALLS ***')
+    print('\n\n*** INIT CALLS ***')
     pprint(init_calls, width=100)
     print('\n\n*** METHOD CALLS ***')
     pprint(method_calls, width=100)
@@ -367,7 +356,6 @@ def exercise_object(obj, obj_name: str, init_properties: Optional[list] = None, 
 
     for init_call in init_calls:
         # initialize obj
-        print('--->', init_call)
         obj = eval(init_call)
         for prop_call in the_properties:
             res = eval(prop_call, globals(), locals())
@@ -375,7 +363,6 @@ def exercise_object(obj, obj_name: str, init_properties: Optional[list] = None, 
             results.append(
                 {'object': obj_name, 'init': init_call, 'kind': 'property', 'call': prop_call, 'result': res})
         for func_call in method_calls:
-            print('--->', func_call)
             try:
                 res = eval(func_call, globals(), locals())
                 res = str(res)
@@ -383,69 +370,21 @@ def exercise_object(obj, obj_name: str, init_properties: Optional[list] = None, 
                 res = str(e)
             results.append({'object': obj_name, 'init': init_call, 'kind': 'method', 'call': func_call, 'result': res})
 
+        for comparison in ('==', '!=', '<', '>', '<=', '>='):
+            try:
+                print(f"{init_call}{comparison}{init_call}")
+                res = str(eval(f'{init_call}{comparison}{init_call}'))
+            except Exception as e:
+                res = str(e)
+            results.append({'object': obj_name, 'init': init_call, 'kind': f'comparison{comparison}', 'call': f"{init_call}{comparison}{init_call}", 'result': res})
+
+
+    if print_result:
+        print(f'\n============================{obj_name}============================')
+        pprint(results, width=max(len(str(item)) for item in results) + 5)
+
     return results
 
-
-def run_tests():
-    # >>>> DEBUG STUFF
-    # exec('''p = GU.Point(random.uniform(0.0, 100.0), random.uniform(0.0, 100.0)); print(p.x, p.y)''')
-    # help(GU.Polar_vector)
-    # p = GU.Polar_vector(34.3, 99.6)
-    # print(str(p))
-    # sys.exit()
-    # <<<<< DEBUG STUFF
-
-    data = list()
-
-    o = GU.Point()
-    res = exercise_object(o, obj_name='GU.Point', namespace='GU')
-    print('RESULTS:')
-    pprint(res, width=100)
-    data.extend(res)
-    print('\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n')
-
-    o = GU.Line_segment()
-    res = exercise_object(o, obj_name='GU.Line_segment', namespace='GU')
-    print('RESULTS:')
-    pprint(res, width=1000)
-    data.extend(res)
-    print('\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n')
-
-    o = GU.Polar_vector()
-    res = exercise_object(o, obj_name='GU.Polar_vector', namespace='GU')
-    print('RESULTS:')
-    pprint(res, width=1000)
-    data.extend(res)
-    print('\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n')
-
-    o = GU
-    res = exercise_namespace(o, ns_name='GU')
-    print('RESULTS:')
-    data.extend(res)
-    pprint(res, width=1000)
-
-    print('\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n')
-
-    o = Symbol()
-    res = exercise_object(o, obj_name='Symbol', namespace='')
-    print('RESULTS:')
-    data.extend(res)
-    pprint(res, width=1000)
-
-    # @@@@@@@@@@@@@@@@ CREATE DataFrame AND SAVE
-    def clean_result(res) -> str:
-        if 'double' in str(res):
-            a = 1
-        out = re.sub(r'[ \t\n]{2,}', ' ', str(res))
-        return out
-
-    # first cleanup =>\n that you get when results are exceptions
-    out_data = []
-    for data_dict in data:
-        out_data.append({k: clean_result(v) if k == 'result' else v for k, v in data_dict.items()})
-
-    # now save the data
-    df = pd.DataFrame(out_data)
-    df.to_csv('../../../code_exercise_results.csv', sep='\t', index=False)
-
-    sys.exit()
+def clean_result(res) -> str:
+    out = re.sub(r'[ \t\n]{2,}', ' ', str(res))
+    return out

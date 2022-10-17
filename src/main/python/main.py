@@ -109,8 +109,8 @@ class AppContext(ApplicationContext):
 
             from cppyy.gbl import Normal_out, Trace_out, PPS_out
             from cppyy.gbl import std
-            from epiclibtests import run_tests
-            run_tests()
+            from epiclibworkout.workout_epiclib_utilities import do_routine
+            do_routine()
             sys.exit()
 
         self.main_win = mainwindow.MainWin(self, epiclib_files, libname)
