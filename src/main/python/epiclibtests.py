@@ -4,6 +4,8 @@ from collections import OrderedDict
 from functools import partial
 from typing import Optional
 
+import pandas as pd
+
 from cppinclude import epiclib_include
 import cppyy
 from loguru import logger as log
@@ -11,7 +13,7 @@ from pprint import pprint
 from apputils import LIBNAME
 import random
 from io import StringIO  ## for Python 3
-
+from epiclibwords import words
 
 
 # ------------------------------------------------------
@@ -37,11 +39,13 @@ epiclib_include("Framework classes/Parameter.h")
 epiclib_include("Framework classes/Coordinator.h")
 epiclib_include("Framework classes/Processor.h")
 epiclib_include("Utility Classes/Symbol.h")
+epiclib_include("Utility Classes/Symbol_utilities.h")
 epiclib_include("Utility Classes/Output_tee.h")
 epiclib_include("Utility Classes/Geometry.h")
 epiclib_include("Utility Classes/Statistics.h")
 epiclib_include("Utility Classes/Point.h")
 epiclib_include("Utility Classes/Random_utilities.h")
+
 epiclib_include("Standard_Symbols.h")
 epiclib_include("PPS/PPS Interface classes/PPS_globals.h")
 epiclib_include("Framework classes/Device_event_types.h")
@@ -54,20 +58,39 @@ from cppyy.gbl import Normal_out
 from cppyy.gbl import Geometry_Utilities as GU
 from cppyy.gbl import Mean_accumulator
 from cppyy.gbl import set_random_number_generator_seed
+from cppyy.gbl import Symbol, concatenate_to_Symbol
 
 # set seed so results are reproducible
 random.seed(1138)
 set_random_number_generator_seed(1138)
 
 MARKERS = {
+    'int': 'random.randint(0, 100)',
     'long': 'random.randint(0, 100)',
     'double': 'random.uniform(0.0, 100.0)',
     'GU.Point': 'random_point()',
     'GU.Line_segment': 'random_line_segment()',
     'GU.Polar_vector': 'random_polar_vector()',
     'GU.Size': 'random_size()',
-    'GU.Cartesian_vector': 'random_cartesian_vector()'
+    'GU.Cartesian_vector': 'random_cartesian_vector()',
+    'str': 'random_string()',
+    'Symbol': 'random_symbol()',
+    'bool': 'int(random.choice((True, False)))'
 }
+
+def random_list(kind)->str:
+    global MARKERS
+    assert kind in MARKERS
+    return f'[{MARKERS[kind]}zzzz{MARKERS[kind]}]'.replace('(', '{').replace(')', '}')
+
+def random_symbol(max_words: int=1, add_number:bool=False)->Symbol:
+    if add_number:
+        return concatenate_to_Symbol(''.join(random.sample(words, max_words)), random.randint(0, 99))
+    else:
+        return Symbol(''.join(random.sample(words, max_words)))
+
+def random_string(max_words: int=2)->str:
+    return ''.join(random.sample(words, max_words))
 
 def random_point(maximum: float = 100.00) -> GU.Point:
     return GU.Point(
@@ -187,6 +210,25 @@ def cleanup(text:str, namespace:str='', is_init:bool=False)->str:
         txt = re.sub(r"\b(\w+)::\1", rf'{namespace}.\1' if namespace else r'\1', txt) # initializers may be Point::Point()
     else:
         txt = re.sub(r"\w+::", '', txt)
+
+    txt = txt.replace('std::string', 'str')
+    txt = txt.replace('char*', 'str')
+
+    # deal with parameters that are vectors of something
+    list_params = re.findall(r'(std::vector\<([\w\.\:]+)\>)', txt)
+    for whole, item_type in list_params:
+        # OLD
+        # itm_typ = item_type.replace(f"{namespace}.", f"{namespace}_")
+        # itm_typ = itm_typ.replace('::', '.').replace('*', '').replace('&', '')
+        # itm_typ = itm_typ.split('.')[-1]
+        # txt = txt.replace(whole, f'random_list[{itm_typ}]')
+        # txt = txt.replace(f"{namespace}_", f"{namespace}.")
+        # txt = txt.replace('random.list', 'random_list')
+
+        # NEW
+        txt = txt.replace(whole, random_list(item_type))
+
+
     return txt
 
 def get_func_sig(method_text:str)->Optional[tuple]:
@@ -208,6 +250,9 @@ def get_func_sig(method_text:str)->Optional[tuple]:
         log.exception(e)
         return None
 
+def brackets2parens(param:str)->str:
+    return param.replace('[', '(').replace(']', ')')
+
 def get_calls(func_sigs:list, type_makers: dict, prefix:str='')->list:
     calls = list()
     for method in func_sigs:
@@ -215,7 +260,22 @@ def get_calls(func_sigs:list, type_makers: dict, prefix:str='')->list:
         if not params:
             func_sig = f"{prefix}{func}()"
         else:
-            rparams = [type_makers[param] for param in params]
+            # old
+            rparams = [param if param.startswith('[') else type_makers[param] for param in params]
+
+            # new
+            # basic_types = 'int', 'long', 'double', 'str', 'bool'
+            # rparams = [eval(type_makers[param]) if param in basic_types else type_makers[param] for param in params]
+            # rparams = []
+            # for param in params:
+            #     print('--->', param)
+            #     if type_makers[param] in basic_types:
+            #         print('-------> in basic types, going to eval!')
+            #         rparams.append(eval(type_makers[param]))
+            #     else:
+            #         rparams.append(type_makers[param])
+
+
             rparams = ', '.join(rparams)
             func_sig = f"{prefix}{func}({rparams})"
         calls.append(func_sig)
@@ -246,7 +306,7 @@ def exercise_namespace(namespace, ns_name)->list:
     for func_call in method_calls:
         res = eval(func_call, globals(), locals())
         res = str(res)
-        results.append(OrderedDict({'object': ns_name, 'init': 'namespace', 'kind': 'method', func_call: res}))
+        results.append({'object': ns_name, 'init': 'namespace', 'kind': 'method', 'call': func_call, 'result': res})
 
     return results
 
@@ -274,9 +334,22 @@ def exercise_object(obj, obj_name:str, init_properties:Optional[list]=None, name
     the_properties = get_weakref_properties(obj_help_text)
     the_properties = [f'obj.{prop}' for prop in the_properties]
 
+
+
     # get python calls we can make with eval/exec to exercise initializers and methods
     init_calls = get_calls(the_inits, MARKERS, prefix='')
     method_calls = get_calls(the_methods, MARKERS, prefix='obj.')
+
+    # random_list() makes lists like this [something{}xxxxsomething{}] instead of [something(), something()] so
+    # that the list survives other parsing s. Here we need to fix that:
+    def list_fix(text:str)->str:
+        print(text)
+        if 'zzzz' in text:
+            return text.replace('{', '(').replace('}', ')').replace('zzzz', ', ')
+        else:
+            return text
+    init_calls = [list_fix(item) for item in init_calls]
+    method_calls = [list_fix(item) for item in method_calls]
 
     print('*** INIT CALLS ***')
     pprint(init_calls, width=100)
@@ -290,15 +363,20 @@ def exercise_object(obj, obj_name:str, init_properties:Optional[list]=None, name
 
     for init_call in init_calls:
         # initialize obj
-        obj = eval(init_call)  # get error bc Point doesn't exist
+        print('--->', init_call)
+        obj = eval(init_call)
         for prop_call in the_properties:
             res = eval(prop_call, globals(), locals())
             res = str(res)
-            results.append(OrderedDict({'object': obj_name, 'init': init_call, 'kind': 'property',  prop_call: res}))
+            results.append({'object': obj_name, 'init': init_call, 'kind': 'property',  'call':prop_call, 'result': res})
         for func_call in method_calls:
-            res = eval(func_call, globals(), locals())
-            res = str(res)
-            results.append(OrderedDict({'object': obj_name, 'init': init_call, 'kind': 'method', func_call: res}))
+            print('--->', func_call)
+            try:
+                res = eval(func_call, globals(), locals())
+                res = str(res)
+            except Exception as e:
+                res = str(e)
+            results.append({'object': obj_name, 'init': init_call, 'kind': 'method',  'call':func_call, 'result': res})
 
     return results
 
@@ -306,35 +384,65 @@ def exercise_object(obj, obj_name:str, init_properties:Optional[list]=None, name
 
 def run_tests():
 
-
+    # >>>> DEBUG STUFF
     # exec('''p = GU.Point(random.uniform(0.0, 100.0), random.uniform(0.0, 100.0)); print(p.x, p.y)''')
     # help(GU.Polar_vector)
     # p = GU.Polar_vector(34.3, 99.6)
     # print(str(p))
     # sys.exit()
+    # <<<<< DEBUG STUFF
 
+    data = list()
 
     o = GU.Point()
     res = exercise_object(o, obj_name='GU.Point', namespace='GU')
     print('RESULTS:')
     pprint(res, width=100)
+    data.extend(res)
     print('\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n')
 
     o = GU.Line_segment()
     res = exercise_object(o, obj_name='GU.Line_segment', namespace='GU')
     print('RESULTS:')
     pprint(res, width=1000)
+    data.extend(res)
     print('\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n')
 
     o = GU.Polar_vector()
     res = exercise_object(o, obj_name='GU.Polar_vector', namespace='GU')
     print('RESULTS:')
     pprint(res, width=1000)
+    data.extend(res)
     print('\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n')
 
     o = GU
     res = exercise_namespace(o, ns_name='GU')
     print('RESULTS:')
+    data.extend(res)
     pprint(res, width=1000)
+
+    print('\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n')
+
+    o = Symbol()
+    res = exercise_object(o, obj_name='Symbol', namespace='')
+    print('RESULTS:')
+    data.extend(res)
+    pprint(res, width=1000)
+
+    # @@@@@@@@@@@@@@@@ CREATE DataFrame AND SAVE
+    def clean_result(res) -> str:
+        if 'double' in str(res):
+            a = 1
+        out = re.sub(r'[ \t\n]{2,}', ' ', str(res))
+        return out
+
+    # first cleanup =>\n that you get when results are exceptions
+    out_data = []
+    for data_dict in data:
+        out_data.append({k:clean_result(v) if k == 'result' else v for k, v in data_dict.items()})
+
+    # now save the data
+    df = pd.DataFrame(out_data)
+    df.to_csv('code_exercise_results.csv', sep='\t',index=False)
 
     sys.exit()
