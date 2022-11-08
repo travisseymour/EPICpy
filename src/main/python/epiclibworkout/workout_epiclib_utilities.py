@@ -21,6 +21,7 @@ epiclib_include("Utility Classes/Output_tee.h")
 epiclib_include("Utility Classes/Geometry.h")
 epiclib_include("Utility Classes/Statistics.h")
 epiclib_include("Utility Classes/Point.h")
+epiclib_include("Utility Classes/Symbol_Geometry_utilities.h")
 epiclib_include("Utility Classes/Random_utilities.h")
 
 epiclib_include("Standard_Symbols.h")
@@ -36,7 +37,6 @@ from cppyy.gbl import Geometry_Utilities as GU
 from cppyy.gbl import Mean_accumulator
 from cppyy.gbl import set_random_number_generator_seed
 from cppyy.gbl import Symbol, concatenate_to_Symbol
-
 
 def do_routine():
 
@@ -64,8 +64,15 @@ def do_routine():
     o = GU.Polygon()
     data.extend(exercise_object(o, obj_name='GU.Polygon', namespace='GU', print_result=DEBUG))
 
+    # @@@@@@@@@@@@ Symbol.h @@@@@@@@@@@@@@@@@@
+
     o = Symbol()
     data.extend(exercise_object(o, obj_name='Symbol', namespace='', print_result=DEBUG))
+
+    # FIXME: I don't know how to test add-on methods like in Symbol_Geometry_utilities
+    #        or random functions that are not methods of a class or struct
+    # o = Symbol()
+    # data.extend(exercise_namespace(o, ns_name='Symbol_Geometry_utilities', print_result=DEBUG))
 
     # CREATE DataFrame AND SAVE
 

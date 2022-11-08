@@ -98,7 +98,7 @@ class AppContext(ApplicationContext):
 
         import mainwindow
 
-        RUN_TESTS = True
+        RUN_TESTS = False
         if RUN_TESTS:
             from cppinclude import epiclib_include
 
