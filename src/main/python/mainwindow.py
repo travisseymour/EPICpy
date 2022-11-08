@@ -1458,6 +1458,8 @@ class MainWin(QMainWindow):
                 fitness.clear_results()
                 fitness.run_all_model_tests(self, close_on_finish=False)
 
+
+
     def open_help_file(self):
         url = "https://travisseymour.github.io/EPICpyDocs/"
         if webbrowser.open(url):

@@ -95,7 +95,23 @@ class AppContext(ApplicationContext):
 
         apputils.LIBNAME = libname
         apputils.HEADERPATH = headerpath
+
         import mainwindow
+
+        RUN_TESTS = False
+        if RUN_TESTS:
+            from cppinclude import epiclib_include
+
+            epiclib_include("Utility Classes/Symbol.h")
+            epiclib_include("Utility Classes/Output_tee.h")
+            epiclib_include("Standard_Symbols.h")
+            epiclib_include("PPS/PPS Interface classes/PPS_globals.h")
+
+            from cppyy.gbl import Normal_out, Trace_out, PPS_out
+            from cppyy.gbl import std
+            from epiclibworkout.workout_epiclib_utilities import do_routine
+            do_routine()
+            sys.exit()
 
         self.main_win = mainwindow.MainWin(self, epiclib_files, libname)
         self.app.lastWindowClosed.connect(shut_it_down)
@@ -153,6 +169,7 @@ if __name__ == "__main__":
     # ==============================
     # =====      Run App       =====
     # ==============================
+
 
     print("starting EPICpy at", datetime.datetime.now().ctime())
     appctxt = AppContext()
