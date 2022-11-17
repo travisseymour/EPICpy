@@ -559,7 +559,7 @@ class PPSCustomLexer(QsciLexerCustom):
 
             if string_flag:
                 self.setStyling(tok_len, self.COMMENT)
-                if tok.startswith("\n"):
+                if tok.endswith("\n") or tok.startswith('\n'):
                     string_flag = False
                 continue
 

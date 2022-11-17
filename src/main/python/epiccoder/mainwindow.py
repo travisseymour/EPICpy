@@ -18,16 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
+from functools import partial
 from typing import Optional
-
-# from PyQt5.QtWidgets import *
-# from PyQt5.QtCore import *
-# from PyQt5.QtGui import *
 
 import sys
 from pathlib import Path
 
-from PyQt5.QtCore import QSettings, Qt, QSize, QDir, QModelIndex
+from PyQt5.QtCore import QSettings, Qt, QSize, QDir, QModelIndex, QRect
 from PyQt5.QtGui import QIcon, QFont, QPixmap, QResizeEvent, QCloseEvent
 from PyQt5.QtWidgets import (
     QMainWindow,
@@ -46,10 +43,11 @@ from PyQt5.QtWidgets import (
     QTabWidget,
     QMessageBox,
     QFileDialog,
-    QApplication,
+    QApplication, QMenu, QAction, QDialog,
 )
 
 from epiccoder.customeditor import CustomEditor
+from epiccoder.duplicatedlg import DuplicateFileNameWin
 from epiccoder.fuzzy_searcher import SearchItem, SearchWorker
 from epiccoder.aboutwindow import AboutWin
 from epiccoder.version import __version__
@@ -61,7 +59,7 @@ int_gen = (
 )  # generator for successive integers from 1 to sys.maxsize
 
 
-class MainEditorWindow(QMainWindow):
+class MainWindow(QMainWindow):
     def __init__(self, context: ApplicationContext):
         super(QMainWindow, self).__init__()
 
@@ -107,6 +105,8 @@ class MainEditorWindow(QMainWindow):
         self.set_up_body()
         self.statusBar().showMessage("hello")
 
+        self.last_hsplit_sizes = [400, self.width()-400]
+        self.hsplit.setSizes(self.last_hsplit_sizes)
         self.show()
 
     def set_up_menu(self):
@@ -115,9 +115,7 @@ class MainEditorWindow(QMainWindow):
         # File Menu
         file_menu = menu_bar.addMenu("File")
 
-        new_file = file_menu.addAction("New")
-        new_file.setShortcut("Ctrl+N")
-        new_file.triggered.connect(self.new_file)
+        # Open File/Folder
 
         open_file = file_menu.addAction("Open File")
         open_file.setShortcut("Ctrl+O")
@@ -129,6 +127,8 @@ class MainEditorWindow(QMainWindow):
 
         file_menu.addSeparator()
 
+        # Save/SaveAs File
+
         save_file = file_menu.addAction("Save")
         save_file.setShortcut("Ctrl+S")
         save_file.triggered.connect(self.save_file)
@@ -138,6 +138,47 @@ class MainEditorWindow(QMainWindow):
         save_as.triggered.connect(self.save_as)
 
         file_menu.addSeparator()
+
+        # New File SubMenu & Actions
+        new_file_menu = QMenu('New File', self)
+
+        txt_action = QAction('Text File (*.txt)', self)
+        txt_action.triggered.connect(partial(self.new_file, '.txt'))
+        prs_action = QAction('EPIC Production Rule File (*.prs)', self)
+        prs_action.triggered.connect(partial(self.new_file, '.prs'))
+        py_action = QAction('Python Code File (*.py)', self)
+        py_action.triggered.connect(partial(self.new_file, '.py'))
+        cpp_action = QAction('C++ Code File (*.cpp)', self)
+        cpp_action.triggered.connect(partial(self.new_file, '.cpp'))
+        h_action = QAction('C++ Header File (*.h)', self)
+        h_action.triggered.connect(partial(self.new_file, '.h'))
+
+        for obj in (txt_action, prs_action, py_action, cpp_action, h_action):
+            new_file_menu.addAction(obj)
+
+        file_menu.addMenu(new_file_menu)
+
+        file_menu.addSeparator()
+
+        # Duplicate File
+
+        self.dupe_file = file_menu.addAction("Duplicate")
+        self.dupe_file.setShortcut("Ctrl+D")
+        self.dupe_file.triggered.connect(self.duplicate_file)
+        self.dupe_file.setEnabled(False)
+
+        file_menu.addSeparator()
+
+        # Delete File
+
+        self.delete_file = file_menu.addAction("Delete")
+        self.delete_file.setShortcut("Ctrl+X")
+        self.delete_file.triggered.connect(self.remove_file)
+        self.delete_file.setEnabled(False)
+
+        file_menu.addSeparator()
+
+        # Quit Action
 
         quit_app = file_menu.addAction("Quit")
         quit_app.setShortcut("Ctrl+Q")
@@ -192,14 +233,21 @@ class MainEditorWindow(QMainWindow):
                 self.tab_view.setTabText(i, f"*{self.tab_view.tabText(i).strip('*')}")
                 return
 
-    def next_new_file_path(self) -> Path:
-        return Path(self.model.rootPath(), f"untitled{next(int_gen)}.txt")
+    def next_new_file_path(self, file_type: str, stem: str='untitled') -> Path:
+        _stem = stem if stem else 'untitled'
+        expected_fts = ['.txt', '.prs', '.cpp', '.h', '.py']
+        assert file_type.lower() in expected_fts, f"new_new_file_path() requires a filetype in {expected_fts}"
+        for _ in range(9999):
+            p = Path(self.model.rootPath(), f"{_stem}{next(int_gen)}{file_type.lower()}")
+            if not p.exists():
+                return p
+        return Path(self.model.rootPath(), f"{_stem}{next(int_gen)}{file_type.lower()}")
 
-    def set_new_tab(self, path: Path, is_new_file=False):
-        if not path.is_file():
+    def set_new_tab(self, path: Path, is_new_file=False, file_type: str='txt'):
+        if path and isinstance(path, Path) and not path.is_file():
             return
 
-        new_file_path = self.next_new_file_path() if is_new_file else path
+        new_file_path = self.next_new_file_path(file_type) if is_new_file else path
         editor: CustomEditor = self.get_editor(new_file_path)
 
         if is_new_file:
@@ -234,7 +282,10 @@ class MainEditorWindow(QMainWindow):
         self.setWindowTitle(str(new_file_path))
         self.current_file = new_file_path
         self.tab_view.setCurrentIndex(self.tab_view.count() - 1)
-        self.statusBar().showMessage(f"Opened {new_file_path.name}", 2000)
+        self.statusBar().showMessage(f"Opened {new_file_path.name}", 5000)
+
+        self.dupe_file.setEnabled(self.tab_view.count())
+        self.delete_file.setEnabled(self.tab_view.count())
 
     def set_cursor_pointer(self, e):
         self.setCursor(Qt.PointingHandCursor)
@@ -325,7 +376,10 @@ class MainEditorWindow(QMainWindow):
 
         # frame and layout to hold tree view (file manager)
         self.file_manager_frame = self.get_frame()
-        self.file_manager_frame.setMaximumWidth(400)
+
+        # self.file_manager_frame.setMaximumWidth(400)
+        # self.file_manager_frame.setMinimumWidth(200)
+        self.file_manager_frame.setMaximumWidth(self.window().width())
         self.file_manager_frame.setMinimumWidth(200)
         tree_frame_layout = QVBoxLayout()
         tree_frame_layout.setContentsMargins(0, 0, 0, 0)
@@ -350,9 +404,10 @@ class MainEditorWindow(QMainWindow):
         self.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tree_view.customContextMenuRequested.connect(self.tree_view_context_menu)
         # handling click
-        self.tree_view.clicked.connect(self.tree_view_clicked)
+        # self.tree_view.clicked.connect(self.tree_view_clicked)
+        self.tree_view.doubleClicked.connect(self.tree_view_clicked)
         self.tree_view.setIndentation(10)
-        self.tree_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.tree_view.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
         # Hide header and hide other columns except for name
         self.tree_view.setHeaderHidden(True)  # hiding header
         self.tree_view.setColumnHidden(1, True)
@@ -362,7 +417,7 @@ class MainEditorWindow(QMainWindow):
         ##############################
         ###### SEARCH VIEW ##########
         self.search_frame = self.get_frame()
-        self.search_frame.setMaximumWidth(400)
+        self.search_frame.setMaximumWidth(self.window().width())
         self.search_frame.setMinimumWidth(200)
 
         search_layout = QVBoxLayout()
@@ -473,26 +528,42 @@ class MainEditorWindow(QMainWindow):
         editor.setCursorPosition(item.lineno, item.end)
         editor.setFocus()
 
-    def close_tab(self, index):
+    def close_tab(self, index, quiet: bool = False):
         if self.tab_view.tabText(index).startswith("*"):
-            ret = QMessageBox.question(
-                self,
-                "Changed File Alert!",
-                f"Really Close {Path(self.tab_view.tabText(index)).name} and Ignore Changes?",
-                buttons=QMessageBox.Yes | QMessageBox.No,
-            )
-            if ret == QMessageBox.No:
-                return
+            if not quiet:
+                ret = QMessageBox.question(
+                    self,
+                    "Changed File Alert!",
+                    f"Close {Path(self.tab_view.tabText(index)).name} and Ignore Changes?",
+                    buttons=QMessageBox.Yes | QMessageBox.No,
+                )
+                if ret == QMessageBox.No:
+                    return
 
         self.tab_view.removeTab(index)
+
+        self.dupe_file.setEnabled(self.tab_view.count())
+        self.delete_file.setEnabled(self.tab_view.count())
 
     def show_hide_tab(self, e, type_):
         if type_ == "folder-icon":
             if not (self.file_manager_frame in self.hsplit.children()):
+                # restore file manager
                 self.hsplit.replaceWidget(0, self.file_manager_frame)
+                # self.file_manager_frame.setMaximumWidth(self.window().width())
+                # self.file_manager_frame.setMinimumWidth(200)
+                # restore previous file manager width
+                w = self.hsplit.width()
+                self.hsplit.setSizes(self.last_hsplit_sizes)
+
         elif type_ == "search-icon":
             if not (self.search_frame in self.hsplit.children()):
+                # remember hsplit before search
+                self.last_hsplit_sizes = self.hsplit.sizes()
+                # restore search interface
                 self.hsplit.replaceWidget(0, self.search_frame)
+                self.search_frame.setMaximumWidth(self.window().width())
+                self.search_frame.setMinimumWidth(200)
 
         if self.current_side_bar == type_:
             frame = self.hsplit.children()[0]
@@ -500,6 +571,8 @@ class MainEditorWindow(QMainWindow):
                 frame.show()
             else:
                 frame.hide()
+
+
 
         self.current_side_bar = type_
 
@@ -518,8 +591,58 @@ class MainEditorWindow(QMainWindow):
                 f"Unable to open {str(path)}: {str(e)}",
             )
 
-    def new_file(self):
-        self.set_new_tab(None, is_new_file=True)
+    def new_file(self, file_type: str):
+        self.set_new_tab(None, is_new_file=True, file_type=file_type)
+
+    def verify_duplicate_file_name(self, dupe_path: Path)->Optional[Path]:
+        dlg = DuplicateFileNameWin(dupe_path)
+        dlg.exec_()
+        if dlg.result():
+            return dlg.path_result
+        else:
+            return None
+
+    def duplicate_file(self):
+        if not self.tab_view.count():
+            return
+
+        p = Path(self.current_file)
+        dupe_path = self.next_new_file_path(file_type=p.suffix, stem=p.stem)
+        dupe_path = self.verify_duplicate_file_name(dupe_path)
+        if dupe_path is None:
+            return
+        _ = dupe_path.write_text(p.read_text())
+        self.set_new_tab(path=dupe_path, is_new_file=False, file_type=p.suffix)
+
+    def remove_file(self):
+        if not self.tab_view.count() or self.tab_view.currentWidget() is None:
+            return
+
+        p = Path(self.current_file)
+
+        ret = QMessageBox.question(
+            self,
+            "FIle Deletion Warning!",
+            f"Are You Sure You Want To Delete {str(p)}?\n\nThis operation cannot be undone!",
+            buttons=QMessageBox.Yes | QMessageBox.No,
+        )
+        if ret == QMessageBox.No:
+            return
+
+        try:
+            p.unlink(missing_ok=True)
+            self.close_tab(self.tab_view.currentIndex(), quiet=True)
+            if self.tab_view.count():
+                self.current_file = self.tab_view.currentWidget().file_path
+            else:
+                self.current_file = None
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                f'File I/O Error!',
+                f'Unable To Delete File {str(p)}: ({str(e)})',
+            )
+
 
     def save_file(self):
         if self.current_file is None and self.tab_view.count() > 0:
@@ -643,7 +766,7 @@ class MainEditorWindow(QMainWindow):
                     ret = QMessageBox.question(
                         self,
                         "Changed File Alert!",
-                        "Really Close Application and Ignore Changes?",
+                        "Close Application and Ignore Changes?",
                         buttons=QMessageBox.Yes | QMessageBox.No,
                     )
                     if ret == QMessageBox.Yes:
@@ -654,3 +777,12 @@ class MainEditorWindow(QMainWindow):
 
                     # self.tab_view.setTabText(i, f"*{self.tab_view.tabText(i).strip('*')}")
         event.accept()
+
+
+if __name__ == "__main__":
+    app = QApplication([])
+    window = MainWindow()
+    window.set_folder(
+        Path("/home/nogard/Dropbox/Documents/python_coding/EPICcoder/samples")
+    )
+    sys.exit(app.exec())

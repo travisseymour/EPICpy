@@ -21,7 +21,7 @@ from PyQt5.QtGui import QPixmap
 
 from epiccoder.aboutui import Ui_aboutDialog
 from PyQt5.QtWidgets import QDialog
-from version import __version__
+from epiccoder.version import __version__
 
 
 class AboutWin(QDialog):

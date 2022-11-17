@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import os
+
 from itertools import chain
 
 import pandas as pd
@@ -43,14 +43,12 @@ from PyQt5.QtGui import (
 )
 from PyQt5.QtCore import QTimer, QByteArray, QRegExp, Qt, QSettings, QRect, QObject
 from PyQt5.QtWidgets import (
-    QMessageBox,
     QFileDialog,
     QMainWindow,
     QMenu,
     QApplication,
     QPlainTextEdit,
     QInputDialog,
-    QAction,
 )
 import cppyy
 from pathlib import Path
@@ -64,7 +62,7 @@ from views.visualviewwindow import VisualViewWin
 from views.auditoryviewwindow import AuditoryViewWin
 from dialogs.epiclibsettingswindow import EPICLibSettingsWin
 from dialogs.searchwindow import SearchWin
-from epiccoder.mainwindow import MainEditorWindow
+from epiccoder.mainwindow import MainWindow  as MainEditorWindow
 from encoderpassthru import NullVisualEncoder, NullAuditoryEncoder
 import datetime
 import time
