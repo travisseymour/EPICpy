@@ -17,10 +17,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from pathlib import Path
 
 from uifiles.texteditorui import Ui_TextEditorChooser
-from PyQt5.QtWidgets import QDialog, QMessageBox, QFileDialog
+from PyQt5.QtWidgets import QDialog
 import config
 
 
@@ -29,17 +28,16 @@ class TextEditChoiceWin(QDialog):
         super(TextEditChoiceWin, self).__init__()
         self.context = context
         self.ok = False
+        self.current_choice = ''
 
         self.ui = Ui_TextEditorChooser()
         self.ui.setupUi(self)
 
-        self.ui.plainTextEditPath.setReadOnly(False)
-
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
 
-        self.ui.checkBoxUseBuiltin.clicked.connect(self.clicked_checkbox)
-        self.ui.toolButtonTextEditor.clicked.connect(self.clicked_dot_button)
+        self.ui.radioButtonBuiltIn.toggled.connect(self.radio_clicked)
+        self.ui.radioButtonDefault.toggled.connect(self.radio_clicked)
 
         self.setStyleSheet(
             'QWidget {font: "'
@@ -59,6 +57,14 @@ class TextEditChoiceWin(QDialog):
 
         self.setLayout(self.ui.verticalLayout)
 
+    def radio_clicked(self):
+        radio_button = self.sender()
+        if radio_button.isChecked():
+            if 'built-in' in radio_button.text().lower():
+                self.current_choice = 'built-in'
+            else:
+                self.current_choice = 'default'
+
     def resizeEvent(self, event):
         # self.resized.emit()  # in case you want to send this signal somewhere else
         config.app_cfg.dialog_size["texteditchoicewindow"] = [
@@ -69,61 +75,27 @@ class TextEditChoiceWin(QDialog):
         super(TextEditChoiceWin, self).resizeEvent(event)
 
     def setup_options(self):
-        te_path = config.app_cfg.text_editor.strip()
-        if te_path.lower() == "built-in":
-            te_path = ""
-        using_builtin = not te_path
-        self.ui.checkBoxUseBuiltin.setChecked(using_builtin)
-        self.ui.plainTextEditPath.setPlainText(te_path)
+        te_path = config.app_cfg.text_editor.strip().lower()
+        self.current_choice = te_path
 
-        self.ui.label.setEnabled(not using_builtin)
-        self.ui.toolButtonTextEditor.setEnabled(not using_builtin)
-        self.ui.plainTextEditPath.setEnabled(not using_builtin)
+        if te_path == "built-in":
+            self.ui.radioButtonBuiltIn.setChecked(True)
+            self.ui.radioButtonDefault.setChecked(False)
+        elif te_path == 'default':
+            self.ui.radioButtonBuiltIn.setChecked(False)
+            self.ui.radioButtonDefault.setChecked(True)
+        else:
+            config.app_cfg.text_editor = 'default'
+            config.save_app_config(True)
+            self.setup_options()
 
     def clicked_cancel_button(self):
         self.ok = False
         self.hide()
 
     def clicked_ok_button(self):
-        te_path = self.ui.plainTextEditPath.toPlainText().strip()
+        config.app_cfg.text_editor = self.current_choice
+        config.save_app_config(True)
+        self.ok = True
+        self.hide()
 
-        if self.ui.checkBoxUseBuiltin.isChecked():
-            config.app_cfg.text_editor = ""
-            config.save_app_config(True)
-            self.ok = True
-            self.hide()
-        elif te_path and Path(te_path).is_file():
-            config.app_cfg.text_editor = te_path
-            config.save_app_config(True)
-            self.ok = True
-            self.hide()
-        else:
-            self.ok = False
-            ret = QMessageBox.critical(
-                self,
-                "Invalid Text Editor Path",
-                f'"{te_path}" is not a valid text editor executable!\nEither choose '
-                f"a new text editor, or choose the BUILT-IN text editor option.",
-                QMessageBox.Ok,
-            )
-
-    def clicked_checkbox(self, event):
-        self.ui.label.setEnabled(not event)
-        self.ui.toolButtonTextEditor.setEnabled(not event)
-        self.ui.plainTextEditPath.setEnabled(not event)
-
-    def clicked_dot_button(self, event):
-        start = self.ui.plainTextEditPath.toPlainText().strip()
-        start = (
-            start
-            if Path(start).is_file() or Path(start).is_dir()
-            else str(Path("~").expanduser().resolve())
-        )
-        file_name, o = QFileDialog.getOpenFileName(
-            self, caption="Choose A Text Editor Executable", dir=start
-        )
-        if isinstance(file_name, (list, tuple)):
-            file_name = file_name[0]
-
-        if file_name:
-            self.ui.plainTextEditPath.setPlainText(file_name)

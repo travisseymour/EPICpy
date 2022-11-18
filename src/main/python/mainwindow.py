@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
+import platform
 from itertools import chain
 
 import pandas as pd
@@ -420,9 +420,10 @@ class MainWin(QMainWindow):
         self.ui.actionDelete_Datafile.triggered.connect(self.delete_datafile)
 
         self.ui.actionText_Editor.triggered.connect(self.choose_text_editor)
-        te_path = Path(config.app_cfg.text_editor)
+        if not config.app_cfg.text_editor:
+            config.app_cfg.text_editor = 'default'
         self.ui.actionText_Editor.setText(
-            f"Text Editor: {te_path.name if te_path.is_file() else 'BUILT-IN'}"
+            f"Text Editor: {config.app_cfg.text_editor.upper()}"
         )
 
     def window_focus_changed(self, win: QMainWindow):
@@ -1332,26 +1333,17 @@ class MainWin(QMainWindow):
         self.text_editor_dialog.exec()  # needed to make it modal?!
 
         if self.text_editor_dialog.ok:
-            config.app_cfg.text_editor = (
-                self.text_editor_dialog.ui.plainTextEditPath.toPlainText()
-                if not self.text_editor_dialog.ui.checkBoxUseBuiltin.isChecked()
-                else ""
-            )
-            config.save_app_config(quiet=True)
             self.write(
-                f"{e_info} EPICpy's text editor setting is set to \"{config.app_cfg.text_editor if config.app_cfg.text_editor else 'BUILT-IN'}\"."
+                f"{e_info} EPICpy's text editor setting is set to \"{config.app_cfg.text_editor.upper()}\"."
             )
         else:
             self.write(
                 f"{e_info} No changes made to application EPICpy's text editor setting."
             )
 
-        editor = (
-            "BUILT-IN"
-            if not config.app_cfg.text_editor.strip()
-            else Path(config.app_cfg.text_editor.strip()).name
+        self.ui.actionText_Editor.setText(
+            f"Text Editor: {config.app_cfg.text_editor.upper()}"
         )
-        self.ui.actionText_Editor.setText(f"Text Editor: {editor}")
 
     def toggle_darkmode(self, dark_mode: bool):
         config.app_cfg.dark_mode = dark_mode
@@ -1881,17 +1873,24 @@ class MainWin(QMainWindow):
         else:
             stopAction = None
 
-            clearAction = contextMenu.addAction("Clear")
             searchAction = contextMenu.addAction("Search")
             selectAllAction = contextMenu.addAction("Select All")
+
+            contextMenu.addSeparator()
             if self.ui.plainTextEditOutput.copyAvailable and len(
                 self.ui.plainTextEditOutput.toPlainText()
             ):
                 copyAction = contextMenu.addAction("Copy")
             else:
                 copyAction = None
+            clearAction = contextMenu.addAction("Clear")
+
+            contextMenu.addSeparator()
+
             EditNormalOutAction = contextMenu.addAction(
                 "Open Normal Output In Text Editor"
+                if self.run_state >= RUNNABLE
+                else None
             )
             EditRulesAction = (
                 contextMenu.addAction("Edit Production Rule File")
@@ -1899,11 +1898,14 @@ class MainWin(QMainWindow):
                 else None
             )
             EditDataAction = (
-                contextMenu.addAction("edit Data Output File")
+                contextMenu.addAction("Edit Data Output File")
                 if self.run_state > UNREADY
                 else None
             )
+
+            contextMenu.addSeparator()
             searchQuit = contextMenu.addAction("Quit")
+
 
         action = contextMenu.exec_(self.mapToGlobal(event))
 
@@ -2060,9 +2062,9 @@ class MainWin(QMainWindow):
             file_path = None
 
         if file_path is not None:
-            editor_path = config.app_cfg.text_editor.strip()
+            editor_path = config.app_cfg.text_editor.lower()
             try:
-                if not editor_path:
+                if editor_path == 'built-in':
                     # If there is no current editor, create one
                     if (self.editor_window is None) or (not hasattr(self.editor_window, 'isVisible')) or (not self.editor_window.isVisible()):
                         try:
@@ -2090,8 +2092,24 @@ class MainWin(QMainWindow):
                     self.editor_window.activateWindow()
 
                 else:
-                    # user has specified an external editor
-                    subprocess.run([editor_path, str(file_path.resolve())])
+                    # user has specified an the system default editor
+                    OS = platform.system()
+                    if OS == 'Linux':
+                        open_cmd = 'xdg-open'
+                    elif OS == 'Darwin':
+                        open_cmd = 'open'
+                    elif OS == 'Windows':
+                        open_cmd = 'start'
+                    else:
+                        open_cmd = ''
+                        err_msg = (
+                            f"ERROR: EPICpy can only open system default editor on\n"
+                            f"Linux, Darwin, and Windows based operating systems.\n"
+                            f"It does not currently support your operating system type ({OS})."
+                        )
+                        self.write(emoji_box(err_msg, line="thick"))
+                    if open_cmd:
+                        subprocess.run([open_cmd, str(file_path.resolve())])
             except Exception as e:
                 self.write(
                     emoji_box(
