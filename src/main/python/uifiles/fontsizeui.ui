@@ -93,10 +93,10 @@
      <widget class="CachedPlainTextEdit" name="plainTextEditFontSample">
       <property name="font">
        <font>
-        <family>Consolas</family>
+        <family>Fira Mono</family>
         <pointsize>14</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
+        <weight>50</weight>
+        <bold>false</bold>
        </font>
       </property>
       <property name="documentTitle">

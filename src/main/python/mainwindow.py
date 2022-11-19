@@ -267,6 +267,11 @@ class MainWin(QMainWindow):
         self.default_palette = self.context.app.palette()
         self.set_stylesheet(config.app_cfg.dark_mode)
 
+        # I'm not sure Consolas is the right font for us...seems to mess up boxes.
+        # So we're forcing the font_name configuration to be JetBrains Mono for now
+        config.app_cfg.font_name = 'JetBrains Mono'
+        config.save_config(True)
+
         # This approach will presumably alter every widget that is a child of this window
         self.setStyleSheet(
             'QWidget {font: "'
@@ -276,7 +281,10 @@ class MainWin(QMainWindow):
             + "pt}"
         )
         self.ui.plainTextEditOutput.setFont(
-            QFont(config.app_cfg.font_name, int(config.app_cfg.font_size))
+            QFont(
+                config.app_cfg.font_name,
+                int(config.app_cfg.font_size)
+            )
         )
 
         # setup some ui timers
@@ -867,8 +875,12 @@ class MainWin(QMainWindow):
             ).is_file(), f"{img_filename} is not a valid image file"
             if _view_type == "visual":
                 views = self.visual_views
-            else:
+            elif _view_type == 'auditory':
                 views = self.auditory_views
+            else:
+                raise ValueError(f'set_view_background_image: Got bad view_type ({_view_type}), '
+                                 f'should be in (visual, auditory)')
+
             for view in views.values():
                 view.set_background_image(img_filename)
         except Exception as e:
@@ -1300,7 +1312,7 @@ class MainWin(QMainWindow):
 
         if self.font_size_dialog is None:
             self.font_size_dialog = FontSizeDialog(self.context)
-            self.font_size_dialog.setup_options()
+            self.font_size_dialog.setup_options(True)
         self.font_size_dialog.setModal(True)
         self.font_size_dialog.exec()  # needed to make it modal?!
 
@@ -1309,7 +1321,7 @@ class MainWin(QMainWindow):
             config.save_app_config(quiet=True)
             self.write(
                 f"{e_info} Application font size changed to {config.app_cfg.font_size} "
-                f"pt). Note that some dialogs will only use new font size after "
+                f"pt). Note that some dialogs may only use new font size after "
                 f"application restart."
             )
             for target in (self, self.trace_win, self.stats_win):

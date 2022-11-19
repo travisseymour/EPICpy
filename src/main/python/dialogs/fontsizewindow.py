@@ -70,11 +70,27 @@ class FontSizeDialog(QDialog):
         super(FontSizeDialog, self).resizeEvent(event)
 
     def setup_options(self, update_spin_box: bool = True):
-        self.ui.plainTextEditFontSample.setFont(
-            QFont(config.app_cfg.font_name, int(config.app_cfg.font_size))
-        )
         if update_spin_box:
+            # usually called when dialog opened (pulls size from config)
             self.ui.spinBoxFontSize.setValue(int(config.app_cfg.font_size))
+            self.ui.plainTextEditFontSample.setStyleSheet(
+                'QWidget {font: "'
+                + config.app_cfg.font_name
+                + '"; font-size: '
+                + str(int(config.app_cfg.font_size))
+                + "pt}"
+            )
+        else:
+            # usually called when spinbox changes (pulls size from widget)
+            self.ui.plainTextEditFontSample.setStyleSheet(
+                'QWidget {font: "'
+                + config.app_cfg.font_name
+                + '"; font-size: '
+                + str(int(self.ui.spinBoxFontSize.value()))
+                + "pt}"
+            )
+
+        self.ui.plainTextEditFontSample.update()
 
     def clicked_cancel_button(self):
         self.ok = False
