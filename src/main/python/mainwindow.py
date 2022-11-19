@@ -882,7 +882,7 @@ class MainWin(QMainWindow):
                                  f'should be in (visual, auditory)')
 
             for view in views.values():
-                view.set_background_image(img_filename)
+                view.set_background_image(img_filename, scaled=scaled)
         except Exception as e:
             log.error(f"Unable to set view background image [{e}]")
 

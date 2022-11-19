@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from itertools import chain
+from pathlib import Path
 from typing import Optional
 
 from PyQt5.QtGui import (
@@ -89,6 +90,7 @@ class VisualViewWin(QMainWindow):
         self.can_close = False
         self.bg_image_file = ""
         self.bg_image = None
+        self.bg_image_scaled = False
 
         self.enabled = True
         self.can_draw = True
@@ -295,6 +297,10 @@ class VisualViewWin(QMainWindow):
     def resizeEvent(self, event: QResizeEvent):
         QMainWindow.resizeEvent(self, event)
         self.origin = Point(self.width() // 2, self.height() // 2)
+        if self.bg_image_file:
+            self.bg_image = QPixmap(self.bg_image_file)
+            if isinstance(self.bg_image, QPixmap) and self.bg_image_scaled:
+                self.bg_image = self.bg_image.scaled(self.width(), self.height())  # , Qt.KeepAspectRatio
         self.update()
 
     def dot_and_eye(self):
@@ -366,24 +372,25 @@ class VisualViewWin(QMainWindow):
         if self.bg_image is not None:
             w, h = self.width(), self.height()
             pw, ph = self.bg_image.width(), self.bg_image.height()
-            self.painter.drawPixmap(w // 2 - pw // 2, h // 2 - ph // 2, self.bg_image)
+            try:
+                self.painter.drawPixmap(w // 2 - pw // 2, h // 2 - ph // 2, self.bg_image)
+            except Exception as e:
+                log.error(f'Unable to draw background: {str(e)}')
 
     def set_background_image(self, img_file: str, scaled: bool = True):
         if img_file and self.bg_image_file == img_file:
             return
         try:
-            if not img_file:
+            if not img_file or not Path(img_file).is_file():
                 # erase
                 self.bg_image_file = ""
                 self.bg_image = None
             else:
                 self.bg_image_file = img_file
-                img = (
-                    QImage(img_file).scaled(self.width(), self.height())
-                    if scaled
-                    else QImage(img_file)
-                )
-                self.bg_image = QPixmap.fromImage(img)
+                self.bg_image = QPixmap(img_file)
+                if isinstance(self.bg_image, QPixmap) and scaled:
+                    self.bg_image = self.bg_image.scaled(self.width(), self.height()) # , Qt.KeepAspectRatio
+                self.bg_image_scaled = scaled
         except Exception as e:
             self.bg_image_file = ""
             self.bg_image = None
