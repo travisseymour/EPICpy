@@ -1,9 +1,23 @@
 
 # EPICpy Changelog
-#### (lasted updated Sun Aug 28 15:47:37 2022)
+#### (lasted updated Fri Nov 18 20:35:56 2022)
 
 ---
 
+1. Fixed background images not showing up, fixed background images not resizing.
+2. Moved tests to submenu under help menu.
+3. Font size menu example now updates as you change font size.
+4. Rearranged NO popup, fixed NO edit file availaibility in popup, changed editor modes to either built-in or system default. no more entering an editor file path.
+5. Updated EPICCoder to v1.1.0.
+6. Going to merge these tools useful for bug finding in pyEPIC project.
+7. Moved to own subfolder - split up gym and workout - added comparisons.
+8. Working - can now see numbers being used.
+9. Working - only issue is calls with random obj gen are opaque and depend on matching randomization seeds.
+10. Seems to be actually working for classes structs and namespaces!
+11. Almost ready to run but issue with how im trying to make calls from strings.
+12. Have system for obtaining sufficient call information for exercising EPICLib objects properties and methods.
+13. Removed CITATION.cff in favor of explicit citation note in README.md.
+14. Exact_requirements.txt was getting out of date (e.g., we're now using PyQt5).
 
 ## VERSION: 2022.8.2
 
