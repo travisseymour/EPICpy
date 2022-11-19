@@ -1,9 +1,13 @@
 
 # EPICpy Changelog
-#### (lasted updated Fri Nov 18 20:35:56 2022)
+#### (lasted updated Fri Nov 18 20:38:10 2022)
 
 ---
 
+
+## VERSION: 11.18.2022
+
+---
 1. Fixed background images not showing up, fixed background images not resizing.
 2. Moved tests to submenu under help menu.
 3. Font size menu example now updates as you change font size.
