@@ -30,39 +30,35 @@
      <bold>false</bold>
     </font>
    </property>
-   <widget class="CachedPlainTextEdit" name="plainTextEditOutput">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>501</width>
-      <height>431</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Consolas</family>
-      <pointsize>14</pointsize>
-      <weight>50</weight>
-      <bold>false</bold>
-     </font>
-    </property>
-    <property name="contextMenuPolicy">
-     <enum>Qt::CustomContextMenu</enum>
-    </property>
-    <property name="documentTitle">
-     <string/>
-    </property>
-    <property name="readOnly">
-     <bool>true</bool>
-    </property>
-    <property name="plainText">
-     <string>Ready.</string>
-    </property>
-    <property name="centerOnScroll">
-     <bool>false</bool>
-    </property>
-   </widget>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="CachedPlainTextEdit" name="plainTextEditOutput">
+      <property name="font">
+       <font>
+        <family>Consolas</family>
+        <pointsize>14</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="contextMenuPolicy">
+       <enum>Qt::CustomContextMenu</enum>
+      </property>
+      <property name="documentTitle">
+       <string/>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+      <property name="plainText">
+       <string>Ready.</string>
+      </property>
+      <property name="centerOnScroll">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -143,8 +139,24 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <widget class="QMenu" name="menuTests">
+     <property name="font">
+      <font>
+       <family>Consolas</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="title">
+      <string>Tests</string>
+     </property>
+     <addaction name="actionStandardRun"/>
+     <addaction name="actionEncoderRun"/>
+     <addaction name="actionAllRuns"/>
+    </widget>
     <addaction name="actionAbout"/>
     <addaction name="actionHelp"/>
+    <addaction name="separator"/>
+    <addaction name="menuTests"/>
    </widget>
    <widget class="QMenu" name="menuWindows">
     <property name="title">
@@ -177,35 +189,12 @@
     <addaction name="actionFindNext"/>
     <addaction name="actionFindPrevious"/>
    </widget>
-   <widget class="QMenu" name="menuTests">
-    <property name="title">
-     <string>Tests</string>
-    </property>
-    <widget class="QMenu" name="menuRun_Tests">
-     <property name="font">
-      <font>
-       <family>Consolas</family>
-       <pointsize>12</pointsize>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="title">
-      <string>Run Tests</string>
-     </property>
-     <addaction name="actionStandard_Run"/>
-     <addaction name="actionEncoder_Run"/>
-     <addaction name="actionAll_Runs"/>
-    </widget>
-    <addaction name="menuRun_Tests"/>
-   </widget>
    <addaction name="menuFiles"/>
    <addaction name="menuSearch"/>
    <addaction name="menuSettings"/>
    <addaction name="menuRun"/>
    <addaction name="menuWindows"/>
    <addaction name="menuHelp"/>
-   <addaction name="menuTests"/>
   </widget>
   <widget class="QStatusBar" name="statusbar">
    <property name="font">
@@ -805,6 +794,39 @@
   <action name="actionText_Editor">
    <property name="text">
     <string>Text Editor: BUILT-IN</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Consolas</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionStandardRun">
+   <property name="text">
+    <string>Standard Run</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Consolas</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionEncoderRun">
+   <property name="text">
+    <string>Encoder Run</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Consolas</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionAllRuns">
+   <property name="text">
+    <string>All Runs</string>
    </property>
    <property name="font">
     <font>

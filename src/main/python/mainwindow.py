@@ -358,13 +358,13 @@ class MainWin(QMainWindow):
         self.ui.actionPause.setShortcut("Ctrl+Alt+P")
         self.ui.actionAbout.triggered.connect(self.about_dialog)
         self.ui.actionHelp.triggered.connect(self.open_help_file)
-        self.ui.actionStandard_Run.triggered.connect(
+        self.ui.actionStandardRun.triggered.connect(
             partial(self.run_tests, kind="StandardRun")
         )
-        self.ui.actionEncoder_Run.triggered.connect(
+        self.ui.actionEncoderRun.triggered.connect(
             partial(self.run_tests, kind="EncoderRun")
         )
-        self.ui.actionAll_Runs.triggered.connect(
+        self.ui.actionAllRuns.triggered.connect(
             partial(self.run_tests, kind="AllRuns")
         )
         self.ui.actionDisplay_Controls.triggered.connect(
