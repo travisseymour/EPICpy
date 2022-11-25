@@ -1,8 +1,14 @@
 
 # EPICpy Changelog
-#### (lasted updated Fri Nov 18 20:38:10 2022)
+#### (lasted updated Fri Nov 25 12:56:14 2022)
 
 ---
+
+
+## VERSION: 2022.11.25
+
+---
+1. **CHANGE**: new approach to loading devices and encoders no longer requires creating temp files.
 
 
 ## VERSION: 11.18.2022
