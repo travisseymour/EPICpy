@@ -818,21 +818,6 @@ class MainWin(QMainWindow):
             view.can_close = True
             view.close()  # destroy()
 
-        if self.simulation:
-            # cleaning up temp device import module
-            if self.simulation.tempmod_path and self.simulation.tempmod_path.is_file():
-                self.simulation.tempmod_path.unlink()
-            if (
-                self.simulation.tempenc_v_path
-                and self.simulation.tempenc_v_path.is_file()
-            ):
-                self.simulation.tempenc_v_path.unlink()
-            if (
-                self.simulation.tempenc_a_path
-                and self.simulation.tempenc_a_path.is_file()
-            ):
-                self.simulation.tempenc_a_path.unlink()
-
         self.close_output_files()
 
         try:

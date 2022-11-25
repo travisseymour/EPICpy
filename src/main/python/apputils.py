@@ -225,3 +225,20 @@ def ignore_warnings(f):
         return response
 
     return inner
+
+class add_path():
+    """
+    Creates A Context Manager For Temporarily Adding Directory To System Path.
+    E.g., see https://stackoverflow.com/questions/17211078
+    """
+    def __init__(self, path):
+        self.path = path
+
+    def __enter__(self):
+        sys.path.insert(0, self.path)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            sys.path.remove(self.path)
+        except ValueError:
+            pass

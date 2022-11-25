@@ -36,7 +36,7 @@ from encoderpassthru import NullVisualEncoder, NullAuditoryEncoder
 from stateconstants import *
 from emoji import *
 from dialogs.loggingwindow import LoggingSettingsWin
-import modulereloader
+import modulereloader  # KEEP HERE, USED IN EXEC STATEMENT!
 from loguru import logger as log
 import config
 from plum import dispatch  # keep here to ensure it gets pulled in, needed for devices
@@ -86,10 +86,6 @@ class Simulation:
         self.visual_encoder = None
         self.auditory_encoder = None
 
-        self.tempmod_path: Path = None
-        self.tempenc_v_path: Path = None
-        self.tempenc_a_path: Path = None
-
         self.instance = Coordinator.get_instance()
         self.stop_model_now = False
 
@@ -111,6 +107,13 @@ class Simulation:
 
         self.raw_device_param_string = ""
         self.param_set = []
+
+        self.device_path_additions  = []
+        self.visual_encoder_path_additions = []
+        self.auditory_encoder_path_additions = []
+
+    def __del__(self):
+        self.reset_path()
 
     def call_for_display_refresh(self):
         current_time = self.instance.get_time()
@@ -173,6 +176,7 @@ class Simulation:
                     line="thick",
                 )
             )
+
 
     def on_load_device(self, file: str = "", quiet: bool = False):
 
@@ -244,21 +248,6 @@ class Simulation:
 
             self.current_rule_index = 0
             self.device = None
-            try:
-                assert self.tempmod_path and self.tempmod_path.is_file()
-                self.tempmod_path.unlink()
-            except AssertionError:
-                # no file to delte
-                ...
-            except IOError as e:
-                self.write(
-                    f"ERROR: Unable to alter files on the path "
-                    f"{str(self.tempmod_path.parent)} ({e})."
-                )
-            except Exception as e:
-                log.error(
-                    f"ERROR while trying to unlink file {str(self.tempmod_path)}: {e}"
-                )
 
             # these will be handy
             device_file_p = Path(device_file)
@@ -283,89 +272,42 @@ class Simulation:
                         )
                     )
 
-            # Must add parent folder to python path
+            # remove any old device path additions
+            for path in self.device_path_additions:
+                try:
+                    sys.path.remove(path)
+                except ValueError:
+                    ...
+
+            # Must add parent folder to system path
+            self.device_path_additions.append(str(device_file_p.parent))
             sys.path.append(str(device_file_p.parent))
 
             # Optionally try to add grandparent folder too, helps if you have bases
             # in folder above the one the device is in, but we shouldn't require it.
+            self.device_path_additions.append(str(device_file_p.parent.parent))
             try:
                 sys.path.append(str(device_file_p.parent.parent))
             except:
                 ...
-
-            # - to construct an import statement, the module name must be known.
-            #   this expression copies the device code to a known file
-            self.tempmod_path = Path(device_file_p.parent, "tempmod.py")
-            try:
-                assert self.tempmod_path and self.tempmod_path.is_file()
-                self.tempmod_path.unlink()
-            except AssertionError:
-                # no file to delete
-                ...
-            except IOError as e:
-                self.write(
-                    f"ERROR: Unable to alter files on the path "
-                    f"{str(self.tempmod_path.parent)} ({e})."
-                )
-            except Exception as e:
-                log.error(
-                    f"ERROR while trying to unlink file {str(self.tempmod_path)}: {e}"
-                )
-            device_code = device_file_p.read_text()
-
-            try:
-                assert device_code.strip(), "Device file appears to be empty!"
-                pattern = r"class EpicDevice *\( *.*EpicPyDevice *\) *\:"
-                regex_error = (
-                    "Unable to find class EpicDevice subclassed from "
-                    "EpicPyDevice or epicpy_device.EpicPyDevice"
-                )
-                assert re.findall(pattern, device_code), regex_error
-                self.tempmod_path.write_text(device_code)
-            except AssertionError as e:
-                self.write(
-                    emoji_box(
-                        f"ERROR: Failed to create new EpicDevice from\n"
-                        f"{device_file_p.name}!\n"
-                        f"{e}",
-                        line="thick",
-                    )
-                )
-                self.device = None
-                return
-            except IOError as e:
-                self.write(
-                    f"ERROR: Unable to write to file\n"
-                    f"{str(self.tempmod_path.parent)}:\n"
-                    f"{e}"
-                )
-            except Exception as e:
-                log.error(
-                    f"ERROR while trying to write to file "
-                    f"{str(self.tempmod_path)}: {e}"
-                )
 
             # - now we can attempt to import the EpicDevice class from this module
             try:
                 # despite appearances, BOTH of the following lines are required if we
                 # want a device reload to pull any changes that have occurred since
                 # starting EPICpy!
-                import tempmod
 
-                modulereloader.reset_module(tempmod)
+                exec(f'import {device_file_p.stem}')
+                exec(f'modulereloader.reset_module({device_file_p.stem})')
 
                 if not quiet:
                     self.write(
                         f"{e_info} loading device code from {device_file_p.name}..."
                     )
 
-                self.device = tempmod.EpicDevice(
-                    ot=Normal_out,
-                    parent=self.parent,
-                    device_folder=device_file_p.parent,
-                )
+                exec(f'self.device = {device_file_p.stem}.EpicDevice(ot=Normal_out, parent=self.parent, device_folder=device_file_p.parent)')
                 self.device.__release_gil__ = (
-                    True  # no idea if this does anything at all!?
+                    True  # from cppyy...no idea if this does anything at all!?
                 )
                 if not quiet:
                     self.write(
@@ -585,53 +527,18 @@ class Simulation:
             # create a new encoder [encoder file must define a class called VisualEncoder]
             encoder_file_p = Path(encoder_file)
 
-            sys.path.append(str(encoder_file_p.parent))
-            # - to construct an import statement, the module name must be known.
-            #   this expression copies the device code to a known file
-            if kind == "Visual":
-                self.tempenc_v_path = Path(encoder_file_p.parent, "tempvenc.py")
-            else:
-                self.tempenc_a_path = Path(encoder_file_p.parent, "tempaenc.py")
+            # remove any old encoder paths
+            for path in self.visual_encoder_path_additions if kind=='Visual' else self.auditory_encoder_path_additions:
+                try:
+                    sys.path.remove(path)
+                except ValueError:
+                    ...
 
-            try:
-                encoder_code = encoder_file_p.read_text()
-                assert encoder_code.strip(), "Encoder appears to be empty!"
-                if kind == "Visual":
-                    pattern = r"class VisualEncoder *" \
-                              r"\( *(Visual_encoder_base|EPICPyVisualEncoder) *\) *\:"
-                    regex_error = (
-                        "Unable to find class VisualEncoder subclassed from "
-                        "Visual_encoder_base"
-                    )
-                    assert re.findall(pattern, encoder_code), regex_error
-                    self.tempenc_v_path.write_text(encoder_code)
-                else:
-                    pattern = (
-                        r"class AuditoryEncoder *"
-                        r"\( *(Auditory_encoder_base|EPICPyAuditoryEncoder) *\) *\:"
-                    )
-                    regex_error = (
-                        "Unable to find class AuditoryEncoder subclassed from "
-                        "Auditory_encoder_base"
-                    )
-                    assert re.findall(pattern, encoder_code), regex_error
-                    self.tempenc_a_path.write_text(encoder_code)
-            except Exception as e:
-                self.write(
-                    emoji_box(
-                        f"ERROR: Failed to create new {kind} encoder from\n"
-                        f"{encoder_file_p.name}:\n"
-                        f"{e}",
-                        line="thick",
-                    )
-                )
-                if kind == "Visual":
-                    self.visual_encoder = None
-                    config.device_cfg.visual_encoder = ""
-                else:
-                    self.auditory_encoder = None
-                    config.device_cfg.auditory_encoder = ""
-                return
+            # Must add encoder parent folder to system path
+            if str(encoder_file_p.parent) not in self.device_path_additions:
+                self.device_path_additions.append(str(encoder_file_p.parent))
+            sys.path.append(str(encoder_file_p.parent))
+
 
             # - now we can attempt to import the VisualEncoder or AuditoryEncoder class
             #   from this module
@@ -639,26 +546,19 @@ class Simulation:
                 # despite appearances, BOTH of the following lines are required if we
                 # want an encoder reload to pull any changes that have occurred since
                 # starting EPICpy!
-                if kind == "Visual":
-                    import tempvenc as tempenc
-                else:
-                    import tempaenc as tempenc
-
-                modulereloader.reset_module(tempenc)
+                exec(f'import {encoder_file_p.stem}')
+                exec(f'modulereloader.reset_module({encoder_file_p.stem})')
 
                 if not quiet:
                     self.write(
                         f"{e_info} loading encoder from {encoder_file_p.name}..."
                     )
 
+                ul_name = encoder_file_p.stem.replace("_", " ").title()
                 if kind == "Visual":
-                    self.visual_encoder = tempenc.VisualEncoder(
-                        encoder_file_p.stem.replace("_", " ").title(), self
-                    )
+                    exec(f'self.visual_encoder = {encoder_file_p.stem}.VisualEncoder("{ul_name}", self)')
                 else:
-                    self.auditory_encoder = tempenc.AuditoryEncoder(
-                        encoder_file_p.stem.replace("_", " ").title(), self
-                    )
+                    exec(f'self.auditory_encoder = {encoder_file_p.stem}.AuditoryEncoder("{ul_name}", self)')
 
                 if kind == "Visual":
                     setattr(self.visual_encoder, "write", self.write)
