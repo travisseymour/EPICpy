@@ -1886,19 +1886,17 @@ class MainWin(QMainWindow):
 
             EditNormalOutAction = contextMenu.addAction(
                 "Open Normal Output In Text Editor"
-                if self.run_state >= RUNNABLE
-                else None
-            )
+
+            ) if self.run_state >= RUNNABLE else None
+
             EditRulesAction = (
                 contextMenu.addAction("Edit Production Rule File")
-                if self.run_state >= RUNNABLE
-                else None
-            )
+
+            ) if self.run_state >= RUNNABLE else None
+
             EditDataAction = (
                 contextMenu.addAction("Edit Data Output File")
-                if self.run_state > UNREADY
-                else None
-            )
+            ) if self.run_state > UNREADY else None
 
             contextMenu.addSeparator()
             searchQuit = contextMenu.addAction("Quit")
@@ -1920,11 +1918,11 @@ class MainWin(QMainWindow):
             self.ui.plainTextEditOutput.selectAll()
         elif action == copyAction:
             self.ui.plainTextEditOutput.copy()
-        elif action == EditNormalOutAction:
+        elif EditNormalOutAction is not None and action == EditNormalOutAction:
             self.launchEditor(which_file="NormalOut")
-        elif action == EditRulesAction:
+        elif EditRulesAction is not None and action == EditRulesAction:
             self.launchEditor(which_file="RuleFile")
-        elif action == EditDataAction:
+        elif EditDataAction is not None and action == EditDataAction:
             self.launchEditor(which_file="DataFile")
 
     def query_search(self):
