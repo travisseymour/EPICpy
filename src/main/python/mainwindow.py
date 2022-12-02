@@ -1856,6 +1856,7 @@ class MainWin(QMainWindow):
 
     def search_context_menu(self, event):
         contextMenu = QMenu(self)
+        device_file = config.device_cfg.device_file
 
         if self.run_state == RUNNING:
             stopAction = contextMenu.addAction("Stop")
@@ -1867,6 +1868,7 @@ class MainWin(QMainWindow):
             EditNormalOutAction = None
             EditRulesAction = contextMenu.addAction("Edit Rule File")
             EditDataAction = None
+            OpenDeviceFolder = None
         else:
             stopAction = None
 
@@ -1898,6 +1900,12 @@ class MainWin(QMainWindow):
                 contextMenu.addAction("Edit Data Output File")
             ) if self.run_state > UNREADY else None
 
+            if Path(device_file).is_file():
+                contextMenu.addSeparator()
+                OpenDeviceFolder = contextMenu.addAction("Open Device Folder")
+            else:
+                OpenDeviceFolder = None
+
             contextMenu.addSeparator()
             searchQuit = contextMenu.addAction("Quit")
 
@@ -1918,12 +1926,27 @@ class MainWin(QMainWindow):
             self.ui.plainTextEditOutput.selectAll()
         elif action == copyAction:
             self.ui.plainTextEditOutput.copy()
-        elif EditNormalOutAction is not None and action == EditNormalOutAction:
+        elif action == EditNormalOutAction:
             self.launchEditor(which_file="NormalOut")
-        elif EditRulesAction is not None and action == EditRulesAction:
+        elif action == EditRulesAction:
             self.launchEditor(which_file="RuleFile")
-        elif EditDataAction is not None and action == EditDataAction:
+        elif action == EditDataAction:
             self.launchEditor(which_file="DataFile")
+        elif action == OpenDeviceFolder:
+            OS = platform.system()
+            if OS == 'Linux':
+                open_cmd = 'xdg-open'
+            elif OS == 'Darwin':
+                open_cmd = 'open'
+            elif OS == 'Windows':
+                open_cmd = 'start'
+            else:
+                open_cmd = ''
+                err_msg = (f"ERROR: Opening device folder when OS=='{OS}' is not yet implemented!")
+                self.write(emoji_box(err_msg, line="thick"))
+
+            if open_cmd:
+                subprocess.run([open_cmd, str(Path(device_file).resolve().parent)])
 
     def query_search(self):
         self.search_dialog.ok = False
