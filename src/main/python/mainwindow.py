@@ -1857,6 +1857,7 @@ class MainWin(QMainWindow):
     def search_context_menu(self, event):
         contextMenu = QMenu(self)
         device_file = config.device_cfg.device_file
+        rules_rile = config.device_cfg.rule_files[0] if config.device_cfg.rule_files else ''
 
         if self.run_state == RUNNING:
             stopAction = contextMenu.addAction("Stop")
@@ -1889,18 +1890,18 @@ class MainWin(QMainWindow):
             EditNormalOutAction = contextMenu.addAction(
                 "Open Normal Output In Text Editor"
 
-            ) if self.run_state >= RUNNABLE else None
+            ) if self.run_state != RUNNING else None
 
             EditRulesAction = (
                 contextMenu.addAction("Edit Production Rule File")
 
-            ) if self.run_state >= RUNNABLE else None
+            ) if (self.run_state != RUNNING and Path(rules_rile).is_file()) else None
 
             EditDataAction = (
                 contextMenu.addAction("Edit Data Output File")
-            ) if self.run_state > UNREADY else None
+            ) if self.run_state and self.run_state != RUNNING else None
 
-            if Path(device_file).is_file():
+            if Path(device_file).is_file() and self.run_state != RUNNING:
                 contextMenu.addSeparator()
                 OpenDeviceFolder = contextMenu.addAction("Open Device Folder")
             else:
