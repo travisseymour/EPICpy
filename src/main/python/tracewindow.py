@@ -58,11 +58,8 @@ class TraceWin(QMainWindow):
     def enable_text_updates(self, enable: bool = True):
         self.ui.plainTextEditOutput.cache_text = not enable
 
-    def write(self, text: str, copy_to_trace: bool = False):
-        if text.strip():
-            self.ui.plainTextEditOutput.write(text)
-            if copy_to_trace:
-                self.trace_win.ui.plainTextEditOutput.write(text)
+    def write(self, text: str):
+        self.ui.plainTextEditOutput.write(text)
 
     def dump_cache(self):
         return self.ui.plainTextEditOutput.dump_cache()

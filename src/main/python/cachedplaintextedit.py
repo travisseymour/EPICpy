@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
+import re
 from functools import partial
 
 from PyQt5.QtCore import QTimer
@@ -75,8 +75,10 @@ class CachedPlainTextEdit(QPlainTextEdit):
 
             big_text = "\n".join(self.text_cache)
 
-            ss = QTimer()
-            ss.singleShot(100, partial(self.appendPlainText, big_text))
+            if big_text.strip():
+                # don't dump to widget if empty!
+                ss = QTimer()
+                ss.singleShot(100, partial(self.appendPlainText, big_text))
 
             self.text_cache = list()
 
