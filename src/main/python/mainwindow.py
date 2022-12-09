@@ -27,6 +27,7 @@ import fitness
 from dialogs.aboutwindow import AboutWin
 from dialogs.fontsizewindow import FontSizeDialog
 from dialogs.texteditchoicewindow import TextEditChoiceWin
+from runinfo import RunInfo
 from uifiles.mainui import Ui_MainWindow
 from dialogs.sndtextsettingswindow import SoundTextSettingsWin
 from statswindow import StatsWin
@@ -453,7 +454,7 @@ class MainWin(QMainWindow):
     # to nothing.
     # ==============================================================================
 
-    def on_load_device(self, file: str = "", quiet: bool = False):
+    def on_load_device(self, file: str = "", quiet: bool = False, auto_load_rules: bool = True):
         self.layout_save()
 
         try:
@@ -481,7 +482,7 @@ class MainWin(QMainWindow):
             self.layout_load(y_adjust=26)
             self.manage_z_order = True
 
-            if config.device_cfg.rule_files:
+            if auto_load_rules and config.device_cfg.rule_files:
                 self.simulation.choose_rules(config.device_cfg.rule_files)
 
     def choose_rules(self, rules: Optional[list] = None):
@@ -499,7 +500,7 @@ class MainWin(QMainWindow):
     def run_all(self):
         self.simulation.current_rule_index = 0
         rule_name = Path(
-            self.simulation.rule_files[self.simulation.current_rule_index]
+            self.simulation.rule_files[self.simulation.current_rule_index].rule_file
         ).name
         self.write(emoji_box(f"RULE FILE: {rule_name}", line="thick"))
 
@@ -553,7 +554,19 @@ class MainWin(QMainWindow):
                     for rule_file in config.device_cfg.rule_files
                     if Path(rule_file).is_file()
                 ]
-                self.simulation.rule_files = config.device_cfg.rule_files
+                # self.simulation.rule_files = config.device_cfg.rule_files
+
+                self.simulation.rule_files = [
+                    RunInfo(False,
+                            '',
+                            str(Path(item).resolve()),
+                            '',
+                            False,
+                            False
+                            )
+                    for item in config.device_cfg.rule_files
+                ]
+
                 self.simulation.current_rule_index = 0
             else:
                 self.simulation.rule_files = []
@@ -562,9 +575,9 @@ class MainWin(QMainWindow):
             if self.simulation.rule_files:
                 self.write(
                     f"{e_info} Attempting to compile first rule in ruleset list "
-                    f'("{Path(self.simulation.rule_files[0]).name}")'
+                    f'("{Path(self.simulation.rule_files[0].rule_file).name}")'
                 )
-                self.simulation.compile_rule(self.simulation.rule_files[0])
+                self.simulation.compile_rule(self.simulation.rule_files[0].rule_file)
 
             try:
                 assert Path(config.device_cfg.visual_encoder).is_file()
@@ -1138,7 +1151,7 @@ class MainWin(QMainWindow):
             device_name = "DEVICE: None"
         rule_name = (
             f"RULES: "
-            f"{Path(self.simulation.rule_files[self.simulation.current_rule_index]).name}"
+            f"{Path(self.simulation.rule_files[self.simulation.current_rule_index].rule_file).name}"
             if self.simulation and self.simulation.rule_files
             else "Rules: None"
         )
@@ -1916,7 +1929,7 @@ class MainWin(QMainWindow):
     def search_context_menu(self, event):
         contextMenu = QMenu(self)
         device_file = config.device_cfg.device_file
-        rules_rile = config.device_cfg.rule_files[0] if config.device_cfg.rule_files else ''
+        rules_file = config.device_cfg.rule_files[0] if config.device_cfg.rule_files else ''
 
         if self.run_state == RUNNING:
             stopAction = contextMenu.addAction("Stop")
@@ -1954,7 +1967,7 @@ class MainWin(QMainWindow):
             EditRulesAction = (
                 contextMenu.addAction("Edit Production Rule File")
 
-            ) if (self.run_state != RUNNING and Path(rules_rile).is_file()) else None
+            ) if (self.run_state != RUNNING and Path(rules_file).is_file()) else None
 
             EditDataAction = (
                 contextMenu.addAction("Edit Data Output File")
@@ -2092,13 +2105,13 @@ class MainWin(QMainWindow):
             if self.simulation.rule_files:
                 if self.simulation.current_rule_index < len(self.simulation.rule_files):
                     file_path = Path(
-                        self.simulation.rule_files[self.simulation.current_rule_index]
+                        self.simulation.rule_files[self.simulation.current_rule_index].rule_file
                     )
                 else:
                     file_path = Path(
                         self.simulation.rule_files[
                             self.simulation.current_rule_index - 1
-                        ]
+                        ].rule_file
                     )
             else:
                 file_path = None

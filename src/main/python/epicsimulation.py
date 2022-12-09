@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import re
-from typing import Optional
+from typing import Optional, List
 from pathlib import Path
 import sys
 import weakref
@@ -33,6 +33,7 @@ from cppinclude import epiclib_include
 import cppyy
 
 from encoderpassthru import NullVisualEncoder, NullAuditoryEncoder
+from runinfo import RunInfo
 from stateconstants import *
 from emoji import *
 from dialogs.loggingwindow import LoggingSettingsWin
@@ -94,7 +95,7 @@ class Simulation:
         self.run_time = 0
         self.run_time_limit = 0
         self.run_timer = QTimer()
-        self.rule_files = []
+        self.rule_files: List[RunInfo] = []
         self.last_run_mode = ""
         self.current_rule_index = 0
         self.last_update_time = timeit.default_timer()
@@ -634,11 +635,11 @@ class Simulation:
 
     def recompile_rules(self):
         self.current_rule_index = 0
-        if self.rule_files and Path(self.rule_files[self.current_rule_index]).is_file():
+        if self.rule_files and Path(self.rule_files[self.current_rule_index].rule_file).is_file():
             self.write(
-                f"{e_info} Recompiling {self.rule_files[self.current_rule_index]}..."
+                f"{e_info} Recompiling {self.rule_files[self.current_rule_index].rule_file}..."
             )
-            self.compile_rule(self.rule_files[self.current_rule_index])
+            self.compile_rule(self.rule_files[self.current_rule_index].rule_file)
         else:
             self.write(
                 emoji_box(
@@ -655,9 +656,22 @@ class Simulation:
         """
 
         if files:
-            note = "reloaded"
-            rule_files = [str(Path(file).resolve()) for file in files]
+            if all(isinstance(item, RunInfo) for item in files):
+                mode = 'run_info'
+            elif all(isinstance(item, str) for item in files):
+                mode = 'rule_files'
+            else:
+                the_types = set([type(item) for item in files])
+                self.write(
+                    f"ERROR: epicsimulation.choose_rules can only accept a list of ALL RuleInfo objects, or"
+                    f" a list of ALL rule file path strings, not a list consisting of multiple types"
+                    f" (e.g., {the_types})."
+                )
+                raise ValueError('Mixed types given to choose_rule function!')
         else:
+            mode = 'rule_files'
+
+        if not files:
             note = "selected"
             if (
                 config.device_cfg.device_file
@@ -673,25 +687,65 @@ class Simulation:
                 str(start_dir),
                 "Rule files (*.prs)",
             )[0]
+
+            rule_files = [
+                RunInfo(False,
+                        '',
+                        str(Path(item).resolve()),
+                        '',
+                        False,
+                        False
+                )
+                for item in rule_files
+            ]
+
+        elif files and mode == 'rule_files':
+            note = "reloaded"
+            rule_files = [
+                RunInfo(False,
+                        '',
+                        str(Path(item).resolve()),
+                        '',
+                        False,
+                        False
+                )
+                for item in files
+            ]
+        elif files and mode == 'rule_info':
+            note = "scripted"
+            rule_files = [
+                RunInfo(item.from_script,
+                        str(Path(item.device_file).resolve()),
+                        str(Path(item.rule_file).resolve()),
+                        item.parameter_string,
+                        item.clear_data,
+                        item.reload_device
+                )
+                for item in files
+            ]
+        else:
+            raise ValueError(f'Unknown state in epicsimulation.choose_rules(): {mode=} {files=}')
+
         if rule_files:
             self.rule_files = rule_files
-            self.rule_files = sorted(self.rule_files)
             self.current_rule_index = 0
 
+            rule_file_paths = [item.rule_file for item in rule_files]
+
             # go ahead and save in case we need cfg.rule_files
-            config.device_cfg.rule_files = rule_files
+            config.device_cfg.rule_files = rule_file_paths
             config.save_config(quiet=True)
             endl = "\n"
             self.write(
-                f"\n{len(self.rule_files)} ruleset files {note}:\n"
-                f"{endl.join(Path(rule_file).name for rule_file in self.rule_files)}\n"
+                f"\n{len(rule_file_paths)} ruleset files {note}:\n"
+                f"{endl.join(Path(rule_file).name for rule_file in rule_file_paths)}\n"
             )
             self.write(
                 f"{e_info} Attempting to compile first rule in {note} ruleset list..."
                 if len(rule_files) > 1
                 else f"{e_info} Attempting to compile {note} ruleset..."
             )
-            self.compile_rule(self.rule_files[self.current_rule_index])
+            self.compile_rule(self.rule_files[self.current_rule_index].rule_file)
         else:
             self.rule_files = []
             self.write(f"{e_boxed_x} No valid rule file(s) {note}.")
@@ -986,14 +1040,14 @@ class Simulation:
         if self.last_run_mode == "run_all":
             self.current_rule_index += 1
             if self.current_rule_index < len(self.rule_files):
-                rule_name = Path(self.rule_files[self.current_rule_index]).name
+                rule_name = Path(self.rule_files[self.current_rule_index].rule_file).name
                 self.write(
                     emoji_box(
                         f"RULE FILE: {rule_name} "
                         f"({self.current_rule_index}/{len(self.rule_files)})"
                     )
                 )
-                if self.compile_rule(self.rule_files[self.current_rule_index]):
+                if self.compile_rule(self.rule_files[self.current_rule_index].rule_file):
                     self.run_all()
                 else:
                     self.current_rule_index += 1
@@ -1002,7 +1056,7 @@ class Simulation:
                             f"\n{e_boxed_x} Compile Failed for {rule_name}, "
                             f"moving to next rule in list....\n"
                         )
-                        if self.compile_rule(self.rule_files[self.current_rule_index]):
+                        if self.compile_rule(self.rule_files[self.current_rule_index].rule_file):
                             self.run_all()
                     else:
                         self.current_rule_index = 0
