@@ -434,6 +434,8 @@ class MainWin(QMainWindow):
             f"Text Editor: {config.app_cfg.text_editor.upper()}"
         )
 
+        self.ui.actionRun_Simulation_Script.triggered.connect(self.simulation_from_script)
+
     def window_focus_changed(self, win: QMainWindow):
         if not win or not self.manage_z_order:
             return
@@ -482,8 +484,8 @@ class MainWin(QMainWindow):
             if config.device_cfg.rule_files:
                 self.simulation.choose_rules(config.device_cfg.rule_files)
 
-    def choose_rules(self):
-        self.simulation.choose_rules()
+    def choose_rules(self, rules: Optional[list] = None):
+        self.simulation.choose_rules(rules)
 
     def recompile_rules(self):
         self.simulation.recompile_rules()
@@ -625,6 +627,57 @@ class MainWin(QMainWindow):
             #     else:
             #         config.device_cfg.visual_encoder = ""
             #         config.device_cfg.auditory_encoder = ""
+
+    def simulation_from_script(self):
+        # if Path(config.device_cfg.device_file).is_file():
+        #     start_dir = Path(config.device_cfg.device_file).parent
+        # elif Path(config.app_cfg.last_device_file).is_file():
+        #     start_dir = Path(config.app_cfg.last_device_file).parent
+        # else:
+        #     start_dir = str(Path.home())
+        #
+        # script_file, _ = QFileDialog.getOpenFileName(
+        #     None,
+        #     "Choose EPICpy Device File",
+        #     str(start_dir),
+        #     "Python Files (*.py)",
+        # )
+        script_file = '/home/nogard/Dropbox/Documents/Courses_UCSC/Psych_139D_Modeling_Human_Performance/Fall 2022/Assignments/9_Final_Report/submissions/adamssamuel_LATE_37389_6535319_my_final_report/run_script.csv'
+        if not script_file:
+            self.write(f'The run-script loading operation was cancelled.')
+            return
+
+        try:
+            commands = pd.read_csv(
+                script_file,
+                names=['device_file', 'rule_file', 'parameter_string'],
+                skip_blank_lines=True,
+                comment='#'
+            )
+
+            err_msg = f"Unable to construct proper command matrix from '{script_file}'.\n" \
+                      f"Make sure each line contains device_file, rule_file, parameter_string " \
+                      f"on each line separated by commas and without spaces between elements " \
+                      f"(like a standard csv file)"
+
+            assert isinstance(commands, pd.DataFrame), err_msg
+
+            # for i, command in commands.iterrows():
+            #     log.debug(f'COMMAND {i}:\n\t{command.device_file=}\n\t{command.rule_file=}\n\t{command.parameter_string=}')
+        except Exception as e:
+            self.write(f'Error loading script file "{script_file}": {str(e)}.')
+            return
+
+        for i, cmd in commands.iterrows():
+            msg = f'RUNNING COMMAND ' \
+                  f'{i+1}/{len(commands)}:\n\t{cmd.device_file=}\n\t{cmd.rule_file=}\n\t{cmd.parameter_string=}'
+            log.debug(msg)
+            self.on_load_device(cmd.device_file)
+            self.choose_rules([cmd.rule_file])
+            self.simulation.device.set_parameter_string(cmd.parameter_string)
+            self.delete_datafile()
+            self.run_all()
+
 
     def update_output_logging(self):
         # First we undo everything, in case we get here with no model/device in
@@ -962,6 +1015,8 @@ class MainWin(QMainWindow):
         self.ui.actionEPICLib_Settings.setEnabled(False)
         self.ui.actionDelete_Datafile.setEnabled(False)
 
+        self.ui.actionRun_Simulation_Script.setEnabled(False)
+
     def set_ui_paused(self):
         has_rules = (
             True
@@ -1017,6 +1072,8 @@ class MainWin(QMainWindow):
 
         self.ui.actionDelete_Datafile.setEnabled(False)
 
+        self.ui.actionRun_Simulation_Script.setEnabled(True)
+
     def set_ui_not_running(self):
         runnable = self.run_state == RUNNABLE
         has_rules = (
@@ -1071,6 +1128,8 @@ class MainWin(QMainWindow):
 
         self.ui.actionEPICLib_Settings.setEnabled(has_device)
         self.ui.actionDelete_Datafile.setEnabled(has_device)
+
+        self.ui.actionRun_Simulation_Script.setEnabled(True)
 
     def update_title(self):
         if self.simulation and self.simulation.device and self.simulation.model:

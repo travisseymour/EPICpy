@@ -100,6 +100,8 @@
     <addaction name="separator"/>
     <addaction name="actionReload_Session"/>
     <addaction name="separator"/>
+    <addaction name="actionRun_Simulation_Script"/>
+    <addaction name="separator"/>
     <addaction name="actionExport_Normal_Output"/>
     <addaction name="actionExport_Trace_Output"/>
     <addaction name="actionExport_Stats_Output"/>
@@ -144,6 +146,8 @@
       <font>
        <family>Consolas</family>
        <pointsize>12</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
       </font>
      </property>
      <property name="title">
@@ -827,6 +831,17 @@
   <action name="actionAllRuns">
    <property name="text">
     <string>All Runs</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Consolas</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionRun_Simulation_Script">
+   <property name="text">
+    <string>Run Simulation Script</string>
    </property>
    <property name="font">
     <font>
