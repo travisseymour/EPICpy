@@ -676,6 +676,10 @@ class MainWin(QMainWindow):
             self.write(f'{e_boxed_x} The run-script loading operation was cancelled.')
             return
 
+        if Path(script_file).is_file():
+            config.app_cfg.last_script_file =  script_file
+            config.save_app_config(quiet=True)
+
         try:
             commands = pd.read_csv(
                 script_file,
@@ -694,8 +698,6 @@ class MainWin(QMainWindow):
 
             assert isinstance(commands, pd.DataFrame), err_msg
 
-            # for i, command in commands.iterrows():
-            #     log.debug(f'COMMAND {i}:\n\t{command.device_file=}\n\t{command.rule_file=}\n\t{command.parameter_string=}')
         except Exception as e:
             self.write(f'{e_boxed_x} Error loading script from file\n"{script_file}":\n{str(e)}.')
             return
