@@ -642,6 +642,7 @@ class MainWin(QMainWindow):
             #         config.device_cfg.auditory_encoder = ""
 
     def simulation_from_script(self):
+
         # if Path(config.device_cfg.device_file).is_file():
         #     start_dir = Path(config.device_cfg.device_file).parent
         # elif Path(config.app_cfg.last_device_file).is_file():
@@ -655,21 +656,24 @@ class MainWin(QMainWindow):
         #     str(start_dir),
         #     "Python Files (*.py)",
         # )
+
         script_file = '/home/nogard/Dropbox/Documents/Courses_UCSC/Psych_139D_Modeling_Human_Performance/Fall 2022/Assignments/9_Final_Report/submissions/adamssamuel_LATE_37389_6535319_my_final_report/run_script.csv'
         if not script_file:
-            self.write(f'The run-script loading operation was cancelled.')
+            self.write(f'{e_boxed_x} The run-script loading operation was cancelled.')
             return
 
         try:
             commands = pd.read_csv(
                 script_file,
-                names=['device_file', 'rule_file', 'parameter_string'],
+                names=['device_file', 'rule_file', 'parameter_string', 'clear_data', 'reload_device'],
                 skip_blank_lines=True,
-                comment='#'
+                comment='#',
+                on_bad_lines='skip',
+                dtype={'device_file':str, 'rule_file':str, 'parameter_string':str, 'clear_data':bool, 'reload_device':bool}
             )
 
-            err_msg = f"Unable to construct proper command matrix from '{script_file}'.\n" \
-                      f"Make sure each line contains device_file, rule_file, parameter_string " \
+            err_msg = f"{e_heavy_x} Unable to construct proper command matrix from '{script_file}'.\n" \
+                      f"Make sure each line contains device_file,rule_file,parameter_string,clear_data,reload_device " \
                       f"on each line separated by commas and without spaces between elements " \
                       f"(like a standard csv file)"
 
@@ -678,18 +682,57 @@ class MainWin(QMainWindow):
             # for i, command in commands.iterrows():
             #     log.debug(f'COMMAND {i}:\n\t{command.device_file=}\n\t{command.rule_file=}\n\t{command.parameter_string=}')
         except Exception as e:
-            self.write(f'Error loading script file "{script_file}": {str(e)}.')
+            self.write(f'{e_boxed_x} Error loading script from file\n"{script_file}":\n{str(e)}.')
             return
+        def shorten_paths(row):
+            row.device_file = Path(row.device_file).name
+            row.rule_file = Path(row.rule_file).name
+            return row
+        short_commands = commands.apply(shorten_paths, axis=1)
+
+
+
+        #             str(Path(item.device_file).resolve()),
+
+        run_info = []
 
         for i, cmd in commands.iterrows():
-            msg = f'RUNNING COMMAND ' \
-                  f'{i+1}/{len(commands)}:\n\t{cmd.device_file=}\n\t{cmd.rule_file=}\n\t{cmd.parameter_string=}'
-            log.debug(msg)
-            self.on_load_device(cmd.device_file)
-            self.choose_rules([cmd.rule_file])
-            self.simulation.device.set_parameter_string(cmd.parameter_string)
-            self.delete_datafile()
-            self.run_all()
+            run_info.append(
+                RunInfo(
+                    from_script=True,
+                    device_file=cmd.device_file.strip(),
+                    rule_file=cmd.rule_file.strip(),
+                    parameter_string=cmd.parameter_string.strip(),
+                    clear_data=cmd.clear_data,
+                    reload_device=cmd.reload_device
+                )
+            )
+
+        sf_title = f'\nRUNS LOADED FROM SCRIPT FILE "{Path(script_file).name}":'
+        self.write(sf_title)
+        self.write('-' * len(sf_title))
+        self.write(' ')
+        pretty = [RunInfo(
+            ri.from_script,
+            Path(ri.device_file).name if ri.device_file else ri.device_file,
+            Path(ri.rule_file).name if ri.rule_file else ri.rule_file,
+            ri.parameter_string,
+            ri.clear_data,
+            ri.reload_device
+        ) for ri in run_info]
+        self.ui.plainTextEditOutput.write(pd.DataFrame(pretty).to_string(index=False))
+        self.write('>>>> Press Run|Run_All in the menu to start!')
+        self.write(' ')
+
+        # for i, cmd in commands.iterrows():
+        #     msg = f'RUNNING COMMAND ' \
+        #           f'{i+1}/{len(commands)}:\n\t{cmd.device_file=}\n\t{cmd.rule_file=}\n\t{cmd.parameter_string=}'
+        #     log.debug(msg)
+        #     self.on_load_device(cmd.device_file)
+        #     self.choose_rules([cmd.rule_file])
+        #     self.simulation.device.set_parameter_string(cmd.parameter_string)
+        #     self.delete_datafile()
+        #     self.run_all()
 
 
     def update_output_logging(self):
