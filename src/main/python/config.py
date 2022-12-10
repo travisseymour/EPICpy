@@ -32,6 +32,7 @@ class AppConfig:
     config_version: str = "20211023"
 
     last_device_file: str = ""  # for reloading last session
+    last_script_file: str = ""
     dark_mode: bool = False
     epiclib_version: str = (
         ""  # if not "", passes this value to DeviceConfig on app init

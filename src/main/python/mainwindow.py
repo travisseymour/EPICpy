@@ -650,21 +650,28 @@ class MainWin(QMainWindow):
 
     def simulation_from_script(self):
 
-        # if Path(config.device_cfg.device_file).is_file():
-        #     start_dir = Path(config.device_cfg.device_file).parent
-        # elif Path(config.app_cfg.last_device_file).is_file():
-        #     start_dir = Path(config.app_cfg.last_device_file).parent
-        # else:
-        #     start_dir = str(Path.home())
-        #
-        # script_file, _ = QFileDialog.getOpenFileName(
-        #     None,
-        #     "Choose EPICpy Device File",
-        #     str(start_dir),
-        #     "Python Files (*.py)",
-        # )
+        if hasattr(config.app_cfg, 'last_script_file') and Path(config.app_cfg.last_script_file).is_file():
+            start_dir = Path(config.app_cfg.last_script_file)
+        elif Path(config.device_cfg.device_file).is_file():
+            start_dir = Path(config.device_cfg.device_file).parent
+        elif Path(config.app_cfg.last_device_file).is_file():
+            start_dir = Path(config.app_cfg.last_device_file).parent
+        else:
+            start_dir = str(Path.home())
 
-        script_file = '/home/nogard/Dropbox/Documents/Courses_UCSC/Psych_139D_Modeling_Human_Performance/Fall 2022/Assignments/9_Final_Report/submissions/adamssamuel_LATE_37389_6535319_my_final_report/run_script.csv'
+        fd_options = QFileDialog.Options()
+        if platform.system() == 'Linux':
+            fd_options = fd_options | QFileDialog.DontUseNativeDialog
+
+        script_file, _ = QFileDialog.getOpenFileName(
+            parent=None,
+            caption="Choose EPICpy Device File",
+            directory=str(start_dir),
+            filter="CSV Files (*.csv);;Text Files (*.txt)",
+            initialFilter="CSV Files (*.csv)"
+            # options=fd_options
+        )
+
         if not script_file:
             self.write(f'{e_boxed_x} The run-script loading operation was cancelled.')
             return
