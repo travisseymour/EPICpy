@@ -650,14 +650,14 @@ class Simulation:
             )
             self.parent.ui.actionRecompile_Rules.setEnabled(False)
 
-    def choose_rules(self, files: Optional[list] = None):
+    def choose_rules(self, files: Optional[list] = None)->bool:
         """
         Select EPIC prs rule file(s) from disk
         """
 
         if files:
             if all(isinstance(item, RunInfo) for item in files):
-                mode = 'run_info'
+                mode = 'rule_info'
             elif all(isinstance(item, str) for item in files):
                 mode = 'rule_files'
             else:
@@ -733,8 +733,9 @@ class Simulation:
             rule_file_paths = [item.rule_file for item in rule_files]
 
             # go ahead and save in case we need cfg.rule_files
-            config.device_cfg.rule_files = rule_file_paths
-            config.save_config(quiet=True)
+            if not any(item.from_script for item in self.rule_files):
+                config.device_cfg.rule_files = rule_file_paths
+                config.save_config(quiet=True)
             endl = "\n"
             self.write(
                 f"\n{len(rule_file_paths)} ruleset files {note}:\n"
@@ -745,10 +746,12 @@ class Simulation:
                 if len(rule_files) > 1
                 else f"{e_info} Attempting to compile {note} ruleset..."
             )
-            self.compile_rule(self.rule_files[self.current_rule_index].rule_file)
+            return self.compile_rule(self.rule_files[self.current_rule_index].rule_file)
         else:
             self.rule_files = []
             self.write(f"{e_boxed_x} No valid rule file(s) {note}.")
+
+        return False
 
     def compile_rule(self, file: str = "") -> bool:
         rule_path = Path(file)
@@ -1027,6 +1030,9 @@ class Simulation:
         duration = timeit.default_timer() - self.run_start_time
         self.write(f"{e_info} (run took {duration:0.4f} seconds)")
 
+        # For ensuring that all param string versions get run
+        #  when done, drop to next section to make sure all files get run!
+
         if self.last_run_mode == "run_all" and self.raw_device_param_string and reason:
             if self.param_set:
                 self.run_all(clear_ui=False)
@@ -1040,14 +1046,36 @@ class Simulation:
         if self.last_run_mode == "run_all":
             self.current_rule_index += 1
             if self.current_rule_index < len(self.rule_files):
-                rule_name = Path(self.rule_files[self.current_rule_index].rule_file).name
+                next_sim = self.rule_files[self.current_rule_index]
+                prev_sim = self.rule_files[self.current_rule_index - 1]
+                rule_name = Path(next_sim.rule_file).name
                 self.write(
                     emoji_box(
                         f"RULE FILE: {rule_name} "
                         f"({self.current_rule_index}/{len(self.rule_files)})"
                     )
                 )
-                if self.compile_rule(self.rule_files[self.current_rule_index].rule_file):
+
+                if next_sim.clear_data:
+                    # nothing that this is an odd thing to ask for...what's the point in running
+                    # multiple files if you are only going to end up with data from the last one?!
+                    self.parent.delete_datafile()
+
+                # NOTE: when not running from script, next_sim.device_file & prev_sim.device_file are both ''
+                #       and next_sim.reload_device is False. This, this section gets bypassed
+                if (next_sim.device_file and next_sim.device_file != prev_sim.device_file) or next_sim.reload_device:
+                    if not self.parent.on_load_device(next_sim.device_file, auto_load_rules=False, quiet=True):
+                        self.write(
+                            f"\n{e_boxed_x} Device (re)load failed while running "
+                            f"{next_sim.device_file} + {next_sim.rule_file} from script!"
+                        )
+                        self.current_rule_index = 0
+                        return
+
+                if next_sim.parameter_string:
+                    self.device.set_parameter_string(next_sim.parameter_string)
+
+                if self.compile_rule(next_sim.rule_file):
                     self.run_all()
                 else:
                     self.current_rule_index += 1
