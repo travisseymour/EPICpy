@@ -1,8 +1,28 @@
 
 # EPICpy Changelog
-#### (lasted updated Fri Nov 25 12:56:14 2022)
+#### (lasted updated Sun Dec 11 23:29:03 2022)
 
 ---
+
+
+## VERSION: 2022.12.11
+
+---
+1. **FIXED**: Various features of Normal Output popup window. 
+2. **ADDED**: First pass of run-script feature. 
+3. **FIXED**: Extra spaces in Trace Window.
+4. Last script now being saved in app config.
+5. Script feature seems to be working. only tested for now as far as I need for grading final exam.
+6. Script run works with hardcoded script path. also fixed default filename when exporting stats window.
+7. Successfully reading in well-formed script file or else alerting user of issue.
+8. Replaced simple list of rule paths with RunInfo objects and core func for single and multiple rule loading seems intact.
+9. Created menu changes prior to implementing run_script functionality.
+10. Removed some improperly added files from main.
+11. Accidentally staged files needed for next feature!
+12. **FIXED**: NO popup edit options availability makes better use of run_state. fixed: Ability to edit rules following rule load error restored.
+13. Added: NO popup menu has option to open device folder.
+14. **FIXED**: null action warning on popup. added: popup to search, copy, and clear tracewindow text.
+15. **FIXED**: eliminated big blank sections in trace output.
 
 
 ## VERSION: 2022.11.25
@@ -34,11 +54,8 @@
 ---
 1. Manually renaming erronous 2022.10.1 version in changelog - should have been 2202.8.1.
 2. **FIXED**: editor won't close automatically if any open file has changed.
-
 3. **NEW FEATURE**: Built-in editor is available (based on the EPICcoder project)
-
 4. **CHANGE**: EPICpy license changed to GPLv3 due to use of PyQT5.
-
 5. **CHANGE**: EPICpy GUI qt-bindings switched from Pyside2 to PyQt5
 
 
