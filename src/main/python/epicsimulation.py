@@ -280,17 +280,11 @@ class Simulation:
                 except ValueError:
                     ...
 
-            # Must add parent folder to system path
-            self.device_path_additions.append(str(device_file_p.parent))
-            sys.path.append(str(device_file_p.parent))
-
-            # Optionally try to add grandparent folder too, helps if you have bases
-            # in folder above the one the device is in, but we shouldn't require it.
-            self.device_path_additions.append(str(device_file_p.parent.parent))
-            try:
-                sys.path.append(str(device_file_p.parent.parent))
-            except:
-                ...
+            # Must add parents folder to system path
+            for parent_path in (device_file_p.parent, device_file_p.parent.parent, device_file_p.parent.parent.parent):
+                if parent_path.is_dir():
+                    sys.path.append(str(parent_path))
+                    self.device_path_additions.append(str(parent_path))
 
             # - now we can attempt to import the EpicDevice class from this module
             try:
