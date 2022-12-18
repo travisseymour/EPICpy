@@ -22,12 +22,21 @@ import config
 from uifiles.breaksettingsui import Ui_DialogRuleBreak
 from PyQt5.QtWidgets import QDialog, QCheckBox, QListWidgetItem
 
+from apputils import LIBNAME, unpack_param_string
+from cppinclude import epiclib_include
+import cppyy
+
+epiclib_include("Model-View Classes/Model.h")
+epiclib_include("Utility Classes/Symbol.h")
+
+from cppyy.gbl import Model
+from cppyy.gbl import Symbol
 
 class BreakSettingsWin(QDialog):
     def __init__(self, context, model):
         super(BreakSettingsWin, self).__init__()
         self.context = context
-        self.model = model
+        self.model: Model = model
         self.ui = Ui_DialogRuleBreak()
         self.ui.setupUi(self)
 
@@ -96,5 +105,5 @@ class BreakSettingsWin(QDialog):
         ]
         rule_states = list(zip(self.all_rules, states))
         for rule_name, state in rule_states:
-            self.model.set_rule_break_state(rule_name, bool(state))
+            self.model.set_rule_break_state(Symbol(rule_name), bool(state))
         self.close()
