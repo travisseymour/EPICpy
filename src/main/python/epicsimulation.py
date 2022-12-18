@@ -113,8 +113,8 @@ class Simulation:
         self.visual_encoder_path_additions = []
         self.auditory_encoder_path_additions = []
 
-    def __del__(self):
-        self.reset_path()
+    # def __del__(self):
+    #     self.reset_path()
 
     def call_for_display_refresh(self):
         current_time = self.instance.get_time()
