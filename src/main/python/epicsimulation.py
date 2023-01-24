@@ -360,11 +360,11 @@ class Simulation:
             try:
                 # suggested in Model::connect_device_to_human, but may not be
                 #  necessary in Python
-                try:
-                    self.model.device_ptr = None
-                    self.model.device_processor_ptr = None
-                except:  # FIXME: Seriously? Why would setting these to None fail??
-                    pass
+                # try:
+                #     self.model.device_ptr = None
+                #     self.model.device_processor_ptr = None
+                # except:  # FIXME: Seriously? Why would setting these to None fail??
+                #     pass
                 # actually create a new model, we're passing in the new device
                 #  (different than EpicCLI approach)
                 self.model = Model(self.device)
