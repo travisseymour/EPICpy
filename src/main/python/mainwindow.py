@@ -99,13 +99,13 @@ if frozen():
 
 cppyy.load_library(LIBNAME)
 
-epiclib_include("Utility Classes/Symbol.h")
+# epiclib_include("Utility Classes/Symbol.h")
 epiclib_include("Utility Classes/Output_tee.h")
-epiclib_include("Standard_Symbols.h")
+# epiclib_include("Standard_Symbols.h")
 epiclib_include("PPS/PPS Interface classes/PPS_globals.h")
 
 from cppyy.gbl import Normal_out, Trace_out, PPS_out
-from cppyy.gbl import std
+from cppyy.gbl import std  # for fstream
 
 
 class StateChangeWatcher(QObject):

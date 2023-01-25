@@ -35,9 +35,9 @@ cppyy.load_library(LIBNAME)
 
 epiclib_include("Framework classes/Auditory_encoder_base.h")
 epiclib_include("Framework classes/Visual_encoder_base.h")
-epiclib_include("Framework classes/Output_tee_globals.h")
+# epiclib_include("Framework classes/Output_tee_globals.h")
 epiclib_include("Utility Classes/Symbol.h")
-epiclib_include("Standard_Symbols.h")
+# epiclib_include("Standard_Symbols.h")
 
 from cppyy.gbl import Visual_encoder_base, Auditory_encoder_base, Symbol
 

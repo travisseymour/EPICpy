@@ -58,7 +58,7 @@ import config
 cppyy.load_library(LIBNAME)
 
 epiclib_include("Utility Classes/Geometry.h")
-epiclib_include("Utility Classes/Symbol.h")
+# epiclib_include("Utility Classes/Symbol.h")
 
 from cppyy.gbl import Geometry_Utilities as GU
 
