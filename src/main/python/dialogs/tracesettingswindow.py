@@ -24,9 +24,8 @@ import config
 
 
 class TraceSettingsWin(QDialog):
-    def __init__(self, context):
+    def __init__(self):
         super(TraceSettingsWin, self).__init__()
-        self.context = context
         self.ok = False
         self.ui = Ui_DialogTraceSettings()
         self.ui.setupUi(self)

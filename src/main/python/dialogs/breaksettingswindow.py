@@ -33,9 +33,8 @@ from cppyy.gbl import Model
 from cppyy.gbl import Symbol
 
 class BreakSettingsWin(QDialog):
-    def __init__(self, context, model):
+    def __init__(self, model):
         super(BreakSettingsWin, self).__init__()
-        self.context = context
         self.model: Model = model
         self.ui = Ui_DialogRuleBreak()
         self.ui.setupUi(self)

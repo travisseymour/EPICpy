@@ -1,9 +1,10 @@
 from uifiles.loadui import Ui_DialogLoading
 from PyQt5.QtCore import QObject, QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QMovie
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog, QApplication
 import sys
-from fbs_runtime.application_context.PyQt5 import ApplicationContext
+
+from apputils import get_resource
 
 
 class LoadingWorker(QThread):
@@ -39,10 +40,9 @@ LoadingMessenge = LoadingSignal()
 class LoadingWin(QDialog):
     message = pyqtSignal(str)
 
-    def __init__(self, context, func: callable):
+    def __init__(self, func: callable):
         super(LoadingWin, self).__init__()
 
-        self.context = context
         self.func = func
         self.result = None
         self.error = None
@@ -56,7 +56,7 @@ class LoadingWin(QDialog):
         # self.ui.labelImage.setPixmap(pixmap)
 
         # loading movie
-        movie = QMovie(self.context.get_resource('images', 'spinner_rainbow.gif'))
+        movie = QMovie(get_resource('images', 'spinner_rainbow.gif'))
         self.ui.labelImage.setMovie(movie)
         movie.start()
 
@@ -77,6 +77,9 @@ class LoadingWin(QDialog):
 
 
 if __name__ == '__main__':
+    app = QApplication(sys.argv)
+
+
     def my_fake_work(*args, **kwargs):
         from PyQt5 import QtTest
         for i in range(8):
@@ -86,16 +89,8 @@ if __name__ == '__main__':
         return True
 
 
-    class AppContext(ApplicationContext):
-        def __init__(self, *args, **kwargs):
-            super(AppContext, self).__init__()
+    loading = LoadingWin(func=my_fake_work)
 
-        def run(self):
-            self.loading = LoadingWin(context=self, func=my_fake_work)
+    print(f"loading func result = {loading.result}, error msg={loading.error}")
 
-            print(f"loading func result = {self.loading.result}, error msg={self.loading.error}")
-
-
-    appctxt = AppContext()
-    exit_code = appctxt.run()
-    sys.exit(exit_code)
+    sys.exit(app.exec())

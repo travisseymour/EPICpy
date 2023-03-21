@@ -1,5 +1,5 @@
 import cppyy
-from apputils import CONTEXT, HEADERPATH
+from apputils import HEADERPATH, get_resource
 
 
 def epiclib_include(epiclib_header_file: str):
@@ -13,7 +13,7 @@ def epiclib_include(epiclib_header_file: str):
     """
 
     cppyy.include(
-        CONTEXT.get_resource(f"{HEADERPATH}/{epiclib_header_file.lstrip('/')}")
+        get_resource(f"{HEADERPATH}/{epiclib_header_file.lstrip('/')}")
     )
 
 
@@ -23,4 +23,4 @@ def cpp_include(header_file: str):
     *** DO NOT USE FOR EPICLIB HEADER FILES!! ***
     """
 
-    cppyy.include(CONTEXT.get_resource(header_file))
+    cppyy.include(get_resource(header_file))

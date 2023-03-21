@@ -78,9 +78,8 @@ from cppyy.gbl import Normal_out
 
 
 class Simulation:
-    def __init__(self, parent, context):
+    def __init__(self, parent):
         self.parent = parent
-        self.ctx = context
 
         self.device = None
         self.model = None

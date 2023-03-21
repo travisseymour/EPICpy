@@ -73,7 +73,7 @@ class SoundObject:
 
 
 class AuditoryViewWin(QMainWindow):
-    def __init__(self, view_type: str, view_title: str, context):
+    def __init__(self, view_type: str, view_title: str):
         super(AuditoryViewWin, self).__init__()
 
         # these have to match the channels created on the EpicCLI/Device side,
@@ -87,7 +87,6 @@ class AuditoryViewWin(QMainWindow):
         self.view_type = view_type
         self.view_title = view_title
         self.setObjectName(view_type)
-        self.context = context
         self.dark_mode = config.app_cfg.dark_mode
         self.can_close = False
         self.bg_image_file = ""

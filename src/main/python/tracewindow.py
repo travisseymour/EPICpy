@@ -31,10 +31,9 @@ import config
 
 
 class TraceWin(QMainWindow):
-    def __init__(self, context, parent):
+    def __init__(self, parent):
         super(TraceWin, self).__init__()
         self._parent = parent
-        self.context = context
         self.view_type = b"TraceOut"
         self.setObjectName("TraceWindow")
         self.ui = Ui_TraceWindow()

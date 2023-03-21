@@ -75,7 +75,7 @@ class VisualObject:
 
 
 class VisualViewWin(QMainWindow):
-    def __init__(self, view_type: str, view_title: str, context):
+    def __init__(self, view_type: str, view_title: str):
         super(VisualViewWin, self).__init__()
 
         # these have to match the channels created on the EpicCLI/Device side,
@@ -85,7 +85,6 @@ class VisualViewWin(QMainWindow):
         self.view_type = view_type
         self.view_title = view_title
         self.setObjectName(view_type)
-        self.context = context
         self.dark_mode = config.app_cfg.dark_mode  # local lookup...
         self.can_close = False
         self.bg_image_file = ""
@@ -201,11 +200,11 @@ class VisualViewWin(QMainWindow):
         self.eye_pos = Point(point.x, point.y * -1)
 
     def create_new_object(
-        self,
-        object_name: str,
-        location: GU.Point,
-        size: GU.Size,
-        properties: Optional[dict] = None,
+            self,
+            object_name: str,
+            location: GU.Point,
+            size: GU.Size,
+            properties: Optional[dict] = None,
     ):
         if object_name not in self.objects:
             self.objects[object_name] = VisualObject(
@@ -389,7 +388,7 @@ class VisualViewWin(QMainWindow):
                 self.bg_image_file = img_file
                 self.bg_image = QPixmap(img_file)
                 if isinstance(self.bg_image, QPixmap) and scaled:
-                    self.bg_image = self.bg_image.scaled(self.width(), self.height()) # , Qt.KeepAspectRatio
+                    self.bg_image = self.bg_image.scaled(self.width(), self.height())  # , Qt.KeepAspectRatio
                 self.bg_image_scaled = scaled
         except Exception as e:
             self.bg_image_file = ""
@@ -657,7 +656,7 @@ class VisualViewWin(QMainWindow):
     # ------------- Draw Command Functions ---------------------------------
 
     def add_leader(
-        self, x, y, w, h, leader: str, path: QPainterPath, inverted: bool = False
+            self, x, y, w, h, leader: str, path: QPainterPath, inverted: bool = False
     ):
         """
         A fixed leader is a line from the location of the object in one of the four

@@ -1,17 +1,17 @@
 import platform
 from pathlib import Path
 
-from fbs_runtime.application_context.PyQt5 import ApplicationContext
-
 import config
 import pandas as pd
 from collections import namedtuple
+
+from apputils import get_resource
 
 OS = platform.system()
 EPICLIB_INFO = namedtuple("EPICLIB_INFO", "info libname headerpath epiclib_files")
 
 
-def get_epiclib_files(context: ApplicationContext) -> EPICLIB_INFO:
+def get_epiclib_files() -> EPICLIB_INFO:
     """
     type(info)=<class 'pandas.core.series.Series'>
     type(libname)=<class 'str'>
@@ -22,7 +22,7 @@ def get_epiclib_files(context: ApplicationContext) -> EPICLIB_INFO:
 
     epiclib_files = [
         dict(zip(("libdate", "filename"), file.stem.split("_")[1:] + [file.name]))
-        for file in Path(context.get_resource("epiclib")).glob("*.*")
+        for file in Path(get_resource("epiclib")).glob("*.*")
         if file.suffix in (".dylib", ".so", ".dll")
     ]
     epiclib_files = pd.DataFrame(epiclib_files)

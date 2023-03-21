@@ -143,10 +143,10 @@ class StateChangeWatcher(QObject):
 
 
 class MainWin(QMainWindow):
-    def __init__(self, context, epiclib_files: pd.DataFrame, epiclib_name: str):
+    def __init__(self, app: QApplication, epiclib_files: pd.DataFrame, epiclib_name: str):
         super(MainWin, self).__init__()
+        self.app = app
         self.setObjectName("MainWindow")
-        self.context = context
         self.epiclib_files = epiclib_files
         self.epiclib_name = epiclib_name
         self.view_type = b"NormalOut"
@@ -193,7 +193,7 @@ class MainWin(QMainWindow):
 
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
         # connect Trace_out now
-        self.trace_win = TraceWin(context=self.context, parent=self)
+        self.trace_win = TraceWin(parent=self)
         self.trace_win.trace_out_view = EPICTextViewCachedWrite(
             text_widget=self.trace_win.ui.plainTextEditOutput
         )
@@ -203,9 +203,9 @@ class MainWin(QMainWindow):
         )
         Trace_out.add_view(self.trace_win.trace_out_view)
 
-        self.stats_win = StatsWin(context=self.context, parent=self)
+        self.stats_win = StatsWin(parent=self)
 
-        self.simulation = Simulation(self, context)
+        self.simulation = Simulation(self)
 
         self.search_pattern = ""
         self.search_using_regex = False
@@ -265,7 +265,7 @@ class MainWin(QMainWindow):
             f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n'
         )
 
-        self.default_palette = self.context.app.palette()
+        self.default_palette = self.app.palette()
         self.set_stylesheet(config.app_cfg.dark_mode)
 
         # I'm not sure Consolas is the right font for us...seems to mess up boxes.
@@ -841,13 +841,13 @@ class MainWin(QMainWindow):
     def setup_views(self):
         self.visual_views = {
             "Visual Physical": VisualViewWin(
-                "Visual Physical", "Visual Physical", self.context
+                "Visual Physical", "Visual Physical",
             ),
             "Visual Sensory": VisualViewWin(
-                "Visual Sensory", "Visual Sensory", self.context
+                "Visual Sensory", "Visual Sensory",
             ),
             "Visual Perceptual": VisualViewWin(
-                "Visual Perceptual", "Visual Perceptual", self.context
+                "Visual Perceptual", "Visual Perceptual",
             ),
         }
         self.visual_physical_view = EPICVisualView(self.visual_views["Visual Physical"])
@@ -858,13 +858,13 @@ class MainWin(QMainWindow):
 
         self.auditory_views = {
             "Auditory Physical": AuditoryViewWin(
-                "Auditory Physical", "Auditory Physical", self.context
+                "Auditory Physical", "Auditory Physical",
             ),
             "Auditory Sensory": AuditoryViewWin(
-                "Auditory Sensory", "Auditory Sensory", self.context
+                "Auditory Sensory", "Auditory Sensory",
             ),
             "Auditory Perceptual": AuditoryViewWin(
-                "Auditory Perceptual", "Auditory Perceptual", self.context
+                "Auditory Perceptual", "Auditory Perceptual",
             ),
         }
         self.auditory_physical_view = EPICAuditoryView(
@@ -1280,7 +1280,6 @@ class MainWin(QMainWindow):
             delete_data_func, data_info_func = None, None
 
         self.run_settings_dialog = RunSettingsWin(
-            self.context,
             self.simulation.default_device_parameters,
             delete_data_func,
             data_info_func,
@@ -1321,7 +1320,7 @@ class MainWin(QMainWindow):
 
     def show_display_settings_dialogs(self):
         if self.display_settings_dialog is None:
-            self.display_settings_dialog = DisplayControlsWin(self.context)
+            self.display_settings_dialog = DisplayControlsWin()
 
         self.display_settings_dialog.setup_options()
         self.display_settings_dialog.setModal(True)
@@ -1341,7 +1340,7 @@ class MainWin(QMainWindow):
             self.trace_settings_dialog.setModal(True)
             self.trace_settings_dialog.exec()  # needed to make it modal?!
         else:
-            self.trace_settings_dialog = TraceSettingsWin(self.context)
+            self.trace_settings_dialog = TraceSettingsWin()
             self.trace_settings_dialog.setup_options()
             self.trace_settings_dialog.setModal(True)
             self.trace_settings_dialog.exec()  # needed to make it modal?!
@@ -1359,7 +1358,7 @@ class MainWin(QMainWindow):
             self.log_settings_dialog.setModal(True)
             self.log_settings_dialog.exec()  # needed to make it modal?!
         else:
-            self.log_settings_dialog = LoggingSettingsWin(self.context)
+            self.log_settings_dialog = LoggingSettingsWin()
             self.log_settings_dialog.setup_options()
             self.log_settings_dialog.setModal(True)
             self.log_settings_dialog.exec()  # needed to make it modal?!
@@ -1374,9 +1373,7 @@ class MainWin(QMainWindow):
     def show_rule_break_settings_dialog(self):
         if not self.simulation or not self.simulation.model:
             return
-        self.rule_break_settings_dialog = BreakSettingsWin(
-            self.context, self.simulation.model
-        )
+        self.rule_break_settings_dialog = BreakSettingsWin( self.simulation.model )
         self.rule_break_settings_dialog.setup_options()
         self.rule_break_settings_dialog.setModal(True)
         self.rule_break_settings_dialog.exec()  # needed to make it modal?!
@@ -1384,9 +1381,7 @@ class MainWin(QMainWindow):
     def show_device_options_dialog(self):
         if not self.simulation or not self.simulation.device:
             return
-        self.device_options_dialog = DeviceOptionsWin(
-            self.context, self.simulation.device
-        )
+        self.device_options_dialog = DeviceOptionsWin( self.simulation.device )
         self.device_options_dialog.setup_options()
         self.device_options_dialog.setModal(True)
         self.device_options_dialog.exec()  # needed to make it modal?!
@@ -1394,16 +1389,14 @@ class MainWin(QMainWindow):
     def show_sound_text_settings_dialog(self):
         if not self.simulation or not self.simulation.device:
             return
-        self.sound_text_settings_dialog = SoundTextSettingsWin(self.context)
+        self.sound_text_settings_dialog = SoundTextSettingsWin()
         self.sound_text_settings_dialog.setup_options()
         self.sound_text_settings_dialog.setModal(True)
         self.sound_text_settings_dialog.exec()  # needed to make it modal?!
 
     def show_epiclib_settings_dialog(self):
         old_epiclib = config.device_cfg.epiclib_version
-        self.epiclib_settings_dialog = EPICLibSettingsWin(
-            self.context, self.epiclib_files, self.epiclib_name
-        )
+        self.epiclib_settings_dialog = EPICLibSettingsWin( self.epiclib_files, self.epiclib_name )
         self.epiclib_settings_dialog.setup_options()
         self.epiclib_settings_dialog.setModal(True)
         self.epiclib_settings_dialog.exec()  # needed to make it modal?!
@@ -1423,7 +1416,7 @@ class MainWin(QMainWindow):
         #  can't change the font family
 
         if self.font_size_dialog is None:
-            self.font_size_dialog = FontSizeDialog(self.context)
+            self.font_size_dialog = FontSizeDialog()
             self.font_size_dialog.setup_options(True)
         self.font_size_dialog.setModal(True)
         self.font_size_dialog.exec()  # needed to make it modal?!
@@ -1451,7 +1444,7 @@ class MainWin(QMainWindow):
         if self.text_editor_dialog is not None:
             self.text_editor_dialog.close()
             self.text_editor_dialog = None
-        self.text_editor_dialog = TextEditChoiceWin(self.context)
+        self.text_editor_dialog = TextEditChoiceWin()
         self.text_editor_dialog.setup_options()
         self.text_editor_dialog.setModal(True)
         self.text_editor_dialog.exec()  # needed to make it modal?!
@@ -1555,7 +1548,7 @@ class MainWin(QMainWindow):
             self.stats_win.ui.statsTextBrowser.clear()
 
     def about_dialog(self):
-        about_window = AboutWin(self, self.context)
+        about_window = AboutWin(self)
         about_window.show()
 
     def run_tests(self, kind: str):
@@ -1683,7 +1676,7 @@ class MainWin(QMainWindow):
     # ============================================
 
     def set_stylesheet(self, dark_mode):
-        self.context.app.setStyle("Fusion")
+        self.app.setStyle("Fusion")
 
         if dark_mode:
             dark_palette = QPalette()
@@ -1705,9 +1698,9 @@ class MainWin(QMainWindow):
             dark_palette.setColor(QPalette.Disabled, QPalette.WindowText, Qt.darkGray)
             dark_palette.setColor(QPalette.Disabled, QPalette.Text, Qt.darkGray)
             dark_palette.setColor(QPalette.Disabled, QPalette.Light, QColor(53, 53, 53))
-            self.context.app.setPalette(dark_palette)
+            self.app.setPalette(dark_palette)
         else:
-            self.context.app.setPalette(self.default_palette)
+            self.app.setPalette(self.default_palette)
 
     # =============================================
     # Layout Save/Restore
@@ -2224,7 +2217,7 @@ class MainWin(QMainWindow):
                         except AttributeError:
                             ...
                         self.editor_window = None
-                        self.editor_window = MainEditorWindow(context=self.context)
+                        self.editor_window = MainEditorWindow()
                         # FIXME: vvv this should open to current device folder if possible
 
                         if self.simulation and self.simulation.device and Path(config.device_cfg.device_file).is_file():

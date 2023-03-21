@@ -172,7 +172,7 @@ def show_results():
             }
             </style>
             </head>
-            <body>
+            <body>fitness
                 <h1>EPICpy Test Results</h1>
                 <hr>
                 <table>
@@ -227,7 +227,7 @@ def add_result(name: str, worked: bool, outcome: str):
 def wait(window: QMainWindow, duration: float):
     start = timeit.default_timer()
     while True:
-        window.context.app.processEvents()
+        window.app.processEvents()
         if timeit.default_timer() - start > duration:
             break
 
@@ -242,7 +242,7 @@ def wait_for_output(
     _timeout = timeout_secs if timeout_secs else 20.0
     start = timeit.default_timer()
     while True:
-        window.context.app.processEvents()
+        window.app.processEvents()
         if timeit.default_timer() - start > _timeout:
             result = False
             outcome = "Operation Timed Out."

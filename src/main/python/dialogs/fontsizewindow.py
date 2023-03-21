@@ -27,9 +27,8 @@ import config
 
 
 class FontSizeDialog(QDialog):
-    def __init__(self, context):
+    def __init__(self):
         super(FontSizeDialog, self).__init__()
-        self.context = context
         self.ok = False
         self.ui = Ui_DialogFontSize()
         self.ui.setupUi(self)

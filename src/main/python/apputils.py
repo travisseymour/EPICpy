@@ -36,7 +36,13 @@ from functools import wraps
 OS = platform.system()
 LIBNAME = ""
 HEADERPATH = ""
-CONTEXT = None
+
+# pathEX = getattr(sys, '_MEIPASS', '.')
+
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    pathEX = Path(sys._MEIPASS)
+else:
+    pathEX = Path(__file__).parent
 
 
 class Point:
@@ -83,11 +89,11 @@ class Rect:
     __slots__ = "x", "y", "w", "h"
 
     def __init__(
-        self,
-        x: Union[float, int],
-        y: Union[float, int],
-        w: Union[float, int],
-        h: Union[float, int],
+            self,
+            x: Union[float, int],
+            y: Union[float, int],
+            w: Union[float, int],
+            h: Union[float, int],
     ):
         self.x = x
         self.y = y
@@ -200,7 +206,7 @@ class FancyTimer:
 
 
 def unpack_param_string(
-    pattern: str, delimiter: str = "|", left: str = "[", right: str = "]"
+        pattern: str, delimiter: str = "|", left: str = "[", right: str = "]"
 ) -> List[str]:
     """
     Expand the brace-delimited possibilities in a string.
@@ -226,11 +232,13 @@ def ignore_warnings(f):
 
     return inner
 
+
 class add_path():
     """
     Creates A Context Manager For Temporarily Adding Directory To System Path.
     E.g., see https://stackoverflow.com/questions/17211078
     """
+
     def __init__(self, path):
         self.path = path
 
@@ -242,3 +250,27 @@ class add_path():
             sys.path.remove(self.path)
         except ValueError:
             pass
+
+
+def fjoin(*elements):
+    return Path(pathEX, *elements).resolve()
+
+
+def get_resource(*args) -> Path:
+    OS = platform.system()
+    os_id = {'Linux': 'linux', 'Darwin': 'mac', 'Windows': 'windows'}
+
+    base_folder = Path('..', 'resources', 'base').resolve()
+    os_folder = Path('..', 'resources', os_id[OS]).resolve()
+    for target_path in (Path(base_folder, *args), Path(os_folder, *args)):
+        if target_path.exists():
+            return target_path
+    else:
+        raise FileNotFoundError(f'Unable to locate resource "{str(Path(*args))}" in application resource folder.')
+
+
+if __name__ == '__main__':
+    print(f"{get_resource('fonts', 'Consolas', 'ATTRIBUTION.txt')=}")
+    print(f"{get_resource('epiclib', 'EPIC_LICENSE.txt')=}")
+    print(f"{get_resource('cppyy_backend')=}")
+    print(f"{get_resource('fake_file.txt')=}")

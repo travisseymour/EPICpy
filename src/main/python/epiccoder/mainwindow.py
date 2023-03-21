@@ -46,13 +46,12 @@ from PyQt5.QtWidgets import (
     QApplication, QMenu, QAction, QDialog,
 )
 
+from apputils import get_resource
 from epiccoder.customeditor import CustomEditor
 from epiccoder.duplicatedlg import DuplicateFileNameWin
 from epiccoder.fuzzy_searcher import SearchItem, SearchWorker
 from epiccoder.aboutwindow import AboutWin
 from epiccoder.version import __version__
-
-from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
 int_gen = (
     i for i in range(sys.maxsize)
@@ -60,10 +59,9 @@ int_gen = (
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, context: ApplicationContext):
+    def __init__(self):
         super(QMainWindow, self).__init__()
 
-        self.context = context
         self.force_close: bool = False
 
         # add before init
@@ -83,16 +81,16 @@ class MainWindow(QMainWindow):
         self.current_file = None
         self.current_side_bar = None
 
-        self.setWindowIcon(QIcon(self.context.get_resource("uiicons", "app-icon.svg")))
+        self.setWindowIcon(QIcon(get_resource("uiicons", "app-icon.svg")))
 
     def init_ui(self):
         self.setWindowTitle(f"EPIC Coder v{__version__}")
         self.resize(self.main_window_width, self.main_window_height)
 
-        style_sheet = Path(self.context.get_resource("css/style.qss")).read_text()
+        style_sheet = Path(get_resource("css/style.qss")).read_text()
         style_sheet = style_sheet.replace(
             ":/icons/close-icon.svg",
-            self.context.get_resource("uiicons", "close-icon.svg"),
+            str(get_resource("uiicons", "close-icon.svg")),
         )
         self.setStyleSheet(style_sheet)
 
@@ -208,7 +206,7 @@ class MainWindow(QMainWindow):
         # help.triggered.connect(self.show_help)
 
     def show_about(self):
-        about = AboutWin(self, context=self.context)
+        about = AboutWin(self)
         about.show()
 
     def show_help(self):
@@ -357,12 +355,12 @@ class MainWindow(QMainWindow):
 
         # setup labels
         folder_label = self.get_side_bar_label(
-            self.context.get_resource("uiicons", "folder-icon-blue.svg"), "folder-icon"
+            get_resource("uiicons", "folder-icon-blue.svg"), "folder-icon"
         )
         side_bar_layout.addWidget(folder_label)
 
         search_label = self.get_side_bar_label(
-            self.context.get_resource("uiicons", "search-icon.svg"), "search-icon"
+            get_resource("uiicons", "search-icon.svg"), "search-icon"
         )
         side_bar_layout.addWidget(search_label)
 

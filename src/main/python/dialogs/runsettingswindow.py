@@ -27,13 +27,11 @@ from typing import Callable
 class RunSettingsWin(QDialog):
     def __init__(
         self,
-        context,
         default_device_params: str,
         data_delete_func: Callable = None,
         data_info_func: Callable = None,
     ):
         super(RunSettingsWin, self).__init__()
-        self.context = context
         self.data_delete_func = data_delete_func
         self.data_info_func = data_info_func
         self.default_device_params = default_device_params

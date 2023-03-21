@@ -24,9 +24,8 @@ import config
 
 
 class TextEditChoiceWin(QDialog):
-    def __init__(self, context):
+    def __init__(self):
         super(TextEditChoiceWin, self).__init__()
-        self.context = context
         self.ok = False
         self.current_choice = ''
 

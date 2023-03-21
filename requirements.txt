@@ -2,7 +2,7 @@
 # ------
 
 loguru
-fbs  # ok to run/develop EPICpy, but to use any fbs ____ command on Py3.7+, you'll need fbs pro
+# fbs  # ok to run/develop EPICpy, but to use any fbs ____ command on Py3.7+, you'll need fbs pro
 PyQt5
 QScintilla
 python-dateutil
@@ -10,6 +10,7 @@ ulid
 pingouin
 plum-dispatch
 ascii_frame
+ulid2             # https://github.com/valohai/ulid2
 
 # Platform Specific
 # -----------------
@@ -25,7 +26,8 @@ ascii_frame
 # ------------------------------------
 
 # icecream
-mkdocs
+# mkdocs
 black
-fbs[upload]
+# fbs[upload]
 plumbum
+pytest

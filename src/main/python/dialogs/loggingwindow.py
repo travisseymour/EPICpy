@@ -26,9 +26,8 @@ from functools import partial
 
 
 class LoggingSettingsWin(QDialog):
-    def __init__(self, context):
+    def __init__(self):
         super(LoggingSettingsWin, self).__init__()
-        self.context = context
         self.ok = False
         self.ui = Ui_DialogLoggingSettings()
         self.ui.setupUi(self)

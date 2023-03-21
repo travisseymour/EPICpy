@@ -27,9 +27,8 @@ import config
 
 
 class EPICLibSettingsWin(QDialog):
-    def __init__(self, context, epiclib_files: pd.DataFrame, epiclib_name: str):
+    def __init__(self, epiclib_files: pd.DataFrame, epiclib_name: str):
         super(EPICLibSettingsWin, self).__init__()
-        self.context = context
         self.epiclib_files = epiclib_files
         self.epiclib_name = epiclib_name
         self.selection = None

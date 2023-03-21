@@ -24,9 +24,8 @@ import config
 
 
 class DisplayControlsWin(QDialog):
-    def __init__(self, context):
+    def __init__(self):
         super(DisplayControlsWin, self).__init__()
-        self.context = context
         self.ok = False
         self.ui = Ui_DialogDisplayControls()
         self.ui.setupUi(self)

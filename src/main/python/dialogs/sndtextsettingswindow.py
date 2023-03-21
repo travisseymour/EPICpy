@@ -24,9 +24,8 @@ import config
 
 
 class SoundTextSettingsWin(QDialog):
-    def __init__(self, context):
+    def __init__(self):
         super(SoundTextSettingsWin, self).__init__()
-        self.context = context
         self.ok = False
         self.ui = Ui_DialogSndTextSettings()
         self.ui.setupUi(self)

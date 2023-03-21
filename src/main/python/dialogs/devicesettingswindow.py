@@ -24,9 +24,8 @@ from PyQt5.QtWidgets import QDialog, QCheckBox, QListWidgetItem
 
 
 class DeviceOptionsWin(QDialog):
-    def __init__(self, context, device):
+    def __init__(self, device):
         super(DeviceOptionsWin, self).__init__()
-        self.context = context
         self.device = device
         self.ui = Ui_DialogDeviceOptions()
         self.ui.setupUi(self)

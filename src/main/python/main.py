@@ -27,12 +27,11 @@ import platform
 from loguru import logger as log
 
 from PyQt5.QtGui import QFontDatabase
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QApplication
 from PyQt5.QtCore import qInstallMessageHandler, QCoreApplication
 
-from fbs_runtime.application_context.PyQt5 import ApplicationContext
-
 import apputils
+from apputils import get_resource
 import config
 
 from cppyysetup import setup_cppyy
@@ -53,69 +52,48 @@ def handler(msg_type, msg_log_content, msg_string):
     ...
 
 
-class AppContext(ApplicationContext):
-    def __init__(self):
-        super(AppContext, self).__init__()
-        self.loading = None
-        self.main_win = None
+def main(app: QApplication):
+    main_win = None
 
-        apputils.CONTEXT = self
+    config.get_app_config()
+    config.get_device_config(None)
 
-        config.get_app_config()
-        config.get_device_config(None)
+    fontDatabase = QFontDatabase()
 
-        fontDatabase = QFontDatabase()
+    fontDatabase.addApplicationFont(str(get_resource("fonts", "Consolas", "Consolas_Regular.ttf")))
+    fontDatabase.addApplicationFont(str(get_resource("fonts", "Consolas", "Consolas_Bold.ttf")))
+    fontDatabase.addApplicationFont(str(get_resource("fonts", "Consolas", "Consolas_Italic.ttf")))
+    fontDatabase.addApplicationFont(str(get_resource("fonts", "Consolas", "Consolas_Bold_Italic.ttf")))
 
-        fontDatabase.addApplicationFont(self.get_resource("fonts", "Consolas", "Consolas_Regular.ttf"))
-        fontDatabase.addApplicationFont(self.get_resource("fonts", "Consolas", "Consolas_Bold.ttf"))
-        fontDatabase.addApplicationFont(self.get_resource("fonts", "Consolas", "Consolas_Italic.ttf"))
-        fontDatabase.addApplicationFont(self.get_resource("fonts", "Consolas", "Consolas_Bold_Italic.ttf"))
+    fontDatabase.addApplicationFont(str(get_resource("fonts", "FiraCode", "FiraCode-Regular.ttf")))
+    fontDatabase.addApplicationFont(str(get_resource("fonts", "FiraCode", "FiraCode-Bold.ttf")))
+    fontDatabase.addApplicationFont(str(get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Regular.ttf")))
+    fontDatabase.addApplicationFont(str(get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Bold.ttf")))
 
-        fontDatabase.addApplicationFont(self.get_resource("fonts", "FiraCode", "FiraCode-Regular.ttf"))
-        fontDatabase.addApplicationFont(self.get_resource("fonts", "FiraCode", "FiraCode-Bold.ttf"))
-        fontDatabase.addApplicationFont(self.get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Regular.ttf"))
-        fontDatabase.addApplicationFont(self.get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Bold.ttf"))
+    OS = platform.system()
 
-    def run(self):
-        OS = platform.system()
+    try:
+        info, libname, headerpath, epiclib_files = setup_cppyy()
+    except Exception as e:
+        info, libname, headerpath, epiclib_files = None, None, None, None
+        QMessageBox.critical(
+            None,
+            "Critical Library Error",
+            f"Unable to locate or load the libEPIC shared library for OS Type "
+            f'"{OS}" (epiclib/{libname}). EPICpy cannot start. \n[{e}]',
+        )
+        return 1
 
-        try:
-            info, libname, headerpath, epiclib_files = setup_cppyy(self)
-        except Exception as e:
-            info, libname, headerpath, epiclib_files = None, None, None, None
-            QMessageBox.critical(
-                None,
-                "Critical Library Error",
-                f"Unable to locate or load the libEPIC shared library for OS Type "
-                f'"{OS}" (epiclib/{libname}). EPICpy cannot start. \n[{e}]',
-            )
-            return 1
+    import apputils
 
-        import apputils
+    apputils.LIBNAME = libname
+    apputils.HEADERPATH = headerpath
 
-        apputils.LIBNAME = libname
-        apputils.HEADERPATH = headerpath
+    import mainwindow
 
-        import mainwindow
-
-        RUN_TESTS = False
-        if RUN_TESTS:
-            from cppinclude import epiclib_include
-
-            # epiclib_include("Utility Classes/Symbol.h")
-            # epiclib_include("Utility Classes/Output_tee.h")
-            # epiclib_include("Standard_Symbols.h")
-            # epiclib_include("PPS/PPS Interface classes/PPS_globals.h")
-            #
-            # from cppyy.gbl import Normal_out, Trace_out, PPS_out
-            # from cppyy.gbl import std
-            from epiclibworkout.workout_epiclib_utilities import do_routine
-            do_routine()
-            sys.exit()
-
-        self.main_win = mainwindow.MainWin(self, epiclib_files, libname)
-        self.app.lastWindowClosed.connect(shut_it_down)
-        return self.app.exec_()
+    main_win = mainwindow.MainWin(app, epiclib_files, libname)
+    app.lastWindowClosed.connect(shut_it_down)
+    return app.exec_()
 
 
 def shut_it_down():
@@ -129,6 +107,7 @@ def shut_it_down():
 
 
 if __name__ == "__main__":
+    application = QApplication(sys.argv)
 
     # ------------------------------------------------------
     # if frozen, send log messages to file in config folder
@@ -170,8 +149,6 @@ if __name__ == "__main__":
     # =====      Run App       =====
     # ==============================
 
-
     print("starting EPICpy at", datetime.datetime.now().ctime())
-    appctxt = AppContext()
-    exit_code = appctxt.run()
+    exit_code = main(application)
     sys.exit(exit_code)

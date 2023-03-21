@@ -30,10 +30,9 @@ import config
 
 
 class StatsWin(QMainWindow):
-    def __init__(self, context, parent):
+    def __init__(self, parent):
         super(StatsWin, self).__init__()
 
-        self.context = context
         self.view_type = b"StatsOut"
         self.setObjectName("StatsWindow")
         self.ui = Ui_StatsWindow()

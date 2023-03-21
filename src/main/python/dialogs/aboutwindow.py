@@ -20,13 +20,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from PyQt5.QtGui import QPixmap
 
+from apputils import get_resource
 from uifiles.aboutui import Ui_aboutDialog
 from PyQt5.QtWidgets import QDialog
 import version
 
 
 class AboutWin(QDialog):
-    def __init__(self, parent, context):
+    def __init__(self, parent):
         super(AboutWin, self).__init__(parent=parent)
 
         self.ui = Ui_aboutDialog()
@@ -38,6 +39,6 @@ class AboutWin(QDialog):
         html = html.replace("** EPICpy **", f"EPICpy v{version.__version__}")
         self.ui.textBrowser.setHtml(html)
 
-        pic_file = context.get_resource("images", "EPIC_TINY.png")
+        pic_file = str(get_resource("images", "EPIC_TINY.png"))
         pixmap = QPixmap(pic_file)
         self.ui.labelEPICicon.setPixmap(pixmap.scaled(self.ui.labelEPICicon.size()))
