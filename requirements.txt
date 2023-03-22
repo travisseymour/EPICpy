@@ -2,7 +2,6 @@
 # ------
 
 loguru
-# fbs  # ok to run/develop EPICpy, but to use any fbs ____ command on Py3.7+, you'll need fbs pro
 PyQt5
 QScintilla
 python-dateutil
@@ -28,6 +27,5 @@ ulid2             # https://github.com/valohai/ulid2
 # icecream
 # mkdocs
 black
-# fbs[upload]
 plumbum
 pytest
