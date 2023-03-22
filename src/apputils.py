@@ -260,8 +260,12 @@ def get_resource(*args) -> Path:
     OS = platform.system()
     os_id = {'Linux': 'linux', 'Darwin': 'mac', 'Windows': 'windows'}
 
-    base_folder = Path('..', 'resources', 'base').resolve()
-    os_folder = Path('..', 'resources', os_id[OS]).resolve()
+    if frozen():
+        base_folder = Path('resources', 'base').resolve()
+        os_folder = Path('resources', os_id[OS]).resolve()
+    else:
+        base_folder = Path('..', 'resources', 'base').resolve()
+        os_folder = Path('..', 'resources', os_id[OS]).resolve()
     for target_path in (Path(base_folder, *args), Path(os_folder, *args)):
         if target_path.exists():
             return target_path

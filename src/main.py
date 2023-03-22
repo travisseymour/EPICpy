@@ -52,14 +52,13 @@ def handler(msg_type, msg_log_content, msg_string):
     ...
 
 
-def main(app: QApplication):
+def start_ui(app: QApplication):
     main_win = None
 
     config.get_app_config()
     config.get_device_config(None)
 
     fontDatabase = QFontDatabase()
-
     fontDatabase.addApplicationFont(str(get_resource("fonts", "Consolas", "Consolas_Regular.ttf")))
     fontDatabase.addApplicationFont(str(get_resource("fonts", "Consolas", "Consolas_Bold.ttf")))
     fontDatabase.addApplicationFont(str(get_resource("fonts", "Consolas", "Consolas_Italic.ttf")))
@@ -106,7 +105,7 @@ def shut_it_down():
     sys.exit()
 
 
-if __name__ == "__main__":
+def main():
     application = QApplication(sys.argv)
 
     # ------------------------------------------------------
@@ -150,5 +149,9 @@ if __name__ == "__main__":
     # ==============================
 
     print("starting EPICpy at", datetime.datetime.now().ctime())
-    exit_code = main(application)
+    exit_code = start_ui(application)
     sys.exit(exit_code)
+
+
+if __name__ == "__main__":
+    main()
