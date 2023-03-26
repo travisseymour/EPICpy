@@ -18,19 +18,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import cppyy
 from views.auditoryviewwindow import AuditoryViewWin
 from loguru import logger as log
-from cppinclude import epiclib_include
 
-epiclib_include("Model-View Classes/View_base.h")
-epiclib_include("Utility Classes/Geometry.h")
-epiclib_include("Utility Classes/Symbol.h")
-epiclib_include("Framework classes/Speech_word.h")
-
-from cppyy.gbl import View_base, Speech_word
-from cppyy.gbl import Geometry_Utilities as GU
-from cppyy.gbl import Symbol
+from epiclib.epiclib import View_base, Speech_word, geometric_utilities as GU, Symbol
 
 
 class EPICAuditoryView(View_base):
@@ -80,7 +71,7 @@ class EPICAuditoryView(View_base):
     # The architecture elsewhere will signal an error.
 
     def notify_auditory_stream_appear(
-        self, object_name: Symbol, pitch: float, loudness: float, location: GU.Point
+            self, object_name: Symbol, pitch: float, loudness: float, location: GU.Point
     ):
         if self.view_window.enabled:
             self.view_window.create_new_stream(
@@ -89,13 +80,13 @@ class EPICAuditoryView(View_base):
             self.set_changed()
 
     def notify_auditory_sound_start(
-        self,
-        object_name: Symbol,
-        stream_name: Symbol,
-        time_stamp: int,
-        location: GU.Point,
-        timbre: Symbol,
-        loudness: float,
+            self,
+            object_name: Symbol,
+            stream_name: Symbol,
+            time_stamp: int,
+            location: GU.Point,
+            timbre: Symbol,
+            loudness: float,
     ):
         if self.view_window.enabled:
             keys = ("stream_name", "time_stamp", "timbre", "loudness")
@@ -186,7 +177,7 @@ class EPICAuditoryView(View_base):
             self.set_changed()
 
     def notify_auditory_sound_property_changed(
-        self, object_name: Symbol, prop_name: Symbol, prop_value: Symbol
+            self, object_name: Symbol, prop_name: Symbol, prop_value: Symbol
     ):
         if self.view_window.enabled:
             # NOTE: Currently only expecting property values that can be represented as string

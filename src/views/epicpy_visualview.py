@@ -21,17 +21,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import cppyy
 from views.visualviewwindow import VisualViewWin
 from loguru import logger as log
-from cppinclude import epiclib_include
 
-epiclib_include("Model-View Classes/View_base.h")
-epiclib_include("Utility Classes/Geometry.h")
-epiclib_include("Utility Classes/Symbol.h")
-
-from cppyy.gbl import View_base
-from cppyy.gbl import Geometry_Utilities as GU
-from cppyy.gbl import Symbol
-
-View_base.__release_gil__ = True
+from epiclib.epiclib import View_base, geometric_utilities as GU, Symbol
 
 
 class EPICVisualView(View_base):

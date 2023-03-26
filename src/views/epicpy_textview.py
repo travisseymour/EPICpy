@@ -18,13 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import cppyy
-from cppinclude import epiclib_include
 from cachedplaintextedit import CachedPlainTextEdit
-
-epiclib_include("Model-View Classes/View_base.h")
-
-from cppyy.gbl import View_base
 
 
 # class EPICTextViewCachedWrite(View_base):

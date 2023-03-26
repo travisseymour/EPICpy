@@ -22,15 +22,7 @@ import config
 from uifiles.breaksettingsui import Ui_DialogRuleBreak
 from PyQt5.QtWidgets import QDialog, QCheckBox, QListWidgetItem
 
-from apputils import LIBNAME, unpack_param_string
-from cppinclude import epiclib_include
-import cppyy
-
-epiclib_include("Model-View Classes/Model.h")
-epiclib_include("Utility Classes/Symbol.h")
-
-from cppyy.gbl import Model
-from cppyy.gbl import Symbol
+from epiclib.epiclib import Model, Symbol
 
 class BreakSettingsWin(QDialog):
     def __init__(self, model):

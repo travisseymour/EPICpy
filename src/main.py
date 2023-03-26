@@ -30,7 +30,7 @@ from PyQt5.QtGui import QFontDatabase
 from PyQt5.QtWidgets import QMessageBox, QApplication
 from PyQt5.QtCore import qInstallMessageHandler, QCoreApplication
 
-from apputils import get_resource, frozen, LIBNAME, HEADERPATH, set_libname, set_headerpath
+from apputils import get_resource, frozen
 import config
 
 os.environ["OUTDATED_IGNORE"] = "1"

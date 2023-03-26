@@ -28,9 +28,7 @@ import timeit
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QFileDialog
 
-from apputils import LIBNAME, unpack_param_string
-from cppinclude import epiclib_include
-import cppyy
+from apputils import unpack_param_string
 
 from encoderpassthru import NullVisualEncoder, NullAuditoryEncoder
 from runinfo import RunInfo
@@ -42,39 +40,7 @@ from loguru import logger as log
 import config
 from plum import dispatch  # keep here to ensure it gets pulled in, needed for devices
 
-# ------------------------------------------------------
-# Load Various Include files and objects we will need
-# The location of the library depends on OS, this is
-# figured out in main.py which sets apputils.LIBNAME
-# so that the correct library can be loaded when this
-# module is imported.
-# ------------------------------------------------------
-
-cppyy.load_library(LIBNAME)
-
-# epiclib_include("Model-View Classes/View_base.h")
-epiclib_include("Model-View Classes/Model.h")
-epiclib_include("Framework classes/Output_tee_globals.h")
-epiclib_include("Framework classes/Device_base.h")
-epiclib_include("Framework classes/Device_exception.h")
-epiclib_include("Framework classes/Device_processor.h")
-epiclib_include("Framework classes/Human_base.h")
-epiclib_include("Framework classes/Human_processor.h")
-# epiclib_include("Framework classes/Parameter.h")
-epiclib_include("Framework classes/Coordinator.h")
-# epiclib_include("Framework classes/Processor.h")
-# epiclib_include("Utility Classes/Symbol.h")
-# epiclib_include("Utility Classes/Output_tee.h")
-# epiclib_include("Utility Classes/Statistics.h")
-# epiclib_include("Standard_Symbols.h")
-# epiclib_include("PPS/PPS Interface classes/PPS_globals.h")
-# epiclib_include("Framework classes/Device_event_types.h")
-# epiclib_include("Motor Classes/Manual_actions.h")
-# epiclib_include("Motor Classes/Manual_processor.h")
-
-from cppyy.gbl import Model
-from cppyy.gbl import Coordinator
-from cppyy.gbl import Normal_out
+from epiclib.epiclib import Model, Coordinator, Normal_out
 
 
 class Simulation:
@@ -300,9 +266,7 @@ class Simulation:
                     )
 
                 exec(f'self.device = {device_file_p.stem}.EpicDevice(ot=Normal_out, parent=self.parent, device_folder=device_file_p.parent)')
-                self.device.__release_gil__ = (
-                    True  # from cppyy...no idea if this does anything at all!?
-                )
+
                 if not quiet:
                     self.write(
                         f"{e_info} found EpicDevice class, creating new device instance "
@@ -367,7 +331,6 @@ class Simulation:
                 # actually create a new model, we're passing in the new device
                 #  (different than EpicCLI approach)
                 self.model = Model(self.device)
-                self.model.__release_gil__ = True
                 assert self.model, "Error creating new Model() with device."
 
                 # now connect everything up

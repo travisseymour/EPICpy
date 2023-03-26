@@ -49,7 +49,7 @@ from PyQt5.QtWidgets import (
     QMenu,
     QApplication,
     QPlainTextEdit,
-    QInputDialog,
+    QInputDialog, QMessageBox,
 )
 
 from pathlib import Path
@@ -1409,6 +1409,14 @@ class MainWin(QMainWindow):
         self.sound_text_settings_dialog.exec()  # needed to make it modal?!
 
     def show_epiclib_settings_dialog(self):
+        _ = QMessageBox(QMessageBox.Information,
+                    "This Function Has Been Disabled",
+                    "At the moment, the ability to switch EPIClib versions has been disabled. It is currently"
+                    "hard-coded to the version published in 2016 by David Kieras at https://github.com/dekieras/EPIC",
+                    QMessageBox.Ok,
+                    )
+        return
+
         old_epiclib = config.device_cfg.epiclib_version
         self.epiclib_settings_dialog = EPICLibSettingsWin(self.epiclib_files, self.epiclib_name)
         self.epiclib_settings_dialog.setup_options()

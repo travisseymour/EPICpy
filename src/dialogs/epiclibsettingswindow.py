@@ -25,9 +25,16 @@ from PyQt5.QtWidgets import QDialog, QMessageBox
 from functools import partial
 import config
 
+# FIXME: This window needs update now that were are no longer using cppyy.
+#        Because literally no one wants it, I am very unlikely to convert the pre 2015
+#        versions to EPIClib to the new pybind11 approach (way too much work).
+#        Thus, this code will stay here in limbo until I produce a newer version of EPICLib.
+#        Only then will there be any need to allow the user to choose anything.
 
 class EPICLibSettingsWin(QDialog):
     def __init__(self, epiclib_files: pd.DataFrame, epiclib_name: str):
+        raise NotImplementedError("This Function Has Been Disabled")
+
         super(EPICLibSettingsWin, self).__init__()
         self.epiclib_files = epiclib_files
         self.epiclib_name = epiclib_name
