@@ -30,8 +30,7 @@ from PyQt5.QtGui import QFontDatabase
 from PyQt5.QtWidgets import QMessageBox, QApplication
 from PyQt5.QtCore import qInstallMessageHandler, QCoreApplication
 
-import apputils
-from apputils import get_resource
+from apputils import get_resource, frozen, LIBNAME, HEADERPATH, set_libname, set_headerpath
 import config
 
 from cppyysetup import setup_cppyy
@@ -40,8 +39,6 @@ os.environ["OUTDATED_IGNORE"] = "1"
 
 # TODO: On MacOS BigSur, need to fix problem, but not sure if needed now that we switched to PyQt5
 os.environ["QT_MAC_WANTS_LAYER"] = "1"
-
-apputils.CONTEXT = None
 
 DONE = False
 
@@ -53,6 +50,7 @@ def handler(msg_type, msg_log_content, msg_string):
 
 
 def start_ui(app: QApplication):
+    global LIBNAME, HEADERPATH
     main_win = None
 
     config.get_app_config()
@@ -83,10 +81,8 @@ def start_ui(app: QApplication):
         )
         return 1
 
-    import apputils
-
-    apputils.LIBNAME = libname
-    apputils.HEADERPATH = headerpath
+    set_libname(libname)
+    set_headerpath(headerpath)
 
     import mainwindow
 
@@ -106,13 +102,29 @@ def shut_it_down():
 
 
 def main():
+    import sys
+    from pathlib import Path
+    print(f'>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> {str(Path().cwd())=}')
+    for file in Path().cwd().glob('*'):
+        if not file.name.startswith('.'):
+            print(file, file.is_dir(), file.is_file())
+
+    print('===================\n')
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        pathEX = Path(sys._MEIPASS)
+        for file in pathEX.cwd().glob('*'):
+            if not file.name.startswith('.'):
+                print(file, file.is_dir(), file.is_file())
+    else:
+        print('not frozen')
+
     application = QApplication(sys.argv)
 
     # ------------------------------------------------------
     # if frozen, send log messages to file in config folder
     # ------------------------------------------------------
 
-    if apputils.frozen():
+    if frozen():
         # Ignore all the log messages I sprinkled throughout the code while developing
         log.remove(None)  # should disable all logs
 

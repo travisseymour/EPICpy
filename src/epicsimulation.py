@@ -903,8 +903,8 @@ class Simulation:
                     #   run until done?
                     if self.run_time >= config.device_cfg.run_command_value:
                         self.write(
-                            "{e_info} Unable to run additional steps, RUN_UNTIL_TIME "
-                            "value already reached!"
+                            f"{e_info} Unable to run additional steps, RUN_UNTIL_TIME "
+                            f"value already reached!"
                         )
                     self.run_time_limit = 0
                     return

@@ -37,6 +37,14 @@ OS = platform.system()
 LIBNAME = ""
 HEADERPATH = ""
 
+def set_libname(libname:str):
+    global LIBNAME
+    LIBNAME = libname
+
+def set_headerpath(headerpath:str):
+    global HEADERPATH
+    HEADERPATH = headerpath
+
 # pathEX = getattr(sys, '_MEIPASS', '.')
 
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
@@ -261,16 +269,21 @@ def get_resource(*args) -> Path:
     os_id = {'Linux': 'linux', 'Darwin': 'mac', 'Windows': 'windows'}
 
     if frozen():
-        base_folder = Path('resources', 'base').resolve()
-        os_folder = Path('resources', os_id[OS]).resolve()
+        # because the resources' folder is at same level in frozen application
+        base_folder = Path(pathEX, 'resources', 'base').resolve()
+        os_folder = Path(pathEX, 'resources', os_id[OS]).resolve()
     else:
-        base_folder = Path('..', 'resources', 'base').resolve()
-        os_folder = Path('..', 'resources', os_id[OS]).resolve()
+        # because we're keeping the resources' folder outside the src folder during development
+        base_folder = Path(Path(pathEX).parent, 'resources', 'base').resolve()
+        os_folder = Path(Path(pathEX).parent, 'resources', os_id[OS]).resolve()
+
     for target_path in (Path(base_folder, *args), Path(os_folder, *args)):
         if target_path.exists():
             return target_path
     else:
-        raise FileNotFoundError(f'Unable to locate resource "{str(Path(*args))}" in application resource folder.')
+        p =Path(pathEX, 'resources').resolve()
+        raise FileNotFoundError(f'Unable to locate resource "{str(Path(*args))}" '
+                                f'in application resource folder "{str(p)}".')
 
 
 if __name__ == '__main__':

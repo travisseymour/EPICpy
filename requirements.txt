@@ -11,15 +11,6 @@ plum-dispatch
 ascii_frame
 ulid2             # https://github.com/valohai/ulid2
 
-# Platform Specific
-# -----------------
-#
-# LINUX: Comment out the cppyy import and build it from source as explained here:
-# https://cppyy.readthedocs.io/en/latest/repositories.html#building-from-source
-#
-# MACOS: Uncomment the next line vvvv
-# cppyy
-
 # Development
 # Developers: See epicpy_dev_setup.txt
 # ------------------------------------
