@@ -27,21 +27,56 @@ epiclib_include("Model-View Classes/View_base.h")
 from cppyy.gbl import View_base
 
 
-class EPICTextViewCachedWrite(View_base):
+# class EPICTextViewCachedWrite(View_base):
+#     """
+#     Version of EPICTextView that is passed an instance of CachedPlainTextEdit
+#     to which it posts text output.
+#     """
+#
+#     def __init__(self, text_widget: CachedPlainTextEdit):
+#         super(EPICTextViewCachedWrite, self).__init__()
+#         self.text_widget = text_widget
+#
+#     def clear(self):
+#         self.text_widget.clear()
+#
+#     def notify_append_text(self, text: str):
+#         self.text_widget.write(str(text).strip())
+#
+#     def __getattr__(self, name):
+#         def _missing(*args, **kwargs):
+#             print("A missing method was called.")
+#             print("The object was %r, the method was %r. " % (self, name))
+#             print("It was called with %r and %r as arguments" % (args, kwargs))
+#
+#         return _missing
+
+class EPICTextViewCachedWrite:
     """
     Version of EPICTextView that is passed an instance of CachedPlainTextEdit
     to which it posts text output.
+    NOTE: instead of being derivative of View_base, we just need a write_char interface
+          for use with PyStreamer objects (see py_streamer.h)
     """
 
     def __init__(self, text_widget: CachedPlainTextEdit):
         super(EPICTextViewCachedWrite, self).__init__()
         self.text_widget = text_widget
+        self.buffer = []
 
     def clear(self):
         self.text_widget.clear()
 
-    def notify_append_text(self, text: str):
-        self.text_widget.write(str(text).strip())
+    def write_char(self, char: str):
+        """writes one character to a local buffer, only submitting to attached text_widget after a newline"""
+        self.buffer.append(char)  # NOTE: if this leads to double-spaced output, move this to an else block
+        if char == '\n':
+            self.text_widget.write(f"".join(self.buffer))
+            self.buffer = []
+
+    def write(self, text: str):
+        """writes given text to attached text_widget"""
+        self.text_widget.write(str(text).strip())  # TODO: do we need this strip() -- maybe stripping of the newline??
 
     def __getattr__(self, name):
         def _missing(*args, **kwargs):

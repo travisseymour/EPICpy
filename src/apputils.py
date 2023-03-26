@@ -34,8 +34,6 @@ import warnings
 from functools import wraps
 
 OS = platform.system()
-LIBNAME = ""
-HEADERPATH = ""
 
 def set_libname(libname:str):
     global LIBNAME

@@ -18,33 +18,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import cppyy
-from apputils import LIBNAME
-from cppinclude import epiclib_include
-
-# ------------------------------------------------------
-# Load Various Include files and objects we will need
-# The location of the library depends on OS, this is
-# figured out in main.py which sets apputils.LIBNAME
-# so that the correctly library can be loaded when this
-# module is imported.
-# ------------------------------------------------------
-
-
-cppyy.load_library(LIBNAME)
-
-epiclib_include("Framework classes/Auditory_encoder_base.h")
-epiclib_include("Framework classes/Visual_encoder_base.h")
-# epiclib_include("Framework classes/Output_tee_globals.h")
-epiclib_include("Utility Classes/Symbol.h")
-# epiclib_include("Standard_Symbols.h")
-
-from cppyy.gbl import Visual_encoder_base, Auditory_encoder_base, Symbol
+from epiclib.epiclib import Visual_encoder_base, Auditory_encoder_base
 
 
 # ---------------------------------------------------------------------------
 #   Dummy Encoders for when we need to *REMOVE* an encoder.
-#   There's no easy way to do that, so isntead we assign a new
+#   There's no easy way to do that, so instead we assign a new
 #   encoder that does nothing.
 # ---------------------------------------------------------------------------
 

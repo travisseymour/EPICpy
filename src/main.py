@@ -33,8 +33,6 @@ from PyQt5.QtCore import qInstallMessageHandler, QCoreApplication
 from apputils import get_resource, frozen, LIBNAME, HEADERPATH, set_libname, set_headerpath
 import config
 
-from cppyysetup import setup_cppyy
-
 os.environ["OUTDATED_IGNORE"] = "1"
 
 # TODO: On MacOS BigSur, need to fix problem, but not sure if needed now that we switched to PyQt5
@@ -69,24 +67,9 @@ def start_ui(app: QApplication):
 
     OS = platform.system()
 
-    try:
-        info, libname, headerpath, epiclib_files = setup_cppyy()
-    except Exception as e:
-        info, libname, headerpath, epiclib_files = None, None, None, None
-        QMessageBox.critical(
-            None,
-            "Critical Library Error",
-            f"Unable to locate or load the libEPIC shared library for OS Type "
-            f'"{OS}" (epiclib/{libname}). EPICpy cannot start. \n[{e}]',
-        )
-        return 1
-
-    set_libname(libname)
-    set_headerpath(headerpath)
-
     import mainwindow
 
-    main_win = mainwindow.MainWin(app, epiclib_files, libname)
+    main_win = mainwindow.MainWin(app)
     app.lastWindowClosed.connect(shut_it_down)
     return app.exec_()
 
@@ -104,19 +87,6 @@ def shut_it_down():
 def main():
     import sys
     from pathlib import Path
-    print(f'>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> {str(Path().cwd())=}')
-    for file in Path().cwd().glob('*'):
-        if not file.name.startswith('.'):
-            print(file, file.is_dir(), file.is_file())
-
-    print('===================\n')
-    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-        pathEX = Path(sys._MEIPASS)
-        for file in pathEX.cwd().glob('*'):
-            if not file.name.startswith('.'):
-                print(file, file.is_dir(), file.is_file())
-    else:
-        print('not frozen')
 
     application = QApplication(sys.argv)
 
@@ -135,7 +105,7 @@ def main():
         try:
             config_dir.mkdir(exist_ok=True)
         except Exception as e:
-            print(f"WARNING: Unable to create config folder at {str(config_dir)}")
+            print(f"WARNING: Unable to create config folder at {str(config_dir)}: {e}")
 
         log_file = Path(config_dir, "epicpy.log")
         log.add(log_file, level="ERROR")

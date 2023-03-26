@@ -51,7 +51,7 @@ from PyQt5.QtWidgets import (
     QPlainTextEdit,
     QInputDialog,
 )
-import cppyy
+
 from pathlib import Path
 from dialogs.runsettingswindow import RunSettingsWin
 from dialogs.tracesettingswindow import TraceSettingsWin
@@ -69,8 +69,6 @@ import datetime
 import time
 import subprocess
 from functools import partial
-from apputils import LIBNAME, frozen
-from cppinclude import epiclib_include, cpp_include
 from version import __version__
 import re
 import tempfile
@@ -86,26 +84,10 @@ from views.epicpy_textview import EPICTextViewCachedWrite
 from views.epicpy_visualview import EPICVisualView
 from views.epicpy_auditoryview import EPICAuditoryView
 
-# ------------------------------------------------------
-# Load Various Include files and objects we will need
-# The location of the library depends on OS, this is
-# figured out in main.py which sets apputils.LIBNAME
-# so that the correct library can be loaded when this
-# module is imported.
-# ------------------------------------------------------
-
-if frozen():
-    cpp_include("cppyy_backend/include/TStreamerInfo.h")
-
-cppyy.load_library(LIBNAME)
-
-# epiclib_include("Utility Classes/Symbol.h")
-epiclib_include("Utility Classes/Output_tee.h")
-# epiclib_include("Standard_Symbols.h")
-epiclib_include("PPS/PPS Interface classes/PPS_globals.h")
-
-from cppyy.gbl import Normal_out, Trace_out, PPS_out
-from cppyy.gbl import std  # for fstream
+from epiclib.epiclib import (add_py_object_to_normal_out_streamer, add_py_object_to_trace_out_streamer,
+                             add_py_object_to_pps_out_streamer, add_py_object_to_debug_out_streamer,
+                             initialize_py_streamers, uninitialize_py_streamers)
+from epiclib.epiclib import Normal_out, Trace_out, PPS_out, Debug_out
 
 
 class StateChangeWatcher(QObject):
@@ -140,6 +122,19 @@ class StateChangeWatcher(QObject):
                     self.restore_func()
 
         return False
+
+
+class DebugOutWriter:
+    """TEMP: Until UI window is created for it, write debug info to stdio"""
+
+    def __init__(self):
+        self.buffer = []
+
+    def write_char(self, c: str):
+        self.buffer.append(c)
+        if c == '\n':
+            print(f'{"".join(self.buffer)}', end='')
+            self.buffer = []
 
 
 class MainWin(QMainWindow):
@@ -180,16 +175,22 @@ class MainWin(QMainWindow):
 
         self.run_state = UNREADY
 
-        self.normal_out_fs = std.fstream()
-        self.trace_out_fs = std.fstream()
+        # disabled at the moment...working on alternative approach to hooking up std.stream to the output tees
+        # self.normal_out_fs = std.fstream()
+        # self.trace_out_fs = std.fstream()
 
-        # Normal_out is always attached to this window
+        # init pystreamers on c++ side so we can connect local writer classes
+        # via the add_py_object_to_xxxx_streamer() facility
+        # enable_normal: bool, enable_trace: bool, enable_pps: bool, enable_debug: bool)
+        initialize_py_streamers(True, True, True, False)
+
+        # attach Normal_out and PPS_out output to this window
         self.normal_out_view = EPICTextViewCachedWrite(
             text_widget=self.ui.plainTextEditOutput
         )
+        add_py_object_to_normal_out_streamer(self.normal_out_view)
+        add_py_object_to_pps_out_streamer(self.normal_out_view)
         self.normal_out_view.text_widget.dark_mode = config.app_cfg.dark_mode
-        Normal_out.add_view(self.normal_out_view)
-        PPS_out.add_view(self.normal_out_view)
 
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
         # connect Trace_out now
@@ -197,11 +198,16 @@ class MainWin(QMainWindow):
         self.trace_win.trace_out_view = EPICTextViewCachedWrite(
             text_widget=self.trace_win.ui.plainTextEditOutput
         )
+        add_py_object_to_trace_out_streamer(self.trace_win.trace_out_view)
         self.trace_win.trace_out_view.text_widget.dark_mode = config.app_cfg.dark_mode
         self.trace_win.ui.plainTextEditOutput.mouseDoubleClickEvent = (
             self.mouseDoubleClickEvent
         )
-        Trace_out.add_view(self.trace_win.trace_out_view)
+
+        # uncomment this if there is a need to output debug info to stdio wile EPICpy is running
+        # also make sure the last param in initialize_py_streamers is set to True
+        # self.debug_out_view = DebugOutWriter()
+        # add_py_object_to_debug_out_streamer(self.debug_out_view)
 
         self.stats_win = StatsWin(parent=self)
 
@@ -677,7 +683,7 @@ class MainWin(QMainWindow):
             return
 
         if Path(script_file).is_file():
-            config.app_cfg.last_script_file =  script_file
+            config.app_cfg.last_script_file = script_file
             config.save_app_config(quiet=True)
 
         try:
@@ -748,55 +754,62 @@ class MainWin(QMainWindow):
             self.write(f'\n{e_boxed_x} Scripted Run NOT SETUP PROPERLY! Attempting to run may fail.\n')
 
     def update_output_logging(self):
+        # FIXME: either move all of this into eiclib and just expose an interface
+        #        to open/close a file and maybe to start/stop tracking?
+        #        OR, just skip directly attaching this to the output tees and instead
+        #        attach them to the downstream somewhere here -- I mean, we're already
+        #        storing and then dumping stuff to the output windows. Could just as easily
+        #        dump it to a file as well. **ALSO ADJUST flush_and_reset_epic_file_outputs()**
         # First we undo everything, in case we get here with no model/device in
         # which case outputs should get shutdown
-        self.flush_and_reset_epic_file_outputs()
-
-        if config.device_cfg.log_normal_out and config.device_cfg.normal_out_file:
-            try:
-                self.normal_out_fs.open(
-                    config.device_cfg.normal_out_file,
-                    std.fstream.out | std.fstream.trunc,
-                )
-                Normal_out.add_stream(self.normal_out_fs)
-                assert Normal_out.is_present(self.normal_out_fs)
-                if config.device_cfg.trace_pps:
-                    PPS_out.add_stream(self.normal_out_fs)
-                self.write(
-                    f"{e_boxed_check} Normal Output logging set to "
-                    f"{config.device_cfg.normal_out_file}"
-                )
-            except Exception as e:
-                self.write(
-                    emoji_box(
-                        f"ERROR: Unable to set Normal Output logging to\n"
-                        f"{config.device_cfg.normal_out_file}:\n"
-                        f"{e}",
-                        line="thick",
-                    )
-                )
-
-        if config.device_cfg.log_trace_out and config.device_cfg.trace_out_file:
-            try:
-                self.trace_out_fs.open(
-                    config.device_cfg.trace_out_file,
-                    std.fstream.out | std.fstream.trunc,
-                )
-                Trace_out.add_stream(self.trace_out_fs)
-                assert Trace_out.is_present(self.trace_out_fs)
-                self.write(
-                    f"{e_boxed_check} Trace Output logging set to "
-                    f"{config.device_cfg.trace_out_file}"
-                )
-            except Exception as e:
-                self.write(
-                    emoji_box(
-                        f"ERROR: Unable to set Trace logging to\n"
-                        f"{config.device_cfg.trace_out_file}:"
-                        f"{e}",
-                        line="thick",
-                    )
-                )
+        # self.flush_and_reset_epic_file_outputs()
+        #
+        # if config.device_cfg.log_normal_out and config.device_cfg.normal_out_file:
+        #     try:
+        #         self.normal_out_fs.open(
+        #             config.device_cfg.normal_out_file,
+        #             std.fstream.out | std.fstream.trunc,
+        #         )
+        #         Normal_out.add_stream(self.normal_out_fs)
+        #         assert Normal_out.is_present(self.normal_out_fs)
+        #         if config.device_cfg.trace_pps:
+        #             PPS_out.add_stream(self.normal_out_fs)
+        #         self.write(
+        #             f"{e_boxed_check} Normal Output logging set to "
+        #             f"{config.device_cfg.normal_out_file}"
+        #         )
+        #     except Exception as e:
+        #         self.write(
+        #             emoji_box(
+        #                 f"ERROR: Unable to set Normal Output logging to\n"
+        #                 f"{config.device_cfg.normal_out_file}:\n"
+        #                 f"{e}",
+        #                 line="thick",
+        #             )
+        #         )
+        #
+        # if config.device_cfg.log_trace_out and config.device_cfg.trace_out_file:
+        #     try:
+        #         self.trace_out_fs.open(
+        #             config.device_cfg.trace_out_file,
+        #             std.fstream.out | std.fstream.trunc,
+        #         )
+        #         Trace_out.add_stream(self.trace_out_fs)
+        #         assert Trace_out.is_present(self.trace_out_fs)
+        #         self.write(
+        #             f"{e_boxed_check} Trace Output logging set to "
+        #             f"{config.device_cfg.trace_out_file}"
+        #         )
+        #     except Exception as e:
+        #         self.write(
+        #             emoji_box(
+        #                 f"ERROR: Unable to set Trace logging to\n"
+        #                 f"{config.device_cfg.trace_out_file}:"
+        #                 f"{e}",
+        #                 line="thick",
+        #             )
+        #         )
+        ...
 
     def add_views_to_model(self):
         self.simulation.model.get_human_ptr().add_visual_physical_view(
@@ -1237,20 +1250,21 @@ class MainWin(QMainWindow):
         )
 
     def flush_and_reset_epic_file_outputs(self):
-        if Normal_out.is_present(self.normal_out_fs):
-            Normal_out.remove_stream(self.normal_out_fs)
-        if PPS_out.is_present(self.normal_out_fs):
-            PPS_out.remove_stream(self.normal_out_fs)
-        if Trace_out.is_present(self.trace_out_fs):
-            Trace_out.remove_stream(self.trace_out_fs)
-        if self.normal_out_fs.is_open():
-            self.normal_out_fs.flush()
-            self.normal_out_fs.close()
-        if self.trace_out_fs.is_open():
-            self.trace_out_fs.flush()
-            self.trace_out_fs.close()
-        self.normal_out_fs = std.fstream()
-        self.trace_out_fs = std.fstream()
+        # if Normal_out.is_present(self.normal_out_fs):
+        #     Normal_out.remove_stream(self.normal_out_fs)
+        # if PPS_out.is_present(self.normal_out_fs):
+        #     PPS_out.remove_stream(self.normal_out_fs)
+        # if Trace_out.is_present(self.trace_out_fs):
+        #     Trace_out.remove_stream(self.trace_out_fs)
+        # if self.normal_out_fs.is_open():
+        #     self.normal_out_fs.flush()
+        #     self.normal_out_fs.close()
+        # if self.trace_out_fs.is_open():
+        #     self.trace_out_fs.flush()
+        #     self.trace_out_fs.close()
+        # self.normal_out_fs = std.fstream()
+        # self.trace_out_fs = std.fstream()
+        ...
 
     def show_run_settings(self):
         if not self.simulation or not self.simulation.device:
@@ -1373,7 +1387,7 @@ class MainWin(QMainWindow):
     def show_rule_break_settings_dialog(self):
         if not self.simulation or not self.simulation.model:
             return
-        self.rule_break_settings_dialog = BreakSettingsWin( self.simulation.model )
+        self.rule_break_settings_dialog = BreakSettingsWin(self.simulation.model)
         self.rule_break_settings_dialog.setup_options()
         self.rule_break_settings_dialog.setModal(True)
         self.rule_break_settings_dialog.exec()  # needed to make it modal?!
@@ -1381,7 +1395,7 @@ class MainWin(QMainWindow):
     def show_device_options_dialog(self):
         if not self.simulation or not self.simulation.device:
             return
-        self.device_options_dialog = DeviceOptionsWin( self.simulation.device )
+        self.device_options_dialog = DeviceOptionsWin(self.simulation.device)
         self.device_options_dialog.setup_options()
         self.device_options_dialog.setModal(True)
         self.device_options_dialog.exec()  # needed to make it modal?!
@@ -1396,7 +1410,7 @@ class MainWin(QMainWindow):
 
     def show_epiclib_settings_dialog(self):
         old_epiclib = config.device_cfg.epiclib_version
-        self.epiclib_settings_dialog = EPICLibSettingsWin( self.epiclib_files, self.epiclib_name )
+        self.epiclib_settings_dialog = EPICLibSettingsWin(self.epiclib_files, self.epiclib_name)
         self.epiclib_settings_dialog.setup_options()
         self.epiclib_settings_dialog.setModal(True)
         self.epiclib_settings_dialog.exec()  # needed to make it modal?!
@@ -1623,7 +1637,7 @@ class MainWin(QMainWindow):
         return file
 
     def export_output(self, source: QPlainTextEdit, name: str):
-        default_exts = {'Normal':'.txt', 'Trace': '.txt', 'Stats': '.html'}
+        default_exts = {'Normal': '.txt', 'Trace': '.txt', 'Stats': '.html'}
         try:
             ext = default_exts[name]
         except NameError:

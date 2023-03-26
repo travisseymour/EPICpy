@@ -38,7 +38,7 @@ class CachedPlainTextEdit(QPlainTextEdit):
         super(CachedPlainTextEdit, self).__init__(*args, **kwargs)
         self.setReadOnly(True)
         self.cache_text = False
-        self.text_cache = list()
+        self.text_cache = []
         self.write_warning_limit = (
             kwargs["write_warning_limit"] if "write_warning_limit" in kwargs else 100000
         )
@@ -80,7 +80,7 @@ class CachedPlainTextEdit(QPlainTextEdit):
                 ss = QTimer()
                 ss.singleShot(100, partial(self.appendPlainText, big_text))
 
-            self.text_cache = list()
+            self.text_cache = []
 
     def dump_cache(self):
         old_cache_status = self.cache_text
