@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import re
+import warnings
 from typing import Optional, List
 from pathlib import Path
 import sys
@@ -31,14 +32,25 @@ from PyQt5.QtWidgets import QFileDialog
 from apputils import unpack_param_string
 
 from encoderpassthru import NullVisualEncoder, NullAuditoryEncoder
+from epicpyexception import EPICpyException
 from runinfo import RunInfo
 from stateconstants import *
 from emoji import *
 from dialogs.loggingwindow import LoggingSettingsWin
-import modulereloader  # KEEP HERE, USED IN EXEC STATEMENT!
-from loguru import logger as log
+
 import config
+
+warnings.filterwarnings("ignore", module="matplotlib\..*")
+warnings.filterwarnings("ignore", module="pingouin\..*")
+# warnings.filterwarnings("ignore")  # NOTE: Is this required, or are the above 2 lines sufficient?
+
+# KEEP HERE, USED IN EXEC STATEMENT!
+import modulereloader
+from loguru import logger as log
+
+# KEEP HERE, NEEDED FOR DEVICES
 from plum import dispatch  # keep here to ensure it gets pulled in, needed for devices
+
 
 from epiclib.epiclib import Model, Coordinator, Normal_out
 
@@ -142,7 +154,6 @@ class Simulation:
                     line="thick",
                 )
             )
-
 
     def on_load_device(self, file: str = "", quiet: bool = False):
 
@@ -321,40 +332,23 @@ class Simulation:
 
             # create new model and connect it to the new device
             try:
-                # suggested in Model::connect_device_to_human, but may not be
-                #  necessary in Python
-                # try:
-                #     self.model.device_ptr = None
-                #     self.model.device_processor_ptr = None
-                # except:  # FIXME: Seriously? Why would setting these to None fail??
-                #     pass
-                # actually create a new model, we're passing in the new device
-                #  (different than EpicCLI approach)
+
                 self.model = Model(self.device)
-                assert self.model, "Error creating new Model() with device."
+                if isinstance(self.model, Model):
+                    self.write(f"{e_boxed_check} New Model() was successfully created with device.")
+                else:
+                    raise EPICpyException(f"{e_boxed_x} Error creating new Model() with device.")
 
                 # now connect everything up
-                self.model.device_processor_ptr = self.device.get_device_proc_ptr()
+                self.model.interconnect_device_and_human()
 
-                assert (
-                    self.model.device_processor_ptr
-                ), "Failed to get valid device_proc_ptr"
-                self.model.device_processor_ptr.connect(self.model.get_human_ptr())
-                assert (
-                    self.model.device_processor_ptr
-                ), "Failed to connect device_proc_ptr to human_ptr"
-                # NOTE: Keep the note below so no one is temped to mirror what's going
-                # on in dkepic here self.model.get_human_ptr().
-                #   connect(self.model.get_device_processor_ptr()) # <--don't do this!!!!!
-                # This is the only way that works vvv
-                self.model.get_human_ptr().connect(self.model.device_processor_ptr)
-                assert (
-                    self.model.get_human_ptr()
-                ), "Failed to connect human_ptr back to device_ptr"
+                if self.model.compile() and self.model.initialize():
+                    self.write(f"{e_boxed_check} Model() was successfully initialized.")
+                else:
+                    raise EPICpyException(f"{e_boxed_x} Error compiling and initializing Model().")
 
                 self.update_model_output_settings()
 
-                self.write(f"{e_boxed_check} Model successfully initialized.")
             except Exception as e:
                 self.write(
                     emoji_box(
@@ -715,7 +709,7 @@ class Simulation:
         try:
             # try to compile rule
             self.model.set_prs_filename(file)
-            result = self.model.compile()
+            result = self.model.compile()  # and self.model.initialize() NEED THIS? Was Used in simulation2.py
         except Exception as e:
             self.write(
                 emoji_box(
@@ -964,10 +958,12 @@ class Simulation:
 
     def halt_simulation(self, reason: str = ""):
 
+        # self.device.stop_simulation()  # TODO: Check to see if this is now ok with the new epiclib approach
         self.model.stop()
+        self.instance.stop()  # added march 26 2023...needed?
 
-        self.model.initialized = False
-        self.model.running = False
+        # self.model.initialized = False  # model.stop should do this!
+        # self.model.running = False      # model.stop should do this!
         self.parent.run_state = RUNNABLE
         self.stop_model_now = True
 

@@ -959,7 +959,22 @@ class MainWin(QMainWindow):
         except:
             pass
 
+        try:
+            self.simulation.pause_simulation()
+            self.simulation.model.stop()
+            self.simulation.device.stop_simulation()
+            self.simulation.instance.shutdown_simulation()
+        except Exception as e:
+            log.error(f'got this error in the closeEvent: {e}')
+
         self.simulation.model = None
+        self.simulation.device = None
+        self.simulation.instance = None
+
+        try:
+            uninitialize_py_streamers()
+        except Exception as e:
+            log.error(f'got this error in the closeEvent: {e}')
 
         event.accept()
 
