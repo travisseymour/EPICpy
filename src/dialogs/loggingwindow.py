@@ -51,7 +51,7 @@ class LoggingSettingsWin(QDialog):
             + "pt}"
         )
 
-        self.setLayout(self.ui.verticalLayout)
+        # self.setLayout(self.ui.verticalLayout)
 
     @staticmethod
     def default_log_filename(file_type: str) -> str:

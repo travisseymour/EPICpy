@@ -93,7 +93,7 @@ class RunSettingsWin(QDialog):
             h = min(h, self.maximumHeight())
             self.resize(w, h)
 
-        self.setLayout(self.ui.verticalLayout_5)
+        # self.setLayout(self.ui.verticalLayout_5)
 
     def resizeEvent(self, event):
         # self.resized.emit()  # in case you want to send this signal somewhere else

@@ -54,7 +54,7 @@ class SearchWin(QDialog):
             h = min(h, self.maximumHeight())
             self.resize(w, h)
 
-        self.setLayout(self.ui.verticalLayout_2)
+        # self.setLayout(self.ui.verticalLayout_2)
 
     def resizeEvent(self, event):
         # self.resized.emit()  # in case you want to send this signal somewhere else

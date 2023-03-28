@@ -53,7 +53,7 @@ class FontSizeDialog(QDialog):
             h = min(h, self.maximumHeight())
             self.resize(w, h)
 
-        self.setLayout(self.ui.verticalLayout)
+        # self.setLayout(self.ui.verticalLayout)
 
     def font_size_changed(self, change: int):
         self.setup_options(update_spin_box=False)

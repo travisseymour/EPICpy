@@ -42,7 +42,7 @@ class BreakSettingsWin(QDialog):
             str(break_rule) for break_rule in self.model.get_break_rule_names()
         ]
 
-        self.setLayout(self.ui.verticalLayout)
+        # self.setLayout(self.ui.verticalLayout)
 
         self.setStyleSheet(
             'QWidget {font: "'

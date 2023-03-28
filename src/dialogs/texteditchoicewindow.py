@@ -54,7 +54,7 @@ class TextEditChoiceWin(QDialog):
             h = min(h, self.maximumHeight())
             self.resize(w, h)
 
-        self.setLayout(self.ui.verticalLayout)
+        # self.setLayout(self.ui.verticalLayout)
 
     def radio_clicked(self):
         radio_button = self.sender()
