@@ -20,3 +20,4 @@ ulid2             # https://github.com/valohai/ulid2
 black
 plumbum
 pytest
+pyinstaller
