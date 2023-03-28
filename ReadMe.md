@@ -16,7 +16,7 @@ EPIC currently exists as an integration between a computational version of the a
 
 **What's New**
 
-**EPICpy** is a cross-platform Python-based interface to EPIClib that allows programming task devices and perceptual encoders in the Python programming language. However, EPIClib itself is still coded in C++.
+**EPICpy** is a cross-platform Python-based interface to EPIClib that allows programming task devices and perceptual encoders in the Python programming language. However, EPIClib itself is still coded in C++ that is compiled into a Python library using Pybind11.
 
 `This repository contains the source code for EPICpy.`
 
