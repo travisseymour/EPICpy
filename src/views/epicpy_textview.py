@@ -63,10 +63,11 @@ class EPICTextViewCachedWrite:
 
     def write_char(self, char: str):
         """writes one character to a local buffer, only submitting to attached text_widget after a newline"""
-        self.buffer.append(char)  # NOTE: if this leads to double-spaced output, move this to an else block
         if char == '\n':
             self.text_widget.write(f"".join(self.buffer))
             self.buffer = []
+        else:
+            self.buffer.append(char)  # NOTE: if this leads to double-spaced output, move this to an else block
 
     def write(self, text: str):
         """writes given text to attached text_widget"""

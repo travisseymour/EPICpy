@@ -138,12 +138,10 @@ class DebugOutWriter:
 
 
 class MainWin(QMainWindow):
-    def __init__(self, app: QApplication, epiclib_files: pd.DataFrame, epiclib_name: str):
+    def __init__(self, app: QApplication):
         super(MainWin, self).__init__()
         self.app = app
         self.setObjectName("MainWindow")
-        self.epiclib_files = epiclib_files
-        self.epiclib_name = epiclib_name
         self.view_type = b"NormalOut"
         self.ok = False
         self.tmp_folder = tempfile.TemporaryDirectory()
@@ -488,8 +486,9 @@ class MainWin(QMainWindow):
             self.layout_load(y_adjust=26)
             self.manage_z_order = True
 
-            if auto_load_rules and config.device_cfg.rule_files:
-                self.simulation.choose_rules(config.device_cfg.rule_files)
+            # FIXME: This is causing trouble...fix device/rule load first
+            # if auto_load_rules and config.device_cfg.rule_files:
+            #     self.simulation.choose_rules(config.device_cfg.rule_files)
 
             return True
         else:
@@ -812,22 +811,22 @@ class MainWin(QMainWindow):
         ...
 
     def add_views_to_model(self):
-        self.simulation.model.get_human_ptr().add_visual_physical_view(
+        self.simulation.model.add_visual_physical_view(
             self.visual_physical_view
         )
-        self.simulation.model.get_human_ptr().add_visual_sensory_view(
+        self.simulation.model.add_visual_sensory_view(
             self.visual_sensory_view
         )
-        self.simulation.model.get_human_ptr().add_visual_perceptual_view(
+        self.simulation.model.add_visual_perceptual_view(
             self.visual_perceptual_view
         )
-        self.simulation.model.get_human_ptr().add_auditory_physical_view(
+        self.simulation.model.add_auditory_physical_view(
             self.auditory_physical_view
         )
-        self.simulation.model.get_human_ptr().add_auditory_sensory_view(
+        self.simulation.model.add_auditory_sensory_view(
             self.auditory_sensory_view
         )
-        self.simulation.model.get_human_ptr().add_auditory_perceptual_view(
+        self.simulation.model.add_auditory_perceptual_view(
             self.auditory_perceptual_view
         )
 
@@ -905,10 +904,12 @@ class MainWin(QMainWindow):
             view.installEventFilter(self.state_watcher)
 
     def close_output_files(self):
-        if Normal_out.is_present(self.normal_out_fs):
-            Normal_out.remove_stream(self.normal_out_fs)
-        if Trace_out.is_present(self.trace_out_fs):
-            Trace_out.remove_stream(self.trace_out_fs)
+        # FIXME: Revisit this when we figure out how to re=do text output
+        # if Normal_out.is_present(self.normal_out_fs):
+        #     Normal_out.remove_stream(self.normal_out_fs)
+        # if Trace_out.is_present(self.trace_out_fs):
+        #     Trace_out.remove_stream(self.trace_out_fs)
+        ...
 
     def update_ui_status(self):
         if self.run_state == RUNNING:
@@ -959,13 +960,13 @@ class MainWin(QMainWindow):
         except:
             pass
 
-        try:
+        if self.simulation:
             self.simulation.pause_simulation()
-            self.simulation.model.stop()
-            self.simulation.device.stop_simulation()
+            if self.simulation.model:
+                self.simulation.model.stop()
+            if self.simulation.device:
+                self.simulation.device.stop_simulation()
             self.simulation.instance.shutdown_simulation()
-        except Exception as e:
-            log.error(f'got this error in the closeEvent: {e}')
 
         self.simulation.model = None
         self.simulation.device = None
@@ -1239,11 +1240,12 @@ class MainWin(QMainWindow):
             else "Rules: None"
         )
 
-        epiclib = Path(self.epiclib_name).stem.split("_")[-1]
-        year = epiclib[0:4]
-        month = epiclib[4:6]
-        day = epiclib[-2:]
-        epiclib_version = f"EPICLIB: {month}/{day}/{year}"
+        # epiclib = Path(self.epiclib_name).stem.split("_")[-1]
+        # year = epiclib[0:4]
+        # month = epiclib[4:6]
+        # day = epiclib[-2:]
+        # epiclib_version = f"EPICLIB: {month}/{day}/{year}"
+        epiclib_version = "EPICLIB: 06/28/2016"
 
         encoders = []
         if self.simulation.visual_encoder and not isinstance(

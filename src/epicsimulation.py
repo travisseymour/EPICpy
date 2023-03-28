@@ -318,7 +318,7 @@ class Simulation:
                 return
 
             try:
-                assert self.device.get_device_proc_ptr()
+                assert self.device.processor_info()
             except AssertionError:
                 self.write(
                     emoji_box(
@@ -340,19 +340,21 @@ class Simulation:
                     raise EPICpyException(f"{e_boxed_x} Error creating new Model() with device.")
 
                 # now connect everything up
+
                 self.model.interconnect_device_and_human()
 
-                if self.model.compile() and self.model.initialize():
-                    self.write(f"{e_boxed_check} Model() was successfully initialized.")
-                else:
-                    raise EPICpyException(f"{e_boxed_x} Error compiling and initializing Model().")
+                # if self.model.compile() and self.model.initialize():
+                #     self.write(f"{e_boxed_check} Model() was successfully initialized.")
+                # else:
+                #     raise EPICpyException(f"{e_boxed_x} Error compiling and initializing Model().")
 
                 self.update_model_output_settings()
+
 
             except Exception as e:
                 self.write(
                     emoji_box(
-                        f"ERROR: Unable to properly connect new device and model:\n"
+                        f"ERROR: Simulation unable to properly connect new Device and Model:\n"
                         f"{e}",
                         line="thick",
                     )
@@ -709,7 +711,7 @@ class Simulation:
         try:
             # try to compile rule
             self.model.set_prs_filename(file)
-            result = self.model.compile()  # and self.model.initialize() NEED THIS? Was Used in simulation2.py
+            result = self.model.compile() and self.model.initialize()
         except Exception as e:
             self.write(
                 emoji_box(
@@ -809,8 +811,13 @@ class Simulation:
             if self.auditory_encoder:
                 self.auditory_encoder.initialize()
 
-            self.model.initialized = True
-            self.model.running = True
+
+            self.model.initialize()
+            # self.model.initialize = True
+            # self.model.running = True
+
+
+
             if config.device_cfg.describe_parameters:
                 self.model.get_human_ptr().describe_parameters(Normal_out)
                 self.write("\n")

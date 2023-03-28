@@ -76,14 +76,10 @@ class SearchWorker(QThread):
         debug = False
         self.items = []
         # you can add more
-        exclude_dirs = set(
-            [".git", ".svn", ".hg", ".bzr", ".idea", "__pycache__", "venv"]
-        )
+        exclude_dirs = {".git", ".svn", ".hg", ".bzr", ".idea", "__pycache__", "venv"}
         if self.search_project:
             exclude_dirs.remove("venv")
-        exclude_files = set(
-            [".svg", ".png", ".exe", ".pyc", ".qm", ".jpg", ".jpeg", ".gif"]
-        )
+        exclude_files = {".svg", ".png", ".exe", ".pyc", ".qm", ".jpg", ".jpeg", ".gif"}
 
         for root, _, files in self.walkdir(
             self.search_path, exclude_dirs, exclude_files

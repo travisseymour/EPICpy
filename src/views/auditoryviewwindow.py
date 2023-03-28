@@ -37,28 +37,12 @@ from PyQt5.QtCore import Qt, QRect, QSize
 from PyQt5.QtWidgets import QMainWindow
 from localmunch import Munch, DefaultMunch
 from loguru import logger as log
-from apputils import LIBNAME, Point, Size, Rect
-from cppinclude import epiclib_include
-import cppyy
+from apputils import Point, Size, Rect
 from dataclasses import dataclass
 from functools import lru_cache
 import config
 
-# ------------------------------------------------------
-# Load Various Include files and objects we will need
-# The location of the library depends on OS, this is
-# figured out in main.py which directly sets LIBNAME
-# so that the correctly library can be loaded when this
-# module is imported.
-# ------------------------------------------------------
-
-cppyy.load_library(LIBNAME)
-
-epiclib_include("Utility Classes/Geometry.h")
-epiclib_include("Utility Classes/Symbol.h")
-
-from cppyy.gbl import Geometry_Utilities as GU
-from cppyy.gbl import Symbol
+from epiclib.epiclib import Symbol, geometric_utilities as GU
 
 WARNING_ACCUMULATOR = []
 
