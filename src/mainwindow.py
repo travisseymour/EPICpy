@@ -80,7 +80,7 @@ from emoji import *
 from typing import Callable, Optional
 import config
 
-from views.epicpy_textview import EPICTextViewCachedWrite
+from views.epicpy_textview import EPICTextViewCachedWrite, EPICTextViewFileWriter
 from views.epicpy_visualview import EPICVisualView
 from views.epicpy_auditoryview import EPICAuditoryView
 
@@ -173,10 +173,6 @@ class MainWin(QMainWindow):
 
         self.run_state = UNREADY
 
-        # disabled at the moment...working on alternative approach to hooking up std.stream to the output tees
-        # self.normal_out_fs = std.fstream()
-        # self.trace_out_fs = std.fstream()
-
         # init pystreamers on c++ side so we can connect local writer classes
         # via the add_py_object_to_xxxx_streamer() facility
         # enable_normal: bool, enable_trace: bool, enable_pps: bool, enable_debug: bool)
@@ -201,6 +197,11 @@ class MainWin(QMainWindow):
         self.trace_win.ui.plainTextEditOutput.mouseDoubleClickEvent = (
             self.mouseDoubleClickEvent
         )
+
+        self.normal_file_output_never_updated = True
+        self.trace_file_output_never_updated = True
+        self.update_output_logging()
+
 
         # uncomment this if there is a need to output debug info to stdio wile EPICpy is running
         # also make sure the last param in initialize_py_streamers is set to True
@@ -490,9 +491,8 @@ class MainWin(QMainWindow):
             self.layout_load(y_adjust=26)
             self.manage_z_order = True
 
-            # FIXME: This is causing trouble...fix device/rule load first
-            # if auto_load_rules and config.device_cfg.rule_files:
-            #     self.simulation.choose_rules(config.device_cfg.rule_files)
+            if auto_load_rules and config.device_cfg.rule_files:
+                self.simulation.choose_rules(config.device_cfg.rule_files)
 
             return True
         else:
@@ -756,63 +756,60 @@ class MainWin(QMainWindow):
         else:
             self.write(f'\n{e_boxed_x} Scripted Run NOT SETUP PROPERLY! Attempting to run may fail.\n')
 
+    def remove_file_loggers(self):
+        if self.normal_out_view.file_writer.enabled:
+            self.normal_out_view.file_writer.close()
+        if self.trace_win.trace_out_view.file_writer.enabled:
+            self.trace_win.trace_out_view.file_writer.close()
+
     def update_output_logging(self):
-        # FIXME: either move all of this into eiclib and just expose an interface
-        #        to open/close a file and maybe to start/stop tracking?
-        #        OR, just skip directly attaching this to the output tees and instead
-        #        attach them to the downstream somewhere here -- I mean, we're already
-        #        storing and then dumping stuff to the output windows. Could just as easily
-        #        dump it to a file as well. **ALSO ADJUST flush_and_reset_epic_file_outputs()**
-        # First we undo everything, in case we get here with no model/device in
-        # which case outputs should get shutdown
-        # self.flush_and_reset_epic_file_outputs()
-        #
-        # if config.device_cfg.log_normal_out and config.device_cfg.normal_out_file:
-        #     try:
-        #         self.normal_out_fs.open(
-        #             config.device_cfg.normal_out_file,
-        #             std.fstream.out | std.fstream.trunc,
-        #         )
-        #         Normal_out.add_stream(self.normal_out_fs)
-        #         assert Normal_out.is_present(self.normal_out_fs)
-        #         if config.device_cfg.trace_pps:
-        #             PPS_out.add_stream(self.normal_out_fs)
-        #         self.write(
-        #             f"{e_boxed_check} Normal Output logging set to "
-        #             f"{config.device_cfg.normal_out_file}"
-        #         )
-        #     except Exception as e:
-        #         self.write(
-        #             emoji_box(
-        #                 f"ERROR: Unable to set Normal Output logging to\n"
-        #                 f"{config.device_cfg.normal_out_file}:\n"
-        #                 f"{e}",
-        #                 line="thick",
-        #             )
-        #         )
-        #
-        # if config.device_cfg.log_trace_out and config.device_cfg.trace_out_file:
-        #     try:
-        #         self.trace_out_fs.open(
-        #             config.device_cfg.trace_out_file,
-        #             std.fstream.out | std.fstream.trunc,
-        #         )
-        #         Trace_out.add_stream(self.trace_out_fs)
-        #         assert Trace_out.is_present(self.trace_out_fs)
-        #         self.write(
-        #             f"{e_boxed_check} Trace Output logging set to "
-        #             f"{config.device_cfg.trace_out_file}"
-        #         )
-        #     except Exception as e:
-        #         self.write(
-        #             emoji_box(
-        #                 f"ERROR: Unable to set Trace logging to\n"
-        #                 f"{config.device_cfg.trace_out_file}:"
-        #                 f"{e}",
-        #                 line="thick",
-        #             )
-        #         )
-        ...
+        self.remove_file_loggers()
+
+        if config.device_cfg.log_normal_out and config.device_cfg.normal_out_file:
+
+            if self.normal_file_output_never_updated:
+                p = Path(config.device_cfg.normal_out_file)
+                p.unlink(missing_ok=True)
+                self.normal_file_output_never_updated = False
+
+            try:
+                self.normal_out_view.file_writer.open(Path(config.device_cfg.normal_out_file))
+                self.write(
+                    f"{e_boxed_check} Normal Output logging set to "
+                    f"{config.device_cfg.normal_out_file}"
+                )
+            except Exception as e:
+                self.write(
+                    emoji_box(
+                        f"ERROR: Unable to set Normal Output logging to\n"
+                        f"{config.device_cfg.normal_out_file}:\n"
+                        f"{e}",
+                        line="thick",
+                    )
+                )
+
+        if config.device_cfg.log_trace_out and config.device_cfg.trace_out_file:
+
+            if self.trace_file_output_never_updated:
+                p = Path(config.device_cfg.trace_out_file)
+                p.unlink(missing_ok=True)
+                self.trace_file_output_never_updated = False
+
+            try:
+                self.trace_win.trace_out_view.file_writer.open(Path(config.device_cfg.trace_out_file))
+                self.write(
+                    f"{e_boxed_check} Trace Output logging set to "
+                    f"{config.device_cfg.trace_out_file}"
+                )
+            except Exception as e:
+                self.write(
+                    emoji_box(
+                        f"ERROR: Unable to set Trace Output logging to\n"
+                        f"{config.device_cfg.trace_out_file}:\n"
+                        f"{e}",
+                        line="thick",
+                    )
+                )
 
     def add_views_to_model(self):
         self.simulation.model.add_visual_physical_view(
@@ -943,7 +940,8 @@ class MainWin(QMainWindow):
 
         if self.run_state == RUNNING:
             self.halt_simulation()
-        self.flush_and_reset_epic_file_outputs()
+
+        self.remove_file_loggers()
 
         _ = self.layout_save()
 
@@ -1270,23 +1268,6 @@ class MainWin(QMainWindow):
             f"| {encoder_info}"
         )
 
-    def flush_and_reset_epic_file_outputs(self):
-        # if Normal_out.is_present(self.normal_out_fs):
-        #     Normal_out.remove_stream(self.normal_out_fs)
-        # if PPS_out.is_present(self.normal_out_fs):
-        #     PPS_out.remove_stream(self.normal_out_fs)
-        # if Trace_out.is_present(self.trace_out_fs):
-        #     Trace_out.remove_stream(self.trace_out_fs)
-        # if self.normal_out_fs.is_open():
-        #     self.normal_out_fs.flush()
-        #     self.normal_out_fs.close()
-        # if self.trace_out_fs.is_open():
-        #     self.trace_out_fs.flush()
-        #     self.trace_out_fs.close()
-        # self.normal_out_fs = std.fstream()
-        # self.trace_out_fs = std.fstream()
-        ...
-
     def show_run_settings(self):
         if not self.simulation or not self.simulation.device:
             self.write(f"{e_boxed_x} Unable to open run settings, load a device first.")
@@ -1405,6 +1386,8 @@ class MainWin(QMainWindow):
         else:
             self.write(f"{e_info} Log Settings changes ignored.")
 
+        config.save_config()
+
     def show_rule_break_settings_dialog(self):
         if not self.simulation or not self.simulation.model:
             return
@@ -1431,11 +1414,11 @@ class MainWin(QMainWindow):
 
     def show_epiclib_settings_dialog(self):
         _ = QMessageBox(QMessageBox.Information,
-                    "This Function Has Been Disabled",
-                    "At the moment, the ability to switch EPIClib versions has been disabled. It is currently"
-                    "hard-coded to the version published in 2016 by David Kieras at https://github.com/dekieras/EPIC",
-                    QMessageBox.Ok,
-                    )
+                        "This Function Has Been Disabled",
+                        "At the moment, the ability to switch EPIClib versions has been disabled. It is currently"
+                        "hard-coded to the version published in 2016 by David Kieras at https://github.com/dekieras/EPIC",
+                        QMessageBox.Ok,
+                        )
         return
 
         old_epiclib = config.device_cfg.epiclib_version
