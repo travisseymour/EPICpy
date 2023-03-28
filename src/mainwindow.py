@@ -381,9 +381,13 @@ class MainWin(QMainWindow):
             self.show_rule_break_settings_dialog
         )
         self.ui.actionDevice_Options.triggered.connect(self.show_device_options_dialog)
-        self.ui.actionEPICLib_Settings.triggered.connect(
-            self.show_epiclib_settings_dialog
-        )
+
+        # NOTE: this is disabled until we have another pybind11-based version of EPIClib to offer
+        self.ui.actionEPICLib_Settings.setEnabled(False)
+        # self.ui.actionEPICLib_Settings.triggered.connect(
+        #     self.show_epiclib_settings_dialog
+        # )
+
         self.ui.actionSound_Text_Settings.triggered.connect(
             self.show_sound_text_settings_dialog
         )
@@ -1109,7 +1113,7 @@ class MainWin(QMainWindow):
         self.ui.actionExport_Stats_Output.setEnabled(False)
         self.ui.actionReload_Session.setEnabled(False)
 
-        self.ui.actionEPICLib_Settings.setEnabled(False)
+        # self.ui.actionEPICLib_Settings.setEnabled(False)
         self.ui.actionDelete_Datafile.setEnabled(False)
 
         self.ui.actionRun_Simulation_Script.setEnabled(False)
@@ -1165,7 +1169,7 @@ class MainWin(QMainWindow):
         self.ui.actionExport_Stats_Output.setEnabled(True)
         self.ui.actionReload_Session.setEnabled(True)
 
-        self.ui.actionEPICLib_Settings.setEnabled(False)
+        # self.ui.actionEPICLib_Settings.setEnabled(False)
 
         self.ui.actionDelete_Datafile.setEnabled(False)
 
@@ -1223,7 +1227,7 @@ class MainWin(QMainWindow):
         self.ui.actionExport_Stats_Output.setEnabled(has_device)
         self.ui.actionReload_Session.setEnabled(True)
 
-        self.ui.actionEPICLib_Settings.setEnabled(has_device)
+        # self.ui.actionEPICLib_Settings.setEnabled(has_device)
         self.ui.actionDelete_Datafile.setEnabled(has_device)
 
         self.ui.actionRun_Simulation_Script.setEnabled(True)
