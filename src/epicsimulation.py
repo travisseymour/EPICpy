@@ -51,7 +51,6 @@ from loguru import logger as log
 # KEEP HERE, NEEDED FOR DEVICES
 from plum import dispatch  # keep here to ensure it gets pulled in, needed for devices
 
-
 from epiclib.epiclib import Model, Coordinator, Normal_out
 
 
@@ -86,7 +85,7 @@ class Simulation:
         self.raw_device_param_string = ""
         self.param_set = []
 
-        self.device_path_additions  = []
+        self.device_path_additions = []
         self.visual_encoder_path_additions = []
         self.auditory_encoder_path_additions = []
 
@@ -99,7 +98,7 @@ class Simulation:
             self.parent.update_views(current_time)
         elif config.device_cfg.display_refresh == "after_every_sec":
             if timeit.default_timer() - self.last_update_time >= float(
-                config.device_cfg.run_command_value
+                    config.device_cfg.run_command_value
             ):
                 self.parent.update_views(current_time)
                 self.last_update_time = timeit.default_timer()
@@ -108,9 +107,9 @@ class Simulation:
     def call_for_text_update(self, force: bool = False):
         if config.device_cfg.text_refresh == "after_each_step":
             if (
-                force
-                or self.steps_since_last_text_out
-                >= config.device_cfg.text_refresh_value
+                    force
+                    or self.steps_since_last_text_out
+                    >= config.device_cfg.text_refresh_value
             ):
                 self.parent.dump_cache()
                 self.parent.trace_win.dump_cache()
@@ -276,7 +275,8 @@ class Simulation:
                         f"{e_info} loading device code from {device_file_p.name}..."
                     )
 
-                exec(f'self.device = {device_file_p.stem}.EpicDevice(ot=Normal_out, parent=self.parent, device_folder=device_file_p.parent)')
+                exec(
+                    f'self.device = {device_file_p.stem}.EpicDevice(ot=Normal_out, parent=self.parent, device_folder=device_file_p.parent)')
 
                 if not quiet:
                     self.write(
@@ -391,8 +391,8 @@ class Simulation:
             else:
                 start_dir = Path(config.device_cfg.device_file).parent
         elif (
-            config.device_cfg.device_file
-            and Path(config.device_cfg.device_file).parent.is_dir()
+                config.device_cfg.device_file
+                and Path(config.device_cfg.device_file).parent.is_dir()
         ):
             start_dir = Path(config.device_cfg.device_file).parent
         else:
@@ -481,7 +481,7 @@ class Simulation:
             encoder_file_p = Path(encoder_file)
 
             # remove any old encoder paths
-            for path in self.visual_encoder_path_additions if kind=='Visual' else self.auditory_encoder_path_additions:
+            for path in self.visual_encoder_path_additions if kind == 'Visual' else self.auditory_encoder_path_additions:
                 try:
                     sys.path.remove(path)
                 except ValueError:
@@ -491,7 +491,6 @@ class Simulation:
             if str(encoder_file_p.parent) not in self.device_path_additions:
                 self.device_path_additions.append(str(encoder_file_p.parent))
             sys.path.append(str(encoder_file_p.parent))
-
 
             # - now we can attempt to import the VisualEncoder or AuditoryEncoder class
             #   from this module
@@ -602,7 +601,7 @@ class Simulation:
             )
             self.parent.ui.actionRecompile_Rules.setEnabled(False)
 
-    def choose_rules(self, files: Optional[list] = None)->bool:
+    def choose_rules(self, files: Optional[list] = None) -> bool:
         """
         Select EPIC prs rule file(s) from disk
         """
@@ -626,8 +625,8 @@ class Simulation:
         if not files:
             note = "selected"
             if (
-                config.device_cfg.device_file
-                and Path(config.device_cfg.device_file).parent.is_dir()
+                    config.device_cfg.device_file
+                    and Path(config.device_cfg.device_file).parent.is_dir()
             ):
                 start_dir = Path(config.device_cfg.device_file).parent
             else:
@@ -647,7 +646,7 @@ class Simulation:
                         '',
                         False,
                         False
-                )
+                        )
                 for item in rule_files
             ]
 
@@ -660,7 +659,7 @@ class Simulation:
                         '',
                         False,
                         False
-                )
+                        )
                 for item in files
             ]
         elif files and mode == 'rule_info':
@@ -672,7 +671,7 @@ class Simulation:
                         item.parameter_string,
                         item.clear_data,
                         item.reload_device
-                )
+                        )
                 for item in files
             ]
         else:
@@ -698,14 +697,15 @@ class Simulation:
                 if len(rule_files) > 1
                 else f"{e_info} Attempting to compile {note} ruleset..."
             )
-            return self.compile_rule(self.rule_files[self.current_rule_index].rule_file)
+
+            return self.compile_rule(self.rule_files[self.current_rule_index].rule_file, note.lower() == 'reloaded')
         else:
             self.rule_files = []
             self.write(f"{e_boxed_x} No valid rule file(s) {note}.")
 
         return False
 
-    def compile_rule(self, file: str = "") -> bool:
+    def compile_rule(self, file: str = "", calm: bool = False) -> bool:
         rule_path = Path(file)
 
         try:
@@ -713,13 +713,16 @@ class Simulation:
             self.model.set_prs_filename(file)
             result = self.model.compile() and self.model.initialize()
         except Exception as e:
-            self.write(
-                emoji_box(
-                    f"ERROR: Unable to compile ruleset file\n{rule_path.name}:\n"
-                    f"{e}",
-                    line="thick",
+            if calm:
+                self.write(f"WARNING: Unable to compile ruleset file\n{rule_path.name}: {e}")
+            else:
+                self.write(
+                    emoji_box(
+                        f"ERROR: Unable to compile ruleset file\n{rule_path.name}:\n"
+                        f"{e}",
+                        line="thick",
+                    )
                 )
-            )
             result = False
 
         if result:
@@ -729,13 +732,16 @@ class Simulation:
             self.parent.update_title()
             rule_compiled = True
         else:
-            self.write(
-                emoji_box(
-                    f"ERROR: Unable to (re)compile ruleset file\n"
-                    f"{rule_path.name}!",
-                    line="thick",
+            if calm:
+                self.write(f"WARNING: Unable to (re)compile ruleset file\n{rule_path.name}\n")
+            else:
+                self.write(
+                    emoji_box(
+                        f"ERROR: Unable to (re)compile ruleset file\n"
+                        f"{rule_path.name}!",
+                        line="thick",
+                    )
                 )
-            )
             rule_compiled = False
 
         # make sure run state reflects result of rule compile attempt
@@ -811,12 +817,9 @@ class Simulation:
             if self.auditory_encoder:
                 self.auditory_encoder.initialize()
 
-
             self.model.initialize()
             # self.model.initialize = True
             # self.model.running = True
-
-
 
             if config.device_cfg.describe_parameters:
                 self.model.get_human_ptr().describe_parameters(Normal_out)
@@ -842,7 +845,7 @@ class Simulation:
                 self.run_time_limit = int(config.device_cfg.run_command_value)
             elif config.device_cfg.run_command == "run_for_cycles":
                 self.run_time_limit = (
-                    self.run_time + int(config.device_cfg.run_command_value) * 50
+                        self.run_time + int(config.device_cfg.run_command_value) * 50
                 )
             elif config.device_cfg.run_command == "run_until_done":
                 self.run_time_limit = sys.maxsize
@@ -927,13 +930,13 @@ class Simulation:
             self.write(f"{e_info} Run of {self.device.rule_filename} Paused.")
 
         if run_result and (
-            (
-                config.device_cfg.run_command in ("run_for", "run_until")
-                and self.run_time < self.run_time_limit
-            )
-            or (config.device_cfg.run_command == "run_until_done")
-            or config.device_cfg.run_command == "run_for_cycles"
-            and self.steps_run < config.device_cfg.run_command_value
+                (
+                        config.device_cfg.run_command in ("run_for", "run_until")
+                        and self.run_time < self.run_time_limit
+                )
+                or (config.device_cfg.run_command == "run_until_done")
+                or config.device_cfg.run_command == "run_for_cycles"
+                and self.steps_run < config.device_cfg.run_command_value
         ):
             # *** Still running, keep going
             self.run_timer.singleShot(
