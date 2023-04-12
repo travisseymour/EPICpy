@@ -282,7 +282,7 @@ class AuditoryViewWin(QMainWindow):
         QMainWindow.resizeEvent(self, event)
         self.origin = Point(self.width() // 2, self.height() // 2)
         if self.bg_image_file:
-            self.bg_image = QPixmap(self.bg_image_file)
+            self.bg_image = QPixmap(str(self.bg_image_file))
             if isinstance(self.bg_image, QPixmap) and self.bg_image_scaled:
                 self.bg_image = self.bg_image.scaled(self.width(), self.height())  # , Qt.KeepAspectRatio
         self.update()
@@ -356,7 +356,7 @@ class AuditoryViewWin(QMainWindow):
                 self.bg_image = None
             else:
                 self.bg_image_file = img_file
-                self.bg_image = QPixmap(img_file)
+                self.bg_image = QPixmap(str(img_file))
                 if isinstance(self.bg_image, QPixmap) and scaled:
                     self.bg_image = self.bg_image.scaled(self.width(), self.height()) # , Qt.KeepAspectRatio
                 self.bg_image_scaled = scaled

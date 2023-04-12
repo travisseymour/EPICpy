@@ -168,6 +168,7 @@ Configuration File Management
 def get_app_config():
     global app_cfg
     config_dir = Path("~", ".config", "epicpy").expanduser()
+    config_dir.mkdir(exist_ok=True)
     config_file = Path(config_dir, "global_config.json")
 
     try:
@@ -200,6 +201,7 @@ def get_app_config():
 
 def save_app_config(quiet: bool = False) -> bool:
     config_dir = Path("~", ".config", "epicpy").expanduser()
+    config_dir.mkdir(exist_ok=True)
     config_file = Path(config_dir, "global_config.json")
 
     try:

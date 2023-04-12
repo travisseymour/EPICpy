@@ -81,7 +81,7 @@ class MainWindow(QMainWindow):
         self.current_file = None
         self.current_side_bar = None
 
-        self.setWindowIcon(QIcon(get_resource("uiicons", "app-icon.svg")))
+        self.setWindowIcon(QIcon(str(get_resource("uiicons", "app-icon.svg"))))
 
     def init_ui(self):
         self.setWindowTitle(f"EPIC Coder v{__version__}")
@@ -293,7 +293,7 @@ class MainWindow(QMainWindow):
 
     def get_side_bar_label(self, path, name):
         label = QLabel()
-        label.setPixmap(QPixmap(path).scaled(QSize(30, 30)))
+        label.setPixmap(QPixmap(str(path)).scaled(QSize(30, 30)))
         label.setAlignment(Qt.AlignmentFlag.AlignTop)
         label.setFont(self.window_font)
         label.mousePressEvent = lambda e: self.show_hide_tab(e, name)

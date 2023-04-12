@@ -18,10 +18,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pathlib import Path
+import os
+
+os.environ["OUTDATED_IGNORE"] = "1"
+# TODO: vvv On MacOS BigSur, need to fix problem, but not sure if needed now that we switched to PyQt5
+os.environ["QT_MAC_WANTS_LAYER"] = "1"
+
 import datetime
 import sys
-import os
 import platform
 
 from loguru import logger as log
@@ -33,10 +37,7 @@ from PyQt5.QtCore import qInstallMessageHandler, QCoreApplication
 from apputils import get_resource, frozen
 import config
 
-os.environ["OUTDATED_IGNORE"] = "1"
 
-# TODO: On MacOS BigSur, need to fix problem, but not sure if needed now that we switched to PyQt5
-os.environ["QT_MAC_WANTS_LAYER"] = "1"
 
 DONE = False
 

@@ -287,5 +287,4 @@ def get_resource(*args) -> Path:
 if __name__ == '__main__':
     print(f"{get_resource('fonts', 'Consolas', 'ATTRIBUTION.txt')=}")
     print(f"{get_resource('epiclib', 'EPIC_LICENSE.txt')=}")
-    print(f"{get_resource('cppyy_backend')=}")
     print(f"{get_resource('fake_file.txt')=}")

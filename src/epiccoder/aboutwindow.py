@@ -39,5 +39,5 @@ class AboutWin(QDialog):
         self.ui.textBrowser.setHtml(html)
 
         pic_file = get_resource("uiicons", "app-icon.svg")
-        pixmap = QPixmap(pic_file)
+        pixmap = QPixmap(str(pic_file))
         self.ui.labelEPICicon.setPixmap(pixmap.scaled(self.ui.labelEPICicon.size()))
