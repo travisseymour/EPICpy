@@ -609,10 +609,10 @@ class MainWin(QMainWindow):
                 aud_encoder = None
                 config.device_cfg.auditory_encoder = ""
 
-            # note: we're currently ignoring setting:
-            # config.device_cfg.auto_load_last_encoders
-            # and always loading encoders if they are defined.
-            # If modeller doesn't want an encoder, they should just unload it.
+            # NOTE: we're currently ignoring setting:
+            #        config.device_cfg.auto_load_last_encoders
+            #        and always loading encoders if they are defined.
+            #        If modeller doesn't want an encoder, they should just unload it.
 
             if aud_encoder:
                 self.simulation.on_load_encoder(
@@ -628,6 +628,9 @@ class MainWin(QMainWindow):
                     quiet=False,
                 )
 
+            # NOTE: Keep this here...I need more user feedback on this...I think it's disruptive to
+            #       be asked in this when reinstating a session, right?
+            #       ===============================================================================
             # if aud_encoder or vis_encoder:
             #     alle = config.device_cfg.auto_load_last_encoders
             #     if alle == "yes" or (

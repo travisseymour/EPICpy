@@ -13,6 +13,7 @@ import requests
 from PyQt5.QtWidgets import QAction, QMainWindow
 
 import config
+from apputils import get_resource
 from cachedplaintextedit import CachedPlainTextEdit
 
 """
@@ -68,7 +69,7 @@ def setup_test_device_config():
     config.device_cfg.setting_run_until_msecs = 600
     config.device_cfg.setting_run_cycles = 1
     config.device_cfg.setting_refresh_secs = 1.0
-    config.device_cfg.device_params = "10 4 Hard Draft"
+    config.device_cfg.device_params = "10 4 Hard [P1|P2|P3|P4]"
     config.device_cfg.spatial_scale_degree = 10
     config.device_cfg.calibration_grid = False
     config.device_cfg.center_dot = False
@@ -88,30 +89,14 @@ def setup_test_device_folder(window: QMainWindow):
     except AssertionError:
         TEMP_DIR = tempfile.mkdtemp()
 
-    window.write("  Retrieving Files For EPICpy Testing...")
-    url = "https://people.ucsc.edu/~nogard/software/epicpy/devices.zip"
-    response = requests.get(url)
-    if not response.ok:
-        window.write(
-            f'ERROR: Unable to download test device package from website: "{response.reason}". Unable to perform test.'
-        )
-        return False
-
-    try:
-        with open(Path(TEMP_DIR, "devices.zip"), "wb") as outfile:
-            outfile.write(response.content)
-        assert Path(
-            TEMP_DIR, "devices.zip"
-        ).is_file(), (
-            "Downloaded file devices.zip could not be located in temporary folder."
-        )
-    except Exception as e:
-        window.write(f"ERROR: {e}")
+    devices = get_resource('other', 'devices.zip')
+    if not devices.is_file():
+        window.write("  Unable to locate test device archive inside application package! Contact project maintainer.")
         return False
 
     window.write("  Unzipping test device package...")
     try:
-        with zipfile.ZipFile(Path(TEMP_DIR, "devices.zip"), "r") as infile:
+        with zipfile.ZipFile(devices, "r") as infile:
             infile.extractall(Path(TEMP_DIR))
         assert Path(
             TEMP_DIR, "devices"
