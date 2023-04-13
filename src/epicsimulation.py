@@ -805,10 +805,9 @@ class Simulation:
                 auditory_views=True,
                 normal_output=clear_ui and len(self.rule_files) == 1,
                 trace_output=True,
+                stats_output=False
             )
 
-            # model.initialize() isn't working, but the only critical part is getting
-            # done elsewhere is instance (i.e. Coordinator.get_instance() initialization.
             self.instance.initialize()
 
             # call encoder initializers
@@ -818,8 +817,6 @@ class Simulation:
                 self.auditory_encoder.initialize()
 
             self.model.initialize()
-            # self.model.initialize = True
-            # self.model.running = True
 
             if config.device_cfg.describe_parameters:
                 self.model.get_human_ptr().describe_parameters(Normal_out)
