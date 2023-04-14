@@ -79,6 +79,7 @@ from stateconstants import *
 from emoji import *
 from typing import Callable, Optional
 import config
+import c2pytees
 
 from views.epicpy_textview import EPICTextViewCachedWrite, EPICTextViewFileWriter
 from views.epicpy_visualview import EPICVisualView
@@ -173,17 +174,11 @@ class MainWin(QMainWindow):
 
         self.run_state = UNREADY
 
-        # init pystreamers on c++ side so we can connect local writer classes
-        # via the add_py_object_to_xxxx_streamer() facility
-        # enable_normal: bool, enable_trace: bool, enable_pps: bool, enable_debug: bool)
-        initialize_py_streamers(True, True, True, False)
-
         # attach Normal_out and PPS_out output to this window
         self.normal_out_view = EPICTextViewCachedWrite(
             text_widget=self.ui.plainTextEditOutput
         )
-        add_py_object_to_normal_out_streamer(self.normal_out_view)
-        add_py_object_to_pps_out_streamer(self.normal_out_view)
+
         self.normal_out_view.text_widget.dark_mode = config.app_cfg.dark_mode
 
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
@@ -192,11 +187,27 @@ class MainWin(QMainWindow):
         self.trace_win.trace_out_view = EPICTextViewCachedWrite(
             text_widget=self.trace_win.ui.plainTextEditOutput
         )
-        add_py_object_to_trace_out_streamer(self.trace_win.trace_out_view)
+
         self.trace_win.trace_out_view.text_widget.dark_mode = config.app_cfg.dark_mode
         self.trace_win.ui.plainTextEditOutput.mouseDoubleClickEvent = (
             self.mouseDoubleClickEvent
         )
+
+        # setup epiclib to use EPICpy's gui output objects
+        c2pytees.NORMAL_OUT = self.normal_out_view.write_char
+        c2pytees.TRACE_OUT = self.trace_win.trace_out_view.write_char
+        c2pytees.PPS_OUT = self.normal_out_view.write_char
+
+        initialize_py_streamers(
+            enable_normal=True,
+            enable_trace=True,
+            enable_pps=True,
+            enable_debug=False
+        )
+
+        add_py_object_to_normal_out_streamer()
+        add_py_object_to_pps_out_streamer()
+        add_py_object_to_trace_out_streamer()
 
         self.normal_file_output_never_updated = True
         self.trace_file_output_never_updated = True
