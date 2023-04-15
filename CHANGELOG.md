@@ -1,28 +1,67 @@
 
 # EPICpy Changelog
-#### (lasted updated Sun Dec 11 23:29:03 2022)
+#### (lasted updated Sat Apr 15 15:14:45 2023)
 
 ---
 
+
+## VERSION: 2023.4.15
+
+---
+1. Added sigsegv ignore just in case it helps on mac - does nothing on linux.
+2. Pystreamer update is done. output_tee related sigbart is gone.
+3. Seems to work but still getting fault on quit.
+4. **CHANGE**: stats output window no longer clears when running multiple simulations back to back. if all sims produce stats output, they get APPENDED to what's already there. A new run, single or multiple, will still clear stats output window.
+
+5. Test run now works without neededing to pull devices from internet. also added 4 virtual subjects so stat test in choice_task stats output will work.
+6. No longer makes a federal case if rule file is not found on device reload.
+7. Getting EPICpy2 to work with epiclib on linux mac and windows.
+8. Remove article folder.
+9. **CHANGE**: Major Changes: 1) Replaced use of cppyy with a pre-compiled Python module compiled using PyBind11. I.e., the project contains no more C++ code. This has led to major changes to the project file structure. 2) Several minor but unavoidable changes to device and encoders. 3) EPICpy is now using Python 3.10.
+
+10. **CHANGE**: Major Dev update: Abandoned use of FBSpro (paid) and now using only pyinstaller (free and opensource) to generate binaries. Significant changes to folder structure.
+
+11. Added pyinstaller to requirements.txt and updated exact_requirements.txt.
+12. Reimplemented logging facility. also changes to logging properly saved to config.
+13. Disabled menu item for altering the EPICLib version. Removed mention of cppyy from About screen.
+14. Fixed error in dialog initializations as well as removed extraneous output from epiclib's pystreamer interface.
+15. Fixed view and encoder bases and now choicetask runs! NOTE: runs slower (10 trials of hard choice with live output: old=.68sec new=.71sec), (10 trials of hard choice with cached output: old=.21sec new=.32sec).
+16. Made a pass on epicsimulation but not sure if it works yet.
+17. Finally ready to tackle epicsimulation which may need structural changes for the new pybind11 interface to epiclib.
+18. Updated main app code to work with epiclib including removing various cppyy related modules.
+19. Getting ready to pivot to epiclib python module.
+20. **CHANGE**: No longer relying on FBS for build - now using plain pyinstaller. Also, major folder re-organization.
+
+21. Removed fbs frm reqs.
+22. Removed former epiclibworkout stuff, will add proper tests shortly.
+23. I made an error -- I forgot which branch I was in. These changes primarily have to do with removing the dependency on fbs pro. there is also a bit of epiclib testing that was never finished.
+24. Removed some apparently unnecessary EPIClib imports from python code. done with branch for now.
+25. Removing apparently unnecessary model check in epicsimulation.
+26. **FIXED**: problem setting break states in break-state dialog window
+
+27. **FIXED**: now including greatgrandparent to path adjustment for device load.
+
+28. Removed: epicsim stub to reset path was unnecessary.
 
 ## VERSION: 2022.12.11
 
 ---
-1. **FIXED**: Various features of Normal Output popup window. 
-2. **ADDED**: First pass of run-script feature. 
-3. **FIXED**: Extra spaces in Trace Window.
-4. Last script now being saved in app config.
-5. Script feature seems to be working. only tested for now as far as I need for grading final exam.
-6. Script run works with hardcoded script path. also fixed default filename when exporting stats window.
-7. Successfully reading in well-formed script file or else alerting user of issue.
-8. Replaced simple list of rule paths with RunInfo objects and core func for single and multiple rule loading seems intact.
-9. Created menu changes prior to implementing run_script functionality.
-10. Removed some improperly added files from main.
-11. Accidentally staged files needed for next feature!
-12. **FIXED**: NO popup edit options availability makes better use of run_state. fixed: Ability to edit rules following rule load error restored.
-13. Added: NO popup menu has option to open device folder.
-14. **FIXED**: null action warning on popup. added: popup to search, copy, and clear tracewindow text.
-15. **FIXED**: eliminated big blank sections in trace output.
+1. **FIXED**: Various features of Normal Output popup window. Added: First pass of run-script feature. Fixed: Extra spaces in Trace Window.
+
+2. Last script now being saved in app config.
+3. Script feature seems to be working. only tested for now as far as I need for grading final exam.
+4. Script run works with hardcoded script path. also fixed default filename when exporting stats window.
+5. Successfully reading in well-formed script file or else alerting user of issue.
+6. Replaced simple list of rule paths with RunInfo objects and core func for single and multiple rule loading seems intact.
+7. Created menu changes prior to implementing run_script functionality.
+8. Removed some improperly added files from main.
+9. Accidentally staged files needed for next feature!
+10. **FIXED**: NO popup edit options availability makes better use of run_state. fixed: Ability to edit rules following rule load error restored.
+
+11. Added: NO popup menu has option to open device folder.
+12. **FIXED**: null action warning on popup. added: popup to search, copy, and clear tracewindow text.
+
+13. **FIXED**: eliminated big blank sections in trace output.
 
 
 ## VERSION: 2022.11.25
@@ -54,8 +93,11 @@
 ---
 1. Manually renaming erronous 2022.10.1 version in changelog - should have been 2202.8.1.
 2. **FIXED**: editor won't close automatically if any open file has changed.
+
 3. **NEW FEATURE**: Built-in editor is available (based on the EPICcoder project)
+
 4. **CHANGE**: EPICpy license changed to GPLv3 due to use of PyQT5.
+
 5. **CHANGE**: EPICpy GUI qt-bindings switched from Pyside2 to PyQt5
 
 
