@@ -36,8 +36,10 @@ from PyQt5.QtCore import qInstallMessageHandler, QCoreApplication
 
 from apputils import get_resource, frozen
 import config
+import signal
 
-
+# Set a signal handler for SIGSEGV to ignore the signal
+signal.signal(signal.SIGSEGV, signal.SIG_IGN)
 
 DONE = False
 
