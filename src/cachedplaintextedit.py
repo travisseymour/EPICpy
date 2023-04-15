@@ -46,7 +46,9 @@ class CachedPlainTextEdit(QPlainTextEdit):
 
     def write(self, text: str, disable_cache: bool = False) -> None:
         # _text = f"{text}"
-        _text = str(text)
+        _text = str(text).strip('\n')
+        if not _text:
+            return
 
         if disable_cache:
             self.cache_text = False

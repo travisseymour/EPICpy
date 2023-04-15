@@ -70,9 +70,12 @@ def start_ui(app: QApplication):
 
     import mainwindow
 
-    main_win = mainwindow.MainWin(app)
-    app.lastWindowClosed.connect(shut_it_down)
-    return app.exec_()
+    from epiclib.epiclib import ostream_redirect
+
+    with ostream_redirect(stdout=True, stderr=True):
+        main_win = mainwindow.MainWin(app)
+        app.lastWindowClosed.connect(shut_it_down)
+        return app.exec_()
 
 
 def shut_it_down():

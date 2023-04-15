@@ -61,6 +61,10 @@ class EPICTextViewCachedWrite:
         if self.file_writer.enabled:
             self.file_writer.write(txt + extra)
 
+    def flush(self):
+        self.buffer.clear()
+        self.text_widget.clear()
+
     def __getattr__(self, name):
         def _missing(*args, **kwargs):
             print("A missing method was called.")

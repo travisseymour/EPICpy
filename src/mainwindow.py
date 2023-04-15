@@ -18,12 +18,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import platform
+import sys
 from itertools import chain
 
 import pandas as pd
 from PyQt5 import QtWidgets
 
 import fitness
+import outputsorter
 from dialogs.aboutwindow import AboutWin
 from dialogs.fontsizewindow import FontSizeDialog
 from dialogs.texteditchoicewindow import TextEditChoiceWin
@@ -79,7 +81,6 @@ from stateconstants import *
 from emoji import *
 from typing import Callable, Optional
 import config
-import c2pytees
 
 from views.epicpy_textview import EPICTextViewCachedWrite, EPICTextViewFileWriter
 from views.epicpy_visualview import EPICVisualView
@@ -174,12 +175,20 @@ class MainWin(QMainWindow):
 
         self.run_state = UNREADY
 
+        # NOTE: Before we set up py_streamers below, we have to re-route sys.stdout
+        #       and then assign our various output windows to an associated window
+        #       in outputsorter.OUTPUT_SORTER
+
+        sys.stdout = outputsorter.OUTPUT_SORTER
+
         # attach Normal_out and PPS_out output to this window
         self.normal_out_view = EPICTextViewCachedWrite(
             text_widget=self.ui.plainTextEditOutput
         )
-
         self.normal_out_view.text_widget.dark_mode = config.app_cfg.dark_mode
+        outputsorter.OUTPUT_SORTER.window['N'] = self.normal_out_view  # Normal_out
+        outputsorter.OUTPUT_SORTER.window['P'] = self.normal_out_view  # PPS_out
+
 
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
         # connect Trace_out now
@@ -187,16 +196,14 @@ class MainWin(QMainWindow):
         self.trace_win.trace_out_view = EPICTextViewCachedWrite(
             text_widget=self.trace_win.ui.plainTextEditOutput
         )
-
         self.trace_win.trace_out_view.text_widget.dark_mode = config.app_cfg.dark_mode
         self.trace_win.ui.plainTextEditOutput.mouseDoubleClickEvent = (
             self.mouseDoubleClickEvent
         )
+        outputsorter.OUTPUT_SORTER.window['T'] = self.trace_win.trace_out_view
+        outputsorter.OUTPUT_SORTER.window['D'] = self.trace_win.trace_out_view
 
-        # setup epiclib to use EPICpy's gui output objects
-        c2pytees.NORMAL_OUT = self.normal_out_view.write_char
-        c2pytees.TRACE_OUT = self.trace_win.trace_out_view.write_char
-        c2pytees.PPS_OUT = self.normal_out_view.write_char
+        # in order to link epiclib Output_tees to Python, we need to setup py_streamers
 
         initialize_py_streamers(
             enable_normal=True,
@@ -208,6 +215,8 @@ class MainWin(QMainWindow):
         add_py_object_to_normal_out_streamer()
         add_py_object_to_pps_out_streamer()
         add_py_object_to_trace_out_streamer()
+
+        # init ouput logging
 
         self.normal_file_output_never_updated = True
         self.trace_file_output_never_updated = True
@@ -940,6 +949,8 @@ class MainWin(QMainWindow):
             self.set_ui_not_running()
 
     def closeEvent(self, event: QCloseEvent):
+        sys.stdout = sys.__stdout__  # reset
+
         if self.closing:
             event.ignore()
             return
