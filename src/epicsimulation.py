@@ -547,9 +547,14 @@ class Simulation:
                     f"device been loaded??!!"
                 )
                 if kind == "Visual":
-                    self.model.get_human_ptr().set_visual_encoder_ptr(
+                    self.write('0')
+                    # FIXME: I think I need to add human_ptr to the interface for this to work
+                    zztop = self.model.get_human_ptr()
+                    self.write('1')
+                    zztop.set_visual_encoder_ptr(
                         self.visual_encoder
                     )
+                    self.write('2')
                 else:
                     # (*) note "aditory" spelling is from C++ code. When the spelling
                     # gets fixed there, will fix it here!

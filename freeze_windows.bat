@@ -2,7 +2,9 @@ cls
 deltree /S/Q dist_windows
 deltree /S/Q build
 
-pyinstaller "src\main.py" --clean --noconfirm --onefile --windowed --name "EPICpy" ^
+REM had to use --nowindowed bc otherwise there is an issue with the stdout redirection we're now using
+
+pyinstaller "src\main.py" --clean --noconfirm --onefile --nowindowed --name "EPICpy" ^
     --distpath "dist_windows" ^
     --workpath "build" ^
     --paths "src\dialogs;src\epiccoder;src\uifiles;src\views;src\epiclib" ^
