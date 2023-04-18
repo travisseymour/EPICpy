@@ -44,7 +44,7 @@ from PyQt5.QtGui import (
     QMouseEvent,
     QFont,
 )
-from PyQt5.QtCore import QTimer, QByteArray, QRegExp, Qt, QSettings, QRect, QObject
+from PyQt5.QtCore import QTimer, QByteArray, QRegExp, Qt, QSettings, QRect, QObject, QPoint, QSize
 from PyQt5.QtWidgets import (
     QFileDialog,
     QMainWindow,
@@ -189,7 +189,6 @@ class MainWin(QMainWindow):
         outputsorter.OUTPUT_SORTER.window['N'] = self.normal_out_view  # Normal_out
         outputsorter.OUTPUT_SORTER.window['P'] = self.normal_out_view  # PPS_out
 
-
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
         # connect Trace_out now
         self.trace_win = TraceWin(parent=self)
@@ -221,7 +220,6 @@ class MainWin(QMainWindow):
         self.normal_file_output_never_updated = True
         self.trace_file_output_never_updated = True
         self.update_output_logging()
-
 
         # uncomment this if there is a need to output debug info to stdio wile EPICpy is running
         # also make sure the last param in initialize_py_streamers is set to True
@@ -1777,16 +1775,11 @@ class MainWin(QMainWindow):
         ):
             obj_name = win.objectName().replace(" ", "")
 
-            def convert_coords(coords) -> tuple:
-                if isinstance(coords, (list, tuple)):
-                    return tuple(coords)
-                elif isinstance(coords, QRect):
-                    return coords.x(), coords.y(), coords.width(), coords.height()
-                else:
-                    return coords
-
             self.window_settings.setValue(
-                f"{section}/{obj_name}/Geometry", convert_coords(win.geometry())
+                f"{section}/{obj_name}/Size", win.size()
+            )
+            self.window_settings.setValue(
+                f"{section}/{obj_name}/Pos", win.pos()
             )
             self.window_settings.setValue(
                 f"{section}/{obj_name}/Visible", win.isVisible()
@@ -1811,10 +1804,11 @@ class MainWin(QMainWindow):
 
         # if that section works, great, otherwise just use default
         try:
-            _ = self.window_settings.value(f"{section}/MainWindow/Geometry")
+            _ = self.window_settings.value(f"{section}/MainWindow/Pos")
+            _ = self.window_settings.value(f"{section}/MainWindow/Size")
         except Exception as e:
             log.warning(
-                f"Failed to load layout entry {section}/MainWindow/Geometry [{e}], "
+                f"Failed to load layout entry {section}/MainWindow/Pos|Size [{e}], "
                 f"loading default layout instead..."
             )
             self.layout_reset()
@@ -1828,8 +1822,8 @@ class MainWin(QMainWindow):
             ):
                 obj_name = win.objectName().replace(" ", "")
 
-                geom = self.window_settings.value(f"{section}/{obj_name}/Geometry")
-                win.setGeometry(*geom)
+                win.resize(self.window_settings.value(f"{section}/{obj_name}/Size"))
+                win.move(self.window_settings.value(f"{section}/{obj_name}/Pos"))
 
                 try:
                     # not every config will have this new z scheme
@@ -1883,7 +1877,8 @@ class MainWin(QMainWindow):
         #   (there may be multiple monitors)
 
         info = [
-            QtWidgets.QDesktopWidget().screenGeometry(display)
+            # QtWidgets.QDesktopWidget().screenGeometry(display)
+            QtWidgets.QDesktopWidget().availableGeometry(display)
             for display in range(QtWidgets.QDesktopWidget().screenCount())
         ]
 
@@ -1913,119 +1908,93 @@ class MainWin(QMainWindow):
             screen_info.width(),
             screen_info.height(),
         )
-        hide_extra = False
-        hide_auditory = False
 
-        # Figure out Gui Size
+        # Setup default / min sizes
 
-        # - Determine window sizes:
-        if sw >= 2111 and sh >= 1078:
-            # Use settings I use on 1440p
-            gap = 4
-            view_width, view_height = 437, 377
-            norm_width, norm_height = 1320, 400
-        elif sw >= 1880 and sh >= 900:
-            # Use settings I use on 1080p laptop
-            gap = 4
-            view_width, view_height = 390, 301
-            norm_width, norm_height = (view_width + gap) * 3, sh - (
-                    (view_height + gap) * 2
-            ) - 45
+        title_height = self.heightMM() // 2
 
-        elif sw >= 1280 and sh >= 800:
-            # Use settings I use on 1280x800 MacBookPro (old one)
-            gap = 1
-            hide_auditory = True
-            hide_extra = True
-            view_width, view_height = 390, 301
-            norm_width, norm_height = (
-                                              view_width + gap
-                                      ) * 3, sh - view_height - gap - 45
+        # https://ihax.io/display-resolution-explained/
+        # is the smallest likely laptop size 1366 x 768?
+        # vvv implied smalled res = 1170 x 721
+        min_view_win_size = QSize(390, 301)  # plus another 35 or so vertically for the title
+        min_no_win_size = QSize(1170, 345)  # plus another 35 or so vertically for the title
+        min_stat_win_size = QSize(638, min_view_win_size.height() * 2 + title_height * 2 + min_no_win_size.height())
 
-        else:
-            # Auto adjust based on available space,
-            # skip stats and trace windows if necessary
-            # If display resolution is small enough,
-            # then just go for it and let user adjust.
-            gap = 1
-            view_width, view_height = 390, 301  # minimum, can't go any lower
-            remaining_width = sw - ((view_width + gap) * 3)
-            norm_width, norm_height = (
-                                              view_width + gap
-                                      ) * 3, sh - view_height - gap - 45
-            stat_width, stat_height = 710, view_height
-            hide_extra = remaining_width < stat_width
-            hide_auditory = True
+        no_win_total_height = min_no_win_size.height() + title_height
+        view_win_total_height = min_view_win_size.height() + title_height
 
-        # Now Move The Windows Into Place
+        # Determine what should be shown
 
-        view_frame_geometry = None
-        view_frame_size = None
-        view_title_height = 0
-        for i, view in enumerate(self.visual_views.values()):
-            view.setGeometry(
-                QRect(sx + i * (view_width + gap), 0, view_width, view_height)
-            )
-            if view_frame_geometry is None:
-                view_frame_geometry = view.frameGeometry()
-                view_title_height = (
-                        view.frameGeometry().height() - view.normalGeometry().height()
+        show_visual_windows = False
+        show_auditory_windows = False
+        show_stats_window = False
+
+        if sh >= no_win_total_height + view_win_total_height:
+            show_visual_windows = True
+        if sh >= no_win_total_height + view_win_total_height * 2:
+            show_auditory_windows = True
+            pass
+        if sw >= min_no_win_size.width() + min_stat_win_size.width():
+            show_stats_window = True
+            if show_visual_windows and not show_auditory_windows:
+                min_stat_win_size = QSize(
+                    min_stat_win_size.width(),
+                    min_no_win_size.height() + \
+                    view_win_total_height * 1
                 )
-            if view_frame_size is None:
-                view_frame_size = view.frameSize()
-
-        vertical_adjust_visual_row = (
-                view_frame_size.height() + gap + view_title_height * 2
-        )
-        vertical_adjust_auditory_row = view_frame_size.height() + gap
-        vertical_adjust_both_rows = (
-                vertical_adjust_visual_row + vertical_adjust_auditory_row
-        )
-
-        for i, view in enumerate(self.auditory_views.values()):
-            view.setGeometry(
-                QRect(
-                    sx + i * (view_width + gap),
-                    vertical_adjust_visual_row,
-                    view_width,
-                    view_height,
+            elif show_visual_windows and show_auditory_windows:
+                min_stat_win_size = QSize(
+                    min_stat_win_size.width(),
+                    min_no_win_size.height() + \
+                    view_win_total_height * 2
                 )
-            )
-            if hide_auditory:
-                view.hide()
-            else:
-                view.show()
+            elif show_visual_windows or show_auditory_windows:
+                min_stat_win_size = QSize(min_stat_win_size.width(),
+                                          min_no_win_size.height() + \
+                                          title_height + \
+                                          min_view_win_size.height())
 
-        self.setGeometry(
-            QRect(
-                sx,
-                vertical_adjust_visual_row
-                if hide_auditory
-                else vertical_adjust_both_rows,
-                norm_width,
-                norm_height,
-            )
-        )
+        # Show appropriate view windows
 
-        self.stats_win.setGeometry(
-            self.width() + gap,
-            0,
-            sw - (self.width() + gap),
-            self.y() - view_title_height * 2,
-        )
-        self.trace_win.setGeometry(
-            self.width() + gap,
-            self.y() + view_title_height,
-            sw - (self.width() + gap),
-            self.height(),
-        )
-
-        if hide_extra:
-            self.stats_win.hide()
-            self.trace_win.hide()
+        if show_visual_windows:
+            for i, win in enumerate(self.visual_views.values()):
+                win.resize(min_view_win_size)
+                win.move(QPoint(i * min_view_win_size.width(), 0))
+                win.show()
         else:
+            for win in self.visual_views.values():
+                win.hide()
+
+        if show_auditory_windows:
+            for i, win in enumerate(self.auditory_views.values()):
+                win.resize(min_view_win_size)
+                win.move(
+                    QPoint(
+                        i * min_view_win_size.width(),
+                        self.visual_views["Visual Physical"].geometry().bottom() + title_height
+                    )
+                )
+                win.show()
+        else:
+            for win in self.auditory_views.values():
+                win.hide()
+
+        if show_stats_window:
+            self.stats_win.resize(min_stat_win_size)
+            self.stats_win.move(QPoint(self.visual_views['Visual Perceptual'].geometry().right(), 0))
             self.stats_win.show()
-            self.trace_win.show()
+        else:
+            self.stats_win.hide()
+
+        self.resize(min_no_win_size)
+        no_win_top = 0
+        if show_visual_windows:
+            no_win_top = self.visual_views['Visual Physical'].geometry().bottom() + title_height
+        if show_auditory_windows:
+            no_win_top = self.auditory_views['Auditory Physical'].geometry().bottom()
+
+        self.move(QPoint(0, no_win_top))
+        self.show()
 
     # =============================================
     # Context Menu Behavior
