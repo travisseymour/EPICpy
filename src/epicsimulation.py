@@ -810,7 +810,7 @@ class Simulation:
                 auditory_views=True,
                 normal_output=clear_ui and len(self.rule_files) == 1,
                 trace_output=True,
-                stats_output=False
+                stats_output=True
             )
 
             self.instance.initialize()
