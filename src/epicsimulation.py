@@ -52,6 +52,8 @@ from loguru import logger as log
 from plum import dispatch  # keep here to ensure it gets pulled in, needed for devices
 
 from epiclib.epiclib import Model, Coordinator, Normal_out
+from epiclib.epiclib import describe_parameters
+from epiclib.epiclib import set_visual_encoder_ptr, set_auditory_encoder_ptr
 
 
 class Simulation:
@@ -434,14 +436,14 @@ class Simulation:
             )
             if kind == "Visual":
                 self.visual_encoder = NullVisualEncoder("NullVisualEncoder", self)
-                self.model.get_human_ptr().set_visual_encoder_ptr(self.visual_encoder)
+                # self.model.get_human_ptr().set_visual_encoder_ptr(self.visual_encoder)
+                set_visual_encoder_ptr(self.model, self.visual_encoder)
             else:
                 # note "aditory" spelling is from C++ code. When the spelling
                 # gets fixed there, will fix it here!
                 self.auditory_encoder = NullAuditoryEncoder("NullAuditoryEncoder", self)
-                self.model.get_human_ptr().set_aditory_encoder_ptr(
-                    self.auditory_encoder
-                )
+                # self.model.get_human_ptr().set_aditory_encoder_ptr( self.auditory_encoder )
+                set_auditory_encoder_ptr(self.model, self.auditory_encoder)
         except Exception as e:
             self.write(
                 emoji_box(
@@ -547,15 +549,11 @@ class Simulation:
                     f"device been loaded??!!"
                 )
                 if kind == "Visual":
-                    self.model.get_human_ptr().set_visual_encoder_ptr(
-                        self.visual_encoder
-                    )
+                    # self.model.get_human_ptr().set_visual_encoder_ptr( self.visual_encoder )
+                    set_visual_encoder_ptr(self.model, self.visual_encoder)
                 else:
-                    # (*) note "aditory" spelling is from C++ code. When the spelling
-                    # gets fixed there, will fix it here!
-                    self.model.get_human_ptr().set_aditory_encoder_ptr(  # (*)
-                        self.auditory_encoder
-                    )
+                    # self.model.get_human_ptr().set_auditory_encoder_ptr( self.auditory_encoder )
+                    set_auditory_encoder_ptr(self.model, self.auditory_encoder)
             except Exception as e:
                 self.write(
                     emoji_box(
@@ -819,7 +817,8 @@ class Simulation:
             self.model.initialize()
 
             if config.device_cfg.describe_parameters:
-                self.model.get_human_ptr().describe_parameters(Normal_out)
+                # self.model.get_human_ptr().describe_parameters(Normal_out)
+                describe_parameters(self.model, Normal_out)
                 self.write("\n")
 
             self.write(emoji_box("\nSIMULATION STARTING\n", line="double"))
