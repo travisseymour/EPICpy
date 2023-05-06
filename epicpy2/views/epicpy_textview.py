@@ -83,7 +83,7 @@ class EPICTextViewFileWriter:
 
     def __init__(self):
         super(EPICTextViewFileWriter, self).__init__()
-        self.file_path: Path | None = None
+        self.file_path: Optional[Path] = None
         self.file_mode = 'a'
         self.file_object: _io.TextIOWrapper | None = None
         self.buffer: List[str] = []

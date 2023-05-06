@@ -8,16 +8,10 @@ from pathlib import Path
 
 from setuptools import find_packages, setup
 
-"""
-https://setuptools.pypa.io/en/latest/userguide/dependency_management.html
-https://stackoverflow.com/questions/71565967/including-images-in-a-library-with-pip-install
-https://setuptools.pypa.io/en/latest/userguide/datafiles.html
-"""
-
 DEPENDENCIES = [
     "loguru", "pyqt5", "QScintilla", "python-dateutil", "ulid", "pingouin", "plum-dispatch", "ascii_frame", "ulid2"
 ]
-EXCLUDE_FROM_PACKAGES = ["contrib", "docs", "tests*"]
+EXCLUDE_FROM_PACKAGES = ["contrib", "docs", "tests*", "test*", "build", "epicpy2.egg-info"]
 CURDIR = os.path.abspath(os.path.dirname(__file__))
 
 with io.open(os.path.join(CURDIR, "ReadMe.md"), "r", encoding="utf-8") as f:
@@ -57,15 +51,14 @@ setup(
     version=get_version(),
     author="Travis Seymour",
     author_email="nogard@ucsc.edu",
-    description="",
+    description="Python interface to the EPIC computational cognitive architecture simulation environment.",
     long_description=README,
     long_description_content_type="text/markdown",
     url="https://github.com/travisseymour/epicpy2",
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
     include_package_data=True,
     package_data={
-        "": [epiclib_file, "*.TTF", "*.ttf"],
-        "epicpy2.resources.css":["*.css"],
+        "": [epiclib_file],
     },
     keywords=[],
     scripts=[],
@@ -78,11 +71,20 @@ setup(
     python_requires=PYTHON_VERSION,
     # license and classifier list:
     # https://pypi.org/pypi?%3Aaction=list_classifiers
-    license="License :: OSI Approved :: MIT License",
+    license="License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     classifiers=[
+        "Development Status :: 4 - Beta",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        # "Operating System :: OS Independent",
-        # "Private :: Do Not Upload"
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.10"
+        "Operating System :: OS Independent",
+        "Natural Language :: English",
+        "Topic :: Education",
+        "Topic :: Scientific/Engineering",
     ],
+    # vvv these 2 lines are required to pull in the resources' folder.
+    #     I think essentially this causes setup.py to pull in ANYTHING you
+    #     have added to git!
+    use_scm_version=True,
+    setup_requires=['setuptools_scm']
 )

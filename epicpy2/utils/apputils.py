@@ -269,28 +269,13 @@ def get_resource(*args) -> Path:
     OS = platform.system()
     os_id = {'Linux': 'linux', 'Darwin': 'mac', 'Windows': 'windows'}
 
-    base_folder = Path(pathEX, 'resources', 'base').resolve()
-    os_folder = Path(pathEX, 'resources', os_id[OS]).resolve()
+    base_folder = Path(pathEX, 'resources').resolve()
 
-    # log.debug(f"{base_folder=}")
-    # log.debug(f"{os_folder=}")
-
-    # if frozen():
-    #     # because the resources' folder is at same level in frozen application
-    #     base_folder = Path(pathEX, 'resources', 'base').resolve()
-    #     os_folder = Path(pathEX, 'resources', os_id[OS]).resolve()
-    # else:
-    #     # because we're keeping the resources' folder outside the src folder during development
-    #     base_folder = Path(Path(pathEX).parent, 'resources', 'base').resolve()
-    #     os_folder = Path(Path(pathEX).parent, 'resources', os_id[OS]).resolve()
-
-    for target_path in (Path(base_folder, *args), Path(os_folder, *args)):
-        if target_path.exists():
-            return target_path
+    target_path = Path(base_folder, *args)
+    if target_path.exists():
+        return target_path
     else:
-        p = Path(pathEX, 'resources').resolve()
-        raise FileNotFoundError(f'Unable to locate resource "{str(Path(*args))}" '
-                                f'in application resource folder "{str(p)}".')
+        raise FileNotFoundError(f'Unable to locate resource "{str(target_path)}"')
 
 
 if __name__ == '__main__':

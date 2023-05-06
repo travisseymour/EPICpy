@@ -1,23 +1,19 @@
-# Normal
+# All
 # ------
 
-loguru
-PyQt5
-QScintilla
-python-dateutil
-ulid
-pingouin
-plum-dispatch
-ascii_frame
-ulid2             # https://github.com/valohai/ulid2
+loguru==0.6.0
+PyQt5==5.15.9
+QScintilla==2.13.4
+python-dateutil==2.8.2
+ulid==1.1
+ulid2==0.3.0
+pingouin==0.5.3
+plum_dispatch==2.0.1
+ascii_frame==0.0.1
 
-# Development
-# Developers: See epicpy_dev_setup.txt
+# Development Only
 # ------------------------------------
 
-# icecream
-# mkdocs
-black
-plumbum
-pytest
-pyinstaller
+black==23.3.0
+plumbum==1.8.1
+pytest==7.2.2
