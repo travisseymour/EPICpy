@@ -1,9 +1,27 @@
 
 # EPICpy Changelog
-#### (lasted updated Sat Apr 15 15:14:45 2023)
+#### (lasted updated Sat May  6 14:30:09 2023)
 
 ---
 
+
+## VERSION: 2023.5.6
+
+---
+1. **FIXED**: pipx working with resources folder in tact. removed old pyinstaller tools. Pinned requirements.
+
+2. Another resource movement but still pipx isnt pulling it in.
+3. **CHANGE**: ReArranged everything to work properly with pipx. includes devices, encoders, and text devices. everything put into subfolders except for main.py
+
+4. Installs but having import issue with modules in root folder.
+5. Done encoders now work. printing of model parameters also works.
+6. Remove some debug messages prior to attempting to remove the need to ever call model.get_human_ptr.
+7. **CHANGE**: Clearing of stats ui before each sim run has been REINSTATED.
+
+8. **FIXED**: default window sizing uses more reasonable defaults and includes or removes windows depending on available real-estate
+
+9. Edited freezing and packaging scripts.
+10. Updated changelog.
 
 ## VERSION: 2023.4.15
 
