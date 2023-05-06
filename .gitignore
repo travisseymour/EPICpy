@@ -165,14 +165,6 @@ cython_debug/
 # -----------------
 # -----------------
 
-# these will be recreated on your machine when you run `python3 onetime_resource_setup.py`
-src/main/resources/linux/cppyy_backend/
-src/main/resources/linux/CPyCppyy/
-src/main/resources/linux/python3.9/
-src/main/resources/mac/cppyy_backend/
-src/main/resources/mac/CPyCppyy/
-src/main/resources/mac/python3.9/
-
 # these are test scripts of mine that I'm not currently pushing to the repo
 secret.*
 do_release.py
@@ -181,8 +173,8 @@ freeze_and_run.sh
 freeze_and_run_macos.sh
 update_version.py
 
-# fbs related stuff that needs to stay on my machine
-*.gpg
-sign/
+# stuff put in by pipx, both already in default python .gitignore
+# build/
+# *.egg-info/
 
 # Pycharm config files

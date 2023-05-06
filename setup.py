@@ -25,16 +25,16 @@ if platform.system() == "Windows":
     PYTHON_VERSION = "3.9"  # have yet to figure out how to compile epliclib with 3.10+ on windows using MSVC++ 2019
     epiclib_file = "epiclib.pyd"
 elif platform.system() == 'Linux':
-    Path("src", "epiclib", "epiclib.so").unlink(missing_ok=True)
-    shutil.copyfile(Path("src", "epiclib", "epiclib_linux.so"), Path("src", "epiclib", "epiclib.so"))
+    Path("epicpy2", "epiclib", "epiclib.so").unlink(missing_ok=True)
+    shutil.copyfile(Path("epicpy2", "epiclib", "epiclib_linux.so"), Path("epicpy2", "epiclib", "epiclib.so"))
     PYTHON_VERSION = ">=3.10"
     epiclib_file = "epiclib.so"
 elif platform.system() == 'darwin':
-    Path("src", "epiclib", "epiclib.so").unlink(missing_ok=True)
+    Path("epicpy2", "epiclib", "epiclib.so").unlink(missing_ok=True)
     if "ARM" in os.uname().version.upper():
-        shutil.copyfile(Path("src", "epiclib", "epiclib_macos_arm.so"), Path("src", "epiclib", "epiclib.so"))
+        shutil.copyfile(Path("epicpy2", "epiclib", "epiclib_macos_arm.so"), Path("epicpy2", "epiclib", "epiclib.so"))
     else:
-        shutil.copyfile(Path("src", "epiclib", "epiclib_macos.so"), Path("src", "epiclib", "epiclib.so"))
+        shutil.copyfile(Path("epicpy2", "epiclib", "epiclib_macos.so"), Path("epicpy2", "epiclib", "epiclib.so"))
     PYTHON_VERSION = ">=3.10"
     epiclib_file = "epiclib.so"
 else:
@@ -42,7 +42,7 @@ else:
 
 
 def get_version():
-    main_file = os.path.join(CURDIR, "src", "version.py")
+    main_file = os.path.join(CURDIR, "epicpy2", "constants", "version.py")
     _version_re = re.compile(r"__version__\s+=\s+(?P<version>.*)")
     with open(main_file, "r", encoding="utf8") as f:
         match = _version_re.search(f.read())
@@ -51,21 +51,24 @@ def get_version():
 
 
 setup(
-    name="EPICpy2",
+    name="epicpy2",
     version=get_version(),
     author="Travis Seymour",
     author_email="nogard@ucsc.edu",
     description="",
     long_description=README,
     long_description_content_type="text/markdown",
-    url="https://github.com/travisseymour/EPICpy2",
+    url="https://github.com/travisseymour/epicpy2",
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
     include_package_data=True,
-    package_data={"": [epiclib_file]},
+    package_data={
+        "": [epiclib_file],
+        # "epicpy2.resources": ["epicpy2.resources/*.*"]
+    },
     keywords=[],
     scripts=[],
     entry_points={
-        "gui_scripts": ["EPICpy2=src.main:main"],
+        "gui_scripts": ["EPICpy2=epicpy2.main:main"],
     },
     zip_safe=False,
     install_requires=DEPENDENCIES,
