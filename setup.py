@@ -10,6 +10,8 @@ from setuptools import find_packages, setup
 
 """
 https://setuptools.pypa.io/en/latest/userguide/dependency_management.html
+https://stackoverflow.com/questions/71565967/including-images-in-a-library-with-pip-install
+https://setuptools.pypa.io/en/latest/userguide/datafiles.html
 """
 
 DEPENDENCIES = [
@@ -62,8 +64,8 @@ setup(
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
     include_package_data=True,
     package_data={
-        "": [epiclib_file],
-        # "epicpy2.resources": ["epicpy2.resources/*.*"]
+        "": [epiclib_file, "*.TTF", "*.ttf"],
+        "epicpy2.resources.css":["*.css"],
     },
     keywords=[],
     scripts=[],
