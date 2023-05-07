@@ -56,6 +56,11 @@ class TextEditChoiceWin(QDialog):
 
         # self.setLayout(self.ui.verticalLayout)
 
+        try:
+            from epicpy2.epiccoder.customeditor import CustomEditor
+        except ImportError:
+            self.ui.radioButtonBuiltIn.setEnabled(False)
+
     def radio_clicked(self):
         radio_button = self.sender()
         if radio_button.isChecked():

@@ -38,6 +38,13 @@ from epicpy2.utils.apputils import get_resource, frozen
 from epicpy2.utils import config
 import signal
 
+# some older versions of Linux won't be able to use epiccoder
+try:
+    from epicpy2.epiccoder.customeditor import CustomEditor
+except ImportError:
+    config.app_cfg.text_editor = ""
+    config.save_app_config(True)
+
 # Set a signal handler for SIGSEGV to ignore the signal
 signal.signal(signal.SIGSEGV, signal.SIG_IGN)
 

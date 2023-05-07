@@ -46,7 +46,7 @@ from PyQt5.QtWidgets import (
     QApplication, QMenu, QAction, )
 
 from epicpy2.utils.apputils import get_resource
-from epicpy2.epiccoder.customeditor import CustomEditor
+
 from epicpy2.epiccoder.duplicatedlg import DuplicateFileNameWin
 from epicpy2.epiccoder.fuzzy_searcher import SearchItem, SearchWorker
 from epicpy2.epiccoder.aboutwindow import AboutWin
@@ -211,7 +211,8 @@ class MainWindow(QMainWindow):
     def show_help(self):
         ...
 
-    def get_editor(self, file_path: Path) -> CustomEditor:  # QsciScintilla:
+    def get_editor(self, file_path: Path): # -> CustomEditor:  # QsciScintilla:
+        from epicpy2.epiccoder.customeditor import CustomEditor
         editor = CustomEditor(file_path=file_path, star_func=self.add_star)
         return editor
 
@@ -241,6 +242,7 @@ class MainWindow(QMainWindow):
         return Path(self.model.rootPath(), f"{_stem}{next(int_gen)}{file_type.lower()}")
 
     def set_new_tab(self, path: Path, is_new_file=False, file_type: str='txt'):
+        from epicpy2.epiccoder.customeditor import CustomEditor
         if path and isinstance(path, Path) and not path.is_file():
             return
 
@@ -520,6 +522,7 @@ class MainWindow(QMainWindow):
             self.search_list_view.addItem(i)
 
     def search_list_view_clicked(self, item: SearchItem):
+        from epicpy2.epiccoder.customeditor import CustomEditor
         self.set_new_tab(Path(item.full_path))
         editor: CustomEditor = self.tab_view.currentWidget()
         editor.setCursorPosition(item.lineno, item.end)
@@ -642,6 +645,7 @@ class MainWindow(QMainWindow):
 
 
     def save_file(self):
+        from epicpy2.epiccoder.customeditor import CustomEditor
         if self.current_file is None and self.tab_view.count() > 0:
             self.save_as()
 
