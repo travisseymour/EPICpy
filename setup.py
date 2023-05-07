@@ -17,15 +17,15 @@ CURDIR = os.path.abspath(os.path.dirname(__file__))
 with io.open(os.path.join(CURDIR, "ReadMe.md"), "r", encoding="utf-8") as f:
     README = f.read()
 
-if platform.system() == "Windows":
+if platform.system().lower() == "windows":
     PYTHON_VERSION = "3.9"  # have yet to figure out how to compile epliclib with 3.10+ on windows using MSVC++ 2019
     epiclib_file = "epiclib.pyd"
-elif platform.system() == 'Linux':
+elif platform.system().lower() == 'linux':
     Path("epicpy2", "epiclib", "epiclib.so").unlink(missing_ok=True)
     shutil.copyfile(Path("epicpy2", "epiclib", "epiclib_linux.so"), Path("epicpy2", "epiclib", "epiclib.so"))
     PYTHON_VERSION = ">=3.10"
     epiclib_file = "epiclib.so"
-elif platform.system() == 'darwin':
+elif platform.system().lower() == 'darwin':
     Path("epicpy2", "epiclib", "epiclib.so").unlink(missing_ok=True)
     if "ARM" in os.uname().version.upper():
         shutil.copyfile(Path("epicpy2", "epiclib", "epiclib_macos_arm.so"), Path("epicpy2", "epiclib", "epiclib.so"))
