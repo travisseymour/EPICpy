@@ -86,7 +86,8 @@ from epicpy2.views.epicpy_visualview import EPICVisualView
 from epicpy2.views.epicpy_auditoryview import EPICAuditoryView
 
 from epicpy2.epiclib.epiclib import (add_py_object_to_normal_out_streamer, add_py_object_to_trace_out_streamer,
-                                     add_py_object_to_pps_out_streamer, initialize_py_streamers, uninitialize_py_streamers)
+                                     add_py_object_to_pps_out_streamer, initialize_py_streamers,
+                                     uninitialize_py_streamers)
 
 
 class StateChangeWatcher(QObject):
@@ -329,6 +330,10 @@ class MainWin(QMainWindow):
             config.save_app_config(quiet=True)
             two_off_timer = QTimer()
             two_off_timer.singleShot(500, partial(self.session_reload, quiet=True))
+
+        if platform.system().lower() == 'darwin':
+            self.setMenuBar(self.ui.menubar)
+            self.ui.menubar.setNativeMenuBar(False)
 
     def mouseDoubleClickEvent(self, event: QMouseEvent = None):
         try:
