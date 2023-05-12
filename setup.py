@@ -45,7 +45,6 @@ def get_version():
         version = match.group("version") if match is not None else '"unknown"'
     return str(ast.literal_eval(version))
 
-
 setup(
     name="epicpy2",
     version=get_version(),
@@ -73,9 +72,9 @@ setup(
     # https://pypi.org/pypi?%3Aaction=list_classifiers
     license="License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     classifiers=[
-        "Development Status :: 4 - Beta",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10"
         "Operating System :: OS Independent",
         "Natural Language :: English",
