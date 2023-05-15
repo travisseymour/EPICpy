@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import platform
+import socket
 import sys
 from itertools import chain
 
@@ -25,7 +26,6 @@ import pandas as pd
 from PyQt5 import QtWidgets
 
 from epicpy2.utils import fitness, config
-from epicpy2.widgets import outputsorter
 from epicpy2.dialogs.aboutwindow import AboutWin
 from epicpy2.dialogs.fontsizewindow import FontSizeDialog
 from epicpy2.dialogs.texteditchoicewindow import TextEditChoiceWin
@@ -44,7 +44,7 @@ from PyQt5.QtGui import (
     QMouseEvent,
     QFont,
 )
-from PyQt5.QtCore import QTimer, QByteArray, QRegExp, Qt, QSettings, QObject, QPoint, QSize
+from PyQt5.QtCore import QTimer, QByteArray, QRegExp, Qt, QSettings, QObject, QPoint, QSize, QThread, pyqtSignal
 from PyQt5.QtWidgets import (
     QFileDialog,
     QMainWindow,
@@ -85,9 +85,7 @@ from epicpy2.views.epicpy_textview import EPICTextViewCachedWrite
 from epicpy2.views.epicpy_visualview import EPICVisualView
 from epicpy2.views.epicpy_auditoryview import EPICAuditoryView
 
-from epicpy2.epiclib.epiclib import (add_py_object_to_normal_out_streamer, add_py_object_to_trace_out_streamer,
-                                     add_py_object_to_pps_out_streamer, initialize_py_streamers,
-                                     uninitialize_py_streamers)
+from epicpy2.epiclib.epiclib import (initialize_py_streamers, uninitialize_py_streamers)
 
 
 class StateChangeWatcher(QObject):
@@ -123,19 +121,26 @@ class StateChangeWatcher(QObject):
 
         return False
 
+class UdpThread(QThread):
+    messageReceived = pyqtSignal(str)
 
-class DebugOutWriter:
-    """TEMP: Until UI window is created for it, write debug info to stdio"""
+    def __init__(self, parent, udp_ip:str, udp_port:int):
+        super(UdpThread, self).__init__(parent)
+        self.udp_ip = udp_ip  # e.g., "127.0.0.1"
+        self.udp_port = udp_port  # e.g., 13047
+        self.is_running = True
 
-    def __init__(self):
-        self.buffer = []
+    def run(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind((self.udp_ip, self.udp_port))
 
-    def write_char(self, c: str):
-        self.buffer.append(c)
-        if c == '\n':
-            print(f'{"".join(self.buffer)}', end='')
-            self.buffer = []
+        while self.is_running:
+            data, addr = sock.recvfrom(4096)
+            message = data.decode('utf-8')
+            self.messageReceived.emit(message)
 
+    def stop(self):
+        self.is_running = False
 
 class MainWin(QMainWindow):
     def __init__(self, app: QApplication):
@@ -173,56 +178,45 @@ class MainWin(QMainWindow):
 
         self.run_state = UNREADY
 
-        # NOTE: Before we set up py_streamers below, we have to re-route sys.stdout
-        #       and then assign our various output windows to an associated window
-        #       in outputsorter.OUTPUT_SORTER
-
-        sys.stdout = outputsorter.OUTPUT_SORTER
-
         # attach Normal_out and PPS_out output to this window
-        self.normal_out_view = EPICTextViewCachedWrite(
-            text_widget=self.ui.plainTextEditOutput
-        )
+        self.normal_out_view = EPICTextViewCachedWrite( text_widget=self.ui.plainTextEditOutput)
         self.normal_out_view.text_widget.dark_mode = config.app_cfg.dark_mode
-        outputsorter.OUTPUT_SORTER.window['N'] = self.normal_out_view  # Normal_out
-        outputsorter.OUTPUT_SORTER.window['P'] = self.normal_out_view  # PPS_out
+        self.normal_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13050)
+        self.normal_out_view_thread.messageReceived.connect(self.normal_out_view.write)
+        self.normal_out_view_thread.start()
 
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
         # connect Trace_out now
         self.trace_win = TraceWin(parent=self)
-        self.trace_win.trace_out_view = EPICTextViewCachedWrite(
-            text_widget=self.trace_win.ui.plainTextEditOutput
-        )
+        self.trace_win.trace_out_view = EPICTextViewCachedWrite(text_widget=self.trace_win.ui.plainTextEditOutput)
         self.trace_win.trace_out_view.text_widget.dark_mode = config.app_cfg.dark_mode
-        self.trace_win.ui.plainTextEditOutput.mouseDoubleClickEvent = (
-            self.mouseDoubleClickEvent
-        )
-        outputsorter.OUTPUT_SORTER.window['T'] = self.trace_win.trace_out_view
-        outputsorter.OUTPUT_SORTER.window['D'] = self.trace_win.trace_out_view
+        self.trace_win.ui.plainTextEditOutput.mouseDoubleClickEvent = (self.mouseDoubleClickEvent)
+        self.trace_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13048)
+        self.trace_out_view_thread.messageReceived.connect(self.trace_win.trace_out_view.write)
+        self.trace_out_view_thread.start()
 
-        # in order to link epiclib Output_tees to Python, we need to setup py_streamers
+        # self.debug_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13049)
+        # self.debug_out_view_thread.messageReceived.connect(self.trace_win.trace_out_view.write)
+        # self.debug_out_view_thread.start()
+
+        # self.pps_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13053)
+        # self.pps_out_view_thread.messageReceived.connect(self.trace_win.trace_out_view.write)
+        # self.pps_out_view_thread.start()
+
+        # in order to link epiclib Output_tees to Python, we need to set up py_streamers
 
         initialize_py_streamers(
             enable_normal=True,
             enable_trace=True,
+            enable_debug=True,
             enable_pps=True,
-            enable_debug=False
         )
 
-        add_py_object_to_normal_out_streamer()
-        add_py_object_to_pps_out_streamer()
-        add_py_object_to_trace_out_streamer()
-
-        # init ouput logging
+        # init output logging
 
         self.normal_file_output_never_updated = True
         self.trace_file_output_never_updated = True
         self.update_output_logging()
-
-        # uncomment this if there is a need to output debug info to stdio wile EPICpy is running
-        # also make sure the last param in initialize_py_streamers is set to True
-        # self.debug_out_view = DebugOutWriter()
-        # add_py_object_to_debug_out_streamer(self.debug_out_view)
 
         self.stats_win = StatsWin(parent=self)
 
@@ -949,7 +943,6 @@ class MainWin(QMainWindow):
             self.set_ui_not_running()
 
     def closeEvent(self, event: QCloseEvent):
-        sys.stdout = sys.__stdout__  # reset
 
         if self.closing:
             event.ignore()
@@ -965,6 +958,17 @@ class MainWin(QMainWindow):
 
         if self.run_state == RUNNING:
             self.halt_simulation()
+
+        self.normal_out_view_thread.stop()
+        self.trace_out_view_thread.stop()
+        try:
+            self.debug_out_view_thread.stop()
+        except AttributeError:
+            ...
+        try:
+            self.pps_out_view_thread.stop()
+        except AttributeError:
+            ...
 
         self.remove_file_loggers()
 

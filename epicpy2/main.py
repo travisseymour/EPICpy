@@ -75,16 +75,11 @@ def start_ui(app: QApplication):
     fontDatabase.addApplicationFont(str(get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Regular.ttf")))
     fontDatabase.addApplicationFont(str(get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Bold.ttf")))
 
-    OS = platform.system()
-
     from epicpy2.windows import mainwindow
 
-    from epicpy2.epiclib.epiclib import ostream_redirect
-
-    with ostream_redirect(stdout=True, stderr=True):
-        main_win = mainwindow.MainWin(app)
-        app.lastWindowClosed.connect(shut_it_down)
-        return app.exec_()
+    main_win = mainwindow.MainWin(app)
+    app.lastWindowClosed.connect(shut_it_down)
+    return app.exec_()
 
 
 def shut_it_down():
