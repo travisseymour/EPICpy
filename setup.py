@@ -18,12 +18,12 @@ with io.open(os.path.join(CURDIR, "ReadMe.md"), "r", encoding="utf-8") as f:
     README = f.read()
 
 if platform.system().lower() == "windows":
-    PYTHON_VERSION = "3.9"  # have yet to figure out how to compile epliclib with 3.10+ on windows using MSVC++ 2019
+    PYTHON_VERSION = ">=3.9,<3.10"  # have yet to figure out how to compile epliclib with 3.10+ on windows using MSVC++ 2019
     epiclib_file = "epiclib.pyd"
 elif platform.system().lower() == 'linux':
     Path("epicpy2", "epiclib", "epiclib.so").unlink(missing_ok=True)
     shutil.copyfile(Path("epicpy2", "epiclib", "epiclib_linux.so"), Path("epicpy2", "epiclib", "epiclib.so"))
-    PYTHON_VERSION = ">=3.10"
+    PYTHON_VERSION = ">=3.10,<3.11"
     epiclib_file = "epiclib.so"
 elif platform.system().lower() == 'darwin':
     Path("epicpy2", "epiclib", "epiclib.so").unlink(missing_ok=True)
@@ -31,7 +31,7 @@ elif platform.system().lower() == 'darwin':
         shutil.copyfile(Path("epicpy2", "epiclib", "epiclib_macos_arm.so"), Path("epicpy2", "epiclib", "epiclib.so"))
     else:
         shutil.copyfile(Path("epicpy2", "epiclib", "epiclib_macos.so"), Path("epicpy2", "epiclib", "epiclib.so"))
-    PYTHON_VERSION = ">=3.10"
+    PYTHON_VERSION = ">=3.10,<3.11"
     epiclib_file = "epiclib.so"
 else:
     raise NotImplementedError(f'ERROR: No epiclib library for OS={platform.system()}. Unable to continue setup.')
@@ -75,7 +75,7 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10"
+        "Programming Language :: Python :: 3.10",
         "Operating System :: OS Independent",
         "Natural Language :: English",
         "Topic :: Education",
