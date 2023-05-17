@@ -1,9 +1,22 @@
 
 # EPICpy Changelog
-#### (lasted updated Sat May  6 14:30:09 2023)
+#### (lasted updated Wed May 17 15:28:06 2023)
 
 ---
 
+
+## VERSION: 2023.5.16
+
+---
+1. Updated setup.py for windows pipx install.
+2. **CHANGE**: Now using udp broadcasting to get normal and trace outputs to GUI. Debug and PPS outs are untested.
+
+3. Quick cleanup.
+4. **FIXED**: had to deal with qscintilla issue with older versions of glibc on linux. now handles this gracefully.
+
+5. **CHANGE**: unified menu bar on mac, now at normal output window like windows and linux.
+
+6. Fix setup.py to properly notice mac and win hosts.
 
 ## VERSION: 2023.5.6
 
