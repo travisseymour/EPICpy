@@ -25,8 +25,14 @@ os.environ["OUTDATED_IGNORE"] = "1"
 os.environ["QT_MAC_WANTS_LAYER"] = "1"
 
 import datetime
+import ctypes.wintypes
+import signal
 import sys
+import os
 import platform
+import re
+import subprocess
+from pathlib import Path
 
 from loguru import logger as log
 
@@ -36,7 +42,6 @@ from PyQt5.QtCore import qInstallMessageHandler, QCoreApplication
 
 from epicpy2.utils.apputils import get_resource, frozen
 from epicpy2.utils import config
-import signal
 
 # some older versions of Linux won't be able to use epiccoder
 try:
@@ -45,17 +50,91 @@ except ImportError:
     config.app_cfg.text_editor = ""
     config.save_app_config(True)
 
-# Set a signal handler for SIGSEGV to ignore the signal
-signal.signal(signal.SIGSEGV, signal.SIG_IGN)
 
 DONE = False
 
 
-def handler(msg_type, msg_log_content, msg_string):
+def pyqt_warning_handler(msg_type, msg_log_content, msg_string):
     # https://stackoverflow.com/questions/25660597/
     # hide-critical-pyqt-warning-when-clicking-a-checkboc#25681472
     ...
 
+# ==================================================
+# ==========  SETUP SIGSEGV HANDLER ================
+# ==================================================
+# epiclib inevitably leads to segmentation fault on exit.
+# all of this is to ignore that. It isn't really too
+# consequential on Windows and Linux, but on Macos, not
+# handling SIGSEGV causes EPICpy to hang, which requires
+# the user to issue a force-quit to the application.
+# When we port epiclib to Python, this will no longer be necessary.
+# This is why it's getting a visual fence here
+
+OS = platform.system()
+
+# Define the C signal handler function
+def segfault_handler(signal, frame):
+    log.warning("Segmentation fault occurred")
+    os._exit(1)
+
+
+if OS in ('Linux', 'Darwin'):
+    # Define the C function prototype
+    handler_func_type = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)
+
+    # Convert the Python signal handler to a C function pointer
+    handler_func_ptr = handler_func_type(segfault_handler)
+
+    # Get the underlying C handle for the SIGSEGV signal
+    SIGSEGV = signal.SIGSEGV.value
+
+    # Set the signal handler using ctypes
+    if OS == 'Linux':
+        output = subprocess.check_output(['ldd', '/bin/ls']).decode('utf-8')
+        # Extract the path for libc.so.[version] using regular expression
+        pattern = r'libc\.so\.\d+\s*=>\s*(.*?)\s'
+        match = re.search(pattern, output)
+        if match:
+            try:
+                libc_path = match.group(1)
+                if not Path(libc_path).is_file():
+                    raise FileExistsError
+            except Exception as e:
+                libc_path = ''
+                log.warning(f"Extracted bad or unreadable libc path: {libc_path}: {e}. Unable to install SIGSEGV handler.")
+        else:
+            libc_path = ''
+            log.warning("ERROR: Cannot find libc path. Unable to install SIGSEGV handler.")
+    elif OS == 'Darwin':
+        libc_path = '/usr/lib/libc.dylib'  # Update with the correct path on macOS
+    else:
+        # Unknown OS, do nothing
+        libc_path = ''
+
+    if libc_path:
+        libc = ctypes.CDLL(libc_path)
+        libc.signal(SIGSEGV, handler_func_ptr)
+elif OS == 'Windows':
+    # Define the C function prototype
+    # handler_func_type = ctypes.CFUNCTYPE(ctypes.wintypes.BOOL, ctypes.c_ulong)
+    handler_func_type = ctypes.CFUNCTYPE(ctypes.wintypes.BOOL, ctypes.wintypes.DWORD)
+
+    # Convert the Python signal handler to a C function pointer
+    handler_func_ptr = handler_func_type(segfault_handler)
+
+    # Set the signal handler using ctypes on Windows
+    ctypes.windll.kernel32.SetConsoleCtrlHandler(handler_func_ptr, True)
+else:
+    # Unknown OS, do nothing
+    ...
+
+# To test on Linux or Macos, run this:
+# ctypes.string_at(0)
+# NOTE: I can't figure out how to test on Windows.
+# string_at(0) doesn't handle anything on Windows.
+
+# ==================================================
+# ==================================================
 
 def start_ui(app: QApplication):
     global LIBNAME, HEADERPATH
@@ -123,7 +202,7 @@ def main():
         )
 
         # Disable pyqt warnings when not developing
-        qInstallMessageHandler(handler)
+        qInstallMessageHandler(pyqt_warning_handler)
 
     # -------------------------------------------------------------------------
     # init QSettings once so we can use default constructor throughout project
