@@ -34,7 +34,7 @@ from PyQt5.QtGui import (
 )
 from PyQt5.QtCore import Qt, QRect, QSize
 from PyQt5.QtWidgets import QMainWindow
-from epicpy2.utils.localmunch import Munch, DefaultMunch
+from munch import Munch, DefaultMunch
 from loguru import logger as log
 from epicpy2.utils.apputils import Point, Size, Rect
 from dataclasses import dataclass

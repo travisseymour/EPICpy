@@ -10,6 +10,7 @@ ulid2==0.3.0
 pingouin==0.5.3
 plum_dispatch==2.0.1
 ascii_frame==0.0.1
+munch==3.0.0
 
 # Development Only
 # ------------------------------------
