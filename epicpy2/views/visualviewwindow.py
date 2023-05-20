@@ -38,9 +38,9 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QRectF, QSize
 from PyQt5.QtWidgets import QMainWindow, QGraphicsTextItem
 from munch import Munch, DefaultMunch
 from loguru import logger as log
-from epicpy2.utils.apputils import Point, Size, Rect
+from epicpy2.utils.apputils import Point, Size, Rect, memoize_class_method
 from dataclasses import dataclass
-from functools import lru_cache, partial
+from functools import partial
 from epicpy2.views.epiccolors import epic_colors as colors
 from epicpy2.utils import config
 
@@ -330,7 +330,7 @@ class VisualViewWin(QMainWindow):
         )
         self.painter.drawText(5, self.height() - 20, s)
 
-    @lru_cache()
+    @memoize_class_method()
     def grid_cache(self, w, h, scale) -> QPainterPath:
         """
         Grids are expensive to draw, so we're using the flyweight pattern again.
@@ -474,11 +474,11 @@ class VisualViewWin(QMainWindow):
 
     # ------------- Shape Drawing Cache ---------------------------------
 
-    @lru_cache()
+    @memoize_class_method()
     def shape_cache(self, shape, x, y, w, h) -> QPainterPath:
         """
         This is my attempt to replicate DK's flyweight pattern for efficient
-        object creation. The key is the lru_cache!
+        object creation. The key is the custom lru_cache!
         """
         path = QPainterPath()
         if shape == "ellipse":
@@ -934,7 +934,7 @@ class VisualViewWin(QMainWindow):
             self.add_leader(x, y, w, h, obj.property.Leader, path)
             self.painter.drawPath(path)
 
-    @lru_cache()
+    @memoize_class_method()
     def text_cache(self, x, y, text) -> QPainterPath:
         # TODO: This isn't *quite* centered right on (x,y)
         path = QPainterPath()

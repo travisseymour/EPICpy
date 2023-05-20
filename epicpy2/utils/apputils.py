@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import sys
+from collections import OrderedDict
 from pathlib import Path
 
 from loguru import logger as log
@@ -277,6 +278,28 @@ def get_resource(*args) -> Path:
     else:
         raise FileNotFoundError(f'Unable to locate resource "{str(target_path)}"')
 
+
+def memoize_class_method(max_items=250):
+    """
+    Class method for an alternative lru_cache.
+    Python's lru_cache has big issues with used on class methods.
+    """
+    cache = OrderedDict()
+
+    def decorator(func):
+        def memoized_func(instance, *args, **kwargs):
+            if instance not in cache:
+                cache[instance] = OrderedDict()
+            if args not in cache[instance]:
+                if len(cache[instance]) >= max_items:
+                    # Remove the least recently used item from the cache
+                    cache[instance].popitem(last=False)
+                cache[instance][args] = func(instance, *args, **kwargs)
+            return cache[instance][args]
+
+        return memoized_func
+
+    return decorator
 
 if __name__ == '__main__':
     print(f"{get_resource('fonts', 'Consolas', 'ATTRIBUTION.txt')=}")

@@ -36,9 +36,8 @@ from PyQt5.QtCore import Qt, QRect, QSize
 from PyQt5.QtWidgets import QMainWindow
 from munch import Munch, DefaultMunch
 from loguru import logger as log
-from epicpy2.utils.apputils import Point, Size, Rect
+from epicpy2.utils.apputils import Point, Size, Rect, memoize_class_method
 from dataclasses import dataclass
-from functools import lru_cache
 from epicpy2.utils import config
 
 from epicpy2.epiclib.epiclib import Symbol, geometric_utilities as GU
@@ -312,7 +311,7 @@ class AuditoryViewWin(QMainWindow):
         )
         self.painter.drawText(5, self.height() - 20, s)
 
-    @lru_cache()
+    @memoize_class_method()
     def grid_cache(self, w, h, scale) -> QPainterPath:
         """
         Grids are expensive to draw, so we're using the flyweight pattern again.
@@ -381,11 +380,11 @@ class AuditoryViewWin(QMainWindow):
         brush = QBrush(color, brush_style)
         return pen, brush
 
-    @lru_cache()
+    @memoize_class_method()
     def shape_cache(self, shape, x, y, w, h) -> QPainterPath:
         """
         This is my attempt to replicate DK's flyweight pattern for efficient
-        object creation. The key is the lru_cache!
+        object creation. The key is the custom lru_cache!
         """
         path = QPainterPath()
         if shape == "ellipse":
@@ -426,7 +425,7 @@ class AuditoryViewWin(QMainWindow):
         path = self.shape_cache("rectangle", x, y, w, h)
         self.painter.drawPath(path)
 
-    @lru_cache()
+    @memoize_class_method()
     def text_cache(self, x, y, text) -> QPainterPath:
         path = QPainterPath()
         font = QFont("Arial", 10, QFont.Light)
