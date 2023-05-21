@@ -34,13 +34,14 @@ from PyQt5.QtGui import (
 )
 from PyQt5.QtCore import Qt, QRect, QSize
 from PyQt5.QtWidgets import QMainWindow
-from munch import Munch, DefaultMunch
 from loguru import logger as log
 from epicpy2.utils.apputils import Point, Size, Rect, memoize_class_method
 from dataclasses import dataclass
 from epicpy2.utils import config
 
 from epicpy2.epiclib.epiclib import Symbol, geometric_utilities as GU
+
+from epicpy2.utils.localmunch import DefaultMunch, Munch
 
 WARNING_ACCUMULATOR = []
 

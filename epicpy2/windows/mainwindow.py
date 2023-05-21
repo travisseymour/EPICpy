@@ -17,13 +17,19 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from epicpy2.main import mog
+mog('inside mainwindow.py, mog working')
+
 import platform
 import socket
-import sys
+
+mog('socket module loaded')
+
 from itertools import chain
 
 import pandas as pd
 from PyQt5 import QtWidgets
+
 
 from epicpy2.utils import fitness, config
 from epicpy2.dialogs.aboutwindow import AboutWin
@@ -85,8 +91,11 @@ from epicpy2.views.epicpy_textview import EPICTextViewCachedWrite
 from epicpy2.views.epicpy_visualview import EPICVisualView
 from epicpy2.views.epicpy_auditoryview import EPICAuditoryView
 
-from epicpy2.epiclib.epiclib import (initialize_py_streamers, uninitialize_py_streamers)
 
+mog('pre-epiclib imports')
+mog('starting epiclib imports')
+from epicpy2.epiclib.epiclib import (initialize_py_streamers, uninitialize_py_streamers)
+mog('finished epiclib imports')
 
 class StateChangeWatcher(QObject):
     """
@@ -1834,8 +1843,6 @@ class MainWin(QMainWindow):
 
                 win.resize(self.window_settings.value(f"{section}/{obj_name}/Size"))
                 win.move(self.window_settings.value(f"{section}/{obj_name}/Pos"))
-                print(
-                    f"{obj_name=} {win.geometry()=} {win.frameGeometry()=} {win.geometry().topLeft()=} {win.geometry().bottomRight()}")
                 try:
                     # not every config will have this new z scheme
                     z_order = self.window_settings.value(
@@ -1856,7 +1863,10 @@ class MainWin(QMainWindow):
 
             result = True
         except Exception as e:
-            log.warning(f"Unable to restore window geometry: {e}")
+            if 'NoneType' not in str(e):
+                log.warning(f"Unable to restore window geometry: {e}")
+            else:
+                log.warning(f"Unable to restore window geometry.")
             result = False
             return result  # go ahead and fail now, no point in bothering with z-order
 

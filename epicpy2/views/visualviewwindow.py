@@ -36,11 +36,12 @@ from PyQt5.QtGui import (
 )
 from PyQt5.QtCore import Qt, QPoint, QRect, QRectF, QSize
 from PyQt5.QtWidgets import QMainWindow, QGraphicsTextItem
-from munch import Munch, DefaultMunch
 from loguru import logger as log
 from epicpy2.utils.apputils import Point, Size, Rect, memoize_class_method
 from dataclasses import dataclass
 from functools import partial
+
+from epicpy2.utils.localmunch import Munch, DefaultMunch
 from epicpy2.views.epiccolors import epic_colors as colors
 from epicpy2.utils import config
 

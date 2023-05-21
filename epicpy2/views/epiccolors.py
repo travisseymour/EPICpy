@@ -20,7 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from munch import Munch
+
+from epicpy2.utils.localmunch import Munch
 
 """
 For more colors, consult https://cloford.com/resources/colours/500col.htm
