@@ -1796,6 +1796,8 @@ class MainWin(QMainWindow):
 
         self.manage_z_order = True
 
+        self.window_settings.sync()
+
         return True
 
     def layout_load(self, y_adjust: int = 0) -> bool:
