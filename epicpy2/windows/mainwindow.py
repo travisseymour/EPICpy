@@ -121,10 +121,11 @@ class StateChangeWatcher(QObject):
 
         return False
 
+
 class UdpThread(QThread):
     messageReceived = pyqtSignal(str)
 
-    def __init__(self, parent, udp_ip:str, udp_port:int):
+    def __init__(self, parent, udp_ip: str, udp_port: int):
         super(UdpThread, self).__init__(parent)
         self.udp_ip = udp_ip  # e.g., "127.0.0.1"
         self.udp_port = udp_port  # e.g., 13047
@@ -141,6 +142,7 @@ class UdpThread(QThread):
 
     def stop(self):
         self.is_running = False
+
 
 class MainWin(QMainWindow):
     def __init__(self, app: QApplication):
@@ -179,7 +181,7 @@ class MainWin(QMainWindow):
         self.run_state = UNREADY
 
         # attach Normal_out and PPS_out output to this window
-        self.normal_out_view = EPICTextViewCachedWrite( text_widget=self.ui.plainTextEditOutput)
+        self.normal_out_view = EPICTextViewCachedWrite(text_widget=self.ui.plainTextEditOutput)
         self.normal_out_view.text_widget.dark_mode = config.app_cfg.dark_mode
         self.normal_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13050)
         self.normal_out_view_thread.messageReceived.connect(self.normal_out_view.write)
@@ -1816,7 +1818,7 @@ class MainWin(QMainWindow):
             _ = self.window_settings.value(f"{section}/MainWindow/Size")
         except Exception as e:
             log.warning(
-                f"Failed to load layout entry {section}/MainWindow/Pos|Size [{e}], "
+                f"Failed to locate existing window layout for NoDevice state, "
                 f"loading default layout instead..."
             )
             self.layout_reset()
@@ -1832,7 +1834,8 @@ class MainWin(QMainWindow):
 
                 win.resize(self.window_settings.value(f"{section}/{obj_name}/Size"))
                 win.move(self.window_settings.value(f"{section}/{obj_name}/Pos"))
-
+                print(
+                    f"{obj_name=} {win.geometry()=} {win.frameGeometry()=} {win.geometry().topLeft()=} {win.geometry().bottomRight()}")
                 try:
                     # not every config will have this new z scheme
                     z_order = self.window_settings.value(
@@ -1917,92 +1920,65 @@ class MainWin(QMainWindow):
             screen_info.height(),
         )
 
-        # Setup default / min sizes
-
         title_height = self.heightMM() // 2
 
-        # https://ihax.io/display-resolution-explained/
-        # is the smallest likely laptop size 1366 x 768?
-        # vvv implied smalled res = 1170 x 721
-        min_view_win_size = QSize(390, 301)  # plus another 35 or so vertically for the title
-        min_no_win_size = QSize(1170, 345)  # plus another 35 or so vertically for the title
-        min_stat_win_size = QSize(638, min_view_win_size.height() * 2 + title_height * 2 + min_no_win_size.height())
+        # wide
+        if sw >= 390 * 3 + 638:
+            w_mode = 'Physical Sensory Perceptual Stats'
+        elif sw >= 390 * 3:
+            w_mode = 'Physical Sensory Perceptual'
+        elif sw >= 390 * 2 + 638:
+            w_mode = 'Physical Sensory Stats'
+        elif sw >= 390 + 638:
+            w_mode = 'Physical Stats'
+        else:  # 390
+            w_mode = 'Physical'
 
-        no_win_total_height = min_no_win_size.height() + title_height
-        view_win_total_height = min_view_win_size.height() + title_height
+        # tall
+        if sh >= 338 * 2 + 382:
+            h_mode = 'Visual Auditory Main_Tall'
+        elif sh >= 338 * 2 + 250:
+            h_mode = 'Visual Auditory Main_Short'
+        elif sh >= 338 + 382:
+            h_mode = 'Visual Main_Tall'
+        elif sh >= 338 + 250:
+            h_mode = 'Visual Main_Short'
+        elif sh >= 382:
+            h_mode = 'Main_Tall'
+        else:  # 250
+            h_mode = 'Main_Short'
 
-        # Determine what should be shown
+        if 'Visual' in h_mode:
+            for i, kind in enumerate(['Physical', 'Sensory', 'Perceptual']):
+                if kind in w_mode:
+                    self.visual_views[f"Visual {kind}"].move(QPoint(391 * i, 0))
+                    self.visual_views[f"Visual {kind}"].show()
+                else:
+                    self.visual_views[f"Visual {kind}"].hide()
 
-        show_visual_windows = False
-        show_auditory_windows = False
-        show_stats_window = False
+        if 'Auditory' in h_mode:
+            for i, kind in enumerate(['Physical', 'Sensory', 'Perceptual']):
+                if kind in w_mode:
+                    self.auditory_views[f"Auditory {kind}"].move(QPoint(391 * i, 338 + title_height // 2))
+                    self.auditory_views[f"Auditory {kind}"].show()
+                else:
+                    self.auditory_views[f"Auditory {kind}"].hide()
 
-        if sh >= no_win_total_height + view_win_total_height:
-            show_visual_windows = True
-        if sh >= no_win_total_height + view_win_total_height * 2:
-            show_auditory_windows = True
-            pass
-        if sw >= min_no_win_size.width() + min_stat_win_size.width():
-            show_stats_window = True
-            if show_visual_windows and not show_auditory_windows:
-                min_stat_win_size = QSize(
-                    min_stat_win_size.width(),
-                    min_no_win_size.height() + \
-                    view_win_total_height * 1
-                )
-            elif show_visual_windows and show_auditory_windows:
-                min_stat_win_size = QSize(
-                    min_stat_win_size.width(),
-                    min_no_win_size.height() + \
-                    view_win_total_height * 2
-                )
-            elif show_visual_windows or show_auditory_windows:
-                min_stat_win_size = QSize(min_stat_win_size.width(),
-                                          min_no_win_size.height() + \
-                                          title_height + \
-                                          min_view_win_size.height())
+        w_mode_set = set(w_mode.split(' '))
+        h_mode_set = set(h_mode.split(' '))
+        cols = len({'Physical', 'Sensory', 'Perceptual'} & w_mode_set)
+        rows = len({'Visual', 'Auditory'} & h_mode_set)
 
-        # Show appropriate view windows
+        self.move(QPoint(0, rows * 338 + title_height // 2 + 1))
+        self.resize(QSize(cols * 390 + 1, 382 if 'Main_Tall' in h_mode else 250))
+        self.show()
 
-        if show_visual_windows:
-            for i, win in enumerate(self.visual_views.values()):
-                win.resize(min_view_win_size)
-                win.move(QPoint(i * min_view_win_size.width(), 0))
-                win.show()
-        else:
-            for win in self.visual_views.values():
-                win.hide()
-
-        if show_auditory_windows:
-            for i, win in enumerate(self.auditory_views.values()):
-                win.resize(min_view_win_size)
-                win.move(
-                    QPoint(
-                        i * min_view_win_size.width(),
-                        self.visual_views["Visual Physical"].geometry().bottom() + title_height
-                    )
-                )
-                win.show()
-        else:
-            for win in self.auditory_views.values():
-                win.hide()
-
-        if show_stats_window:
-            self.stats_win.resize(min_stat_win_size)
-            self.stats_win.move(QPoint(self.visual_views['Visual Perceptual'].geometry().right(), 0))
+        if 'Stats' in w_mode:
+            self.stats_win.move(QPoint(cols * 390 + cols, 0))
+            self.stats_win.resize(QSize(638, rows * 338 + self.height() + rows))
             self.stats_win.show()
         else:
             self.stats_win.hide()
-
-        self.resize(min_no_win_size)
-        no_win_top = 0
-        if show_visual_windows:
-            no_win_top = self.visual_views['Visual Physical'].geometry().bottom() + title_height
-        if show_auditory_windows:
-            no_win_top = self.auditory_views['Auditory Physical'].geometry().bottom()
-
-        self.move(QPoint(0, no_win_top))
-        self.show()
 
     # =============================================
     # Context Menu Behavior
