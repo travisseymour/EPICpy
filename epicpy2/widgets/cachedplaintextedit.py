@@ -42,6 +42,11 @@ class CachedPlainTextEdit(QPlainTextEdit):
             kwargs["write_warning_limit"] if "write_warning_limit" in kwargs else 100000
         )
         self.dark_mode = False
+        self.can_write: bool = True
+
+    def appendPlainText(self, text: str) -> None:
+        if self.can_write:
+            super().appendPlainText(text)
 
     def write(self, text: str, disable_cache: bool = False) -> None:
         _text = f"{text}"  # faster: https://stackoverflow.com/questions/56587807

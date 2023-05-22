@@ -19,12 +19,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import re
 
-from PyQt5.QtCore import Qt, QRegExp
+from PyQt5.QtCore import Qt, QRegExp, QEvent
 
 from epicpy2.dialogs.searchwindow import SearchWin
 from epicpy2.constants.stateconstants import RUNNING
 from epicpy2.uifiles.traceui import Ui_TraceWindow
-from PyQt5.QtGui import QCloseEvent, QFont, QTextCursor, QTextDocument
+from PyQt5.QtGui import QCloseEvent, QFont, QTextCursor, QTextDocument, QShowEvent, QHideEvent
 from PyQt5.QtWidgets import QMainWindow, QMenu
 import datetime
 from epicpy2.utils import config
@@ -39,7 +39,7 @@ class TraceWin(QMainWindow):
         self.ui = Ui_TraceWindow()
         self.ui.setupUi(self)
         self.setCentralWidget(self.ui.plainTextEditOutput)
-        self.can_close = False
+        self.can_close: bool = False
 
         self.ui.plainTextEditOutput.setPlainText(
             f'Trace Out! ({datetime.datetime.now().strftime("%r")})\n'
@@ -73,6 +73,9 @@ class TraceWin(QMainWindow):
             self.search_context_menu
         )
 
+        # connect self.write directly to widget's write!
+        self.write = self.ui.plainTextEditOutput.write
+
     # =============================================
     # Context Menu Behavior
     # =============================================
@@ -88,7 +91,7 @@ class TraceWin(QMainWindow):
 
         contextMenu.addSeparator()
         if self.ui.plainTextEditOutput.copyAvailable and len(
-            self.ui.plainTextEditOutput.toPlainText()
+                self.ui.plainTextEditOutput.toPlainText()
         ):
             copyAction = contextMenu.addAction("Copy")
         else:
@@ -194,8 +197,16 @@ class TraceWin(QMainWindow):
     def clear(self):
         self.ui.plainTextEditOutput.clear()
 
-    def closeEvent(self, event: QCloseEvent):
+    def closeEvent(self, event: QCloseEvent)->None:
         if self.can_close:
             self.hide()
         else:
             QMainWindow.closeEvent(self, event)
+
+    def hideEvent(self, event: QHideEvent) -> None:
+        self.ui.plainTextEditOutput.can_write = False
+        QMainWindow.hideEvent(self, event)
+
+    def showEvent(self, event: QShowEvent) -> None:
+        self.ui.plainTextEditOutput.can_write = True
+        QMainWindow.showEvent(self, event)
