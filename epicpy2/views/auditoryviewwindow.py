@@ -30,7 +30,7 @@ from PyQt5.QtGui import (
     QColor,
     QResizeEvent,
     QCloseEvent,
-    QPixmap,
+    QPixmap, QHideEvent, QShowEvent,
 )
 from PyQt5.QtCore import Qt, QRect, QSize
 from PyQt5.QtWidgets import QMainWindow
@@ -78,6 +78,7 @@ class AuditoryViewWin(QMainWindow):
 
         self.enabled = True
         self.can_draw = True
+        self.previously_enabled = self.enabled
 
         # min_size = QSize(440, 340)
         min_size = QSize(390, 301)
@@ -476,3 +477,16 @@ class AuditoryViewWin(QMainWindow):
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
         path = self.text_cache(x, y, text.strip())
         self.painter.drawPath(path)
+
+    '''
+    Attempt to avoid drawing to closed windows
+    '''
+
+    def hideEvent(self, event: QHideEvent) -> None:
+        self.previously_enabled = self.enabled
+        self.enabled = False
+        QMainWindow.hideEvent(self, event)
+
+    def showEvent(self, event: QShowEvent) -> None:
+        self.enabled = self.previously_enabled
+        QMainWindow.showEvent(self, event)

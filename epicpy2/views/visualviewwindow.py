@@ -32,7 +32,7 @@ from PyQt5.QtGui import (
     QResizeEvent,
     QCloseEvent,
     QPixmap,
-    QPolygonF,
+    QPolygonF, QHideEvent, QShowEvent,
 )
 from PyQt5.QtCore import Qt, QPoint, QRect, QRectF, QSize
 from PyQt5.QtWidgets import QMainWindow, QGraphicsTextItem
@@ -79,6 +79,7 @@ class VisualViewWin(QMainWindow):
 
         self.enabled = True
         self.can_draw = True
+        self.previously_enabled = self.enabled
 
         # self.setObjectName("VisualViewWindow")
 
@@ -963,3 +964,16 @@ class VisualViewWin(QMainWindow):
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
         path = self.text_cache(x, y, obj.property.Text)
         self.painter.drawPath(path)
+
+    '''
+    Attempt to avoid drawing to closed windows
+    '''
+
+    def hideEvent(self, event: QHideEvent) -> None:
+        self.previously_enabled = self.enabled
+        self.enabled = False
+        QMainWindow.hideEvent(self, event)
+
+    def showEvent(self, event: QShowEvent) -> None:
+        self.enabled = self.previously_enabled
+        QMainWindow.showEvent(self, event)
