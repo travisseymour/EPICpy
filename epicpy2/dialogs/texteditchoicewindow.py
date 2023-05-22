@@ -27,7 +27,7 @@ class TextEditChoiceWin(QDialog):
     def __init__(self):
         super(TextEditChoiceWin, self).__init__()
         self.ok = False
-        self.current_choice = ''
+        self.current_choice = ""
 
         self.ui = Ui_TextEditorChooser()
         self.ui.setupUi(self)
@@ -64,10 +64,10 @@ class TextEditChoiceWin(QDialog):
     def radio_clicked(self):
         radio_button = self.sender()
         if radio_button.isChecked():
-            if 'built-in' in radio_button.text().lower():
-                self.current_choice = 'built-in'
+            if "built-in" in radio_button.text().lower():
+                self.current_choice = "built-in"
             else:
-                self.current_choice = 'default'
+                self.current_choice = "default"
 
     def resizeEvent(self, event):
         # self.resized.emit()  # in case you want to send this signal somewhere else
@@ -85,11 +85,11 @@ class TextEditChoiceWin(QDialog):
         if te_path == "built-in":
             self.ui.radioButtonBuiltIn.setChecked(True)
             self.ui.radioButtonDefault.setChecked(False)
-        elif te_path == 'default':
+        elif te_path == "default":
             self.ui.radioButtonBuiltIn.setChecked(False)
             self.ui.radioButtonDefault.setChecked(True)
         else:
-            config.app_cfg.text_editor = 'default'
+            config.app_cfg.text_editor = "default"
             config.save_app_config(True)
             self.setup_options()
 
@@ -102,4 +102,3 @@ class TextEditChoiceWin(QDialog):
         config.save_app_config(True)
         self.ok = True
         self.hide()
-

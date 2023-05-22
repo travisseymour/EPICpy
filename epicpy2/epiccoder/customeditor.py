@@ -47,7 +47,6 @@ class CustomEditor(QsciScintilla):
         file_path: Optional[Path] = None,
         star_func: Optional[Callable] = None,
     ):
-
         super(CustomEditor, self).__init__(parent)
 
         assert isinstance(file_path, Path)

@@ -46,4 +46,6 @@ class Ui_TraceWindow(object):
         _translate = QtCore.QCoreApplication.translate
         TraceWindow.setWindowTitle(_translate("TraceWindow", "Trace Output Window"))
         self.plainTextEditOutput.setPlainText(_translate("TraceWindow", "Ready."))
+
+
 from epicpy2.widgets.cachedplaintextedit import CachedPlainTextEdit

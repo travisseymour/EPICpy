@@ -80,7 +80,7 @@ class TraceWin(QMainWindow):
     def search_context_menu(self, event):
         contextMenu = QMenu(self)
 
-        if hasattr(self._parent, 'run_state') and self._parent.run_state == RUNNING:
+        if hasattr(self._parent, "run_state") and self._parent.run_state == RUNNING:
             return
 
         searchAction = contextMenu.addAction("Search")
@@ -97,7 +97,6 @@ class TraceWin(QMainWindow):
 
         contextMenu.addSeparator()
 
-
         action = contextMenu.exec_(self.mapToGlobal(event))
 
         if action is None:
@@ -110,7 +109,6 @@ class TraceWin(QMainWindow):
             self.ui.plainTextEditOutput.selectAll()
         elif action == copyAction:
             self.ui.plainTextEditOutput.copy()
-
 
     def query_search(self):
         self.search_dialog.ok = False

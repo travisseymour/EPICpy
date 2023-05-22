@@ -88,9 +88,11 @@ def setup_test_device_folder(window: QMainWindow):
     except AssertionError:
         TEMP_DIR = tempfile.mkdtemp()
 
-    devices = get_resource('other', 'devices.zip')
+    devices = get_resource("other", "devices.zip")
     if not devices.is_file():
-        window.write("  Unable to locate test device archive inside application package! Contact project maintainer.")
+        window.write(
+            "  Unable to locate test device archive inside application package! Contact project maintainer."
+        )
         return False
 
     window.write("  Unzipping test device package...")

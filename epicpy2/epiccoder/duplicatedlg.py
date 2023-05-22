@@ -56,9 +56,11 @@ class DuplicateFileNameWin(QDialog):
         self.ui.labelPath.setText(str(self.path_result))
         error_found = not len(text) or self.path_result.exists() is True
         if not text:
-            self.ui.labelError.setText('The filename box above cannot be empty!')
+            self.ui.labelError.setText("The filename box above cannot be empty!")
         else:
-            self.ui.labelError.setText('That file already exists, please choose another file name!')
+            self.ui.labelError.setText(
+                "That file already exists, please choose another file name!"
+            )
         self.ui.labelError.setVisible(error_found)
         self.ui.pushButtonSelect.setEnabled(not error_found)
 
@@ -68,13 +70,19 @@ class DuplicateFileNameWin(QDialog):
     def clicked_select_button(self):
         self.done(True)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import sys
+
     app = QApplication(sys.argv)
 
-    window = DuplicateFileNameWin(dupe_path=Path('/home/nogard/Dropbox/Documents/EPICSTUFF/EPICcoder2/samples/sample999.txt'))
+    window = DuplicateFileNameWin(
+        dupe_path=Path(
+            "/home/nogard/Dropbox/Documents/EPICSTUFF/EPICcoder2/samples/sample999.txt"
+        )
+    )
     window.show()
 
     result = app.exec_()
-    print(f'{window.result()=}')
+    print(f"{window.result()=}")
     sys.exit()

@@ -138,7 +138,9 @@ class RunSettingsWin(QDialog):
         else:
             self.ui.radioButtonRefreshNoneText.setChecked(True)
 
-        self.ui.spinBoxTextRefreshSteps.setValue(int(config.device_cfg.text_refresh_value))
+        self.ui.spinBoxTextRefreshSteps.setValue(
+            int(config.device_cfg.text_refresh_value)
+        )
 
         self.ui.spinBoxTimeDelay.setValue(int(config.device_cfg.step_time_delay))
 

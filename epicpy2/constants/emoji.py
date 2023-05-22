@@ -67,5 +67,15 @@ def emoji_box(text: str, width: int = 105, padding: int = 1, line="thin") -> str
     wid = min(wid + padding * 2, longest)
     if wid > 105:
         wid = 105
-    lines = [line for line in ascii_frame.wrap( text.splitlines(keepends=False), width=wid + (pad * 2), padding=pad, corners=corners, edges=edges) if line]
-    return '\n'.join(lines)
+    lines = [
+        line
+        for line in ascii_frame.wrap(
+            text.splitlines(keepends=False),
+            width=wid + (pad * 2),
+            padding=pad,
+            corners=corners,
+            edges=edges,
+        )
+        if line
+    ]
+    return "\n".join(lines)

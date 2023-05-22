@@ -115,7 +115,6 @@ def _update_referrers(item, new_item):
             continue
 
         for key in enumerator:
-
             if weak_ref_item() is None:
                 # No refs are left in the GC
                 return
@@ -133,7 +132,6 @@ def _get_tree_references_to_reset_recursively(
     item_tree = dict()
     attr_names = set(dir(item)) - _readonly_attrs
     for sub_item_name in attr_names:
-
         sub_item = getattr(item, sub_item_name)
         item_tree[sub_item_name] = [sub_item, None]
 
@@ -161,11 +159,9 @@ def _get_tree_references_to_reset_recursively(
 
 
 def _reset_item_recursively(item, item_subtree, new_item):
-
     # Set children first so we don't lose the current references.
     if item_subtree is not None:
         for sub_item_name, (sub_item, sub_item_tree) in item_subtree.items():
-
             try:
                 new_sub_item = getattr(new_item, sub_item_name)
             except AttributeError:

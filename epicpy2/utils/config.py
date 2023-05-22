@@ -257,7 +257,6 @@ def get_device_config(device: Optional[Path]):
 
 
 def save_config(quiet: bool = False):
-
     if not device_cfg.device_file:
         return
 

@@ -71,7 +71,9 @@ class Ui_DuplicateFileDialog(object):
         self.verticalLayout.addWidget(self.labelError)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        spacerItem = QtWidgets.QSpacerItem(348, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(
+            348, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout_2.addItem(spacerItem)
         self.pushButtonCancel = QtWidgets.QPushButton(DuplicateFileDialog)
         font = QtGui.QFont()
@@ -100,18 +102,31 @@ class Ui_DuplicateFileDialog(object):
 
     def retranslateUi(self, DuplicateFileDialog):
         _translate = QtCore.QCoreApplication.translate
-        DuplicateFileDialog.setWindowTitle(_translate("DuplicateFileDialog", "Filename For Duplicate File"))
-        self.label.setText(_translate("DuplicateFileDialog", "What Name Should Be Used For The Duplicate File?"))
+        DuplicateFileDialog.setWindowTitle(
+            _translate("DuplicateFileDialog", "Filename For Duplicate File")
+        )
+        self.label.setText(
+            _translate(
+                "DuplicateFileDialog",
+                "What Name Should Be Used For The Duplicate File?",
+            )
+        )
         self.lineEditStem.setText(_translate("DuplicateFileDialog", "myfile"))
         self.labelExt.setText(_translate("DuplicateFileDialog", ".txt"))
         self.labelPath.setText(_translate("DuplicateFileDialog", "/home/me/myfile.txt"))
-        self.labelError.setText(_translate("DuplicateFileDialog", "That file already exists, please choose another file name."))
+        self.labelError.setText(
+            _translate(
+                "DuplicateFileDialog",
+                "That file already exists, please choose another file name.",
+            )
+        )
         self.pushButtonCancel.setText(_translate("DuplicateFileDialog", "Cancel"))
         self.pushButtonSelect.setText(_translate("DuplicateFileDialog", "Select"))
 
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     DuplicateFileDialog = QtWidgets.QDialog()
     ui = Ui_DuplicateFileDialog()

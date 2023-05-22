@@ -24,6 +24,7 @@ from PyQt5.QtWidgets import QDialog, QCheckBox, QListWidgetItem
 
 from epicpy2.epiclib.epiclib import Model, Symbol
 
+
 class BreakSettingsWin(QDialog):
     def __init__(self, model):
         super(BreakSettingsWin, self).__init__()
@@ -70,7 +71,6 @@ class BreakSettingsWin(QDialog):
         super(BreakSettingsWin, self).resizeEvent(event)
 
     def setup_options(self):
-
         for rule_name in self.all_rules:
             item = QListWidgetItem(self.ui.listWidgetRules)
             cb = QCheckBox(rule_name)

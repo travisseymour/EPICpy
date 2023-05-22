@@ -26,7 +26,8 @@ a constituent project is frozen with Pyinstaller. So, this is a local copy of th
 relevant code from version 3.0.0.
 """
 
-from six import u, iteritems, iterkeys # pylint: disable=unused-import
+from six import u, iteritems, iterkeys  # pylint: disable=unused-import
+
 try:
     from collections.abc import Mapping  # pylint: disable=unused-import
 except ImportError:
@@ -49,79 +50,86 @@ except importlib_metadata.PackageNotFoundError:
 
 
 try:
-    VERSION = tuple(map(int, __version__.split('+')[0].split('.')[:3]))
+    VERSION = tuple(map(int, __version__.split("+")[0].split(".")[:3]))
 except ValueError:
     VERSION = (0, 0, 0)
 
-__all__ = ('Munch', 'munchify', 'DefaultMunch', 'DefaultFactoryMunch', 'RecursiveMunch', 'unmunchify')
-
+__all__ = (
+    "Munch",
+    "munchify",
+    "DefaultMunch",
+    "DefaultFactoryMunch",
+    "RecursiveMunch",
+    "unmunchify",
+)
 
 
 class Munch(dict):
-    """ A dictionary that provides attribute-style access.
+    """A dictionary that provides attribute-style access.
 
-        >>> b = Munch()
-        >>> b.hello = 'world'
-        >>> b.hello
-        'world'
-        >>> b['hello'] += "!"
-        >>> b.hello
-        'world!'
-        >>> b.foo = Munch(lol=True)
-        >>> b.foo.lol
-        True
-        >>> b.foo is b['foo']
-        True
+    >>> b = Munch()
+    >>> b.hello = 'world'
+    >>> b.hello
+    'world'
+    >>> b['hello'] += "!"
+    >>> b.hello
+    'world!'
+    >>> b.foo = Munch(lol=True)
+    >>> b.foo.lol
+    True
+    >>> b.foo is b['foo']
+    True
 
-        A Munch is a subclass of dict; it supports all the methods a dict does...
+    A Munch is a subclass of dict; it supports all the methods a dict does...
 
-        >>> sorted(b.keys())
-        ['foo', 'hello']
+    >>> sorted(b.keys())
+    ['foo', 'hello']
 
-        Including update()...
+    Including update()...
 
-        >>> b.update({ 'ponies': 'are pretty!' }, hello=42)
-        >>> print (repr(b))
-        Munch({'ponies': 'are pretty!', 'foo': Munch({'lol': True}), 'hello': 42})
+    >>> b.update({ 'ponies': 'are pretty!' }, hello=42)
+    >>> print (repr(b))
+    Munch({'ponies': 'are pretty!', 'foo': Munch({'lol': True}), 'hello': 42})
 
-        As well as iteration...
+    As well as iteration...
 
-        >>> sorted([ (k,b[k]) for k in b ])
-        [('foo', Munch({'lol': True})), ('hello', 42), ('ponies', 'are pretty!')]
+    >>> sorted([ (k,b[k]) for k in b ])
+    [('foo', Munch({'lol': True})), ('hello', 42), ('ponies', 'are pretty!')]
 
-        And "splats".
+    And "splats".
 
-        >>> "The {knights} who say {ni}!".format(**Munch(knights='lolcats', ni='can haz'))
-        'The lolcats who say can haz!'
+    >>> "The {knights} who say {ni}!".format(**Munch(knights='lolcats', ni='can haz'))
+    'The lolcats who say can haz!'
 
-        See unmunchify/Munch.toDict, munchify/Munch.fromDict for notes about conversion.
+    See unmunchify/Munch.toDict, munchify/Munch.fromDict for notes about conversion.
     """
+
     def __init__(self, *args, **kwargs):  # pylint: disable=super-init-not-called
         self.update(*args, **kwargs)
 
     # only called if k not found in normal places
     def __getattr__(self, k):
-        """ Gets key if it exists, otherwise throws AttributeError.
+        """Gets key if it exists, otherwise throws AttributeError.
 
-            nb. __getattr__ is only called if key is not found in normal places.
+        nb. __getattr__ is only called if key is not found in normal places.
 
-            >>> b = Munch(bar='baz', lol={})
-            >>> b.foo
-            Traceback (most recent call last):
-                ...
-            AttributeError: foo
+        >>> b = Munch(bar='baz', lol={})
+        >>> b.foo
+        Traceback (most recent call last):
+            ...
+        AttributeError: foo
 
-            >>> b.bar
-            'baz'
-            >>> getattr(b, 'bar')
-            'baz'
-            >>> b['bar']
-            'baz'
+        >>> b.bar
+        'baz'
+        >>> getattr(b, 'bar')
+        'baz'
+        >>> b['bar']
+        'baz'
 
-            >>> b.lol is b['lol']
-            True
-            >>> b.lol is getattr(b, 'lol')
-            True
+        >>> b.lol is b['lol']
+        True
+        >>> b.lol is getattr(b, 'lol')
+        True
         """
         try:
             # Throws exception if not in prototype chain
@@ -133,20 +141,20 @@ class Munch(dict):
                 raise AttributeError(k)
 
     def __setattr__(self, k, v):
-        """ Sets attribute k if it exists, otherwise sets key k. A KeyError
-            raised by set-item (only likely if you subclass Munch) will
-            propagate as an AttributeError instead.
+        """Sets attribute k if it exists, otherwise sets key k. A KeyError
+        raised by set-item (only likely if you subclass Munch) will
+        propagate as an AttributeError instead.
 
-            >>> b = Munch(foo='bar', this_is='useful when subclassing')
-            >>> hasattr(b.values, '__call__')
-            True
-            >>> b.values = 'uh oh'
-            >>> b.values
-            'uh oh'
-            >>> b['values']
-            Traceback (most recent call last):
-                ...
-            KeyError: 'values'
+        >>> b = Munch(foo='bar', this_is='useful when subclassing')
+        >>> hasattr(b.values, '__call__')
+        True
+        >>> b.values = 'uh oh'
+        >>> b.values
+        'uh oh'
+        >>> b['values']
+        Traceback (most recent call last):
+            ...
+        KeyError: 'values'
         """
         try:
             # Throws exception if not in prototype chain
@@ -160,16 +168,16 @@ class Munch(dict):
             object.__setattr__(self, k, v)
 
     def __delattr__(self, k):
-        """ Deletes attribute k if it exists, otherwise deletes key k. A KeyError
-            raised by deleting the key--such as when the key is missing--will
-            propagate as an AttributeError instead.
+        """Deletes attribute k if it exists, otherwise deletes key k. A KeyError
+        raised by deleting the key--such as when the key is missing--will
+        propagate as an AttributeError instead.
 
-            >>> b = Munch(lol=42)
-            >>> del b.lol
-            >>> b.lol
-            Traceback (most recent call last):
-                ...
-            AttributeError: lol
+        >>> b = Munch(lol=42)
+        >>> del b.lol
+        >>> b.lol
+        Traceback (most recent call last):
+            ...
+        AttributeError: lol
         """
         try:
             # Throws exception if not in prototype chain
@@ -183,13 +191,13 @@ class Munch(dict):
             object.__delattr__(self, k)
 
     def toDict(self):
-        """ Recursively converts a munch back into a dictionary.
+        """Recursively converts a munch back into a dictionary.
 
-            >>> b = Munch(foo=Munch(lol=True), hello=42, ponies='are pretty!')
-            >>> sorted(b.toDict().items())
-            [('foo', {'lol': True}), ('hello', 42), ('ponies', 'are pretty!')]
+        >>> b = Munch(foo=Munch(lol=True), hello=42, ponies='are pretty!')
+        >>> sorted(b.toDict().items())
+        [('foo', {'lol': True}), ('hello', 42), ('ponies', 'are pretty!')]
 
-            See unmunchify for more info.
+        See unmunchify for more info.
         """
         return unmunchify(self)
 
@@ -198,36 +206,36 @@ class Munch(dict):
         return self.toDict()
 
     def __repr__(self):
-        """ Invertible* string-form of a Munch.
+        """Invertible* string-form of a Munch.
 
-            >>> b = Munch(foo=Munch(lol=True), hello=42, ponies='are pretty!')
-            >>> print (repr(b))
-            Munch({'ponies': 'are pretty!', 'foo': Munch({'lol': True}), 'hello': 42})
-            >>> eval(repr(b))
-            Munch({'ponies': 'are pretty!', 'foo': Munch({'lol': True}), 'hello': 42})
+        >>> b = Munch(foo=Munch(lol=True), hello=42, ponies='are pretty!')
+        >>> print (repr(b))
+        Munch({'ponies': 'are pretty!', 'foo': Munch({'lol': True}), 'hello': 42})
+        >>> eval(repr(b))
+        Munch({'ponies': 'are pretty!', 'foo': Munch({'lol': True}), 'hello': 42})
 
-            >>> with_spaces = Munch({1: 2, 'a b': 9, 'c': Munch({'simple': 5})})
-            >>> print (repr(with_spaces))
-            Munch({'a b': 9, 1: 2, 'c': Munch({'simple': 5})})
-            >>> eval(repr(with_spaces))
-            Munch({'a b': 9, 1: 2, 'c': Munch({'simple': 5})})
+        >>> with_spaces = Munch({1: 2, 'a b': 9, 'c': Munch({'simple': 5})})
+        >>> print (repr(with_spaces))
+        Munch({'a b': 9, 1: 2, 'c': Munch({'simple': 5})})
+        >>> eval(repr(with_spaces))
+        Munch({'a b': 9, 1: 2, 'c': Munch({'simple': 5})})
 
-            (*) Invertible so long as collection contents are each repr-invertible.
+        (*) Invertible so long as collection contents are each repr-invertible.
         """
-        return f'{self.__class__.__name__}({dict.__repr__(self)})'
+        return f"{self.__class__.__name__}({dict.__repr__(self)})"
 
     def __dir__(self):
         return list(iterkeys(self))
 
     def __getstate__(self):
-        """ Implement a serializable interface used for pickling.
+        """Implement a serializable interface used for pickling.
 
         See https://docs.python.org/3.6/library/pickle.html.
         """
         return {k: v for k, v in self.items()}
 
     def __setstate__(self, state):
-        """ Implement a serializable interface used for pickling.
+        """Implement a serializable interface used for pickling.
 
         See https://docs.python.org/3.6/library/pickle.html.
         """
@@ -238,13 +246,13 @@ class Munch(dict):
 
     @classmethod
     def fromDict(cls, d):
-        """ Recursively transforms a dictionary into a Munch via copy.
+        """Recursively transforms a dictionary into a Munch via copy.
 
-            >>> b = Munch.fromDict({'urmom': {'sez': {'what': 'what'}}})
-            >>> b.urmom.sez.what
-            'what'
+        >>> b = Munch.fromDict({'urmom': {'sez': {'what': 'what'}}})
+        >>> b.urmom.sez.what
+        'what'
 
-            See munchify for more info.
+        See munchify for more info.
         """
         return munchify(d, cls)
 
@@ -278,8 +286,8 @@ class Munch(dict):
 
 class AutoMunch(Munch):
     def __setattr__(self, k, v):
-        """ Works the same as Munch.__setattr__ but if you supply
-            a dictionary as value it will convert it to another Munch.
+        """Works the same as Munch.__setattr__ but if you supply
+        a dictionary as value it will convert it to another Munch.
         """
         if isinstance(v, Mapping) and not isinstance(v, (AutoMunch, Munch)):
             v = munchify(v, AutoMunch)
@@ -292,9 +300,9 @@ class DefaultMunch(Munch):
     """
 
     def __init__(self, *args, **kwargs):
-        """ Construct a new DefaultMunch. Like collections.defaultdict, the
-            first argument is the default value; subsequent arguments are the
-            same as those for dict.
+        """Construct a new DefaultMunch. Like collections.defaultdict, the
+        first argument is the default value; subsequent arguments are the
+        same as those for dict.
         """
         # Mimic collections.defaultdict constructor
         if args:
@@ -306,34 +314,34 @@ class DefaultMunch(Munch):
         self.__default__ = default
 
     def __getattr__(self, k):
-        """ Gets key if it exists, otherwise returns the default value."""
+        """Gets key if it exists, otherwise returns the default value."""
         try:
             return super().__getattr__(k)
         except AttributeError:
             return self.__default__
 
     def __setattr__(self, k, v):
-        if k == '__default__':
+        if k == "__default__":
             object.__setattr__(self, k, v)
         else:
             super().__setattr__(k, v)
 
     def __getitem__(self, k):
-        """ Gets key if it exists, otherwise returns the default value."""
+        """Gets key if it exists, otherwise returns the default value."""
         try:
             return super().__getitem__(k)
         except KeyError:
             return self.__default__
 
     def __getstate__(self):
-        """ Implement a serializable interface used for pickling.
+        """Implement a serializable interface used for pickling.
 
         See https://docs.python.org/3.6/library/pickle.html.
         """
         return (self.__default__, {k: v for k, v in self.items()})
 
     def __setstate__(self, state):
-        """ Implement a serializable interface used for pickling.
+        """Implement a serializable interface used for pickling.
 
         See https://docs.python.org/3.6/library/pickle.html.
         """
@@ -351,21 +359,21 @@ class DefaultMunch(Munch):
         return type(self).fromDict(self, default=self.__default__)
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.__undefined__!r}, {dict.__repr__(self)})'
+        return f"{type(self).__name__}({self.__undefined__!r}, {dict.__repr__(self)})"
 
 
 class DefaultFactoryMunch(Munch):
-    """ A Munch that calls a user-specified function to generate values for
-        missing keys like collections.defaultdict.
+    """A Munch that calls a user-specified function to generate values for
+    missing keys like collections.defaultdict.
 
-        >>> b = DefaultFactoryMunch(list, {'hello': 'world!'})
-        >>> b.hello
-        'world!'
-        >>> b.foo
-        []
-        >>> b.bar.append('hello')
-        >>> b.bar
-        ['hello']
+    >>> b = DefaultFactoryMunch(list, {'hello': 'world!'})
+    >>> b.hello
+    'world!'
+    >>> b.foo
+    []
+    >>> b.bar.append('hello')
+    >>> b.bar
+    ['hello']
     """
 
     def __init__(self, default_factory, *args, **kwargs):
@@ -382,10 +390,10 @@ class DefaultFactoryMunch(Munch):
 
     def __repr__(self):
         factory = self.default_factory.__name__
-        return f'{type(self).__name__}({factory}, {dict.__repr__(self)})'
+        return f"{type(self).__name__}({factory}, {dict.__repr__(self)})"
 
     def __setattr__(self, k, v):
-        if k == 'default_factory':
+        if k == "default_factory":
             object.__setattr__(self, k, v)
         else:
             super().__setattr__(k, v)
@@ -397,19 +405,19 @@ class DefaultFactoryMunch(Munch):
 
 class RecursiveMunch(DefaultFactoryMunch):
     """A Munch that calls an instance of itself to generate values for
-        missing keys.
+    missing keys.
 
-        >>> b = RecursiveMunch({'hello': 'world!'})
-        >>> b.hello
-        'world!'
-        >>> b.foo
-        RecursiveMunch(RecursiveMunch, {})
-        >>> b.bar.okay = 'hello'
-        >>> b.bar
-        RecursiveMunch(RecursiveMunch, {'okay': 'hello'})
-        >>> b
-        RecursiveMunch(RecursiveMunch, {'hello': 'world!', 'foo': RecursiveMunch(RecursiveMunch, {}),
-        'bar': RecursiveMunch(RecursiveMunch, {'okay': 'hello'})})
+    >>> b = RecursiveMunch({'hello': 'world!'})
+    >>> b.hello
+    'world!'
+    >>> b.foo
+    RecursiveMunch(RecursiveMunch, {})
+    >>> b.bar.okay = 'hello'
+    >>> b.bar
+    RecursiveMunch(RecursiveMunch, {'okay': 'hello'})
+    >>> b
+    RecursiveMunch(RecursiveMunch, {'hello': 'world!', 'foo': RecursiveMunch(RecursiveMunch, {}),
+    'bar': RecursiveMunch(RecursiveMunch, {'okay': 'hello'})})
     """
 
     def __init__(self, *args, **kwargs):
@@ -431,24 +439,25 @@ class RecursiveMunch(DefaultFactoryMunch):
 # Should you disagree, it is not difficult to duplicate this function with
 # more aggressive coercion to suit your own purposes.
 
+
 def munchify(x, factory=Munch):
-    """ Recursively transforms a dictionary into a Munch via copy.
+    """Recursively transforms a dictionary into a Munch via copy.
 
-        >>> b = munchify({'urmom': {'sez': {'what': 'what'}}})
-        >>> b.urmom.sez.what
-        'what'
+    >>> b = munchify({'urmom': {'sez': {'what': 'what'}}})
+    >>> b.urmom.sez.what
+    'what'
 
-        munchify can handle intermediary dicts, lists and tuples (as well as
-        their subclasses), but ymmv on custom datatypes.
+    munchify can handle intermediary dicts, lists and tuples (as well as
+    their subclasses), but ymmv on custom datatypes.
 
-        >>> b = munchify({ 'lol': ('cats', {'hah':'i win again'}),
-        ...         'hello': [{'french':'salut', 'german':'hallo'}] })
-        >>> b.hello[0].french
-        'salut'
-        >>> b.lol[1].hah
-        'i win again'
+    >>> b = munchify({ 'lol': ('cats', {'hah':'i win again'}),
+    ...         'hello': [{'french':'salut', 'german':'hallo'}] })
+    >>> b.hello[0].french
+    'salut'
+    >>> b.lol[1].hah
+    'i win again'
 
-        nb. As dicts are not hashable, they cannot be nested in sets/frozensets.
+    nb. As dicts are not hashable, they cannot be nested in sets/frozensets.
     """
     # Munchify x, using `seen` to track object cycles
     seen = dict()
@@ -491,7 +500,7 @@ def munchify(x, factory=Munch):
         elif isinstance(obj, list):
             partial.extend(munchify_cycles(item) for item in obj)
         elif isinstance(obj, tuple):
-            for (item_partial, item) in zip(partial, obj):
+            for item_partial, item in zip(partial, obj):
                 post_munchify(item_partial, item)
 
         return partial
@@ -500,21 +509,21 @@ def munchify(x, factory=Munch):
 
 
 def unmunchify(x):
-    """ Recursively converts a Munch into a dictionary.
+    """Recursively converts a Munch into a dictionary.
 
-        >>> b = Munch(foo=Munch(lol=True), hello=42, ponies='are pretty!')
-        >>> sorted(unmunchify(b).items())
-        [('foo', {'lol': True}), ('hello', 42), ('ponies', 'are pretty!')]
+    >>> b = Munch(foo=Munch(lol=True), hello=42, ponies='are pretty!')
+    >>> sorted(unmunchify(b).items())
+    [('foo', {'lol': True}), ('hello', 42), ('ponies', 'are pretty!')]
 
-        unmunchify will handle intermediary dicts, lists and tuples (as well as
-        their subclasses), but ymmv on custom datatypes.
+    unmunchify will handle intermediary dicts, lists and tuples (as well as
+    their subclasses), but ymmv on custom datatypes.
 
-        >>> b = Munch(foo=['bar', Munch(lol=True)], hello=42,
-        ...         ponies=('are pretty!', Munch(lies='are trouble!')))
-        >>> sorted(unmunchify(b).items()) #doctest: +NORMALIZE_WHITESPACE
-        [('foo', ['bar', {'lol': True}]), ('hello', 42), ('ponies', ('are pretty!', {'lies': 'are trouble!'}))]
+    >>> b = Munch(foo=['bar', Munch(lol=True)], hello=42,
+    ...         ponies=('are pretty!', Munch(lies='are trouble!')))
+    >>> sorted(unmunchify(b).items()) #doctest: +NORMALIZE_WHITESPACE
+    [('foo', ['bar', {'lol': True}]), ('hello', 42), ('ponies', ('are pretty!', {'lies': 'are trouble!'}))]
 
-        nb. As dicts are not hashable, they cannot be nested in sets/frozensets.
+    nb. As dicts are not hashable, they cannot be nested in sets/frozensets.
     """
 
     # Munchify x, using `seen` to track object cycles
@@ -553,7 +562,7 @@ def unmunchify(x):
         elif isinstance(obj, list):
             partial.extend(unmunchify_cycles(v) for v in obj)
         elif isinstance(obj, tuple):
-            for (value_partial, value) in zip(partial, obj):
+            for value_partial, value in zip(partial, obj):
                 post_unmunchify(value_partial, value)
 
         return partial
@@ -570,17 +579,16 @@ try:
         import simplejson as json
 
     def toJSON(self, **options):
-        """ Serializes this Munch to JSON. Accepts the same keyword options as `json.dumps()`.
+        """Serializes this Munch to JSON. Accepts the same keyword options as `json.dumps()`.
 
-            >>> b = Munch(foo=Munch(lol=True), hello=42, ponies='are pretty!')
-            >>> json.dumps(b) == b.toJSON()
-            True
+        >>> b = Munch(foo=Munch(lol=True), hello=42, ponies='are pretty!')
+        >>> json.dumps(b) == b.toJSON()
+        True
         """
         return json.dumps(self, **options)
 
     def fromJSON(cls, stream, *args, **kwargs):
-        """ Deserializes JSON to Munch or any of its subclasses.
-        """
+        """Deserializes JSON to Munch or any of its subclasses."""
         factory = lambda d: cls(*(args + (d,)), **kwargs)
         return munchify(json.loads(stream), factory=factory)
 
@@ -597,22 +605,22 @@ try:
     from yaml.representer import Representer, SafeRepresenter
 
     def from_yaml(loader, node):
-        """ PyYAML support for Munches using the tag `!munch` and `!munch.Munch`.
+        """PyYAML support for Munches using the tag `!munch` and `!munch.Munch`.
 
-            >>> import yaml
-            >>> yaml.load('''
-            ... Flow style: !munch.Munch { Clark: Evans, Brian: Ingerson, Oren: Ben-Kiki }
-            ... Block style: !munch
-            ...   Clark : Evans
-            ...   Brian : Ingerson
-            ...   Oren  : Ben-Kiki
-            ... ''') #doctest: +NORMALIZE_WHITESPACE
-            {'Flow style': Munch(Brian='Ingerson', Clark='Evans', Oren='Ben-Kiki'),
-             'Block style': Munch(Brian='Ingerson', Clark='Evans', Oren='Ben-Kiki')}
+        >>> import yaml
+        >>> yaml.load('''
+        ... Flow style: !munch.Munch { Clark: Evans, Brian: Ingerson, Oren: Ben-Kiki }
+        ... Block style: !munch
+        ...   Clark : Evans
+        ...   Brian : Ingerson
+        ...   Oren  : Ben-Kiki
+        ... ''') #doctest: +NORMALIZE_WHITESPACE
+        {'Flow style': Munch(Brian='Ingerson', Clark='Evans', Oren='Ben-Kiki'),
+         'Block style': Munch(Brian='Ingerson', Clark='Evans', Oren='Ben-Kiki')}
 
-            This module registers itself automatically to cover both Munch and any
-            subclasses. Should you want to customize the representation of a subclass,
-            simply register it with PyYAML yourself.
+        This module registers itself automatically to cover both Munch and any
+        subclasses. Should you want to customize the representation of a subclass,
+        simply register it with PyYAML yourself.
         """
         data = Munch()
         yield data
@@ -620,33 +628,40 @@ try:
         data.update(value)
 
     def to_yaml_safe(dumper, data):
-        """ Converts Munch to a normal mapping node, making it appear as a
-            dict in the YAML output.
+        """Converts Munch to a normal mapping node, making it appear as a
+        dict in the YAML output.
 
-            >>> b = Munch(foo=['bar', Munch(lol=True)], hello=42)
-            >>> import yaml
-            >>> yaml.safe_dump(b, default_flow_style=True)
-            '{foo: [bar, {lol: true}], hello: 42}\\n'
+        >>> b = Munch(foo=['bar', Munch(lol=True)], hello=42)
+        >>> import yaml
+        >>> yaml.safe_dump(b, default_flow_style=True)
+        '{foo: [bar, {lol: true}], hello: 42}\\n'
         """
         return dumper.represent_dict(data)
 
     def to_yaml(dumper, data):
-        """ Converts Munch to a representation node.
+        """Converts Munch to a representation node.
 
-            >>> b = Munch(foo=['bar', Munch(lol=True)], hello=42)
-            >>> import yaml
-            >>> yaml.dump(b, default_flow_style=True)
-            '!munch.Munch {foo: [bar, !munch.Munch {lol: true}], hello: 42}\\n'
+        >>> b = Munch(foo=['bar', Munch(lol=True)], hello=42)
+        >>> import yaml
+        >>> yaml.dump(b, default_flow_style=True)
+        '!munch.Munch {foo: [bar, !munch.Munch {lol: true}], hello: 42}\\n'
         """
-        return dumper.represent_mapping(u('!munch.Munch'), data)
+        return dumper.represent_mapping(u("!munch.Munch"), data)
 
-    for loader_name in ("BaseLoader", "FullLoader", "SafeLoader", "Loader", "UnsafeLoader", "DangerLoader"):
+    for loader_name in (
+        "BaseLoader",
+        "FullLoader",
+        "SafeLoader",
+        "Loader",
+        "UnsafeLoader",
+        "DangerLoader",
+    ):
         LoaderCls = getattr(yaml, loader_name, None)
         if LoaderCls is None:
             # This code supports both PyYAML 4.x and 5.x versions
             continue
-        yaml.add_constructor(u('!munch'), from_yaml, Loader=LoaderCls)
-        yaml.add_constructor(u('!munch.Munch'), from_yaml, Loader=LoaderCls)
+        yaml.add_constructor(u("!munch"), from_yaml, Loader=LoaderCls)
+        yaml.add_constructor(u("!munch.Munch"), from_yaml, Loader=LoaderCls)
 
     SafeRepresenter.add_representer(Munch, to_yaml_safe)
     SafeRepresenter.add_multi_representer(Munch, to_yaml_safe)
@@ -656,31 +671,31 @@ try:
 
     # Instance methods for YAML conversion
     def toYAML(self, **options):
-        """ Serializes this Munch to YAML, using `yaml.safe_dump()` if
-            no `Dumper` is provided. See the PyYAML documentation for more info.
+        """Serializes this Munch to YAML, using `yaml.safe_dump()` if
+        no `Dumper` is provided. See the PyYAML documentation for more info.
 
-            >>> b = Munch(foo=['bar', Munch(lol=True)], hello=42)
-            >>> import yaml
-            >>> yaml.safe_dump(b, default_flow_style=True)
-            '{foo: [bar, {lol: true}], hello: 42}\\n'
-            >>> b.toYAML(default_flow_style=True)
-            '{foo: [bar, {lol: true}], hello: 42}\\n'
-            >>> yaml.dump(b, default_flow_style=True)
-            '!munch.Munch {foo: [bar, !munch.Munch {lol: true}], hello: 42}\\n'
-            >>> b.toYAML(Dumper=yaml.Dumper, default_flow_style=True)
-            '!munch.Munch {foo: [bar, !munch.Munch {lol: true}], hello: 42}\\n'
+        >>> b = Munch(foo=['bar', Munch(lol=True)], hello=42)
+        >>> import yaml
+        >>> yaml.safe_dump(b, default_flow_style=True)
+        '{foo: [bar, {lol: true}], hello: 42}\\n'
+        >>> b.toYAML(default_flow_style=True)
+        '{foo: [bar, {lol: true}], hello: 42}\\n'
+        >>> yaml.dump(b, default_flow_style=True)
+        '!munch.Munch {foo: [bar, !munch.Munch {lol: true}], hello: 42}\\n'
+        >>> b.toYAML(Dumper=yaml.Dumper, default_flow_style=True)
+        '!munch.Munch {foo: [bar, !munch.Munch {lol: true}], hello: 42}\\n'
 
         """
         opts = dict(indent=4, default_flow_style=False)
         opts.update(options)
-        if 'Dumper' not in opts:
+        if "Dumper" not in opts:
             return yaml.safe_dump(self, **opts)
         else:
             return yaml.dump(self, **opts)
 
     def fromYAML(cls, stream, *args, **kwargs):
         factory = lambda d: cls(*(args + (d,)), **kwargs)
-        loader_class = kwargs.pop('Loader', yaml.FullLoader)
+        loader_class = kwargs.pop("Loader", yaml.FullLoader)
         return munchify(yaml.load(stream, Loader=loader_class), factory=factory)
 
     Munch.toYAML = toYAML

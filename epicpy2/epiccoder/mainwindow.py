@@ -43,7 +43,10 @@ from PyQt5.QtWidgets import (
     QTabWidget,
     QMessageBox,
     QFileDialog,
-    QApplication, QMenu, QAction, )
+    QApplication,
+    QMenu,
+    QAction,
+)
 
 from epicpy2.utils.apputils import get_resource
 
@@ -102,7 +105,7 @@ class MainWindow(QMainWindow):
         self.set_up_body()
         self.statusBar().showMessage("hello")
 
-        self.last_hsplit_sizes = [400, self.width()-400]
+        self.last_hsplit_sizes = [400, self.width() - 400]
         self.hsplit.setSizes(self.last_hsplit_sizes)
         self.show()
 
@@ -137,18 +140,18 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
 
         # New File SubMenu & Actions
-        new_file_menu = QMenu('New File', self)
+        new_file_menu = QMenu("New File", self)
 
-        txt_action = QAction('Text File (*.txt)', self)
-        txt_action.triggered.connect(partial(self.new_file, '.txt'))
-        prs_action = QAction('EPIC Production Rule File (*.prs)', self)
-        prs_action.triggered.connect(partial(self.new_file, '.prs'))
-        py_action = QAction('Python Code File (*.py)', self)
-        py_action.triggered.connect(partial(self.new_file, '.py'))
-        cpp_action = QAction('C++ Code File (*.cpp)', self)
-        cpp_action.triggered.connect(partial(self.new_file, '.cpp'))
-        h_action = QAction('C++ Header File (*.h)', self)
-        h_action.triggered.connect(partial(self.new_file, '.h'))
+        txt_action = QAction("Text File (*.txt)", self)
+        txt_action.triggered.connect(partial(self.new_file, ".txt"))
+        prs_action = QAction("EPIC Production Rule File (*.prs)", self)
+        prs_action.triggered.connect(partial(self.new_file, ".prs"))
+        py_action = QAction("Python Code File (*.py)", self)
+        py_action.triggered.connect(partial(self.new_file, ".py"))
+        cpp_action = QAction("C++ Code File (*.cpp)", self)
+        cpp_action.triggered.connect(partial(self.new_file, ".cpp"))
+        h_action = QAction("C++ Header File (*.h)", self)
+        h_action.triggered.connect(partial(self.new_file, ".h"))
 
         for obj in (txt_action, prs_action, py_action, cpp_action, h_action):
             new_file_menu.addAction(obj)
@@ -211,8 +214,9 @@ class MainWindow(QMainWindow):
     def show_help(self):
         ...
 
-    def get_editor(self, file_path: Path): # -> CustomEditor:  # QsciScintilla:
+    def get_editor(self, file_path: Path):  # -> CustomEditor:  # QsciScintilla:
         from epicpy2.epiccoder.customeditor import CustomEditor
+
         editor = CustomEditor(file_path=file_path, star_func=self.add_star)
         return editor
 
@@ -231,18 +235,23 @@ class MainWindow(QMainWindow):
                 self.tab_view.setTabText(i, f"*{self.tab_view.tabText(i).strip('*')}")
                 return
 
-    def next_new_file_path(self, file_type: str, stem: str='untitled') -> Path:
-        _stem = stem if stem else 'untitled'
-        expected_fts = ['.txt', '.prs', '.cpp', '.h', '.py']
-        assert file_type.lower() in expected_fts, f"new_new_file_path() requires a filetype in {expected_fts}"
+    def next_new_file_path(self, file_type: str, stem: str = "untitled") -> Path:
+        _stem = stem if stem else "untitled"
+        expected_fts = [".txt", ".prs", ".cpp", ".h", ".py"]
+        assert (
+            file_type.lower() in expected_fts
+        ), f"new_new_file_path() requires a filetype in {expected_fts}"
         for _ in range(9999):
-            p = Path(self.model.rootPath(), f"{_stem}{next(int_gen)}{file_type.lower()}")
+            p = Path(
+                self.model.rootPath(), f"{_stem}{next(int_gen)}{file_type.lower()}"
+            )
             if not p.exists():
                 return p
         return Path(self.model.rootPath(), f"{_stem}{next(int_gen)}{file_type.lower()}")
 
-    def set_new_tab(self, path: Path, is_new_file=False, file_type: str='txt'):
+    def set_new_tab(self, path: Path, is_new_file=False, file_type: str = "txt"):
         from epicpy2.epiccoder.customeditor import CustomEditor
+
         if path and isinstance(path, Path) and not path.is_file():
             return
 
@@ -325,7 +334,6 @@ class MainWindow(QMainWindow):
         return frame
 
     def set_up_body(self):
-
         # Body
         body_frame = QFrame()
         body_frame.setFrameShape(QFrame.NoFrame)
@@ -523,6 +531,7 @@ class MainWindow(QMainWindow):
 
     def search_list_view_clicked(self, item: SearchItem):
         from epicpy2.epiccoder.customeditor import CustomEditor
+
         self.set_new_tab(Path(item.full_path))
         editor: CustomEditor = self.tab_view.currentWidget()
         editor.setCursorPosition(item.lineno, item.end)
@@ -572,8 +581,6 @@ class MainWindow(QMainWindow):
             else:
                 frame.hide()
 
-
-
         self.current_side_bar = type_
 
     def tree_view_context_menu(self, pos):
@@ -594,7 +601,7 @@ class MainWindow(QMainWindow):
     def new_file(self, file_type: str):
         self.set_new_tab(None, is_new_file=True, file_type=file_type)
 
-    def verify_duplicate_file_name(self, dupe_path: Path)->Optional[Path]:
+    def verify_duplicate_file_name(self, dupe_path: Path) -> Optional[Path]:
         dlg = DuplicateFileNameWin(dupe_path)
         dlg.exec_()
         if dlg.result():
@@ -639,13 +646,13 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.critical(
                 self,
-                f'File I/O Error!',
-                f'Unable To Delete File {str(p)}: ({str(e)})',
+                f"File I/O Error!",
+                f"Unable To Delete File {str(p)}: ({str(e)})",
             )
-
 
     def save_file(self):
         from epicpy2.epiccoder.customeditor import CustomEditor
+
         if self.current_file is None and self.tab_view.count() > 0:
             self.save_as()
 
@@ -763,7 +770,6 @@ class MainWindow(QMainWindow):
         if not self.force_close:
             for i in range(self.tab_view.count()):
                 if str(self.tab_view.tabText(i)).startswith("*"):
-
                     ret = QMessageBox.question(
                         self,
                         "Changed File Alert!",

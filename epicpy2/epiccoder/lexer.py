@@ -131,7 +131,6 @@ class PyCustomLexer(QsciLexerCustom):
         return [(token, len(bytearray(token, "utf-8"))) for token in p.findall(text)]
 
     def styleText(self, start: int, end: int) -> None:
-
         self.startStyling(start)
         editor: QsciScintilla = self.parent()
 
@@ -274,7 +273,6 @@ class TextCustomLexer(QsciLexerCustom):
             return ""
 
     def get_tokens(self, text) -> list[str, int]:
-
         p = re.compile(r"[*]|\/\/+|\s+|\w+|\W|\s")
 
         return [(token, len(bytearray(token, "utf-8"))) for token in p.findall(text)]
@@ -559,7 +557,7 @@ class PPSCustomLexer(QsciLexerCustom):
 
             if string_flag:
                 self.setStyling(tok_len, self.COMMENT)
-                if tok.endswith("\n") or tok.startswith('\n'):
+                if tok.endswith("\n") or tok.startswith("\n"):
                     string_flag = False
                 continue
 

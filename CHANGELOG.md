@@ -1,8 +1,20 @@
 
 # EPICpy Changelog
-#### (lasted updated Wed May 17 15:28:06 2023)
+#### (lasted updated Sun May 21 17:19:26 2023)
 
 ---
+
+1. **FIXED**: Initial and reset layouts work in a more accurate and consistent way across OSs.
+
+2. **CHANGE**: for proper operation on windows,had to move back to local copy of munch module.
+
+3. Layout_reset draft change completed, needs testing on smaller desktops.
+4. Now forcing sync after layout save.
+5. **FIXED**: Now using a less problematic lru_cache.
+
+6. **CHANGE**: Localmunch scheme replaced by just importing the munch library from pypi.
+
+7. **FIXED**: More gracefully handling SEGSEGV caused by epiclib.
 
 
 ## VERSION: 2023.5.16

@@ -65,6 +65,7 @@ def pyqt_warning_handler(msg_type, msg_log_content, msg_string):
     # hide-critical-pyqt-warning-when-clicking-a-checkboc#25681472
     ...
 
+
 # ==================================================
 # ==========  SETUP SIGSEGV HANDLER ================
 # ==================================================
@@ -78,13 +79,14 @@ def pyqt_warning_handler(msg_type, msg_log_content, msg_string):
 
 OS = platform.system()
 
+
 # Define the C signal handler function
 def segfault_handler(signal, frame):
     log.warning("Segmentation fault occurred")
     os._exit(1)
 
 
-if OS in ('Linux', 'Darwin'):
+if OS in ("Linux", "Darwin"):
     # Define the C function prototype
     handler_func_type = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)
 
@@ -95,10 +97,10 @@ if OS in ('Linux', 'Darwin'):
     SIGSEGV = signal.SIGSEGV.value
 
     # Set the signal handler using ctypes
-    if OS == 'Linux':
-        output = subprocess.check_output(['ldd', '/bin/ls']).decode('utf-8')
+    if OS == "Linux":
+        output = subprocess.check_output(["ldd", "/bin/ls"]).decode("utf-8")
         # Extract the path for libc.so.[version] using regular expression
-        pattern = r'libc\.so\.\d+\s*=>\s*(.*?)\s'
+        pattern = r"libc\.so\.\d+\s*=>\s*(.*?)\s"
         match = re.search(pattern, output)
         if match:
             try:
@@ -106,21 +108,25 @@ if OS in ('Linux', 'Darwin'):
                 if not Path(libc_path).is_file():
                     raise FileExistsError
             except Exception as e:
-                libc_path = ''
-                log.warning(f"Extracted bad or unreadable libc path: {libc_path}: {e}. Unable to install SIGSEGV handler.")
+                libc_path = ""
+                log.warning(
+                    f"Extracted bad or unreadable libc path: {libc_path}: {e}. Unable to install SIGSEGV handler."
+                )
         else:
-            libc_path = ''
-            log.warning("ERROR: Cannot find libc path. Unable to install SIGSEGV handler.")
-    elif OS == 'Darwin':
-        libc_path = '/usr/lib/libc.dylib'  # Update with the correct path on macOS
+            libc_path = ""
+            log.warning(
+                "ERROR: Cannot find libc path. Unable to install SIGSEGV handler."
+            )
+    elif OS == "Darwin":
+        libc_path = "/usr/lib/libc.dylib"  # Update with the correct path on macOS
     else:
         # Unknown OS, do nothing
-        libc_path = ''
+        libc_path = ""
 
     if libc_path:
         libc = ctypes.CDLL(libc_path)
         libc.signal(SIGSEGV, handler_func_ptr)
-elif OS == 'Windows':
+elif OS == "Windows":
     # Define the C function prototype
     # handler_func_type = ctypes.CFUNCTYPE(ctypes.wintypes.BOOL, ctypes.c_ulong)
     handler_func_type = ctypes.CFUNCTYPE(ctypes.wintypes.BOOL, ctypes.wintypes.DWORD)
@@ -142,20 +148,37 @@ else:
 # ==================================================
 # ==================================================
 
+
 def start_ui(app: QApplication):
     global LIBNAME, HEADERPATH
     config.get_app_config()
     config.get_device_config(None)
     fontDatabase = QFontDatabase()
-    fontDatabase.addApplicationFont(str(get_resource("fonts", "Consolas", "Consolas_Regular.ttf")))
-    fontDatabase.addApplicationFont(str(get_resource("fonts", "Consolas", "Consolas_Bold.ttf")))
-    fontDatabase.addApplicationFont(str(get_resource("fonts", "Consolas", "Consolas_Italic.ttf")))
-    fontDatabase.addApplicationFont(str(get_resource("fonts", "Consolas", "Consolas_Bold_Italic.ttf")))
+    fontDatabase.addApplicationFont(
+        str(get_resource("fonts", "Consolas", "Consolas_Regular.ttf"))
+    )
+    fontDatabase.addApplicationFont(
+        str(get_resource("fonts", "Consolas", "Consolas_Bold.ttf"))
+    )
+    fontDatabase.addApplicationFont(
+        str(get_resource("fonts", "Consolas", "Consolas_Italic.ttf"))
+    )
+    fontDatabase.addApplicationFont(
+        str(get_resource("fonts", "Consolas", "Consolas_Bold_Italic.ttf"))
+    )
 
-    fontDatabase.addApplicationFont(str(get_resource("fonts", "FiraCode", "FiraCode-Regular.ttf")))
-    fontDatabase.addApplicationFont(str(get_resource("fonts", "FiraCode", "FiraCode-Bold.ttf")))
-    fontDatabase.addApplicationFont(str(get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Regular.ttf")))
-    fontDatabase.addApplicationFont(str(get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Bold.ttf")))
+    fontDatabase.addApplicationFont(
+        str(get_resource("fonts", "FiraCode", "FiraCode-Regular.ttf"))
+    )
+    fontDatabase.addApplicationFont(
+        str(get_resource("fonts", "FiraCode", "FiraCode-Bold.ttf"))
+    )
+    fontDatabase.addApplicationFont(
+        str(get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Regular.ttf"))
+    )
+    fontDatabase.addApplicationFont(
+        str(get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Bold.ttf"))
+    )
 
     from epicpy2.windows import mainwindow
 

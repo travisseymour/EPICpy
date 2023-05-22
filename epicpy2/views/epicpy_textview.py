@@ -43,19 +43,21 @@ class EPICTextViewCachedWrite:
 
     def write_char(self, char: str):
         """writes one character to a local buffer, only submitting to attached text_widget after a newline"""
-        if char == '\n':
+        if char == "\n":
             txt = f"".join(self.buffer)
-            extra = '' if txt.endswith('\n') else '\n'
+            extra = "" if txt.endswith("\n") else "\n"
             self.buffer = []
             self.text_widget.write(txt)
             if self.file_writer.enabled:
                 self.file_writer.write(txt + extra)
         else:
-            self.buffer.append(char)  # NOTE: if this leads to double-spaced output, move this to an else block
+            self.buffer.append(
+                char
+            )  # NOTE: if this leads to double-spaced output, move this to an else block
 
     def write(self, text: str):
         """writes given text to attached text_widget"""
-        extra = '' # if text.endswith('\n') else '\n'
+        extra = ""  # if text.endswith('\n') else '\n'
         txt = text + extra
         self.text_widget.write(txt)
         if self.file_writer.enabled:
@@ -84,16 +86,16 @@ class EPICTextViewFileWriter:
     def __init__(self):
         super(EPICTextViewFileWriter, self).__init__()
         self.file_path: Optional[Path] = None
-        self.file_mode = 'a'
+        self.file_mode = "a"
         self.file_object: _io.TextIOWrapper | None = None
         self.buffer: List[str] = []
         self.enabled = False
 
     def set_enabled(self):
-        self.enabled= (
-                isinstance(self.file_object, _io.TextIOWrapper) and
-                not self.file_object.closed and
-                self.file_object.writable()
+        self.enabled = (
+            isinstance(self.file_object, _io.TextIOWrapper)
+            and not self.file_object.closed
+            and self.file_object.writable()
         )
 
     def clear(self):
@@ -115,13 +117,13 @@ class EPICTextViewFileWriter:
             self.open(self.file_path, self.file_mode)
         self.set_enabled()
 
-    def open(self, file_path: Path, file_mode: str = 'a'):
+    def open(self, file_path: Path, file_mode: str = "a"):
         """
         Attempt to open log file for writing
         """
         self.close()
 
-        self.file_mode = file_mode if file_mode in ('w', 'a') else 'a'
+        self.file_mode = file_mode if file_mode in ("w", "a") else "a"
 
         try:
             self.file_object = open(file_path, self.file_mode)
@@ -151,4 +153,3 @@ class EPICTextViewFileWriter:
             self.file_object.write(str(text))
         except:
             ...
-

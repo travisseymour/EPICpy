@@ -42,7 +42,9 @@ class Ui_TextEditorChooser(object):
         self.radioButtonBuiltIn.setChecked(True)
         self.radioButtonBuiltIn.setObjectName("radioButtonBuiltIn")
         self.horizontalLayout_2.addWidget(self.radioButtonBuiltIn)
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout_2.addItem(spacerItem)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
@@ -57,12 +59,16 @@ class Ui_TextEditorChooser(object):
         self.radioButtonDefault.setIconSize(QtCore.QSize(24, 24))
         self.radioButtonDefault.setObjectName("radioButtonDefault")
         self.horizontalLayout_3.addWidget(self.radioButtonDefault)
-        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem1 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout_3.addItem(spacerItem1)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem2 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout.addItem(spacerItem2)
         self.pushButtonOK = QtWidgets.QPushButton(TextEditorChooser)
         font = QtGui.QFont()
@@ -90,9 +96,25 @@ class Ui_TextEditorChooser(object):
 
     def retranslateUi(self, TextEditorChooser):
         _translate = QtCore.QCoreApplication.translate
-        TextEditorChooser.setWindowTitle(_translate("TextEditorChooser", "Text Editor Choice Dialog"))
-        self.label_2.setText(_translate("TextEditorChooser", "<html><head/><body><p>Some EPICpy features require a text editor (e.g., those available when you right-click the Normal Output Window). We recommend you use the BUILT-IN version of EPICcoder so that production rule files get colorful syntax-highlighting. However, EPICcoder is a rather minimal editor, so if you have another text-editor you would rather use (e.g., Atom, Sublimetext, etc.), select SYSTEM-DEFAULT below and EPICpy will use whatever text-editor you have associated with .prs and .txt files in your operating system.</p></body></html>"))
-        self.radioButtonBuiltIn.setText(_translate("TextEditorChooser", "Use Built-In EPICcoder Editor for .prs and .txt Files"))
-        self.radioButtonDefault.setText(_translate("TextEditorChooser", "Use System Default Editor for .prs and .txt Files"))
+        TextEditorChooser.setWindowTitle(
+            _translate("TextEditorChooser", "Text Editor Choice Dialog")
+        )
+        self.label_2.setText(
+            _translate(
+                "TextEditorChooser",
+                "<html><head/><body><p>Some EPICpy features require a text editor (e.g., those available when you right-click the Normal Output Window). We recommend you use the BUILT-IN version of EPICcoder so that production rule files get colorful syntax-highlighting. However, EPICcoder is a rather minimal editor, so if you have another text-editor you would rather use (e.g., Atom, Sublimetext, etc.), select SYSTEM-DEFAULT below and EPICpy will use whatever text-editor you have associated with .prs and .txt files in your operating system.</p></body></html>",
+            )
+        )
+        self.radioButtonBuiltIn.setText(
+            _translate(
+                "TextEditorChooser",
+                "Use Built-In EPICcoder Editor for .prs and .txt Files",
+            )
+        )
+        self.radioButtonDefault.setText(
+            _translate(
+                "TextEditorChooser", "Use System Default Editor for .prs and .txt Files"
+            )
+        )
         self.pushButtonOK.setText(_translate("TextEditorChooser", "OK"))
         self.pushButtonCancel.setText(_translate("TextEditorChooser", "Cancel"))

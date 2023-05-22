@@ -35,7 +35,9 @@ class SearchWin(QDialog):
 
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonSearchForward.clicked.connect(self.clicked_ok_button)
-        self.ui.pushButtonSearchBackward.clicked.connect(partial(self.clicked_ok_button, backwards=True))
+        self.ui.pushButtonSearchBackward.clicked.connect(
+            partial(self.clicked_ok_button, backwards=True)
+        )
         self.ui.lineEditSearchText.editingFinished.connect(self.clicked_ok_button)
 
         self.setStyleSheet(
@@ -66,7 +68,7 @@ class SearchWin(QDialog):
         self.ok = False
         self.hide()
 
-    def clicked_ok_button(self, backwards: bool=False):
+    def clicked_ok_button(self, backwards: bool = False):
         self.backwards = backwards
         self.ok = True
         self.hide()

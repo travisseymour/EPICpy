@@ -186,11 +186,11 @@ class VisualViewWin(QMainWindow):
         self.eye_pos = Point(point.x, point.y * -1)
 
     def create_new_object(
-            self,
-            object_name: str,
-            location: GU.Point,
-            size: GU.Size,
-            properties: Optional[dict] = None,
+        self,
+        object_name: str,
+        location: GU.Point,
+        size: GU.Size,
+        properties: Optional[dict] = None,
     ):
         if object_name not in self.objects:
             self.objects[object_name] = VisualObject(
@@ -237,7 +237,6 @@ class VisualViewWin(QMainWindow):
     # ========================================================================
 
     def paintEvent(self, event):
-
         if not self.enabled or not self.can_draw:
             self.painting = False
             self.can_draw = False
@@ -285,7 +284,9 @@ class VisualViewWin(QMainWindow):
         if self.bg_image_file:
             self.bg_image = QPixmap(str(self.bg_image_file))
             if isinstance(self.bg_image, QPixmap) and self.bg_image_scaled:
-                self.bg_image = self.bg_image.scaled(self.width(), self.height())  # , Qt.KeepAspectRatio
+                self.bg_image = self.bg_image.scaled(
+                    self.width(), self.height()
+                )  # , Qt.KeepAspectRatio
         self.update()
 
     def dot_and_eye(self):
@@ -358,9 +359,11 @@ class VisualViewWin(QMainWindow):
             w, h = self.width(), self.height()
             pw, ph = self.bg_image.width(), self.bg_image.height()
             try:
-                self.painter.drawPixmap(w // 2 - pw // 2, h // 2 - ph // 2, self.bg_image)
+                self.painter.drawPixmap(
+                    w // 2 - pw // 2, h // 2 - ph // 2, self.bg_image
+                )
             except Exception as e:
-                log.error(f'Unable to draw background: {str(e)}')
+                log.error(f"Unable to draw background: {str(e)}")
 
     def set_background_image(self, img_file: str, scaled: bool = True):
         if img_file and self.bg_image_file == img_file:
@@ -374,7 +377,9 @@ class VisualViewWin(QMainWindow):
                 self.bg_image_file = img_file
                 self.bg_image = QPixmap(str(img_file))
                 if isinstance(self.bg_image, QPixmap) and scaled:
-                    self.bg_image = self.bg_image.scaled(self.width(), self.height())  # , Qt.KeepAspectRatio
+                    self.bg_image = self.bg_image.scaled(
+                        self.width(), self.height()
+                    )  # , Qt.KeepAspectRatio
                 self.bg_image_scaled = scaled
         except Exception as e:
             self.bg_image_file = ""
@@ -642,7 +647,7 @@ class VisualViewWin(QMainWindow):
     # ------------- Draw Command Functions ---------------------------------
 
     def add_leader(
-            self, x, y, w, h, leader: str, path: QPainterPath, inverted: bool = False
+        self, x, y, w, h, leader: str, path: QPainterPath, inverted: bool = False
     ):
         """
         A fixed leader is a line from the location of the object in one of the four

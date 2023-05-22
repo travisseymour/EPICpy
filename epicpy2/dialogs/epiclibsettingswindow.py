@@ -32,6 +32,7 @@ from epicpy2.utils import config
 #        Thus, this code will stay here in limbo until I produce a newer version of EPICLib.
 #        Only then will there be any need to allow the user to choose anything.
 
+
 class EPICLibSettingsWin(QDialog):
     def __init__(self, epiclib_files: pd.DataFrame, epiclib_name: str):
         raise NotImplementedError("This Function Has Been Disabled")

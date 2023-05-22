@@ -1,5 +1,4 @@
-words =\
-'''
+words = """
 the
 of
 to
@@ -999,9 +998,10 @@ quotient
 teeth
 shell
 neck
-'''
+"""
 words = words.strip().splitlines(keepends=False)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from pprint import pprint
+
     pprint(words)
