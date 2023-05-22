@@ -1418,6 +1418,7 @@ class MainWin(QMainWindow):
 
         if self.display_settings_dialog.ok:
             self.write(f"{e_info} Display controls changes accepted.")
+            config.save_config(quiet=True)
             if self.simulation and self.simulation.device and self.simulation.model:
                 self.update_output_logging()
                 self.simulation.update_model_output_settings()
@@ -1437,6 +1438,7 @@ class MainWin(QMainWindow):
 
         if self.trace_settings_dialog.ok:
             self.write(f"{e_info} Trace Settings changes accepted.")
+            config.save_config(quiet=True)
             self.simulation.update_model_output_settings()
             self.update_output_logging()
         else:
