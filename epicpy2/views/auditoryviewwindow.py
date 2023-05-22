@@ -359,7 +359,7 @@ class AuditoryViewWin(QMainWindow):
                 self.bg_image = None
             else:
                 self.bg_image_file = img_file
-                self.bg_image = QPixmap(f'{img_file}')
+                self.bg_image = QPixmap(f"{img_file}")
                 if isinstance(self.bg_image, QPixmap) and scaled:
                     self.bg_image = self.bg_image.scaled(
                         self.width(), self.height()

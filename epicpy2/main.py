@@ -52,12 +52,11 @@ except ImportError:
 
 DONE = False
 
-
+# dragon = Path('C:\\Users\\nogard\\Desktop\\mylog.txt')
+# dragon.write_text(f'{datetime.datetime.now().ctime()}')
 # def mog(msg:str):
 #     global dragon
 #     dragon.write_text(dragon.read_text() + '\n' + msg)
-# dragon = Path('C:\\Users\\nogard\\Desktop\\mylog.txt')
-# dragon.write_text(f'{datetime.datetime.now().ctime()}')
 
 
 def pyqt_warning_handler(msg_type, msg_log_content, msg_string):

@@ -44,7 +44,7 @@ class CachedPlainTextEdit(QPlainTextEdit):
         self.dark_mode = False
 
     def write(self, text: str, disable_cache: bool = False) -> None:
-        _text = f"{text}" # faster: https://stackoverflow.com/questions/56587807
+        _text = f"{text}"  # faster: https://stackoverflow.com/questions/56587807
         # _text = str(text)
 
         if disable_cache:

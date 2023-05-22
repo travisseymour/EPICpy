@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/nogard/Dropbox/Documents/EPICSTUFF/EPICpy2/EPICpy2/src/uifiles/aboutui.ui'
+# Form implementation generated from reading ui file '/home/nogard/Dropbox/Documents/EPICSTUFF/EPICpy2/EPICpy2/epicpy2/uifiles/aboutui.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -72,7 +72,7 @@ class Ui_aboutDialog(object):
                 '<p align="center" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-family:\'JetBrains Mono\',\'monospace\'; font-size:28pt; font-weight:600; color:#000000;">** EPICpy **</span></p>\n'
                 '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p>\n'
                 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'JetBrains Mono','monospace'; font-size:15.8pt; color:#000000;\">EPICpy is based on EPIClib and EPICapp by David Kieras, as well as EpicCLI by David Kieras and Yunfeng Zhang.</span></p>\n"
-                "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'JetBrains Mono','monospace'; font-size:15.8pt; color:#000000;\"><br />EPICpy is is made possible by Python bindings for the 2016 C++ version of EPICLib created with &lt;a href=&quot;https://pybind11.readthedocs.io/en/latest/&quot;&gt;PyBind11&lt;/a&gt;. This allows cross platform device and encoder programming in Python, as well as Python programming of the PyQt5 based GUI itself.</span></p>\n"
+                "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'JetBrains Mono','monospace'; font-size:15.8pt; color:#000000;\"><br />EPICpy is made possible by Python bindings for the 2016 C++ version of EPICLib created with &lt;a href=&quot;https://pybind11.readthedocs.io/en/latest/&quot;&gt;PyBind11&lt;/a&gt;. This allows cross platform device and encoder programming in Python, as well as Python programming of the PyQt5 based GUI itself.</span></p>\n"
                 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'JetBrains Mono','monospace'; font-size:15.8pt; color:#000000;\"><br /></p>\n"
                 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'JetBrains Mono','monospace'; font-size:15.8pt; font-weight:600; text-decoration: underline; color:#000000;\">License Statement:</span></p>\n"
                 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'JetBrains Mono','monospace'; font-size:15.8pt; color:#000000;\"><br /></p>\n"

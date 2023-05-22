@@ -150,6 +150,6 @@ class EPICTextViewFileWriter:
     def write(self, text: str):
         """writes given text to attached file"""
         try:
-            self.file_object.write(f'{text}')
+            self.file_object.write(f"{text}")
         except:
             ...
