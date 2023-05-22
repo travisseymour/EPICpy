@@ -44,8 +44,8 @@ class CachedPlainTextEdit(QPlainTextEdit):
         self.dark_mode = False
 
     def write(self, text: str, disable_cache: bool = False) -> None:
-        if not (_text := str(text).strip("\n")):
-            return
+        _text = f"{text}" # faster: https://stackoverflow.com/questions/56587807
+        # _text = str(text)
 
         if disable_cache:
             self.cache_text = False
@@ -75,6 +75,7 @@ class CachedPlainTextEdit(QPlainTextEdit):
             big_text = "\n".join(self.text_cache)
 
             if big_text.strip():
+                # don't dump to widget if empty!
                 ss = QTimer()
                 ss.singleShot(100, partial(self.appendPlainText, big_text))
                 # self.update()

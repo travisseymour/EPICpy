@@ -39,6 +39,8 @@ from epicpy2.dialogs.loggingwindow import LoggingSettingsWin
 
 from epicpy2.utils import config
 
+from loguru import logger as log
+
 warnings.filterwarnings("ignore", module="matplotlib\..*")
 warnings.filterwarnings("ignore", module="pingouin\..*")
 # warnings.filterwarnings("ignore")  # NOTE: Is this required, or are the above 2 lines sufficient?
