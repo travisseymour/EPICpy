@@ -129,7 +129,7 @@ def _get_tree_references_to_reset_recursively(
     if grayed_out_item_ids is None:
         grayed_out_item_ids = set()
 
-    item_tree = dict()
+    item_tree = {}
     attr_names = set(dir(item)) - _readonly_attrs
     for sub_item_name in attr_names:
         sub_item = getattr(item, sub_item_name)

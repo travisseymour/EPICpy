@@ -460,7 +460,7 @@ def munchify(x, factory=Munch):
     nb. As dicts are not hashable, they cannot be nested in sets/frozensets.
     """
     # Munchify x, using `seen` to track object cycles
-    seen = dict()
+    seen = {}
 
     def munchify_cycles(obj):
         partial, already_seen = pre_munchify_cycles(obj)
@@ -527,7 +527,7 @@ def unmunchify(x):
     """
 
     # Munchify x, using `seen` to track object cycles
-    seen = dict()
+    seen = {}
 
     def unmunchify_cycles(obj):
         # If we've already begun unmunchifying obj, just return the already-created unmunchified obj
@@ -545,7 +545,7 @@ def unmunchify(x):
         # Here we return a skeleton of unmunchified obj, which is enough to save for later (in case
         # we need to break cycles) but it needs to filled out in post_unmunchify
         if isinstance(obj, Mapping):
-            return dict()
+            return {}
         elif isinstance(obj, list):
             return type(obj)()
         elif isinstance(obj, tuple):

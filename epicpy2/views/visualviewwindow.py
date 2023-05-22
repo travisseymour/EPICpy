@@ -102,7 +102,7 @@ class VisualViewWin(QMainWindow):
         self.debug_info = list()
 
         # objects
-        self.objects = dict()
+        self.objects = {}
         self.shape_router = self.make_shape_router()
 
         # self.destroyed.connect(self.cleanup)
@@ -157,7 +157,7 @@ class VisualViewWin(QMainWindow):
         )
 
     def clear(self):
-        self.objects = dict()
+        self.objects = {}
         self.update()
 
     def update_time(self, current_time: int):
@@ -282,7 +282,7 @@ class VisualViewWin(QMainWindow):
         QMainWindow.resizeEvent(self, event)
         self.origin = Point(self.width() // 2, self.height() // 2)
         if self.bg_image_file:
-            self.bg_image = QPixmap(str(self.bg_image_file))
+            self.bg_image = QPixmap(f'{self.bg_image_file}')
             if isinstance(self.bg_image, QPixmap) and self.bg_image_scaled:
                 self.bg_image = self.bg_image.scaled(
                     self.width(), self.height()
@@ -375,7 +375,7 @@ class VisualViewWin(QMainWindow):
                 self.bg_image = None
             else:
                 self.bg_image_file = img_file
-                self.bg_image = QPixmap(str(img_file))
+                self.bg_image = QPixmap(f'{img_file}')
                 if isinstance(self.bg_image, QPixmap) and scaled:
                     self.bg_image = self.bg_image.scaled(
                         self.width(), self.height()
@@ -409,7 +409,7 @@ class VisualViewWin(QMainWindow):
         if not obj.property.Filled:
             brush_style = Qt.NoBrush
         else:
-            if str(obj.property.Status) == "Disappearing":
+            if f'{obj.property.Status}' == "Disappearing":
                 brush_style = Qt.Dense4Pattern
             else:
                 brush_style = Qt.SolidPattern

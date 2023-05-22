@@ -94,7 +94,7 @@ class AuditoryViewWin(QMainWindow):
         self.painting = False
 
         # objects
-        self.objects = dict()
+        self.objects = {}
 
         self.setWindowTitle(self.view_title.title())
 
@@ -147,7 +147,7 @@ class AuditoryViewWin(QMainWindow):
         )
 
     def clear(self):
-        self.objects = dict()
+        self.objects = {}
 
     def update_time(self, current_time: int):
         self.current_time = current_time
@@ -281,7 +281,7 @@ class AuditoryViewWin(QMainWindow):
         QMainWindow.resizeEvent(self, event)
         self.origin = Point(self.width() // 2, self.height() // 2)
         if self.bg_image_file:
-            self.bg_image = QPixmap(str(self.bg_image_file))
+            self.bg_image = QPixmap(f"{self.bg_image_file}")
             if isinstance(self.bg_image, QPixmap) and self.bg_image_scaled:
                 self.bg_image = self.bg_image.scaled(
                     self.width(), self.height()
@@ -359,7 +359,7 @@ class AuditoryViewWin(QMainWindow):
                 self.bg_image = None
             else:
                 self.bg_image_file = img_file
-                self.bg_image = QPixmap(str(img_file))
+                self.bg_image = QPixmap(f'{img_file}')
                 if isinstance(self.bg_image, QPixmap) and scaled:
                     self.bg_image = self.bg_image.scaled(
                         self.width(), self.height()
