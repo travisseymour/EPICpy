@@ -17,19 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from epicpy2.main import mog
-mog('inside mainwindow.py, mog working')
 
 import platform
 import socket
-
-mog('socket module loaded')
 
 from itertools import chain
 
 import pandas as pd
 from PyQt5 import QtWidgets
-
 
 from epicpy2.utils import fitness, config
 from epicpy2.dialogs.aboutwindow import AboutWin
@@ -91,11 +86,8 @@ from epicpy2.views.epicpy_textview import EPICTextViewCachedWrite
 from epicpy2.views.epicpy_visualview import EPICVisualView
 from epicpy2.views.epicpy_auditoryview import EPICAuditoryView
 
-
-mog('pre-epiclib imports')
-mog('starting epiclib imports')
 from epicpy2.epiclib.epiclib import (initialize_py_streamers, uninitialize_py_streamers)
-mog('finished epiclib imports')
+
 
 class StateChangeWatcher(QObject):
     """
@@ -1969,7 +1961,10 @@ class MainWin(QMainWindow):
         if 'Auditory' in h_mode:
             for i, kind in enumerate(['Physical', 'Sensory', 'Perceptual']):
                 if kind in w_mode:
-                    self.auditory_views[f"Auditory {kind}"].move(QPoint(391 * i, 338 + title_height // 2))
+                    if platform.system() == 'Windows':
+                        self.auditory_views[f"Auditory {kind}"].move(QPoint(391 * i, 338))
+                    else:
+                        self.auditory_views[f"Auditory {kind}"].move(QPoint(391 * i, 338 + (title_height // 2)))
                     self.auditory_views[f"Auditory {kind}"].show()
                 else:
                     self.auditory_views[f"Auditory {kind}"].hide()
@@ -1979,7 +1974,10 @@ class MainWin(QMainWindow):
         cols = len({'Physical', 'Sensory', 'Perceptual'} & w_mode_set)
         rows = len({'Visual', 'Auditory'} & h_mode_set)
 
-        self.move(QPoint(0, rows * 338 + title_height // 2 + 1))
+        if platform.system() == 'Windows':
+            self.move(QPoint(0, rows * 338))
+        else:
+            self.move(QPoint(0, rows * 338 + title_height // 2 + 1))
         self.resize(QSize(cols * 390 + 1, 382 if 'Main_Tall' in h_mode else 250))
         self.show()
 

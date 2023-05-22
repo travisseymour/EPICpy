@@ -33,8 +33,6 @@ import platform
 import re
 import subprocess
 from pathlib import Path
-dragon = Path('C:\\Users\\nogard\\Desktop\\mylog.txt')
-dragon.write_text(f'{datetime.datetime.now().ctime()}')
 from loguru import logger as log
 
 from PyQt5.QtGui import QFontDatabase
@@ -55,10 +53,11 @@ except ImportError:
 DONE = False
 
 
-def mog(msg:str):
-    global dragon
-    dragon.write_text(dragon.read_text() + '\n' + msg)
-
+# def mog(msg:str):
+#     global dragon
+#     dragon.write_text(dragon.read_text() + '\n' + msg)
+# dragon = Path('C:\\Users\\nogard\\Desktop\\mylog.txt')
+# dragon.write_text(f'{datetime.datetime.now().ctime()}')
 
 
 def pyqt_warning_handler(msg_type, msg_log_content, msg_string):
@@ -122,7 +121,6 @@ if OS in ('Linux', 'Darwin'):
         libc = ctypes.CDLL(libc_path)
         libc.signal(SIGSEGV, handler_func_ptr)
 elif OS == 'Windows':
-    mog('setting up segmentation fault handler...')
     # Define the C function prototype
     # handler_func_type = ctypes.CFUNCTYPE(ctypes.wintypes.BOOL, ctypes.c_ulong)
     handler_func_type = ctypes.CFUNCTYPE(ctypes.wintypes.BOOL, ctypes.wintypes.DWORD)
@@ -132,7 +130,6 @@ elif OS == 'Windows':
 
     # Set the signal handler using ctypes on Windows
     ctypes.windll.kernel32.SetConsoleCtrlHandler(handler_func_ptr, True)
-    mog('...done')
 else:
     # Unknown OS, do nothing
     ...
@@ -147,11 +144,8 @@ else:
 
 def start_ui(app: QApplication):
     global LIBNAME, HEADERPATH
-    main_win = None
-    mog('setting up config')
     config.get_app_config()
     config.get_device_config(None)
-    mog('setting up fonts')
     fontDatabase = QFontDatabase()
     fontDatabase.addApplicationFont(str(get_resource("fonts", "Consolas", "Consolas_Regular.ttf")))
     fontDatabase.addApplicationFont(str(get_resource("fonts", "Consolas", "Consolas_Bold.ttf")))
@@ -162,14 +156,9 @@ def start_ui(app: QApplication):
     fontDatabase.addApplicationFont(str(get_resource("fonts", "FiraCode", "FiraCode-Bold.ttf")))
     fontDatabase.addApplicationFont(str(get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Regular.ttf")))
     fontDatabase.addApplicationFont(str(get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Bold.ttf")))
-    mog('importing mainwin')
-    try:
-        mog('about to load mainwin...')
-        from epicpy2.windows import mainwindow
-        mog("SUCCESS loading mainwin")
-    except Exception as e:
-        mog(f"ERROR loading mainwin: {e}")
-    mog('starting mainwin')
+
+    from epicpy2.windows import mainwindow
+
     main_win = mainwindow.MainWin(app)
     app.lastWindowClosed.connect(shut_it_down)
     return app.exec_()
@@ -196,7 +185,6 @@ def main():
     # ------------------------------------------------------
 
     if frozen():
-        mog('disabling logs')
         # Ignore all the log messages I sprinkled throughout the code while developing
         log.remove(None)  # should disable all logs
 
@@ -210,20 +198,17 @@ def main():
             print(f"WARNING: Unable to create config folder at {str(config_dir)}: {e}")
 
         log_file = Path(config_dir, "epicpy.log")
-        mog(f'setting up error log file at {log_file}')
         log.add(log_file, level="ERROR")
         print(
             f"NOTE: Logging errors to file ({log_file.name}) "
             f"in config_dir ({str(config_dir.resolve())})"
         )
-        mog('installing pyqt warning handler')
         # Disable pyqt warnings when not developing
         qInstallMessageHandler(pyqt_warning_handler)
 
     # -------------------------------------------------------------------------
     # init QSettings once so we can use default constructor throughout project
     # -------------------------------------------------------------------------
-    mog('initializing qsettings')
     QCoreApplication.setOrganizationName("TravisSeymour")
     QCoreApplication.setOrganizationDomain("travisseymour.com")
     QCoreApplication.setApplicationName("EPICpy")
@@ -233,7 +218,6 @@ def main():
     # ==============================
 
     print("starting EPICpy at", datetime.datetime.now().ctime())
-    mog('running start_ui')
     exit_code = start_ui(application)
     sys.exit(exit_code)
 
