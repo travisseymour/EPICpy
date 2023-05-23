@@ -22,6 +22,7 @@ import platform
 import socket
 
 from itertools import chain
+from textwrap import dedent
 
 import pandas as pd
 from PyQt5 import QtWidgets
@@ -350,6 +351,12 @@ class MainWin(QMainWindow):
         if platform.system().lower() == "darwin":
             self.setMenuBar(self.ui.menubar)
             self.ui.menubar.setNativeMenuBar(False)
+
+        Exists = Path(config.app_cfg.last_device_file).is_file()
+        Device = config.app_cfg.last_device_file if config.app_cfg.last_device_file else 'None'
+        last_session_notice = f"Last Device Loaded: {Device} [{Exists=}]"
+        self.write(dedent(last_session_notice))
+
 
     def mouseDoubleClickEvent(self, event: QMouseEvent = None):
         try:
