@@ -1,20 +1,35 @@
 
 # EPICpy Changelog
-#### (lasted updated Sun May 21 17:19:26 2023)
+#### (lasted updated Mon May 22 21:50:10 2023)
 
 ---
 
-1. **FIXED**: Initial and reset layouts work in a more accurate and consistent way across OSs.
 
-2. **CHANGE**: for proper operation on windows,had to move back to local copy of munch module.
+## VERSION: 2023.5.22
 
-3. Layout_reset draft change completed, needs testing on smaller desktops.
-4. Now forcing sync after layout save.
-5. **FIXED**: Now using a less problematic lru_cache.
+---
+1. **Updated**: 1. Demo choice and detection devices will show image underlay if enabled in display_controls. 2. Last device noted when app first starts.
+2. **CHANGE**: view windows no longer updated when closed.
 
-6. **CHANGE**: Localmunch scheme replaced by just importing the munch library from pypi.
+3. **CHANGE**: trace window no longer written to when closed.
 
-7. **FIXED**: More gracefully handling SEGSEGV caused by epiclib.
+4. Corrected typo on about screen and ran black.
+5. **FIXED**: Trace settings now saves changes.
+
+6. Added a few simple optimizations.
+7. **FIXED** - Normal Output text stream was broken, now fixed.
+8. Bumped version to 2023.5.21.
+9. **FIXED**: Initial and reset layouts work in a more accurate and consistent way across OSs.
+
+10. **CHANGE**: for proper operation on windows,had to move back to local copy of munch module.
+
+11. Layout_reset draft change completed, needs testing on smaller desktops.
+12. Now forcing sync after layout save.
+13. **FIXED**: Now using a less problematic lru_cache.
+
+14. **CHANGE**: Localmunch scheme replaced by just importing the munch library from pypi.
+
+15. **FIXED**: More gracefully handling SEGSEGV caused by epiclib.
 
 
 ## VERSION: 2023.5.16
