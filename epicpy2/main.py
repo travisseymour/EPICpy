@@ -33,6 +33,7 @@ import platform
 import re
 import subprocess
 from pathlib import Path
+from shutil import copyfile
 from loguru import logger as log
 
 from PyQt5.QtGui import QFontDatabase
@@ -41,6 +42,23 @@ from PyQt5.QtCore import qInstallMessageHandler, QCoreApplication
 
 from epicpy2.utils.apputils import get_resource, frozen
 from epicpy2.utils import config
+
+# epiclib name (epiclib.so) is same on mac and linux.
+# just in case we were recently running on a different os,
+# let's copy the right one for this system
+try:
+    if platform.system() == 'Darwin':
+        if platform.machine() == 'x86_64':
+            copyfile(Path('epiclib', 'epiclib_macos.so'),
+                     Path('epiclib', 'epiclib.so'))
+        else:
+            copyfile(Path('epiclib', 'epiclib_macos_arm.so'),
+                     Path('epiclib', 'epiclib.so'))
+    elif platform.system() == 'Linux':
+        copyfile(Path('epiclib', 'epiclib_linux.so'),
+                 Path('epiclib', 'epiclib.so'))
+except Exception as e:
+    print(f"Error trying to reset epiclib.so for {platform.system()}: '{e}'")
 
 # some older versions of Linux won't be able to use epiccoder
 try:
