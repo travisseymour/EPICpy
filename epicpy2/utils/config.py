@@ -13,8 +13,10 @@ You should have received a copy of the GNU General Public License along with EPI
 If not, see <https://www.gnu.org/licenses/>.
 """
 
+import os
 import json
 from pathlib import Path
+import platform
 from typing import Optional
 from dataclasses import dataclass, field, fields
 
@@ -38,7 +40,7 @@ class AppConfig:
         ""  # if not "", passes this value to DeviceConfig on app init
     )
     font_name: str = "Consolas"  # default, user can change to whatever they want
-    font_size: int = 14
+    font_size: int = 12
     dialog_size: dict = field(default_factory=dict)  # hold dialog sizes if changed
     main_geom: list = field(default_factory=list)  # does nothing yet
     auto_load_last_device: bool = (
@@ -167,7 +169,10 @@ Configuration File Management
 
 def get_app_config():
     global app_cfg
-    config_dir = Path("~", ".config", "epicpy").expanduser()
+    if platform.system() == 'Windows':
+        config_dir = Path(Path().home(), 'Documents', 'epicpy')
+    else:
+        config_dir = Path("~", ".config", "epicpy").expanduser()
     config_dir.mkdir(exist_ok=True)
     config_file = Path(config_dir, "global_config.json")
 
@@ -180,7 +185,7 @@ def get_app_config():
             assert str(cfg_ver).isdigit()
             assert int(cfg_ver) >= 20211023
 
-            # ok to merge loaded loaded values into default config
+            # ok to merge loaded values into default config
             replace_app_config(config)
         except (AssertionError, KeyError):
             log.info(
@@ -200,7 +205,10 @@ def get_app_config():
 
 
 def save_app_config(quiet: bool = False) -> bool:
-    config_dir = Path("~", ".config", "epicpy").expanduser()
+    if platform.system() == 'Windows':
+        config_dir = Path(Path().home(), 'Documents', 'epicpy')
+    else:
+        config_dir = Path("~", ".config", "epicpy").expanduser()
     config_dir.mkdir(exist_ok=True)
     config_file = Path(config_dir, "global_config.json")
 
@@ -236,7 +244,7 @@ def get_device_config(device: Optional[Path]):
             assert str(cfg_ver).isdigit()
             assert int(cfg_ver) >= 20211023
 
-            # ok to merge loaded loaded values into default config
+            # ok to merge loaded values into default config
             replace_config(config)
         except (AssertionError, KeyError):
             log.info(
