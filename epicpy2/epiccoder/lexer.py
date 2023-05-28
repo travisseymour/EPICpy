@@ -446,7 +446,8 @@ class PPSCustomLexer(QsciLexerCustom):
 
         # font
         normal_font = QFont("Consolas", 14)
-        bold_font = QFont("Consolas", 14, weight=QFont.Bold)
+        bold_font = QFont("Consolas", 14)
+        bold_font.setWeight(QFont.Bold)
         self.setFont(normal_font, self.DEFAULT)
         self.setFont(normal_font, self.PARENS)
         self.setFont(bold_font, self.RULE_SECTION)
@@ -506,8 +507,7 @@ class PPSCustomLexer(QsciLexerCustom):
             (s.lower(), i) if isinstance(s, str) else (s, i)
             for s, i in self.get_tokens(text)
         ]
-        # from pathlib import Path
-        # Path('freaky_deekey.txt').write_text(str(token_list))
+
         string_flag = False
 
         if start > 0:
