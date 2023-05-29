@@ -8,6 +8,8 @@ _Seymour, T. L., (2022). **EPICpy: A Python Interface for EPIC Computational Cog
 
 ---
 
+[![EPICpy Interface](https://travisseymour.github.io/EPICpyDocs/resources/images/custom_layout_choicetask.png)](https://travisseymour.github.io/EPICpyDocs/resources/images/custom_layout_choicetask.png)
+
 **Background - Previous Way to Model Using EPIC**
 
 EPIC is a computational cognitive architecture that specifies a theory of human performance and a facility to create individual task models constrained by that theory. EPIC compacts decades of psychological theory and findings into a rich set of processors and interactions, including those that model sensory perceptual, motor, cognitive, and memory subsystems of the human mind.
