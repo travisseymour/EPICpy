@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 DEPENDENCIES = [
     "loguru", "pyqt5", "QScintilla", "python-dateutil", "ulid", "pingouin", "plum-dispatch", "ascii_frame", "ulid2"
 ]
-EXCLUDE_FROM_PACKAGES = ["contrib", "docs", "tests*", "test*", "build", "epicpy2.egg-info"]
+EXCLUDE_FROM_PACKAGES = ["contrib", "docs", "tests*", "test*", "build", "epicpy.egg-info"]
 CURDIR = os.path.abspath(os.path.dirname(__file__))
 
 with io.open(os.path.join(CURDIR, "ReadMe.md"), "r", encoding="utf-8") as f:
@@ -21,16 +21,16 @@ if platform.system().lower() == "windows":
     PYTHON_VERSION = ">=3.9,<3.10"  # have yet to figure out how to compile epliclib with 3.10+ on windows using MSVC++ 2019
     epiclib_file = "epiclib.pyd"
 elif platform.system().lower() == 'linux':
-    Path("epicpy2", "epiclib", "epiclib.so").unlink(missing_ok=True)
-    shutil.copyfile(Path("epicpy2", "epiclib", "epiclib_linux.so"), Path("epicpy2", "epiclib", "epiclib.so"))
+    Path("epicpy", "epiclib", "epiclib.so").unlink(missing_ok=True)
+    shutil.copyfile(Path("epicpy", "epiclib", "epiclib_linux.so"), Path("epicpy", "epiclib", "epiclib.so"))
     PYTHON_VERSION = ">=3.10,<3.11"
     epiclib_file = "epiclib.so"
 elif platform.system().lower() == 'darwin':
-    Path("epicpy2", "epiclib", "epiclib.so").unlink(missing_ok=True)
+    Path("epicpy", "epiclib", "epiclib.so").unlink(missing_ok=True)
     if "ARM" in os.uname().version.upper():
-        shutil.copyfile(Path("epicpy2", "epiclib", "epiclib_macos_arm.so"), Path("epicpy2", "epiclib", "epiclib.so"))
+        shutil.copyfile(Path("epicpy", "epiclib", "epiclib_macos_arm.so"), Path("epicpy", "epiclib", "epiclib.so"))
     else:
-        shutil.copyfile(Path("epicpy2", "epiclib", "epiclib_macos.so"), Path("epicpy2", "epiclib", "epiclib.so"))
+        shutil.copyfile(Path("epicpy", "epiclib", "epiclib_macos.so"), Path("epicpy", "epiclib", "epiclib.so"))
     PYTHON_VERSION = ">=3.10,<3.11"
     epiclib_file = "epiclib.so"
 else:
@@ -38,7 +38,7 @@ else:
 
 
 def get_version():
-    main_file = os.path.join(CURDIR, "epicpy2", "constants", "version.py")
+    main_file = os.path.join(CURDIR, "epicpy", "constants", "version.py")
     _version_re = re.compile(r"__version__\s+=\s+(?P<version>.*)")
     with open(main_file, "r", encoding="utf8") as f:
         match = _version_re.search(f.read())
@@ -46,23 +46,23 @@ def get_version():
     return str(ast.literal_eval(version))
 
 setup(
-    name="epicpy2",
+    name="epicpy",
     version=get_version(),
     author="Travis Seymour",
     author_email="nogard@ucsc.edu",
     description="Python interface to the EPIC computational cognitive architecture simulation environment.",
     long_description=README,
     long_description_content_type="text/markdown",
-    url="https://github.com/travisseymour/epicpy2",
+    url="https://github.com/travisseymour/EPICpy",
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
     include_package_data=True,
     package_data={
-        "": [epiclib_file],
+        "": [epiclib_file]
     },
     keywords=[],
     scripts=[],
     entry_points={
-        "gui_scripts": ["EPICpy2=epicpy2.main:main"],
+        "gui_scripts": ["EPICpy=epicpy.main:main"],
     },
     zip_safe=False,
     install_requires=DEPENDENCIES,
