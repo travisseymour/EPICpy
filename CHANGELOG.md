@@ -1,14 +1,17 @@
 
 # EPICpy Changelog
-#### (lasted updated Mon May 22 21:50:10 2023)
+#### (lasted updated Sun May 28 20:06:17 2023)
 
 ---
 
+1. Epiccoder font fix and requirements fix.
+2. Changed default fontsize to 12pt.
+3. Make sure correct epiclib file is used when runnning in IDE.
 
 ## VERSION: 2023.5.22
 
 ---
-1. **Updated**: 1. Demo choice and detection devices will show image underlay if enabled in display_controls. 2. Last device noted when app first starts.
+1. Updated: 1. Demo choice and detection devices will show image underlay if enabled in display_controls. 2. Last device noted when app first starts.
 2. **CHANGE**: view windows no longer updated when closed.
 
 3. **CHANGE**: trace window no longer written to when closed.
@@ -17,7 +20,7 @@
 5. **FIXED**: Trace settings now saves changes.
 
 6. Added a few simple optimizations.
-7. **FIXED** - Normal Output text stream was broken, now fixed.
+7. Fixed - Normal Output text stream was broken, now fixed.
 8. Bumped version to 2023.5.21.
 9. **FIXED**: Initial and reset layouts work in a more accurate and consistent way across OSs.
 
