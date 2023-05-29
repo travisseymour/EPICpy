@@ -1,9 +1,17 @@
 
 # EPICpy Changelog
-#### (lasted updated Sun May 28 20:07:25 2023)
+#### (lasted updated Mon May 29 13:22:11 2023)
 
 ---
 
+
+## VERSION: 2023.5.29
+
+---
+1. Added GUI image to ReadMe.md.
+2. Cannot pipx install from github unless epiclib binaries are therel. so I put them there despite this not being exactly best practices. my rationale is that they are unlikely to change frequently.
+3. Changed temp epicpy2 name to epicpy throughout project.
+4. Updated ReadMe.md.
 
 ## VERSION: 2023.5.28
 
@@ -80,7 +88,7 @@
 
 5. Test run now works without neededing to pull devices from internet. also added 4 virtual subjects so stat test in choice_task stats output will work.
 6. No longer makes a federal case if rule file is not found on device reload.
-7. Getting EPICpy to work with epiclib on linux mac and windows.
+7. Getting EPICpy2 to work with epiclib on linux mac and windows.
 8. Remove article folder.
 9. **CHANGE**: Major Changes: 1) Replaced use of cppyy with a pre-compiled Python module compiled using PyBind11. I.e., the project contains no more C++ code. This has led to major changes to the project file structure. 2) Several minor but unavoidable changes to device and encoders. 3) EPICpy is now using Python 3.10.
 
