@@ -1,9 +1,13 @@
 
 # EPICpy Changelog
-#### (lasted updated Sun May 28 20:06:17 2023)
+#### (lasted updated Sun May 28 20:07:25 2023)
 
 ---
 
+
+## VERSION: 2023.5.28
+
+---
 1. Epiccoder font fix and requirements fix.
 2. Changed default fontsize to 12pt.
 3. Make sure correct epiclib file is used when runnning in IDE.
