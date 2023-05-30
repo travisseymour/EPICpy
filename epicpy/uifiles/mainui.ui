@@ -12,9 +12,8 @@
   </property>
   <property name="font">
    <font>
-    <family>Consolas</family>
+    <family>Fira Mono</family>
     <pointsize>14</pointsize>
-    <weight>75</weight>
     <bold>true</bold>
    </font>
   </property>
@@ -24,9 +23,8 @@
   <widget class="QWidget" name="centralwidget">
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
-     <weight>50</weight>
      <bold>false</bold>
     </font>
    </property>
@@ -35,9 +33,8 @@
      <widget class="CachedPlainTextEdit" name="plainTextEditOutput">
       <property name="font">
        <font>
-        <family>Consolas</family>
+        <family>Fira Mono</family>
         <pointsize>14</pointsize>
-        <weight>50</weight>
         <bold>false</bold>
        </font>
       </property>
@@ -66,23 +63,21 @@
      <x>0</x>
      <y>0</y>
      <width>638</width>
-     <height>24</height>
+     <height>25</height>
     </rect>
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
-     <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
    <widget class="QMenu" name="menuFiles">
     <property name="font">
      <font>
-      <family>Consolas</family>
+      <family>Fira Mono</family>
       <pointsize>12</pointsize>
-      <weight>75</weight>
       <bold>true</bold>
      </font>
     </property>
@@ -144,9 +139,8 @@
     <widget class="QMenu" name="menuTests">
      <property name="font">
       <font>
-       <family>Consolas</family>
+       <family>Fira Mono</family>
        <pointsize>12</pointsize>
-       <weight>75</weight>
        <bold>true</bold>
       </font>
      </property>
@@ -180,9 +174,8 @@
    <widget class="QMenu" name="menuSearch">
     <property name="font">
      <font>
-      <family>Consolas</family>
+      <family>Fira Mono</family>
       <pointsize>12</pointsize>
-      <weight>75</weight>
       <bold>true</bold>
      </font>
     </property>
@@ -203,9 +196,8 @@
   <widget class="QStatusBar" name="statusbar">
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
-     <weight>50</weight>
      <bold>false</bold>
     </font>
    </property>
@@ -216,9 +208,8 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
-     <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
@@ -232,9 +223,8 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
-     <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
@@ -248,7 +238,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -259,9 +249,8 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
-     <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
@@ -275,7 +264,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -289,9 +278,8 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
-     <weight>50</weight>
      <bold>false</bold>
     </font>
    </property>
@@ -305,9 +293,8 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
-     <weight>50</weight>
      <bold>false</bold>
     </font>
    </property>
@@ -321,7 +308,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -340,7 +327,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -354,7 +341,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -365,7 +352,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -376,7 +363,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -390,7 +377,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -404,7 +391,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -418,7 +405,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -432,7 +419,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -453,7 +440,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -464,9 +451,8 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
-     <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
@@ -477,7 +463,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -488,7 +474,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -502,7 +488,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -513,7 +499,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -524,7 +510,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -538,7 +524,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -560,7 +546,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -571,7 +557,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -582,7 +568,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -596,7 +582,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -610,7 +596,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -624,7 +610,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -635,7 +621,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -646,7 +632,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -657,7 +643,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -668,7 +654,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -679,7 +665,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -690,7 +676,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -704,7 +690,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -718,7 +704,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -732,7 +718,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -746,7 +732,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -757,7 +743,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -768,7 +754,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -779,7 +765,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -790,7 +776,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -801,7 +787,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -812,7 +798,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -823,7 +809,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -834,7 +820,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -845,7 +831,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>

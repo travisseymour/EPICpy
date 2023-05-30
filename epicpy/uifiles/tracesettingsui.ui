@@ -24,7 +24,7 @@
   </property>
   <property name="font">
    <font>
-    <family>Consolas</family>
+    <family>Fira Mono</family>
     <pointsize>14</pointsize>
    </font>
   </property>
@@ -41,7 +41,7 @@
       <widget class="QCheckBox" name="checkBoxVisual">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -54,7 +54,7 @@
       <widget class="QCheckBox" name="checkBoxTemporal">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -67,7 +67,7 @@
       <widget class="QCheckBox" name="checkBoxVocal">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -80,7 +80,7 @@
       <widget class="QCheckBox" name="checkBoxCognitive">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -93,7 +93,7 @@
       <widget class="QCheckBox" name="checkBoxDevice">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -106,7 +106,7 @@
       <widget class="QCheckBox" name="checkBoxManual">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -119,7 +119,7 @@
       <widget class="QCheckBox" name="checkBoxOcular">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -132,7 +132,7 @@
       <widget class="QCheckBox" name="checkBoxAuditory">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -147,9 +147,8 @@
         <widget class="QPushButton" name="pushButtonCancel">
          <property name="font">
           <font>
-           <family>Consolas</family>
+           <family>Fira Mono</family>
            <pointsize>14</pointsize>
-           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -162,9 +161,8 @@
         <widget class="QPushButton" name="pushButtonOK">
          <property name="font">
           <font>
-           <family>Consolas</family>
+           <family>Fira Mono</family>
            <pointsize>14</pointsize>
-           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>

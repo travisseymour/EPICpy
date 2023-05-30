@@ -39,7 +39,7 @@ class AppConfig:
     epiclib_version: str = (
         ""  # if not "", passes this value to DeviceConfig on app init
     )
-    font_name: str = "Consolas"  # default, user can change to whatever they want
+    font_name: str = "Fira Mono"  # default, user can change to whatever they want
     font_size: int = 12
     dialog_size: dict = field(default_factory=dict)  # hold dialog sizes if changed
     main_geom: list = field(default_factory=list)  # does nothing yet
@@ -133,7 +133,7 @@ Dataclass Utilities
 def replace_config(new_items: dict):
     """
     Given a dict of config keys and values (most likely from reading a dict in from a
-    json file), update global_device_config by a) starting with a fresh DeviceConfig and
+    json file), update global_device_config by (a) starting with a fresh DeviceConfig and
     copying any relevant keys and values from new_items.
     """
     # https://stackoverflow.com/questions/57962873
@@ -149,7 +149,7 @@ def replace_config(new_items: dict):
 def replace_app_config(new_items: dict):
     """
     Given a dict of config keys and values (most likely from reading a dict in from a
-    json file), update global_app_config by a) starting with a fresh AppConfig and
+    json file), update global_app_config by (a) starting with a fresh AppConfig and
     copying any relevant keys and values from new_items.
     """
     # https://stackoverflow.com/questions/57962873
@@ -169,8 +169,8 @@ Configuration File Management
 
 def get_app_config():
     global app_cfg
-    if platform.system() == 'Windows':
-        config_dir = Path(Path().home(), 'Documents', 'epicpy')
+    if platform.system() == "Windows":
+        config_dir = Path(Path().home(), "Documents", "epicpy")
     else:
         config_dir = Path("~", ".config", "epicpy").expanduser()
     config_dir.mkdir(exist_ok=True)
@@ -205,8 +205,8 @@ def get_app_config():
 
 
 def save_app_config(quiet: bool = False) -> bool:
-    if platform.system() == 'Windows':
-        config_dir = Path(Path().home(), 'Documents', 'epicpy')
+    if platform.system() == "Windows":
+        config_dir = Path(Path().home(), "Documents", "epicpy")
     else:
         config_dir = Path("~", ".config", "epicpy").expanduser()
     config_dir.mkdir(exist_ok=True)

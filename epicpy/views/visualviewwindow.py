@@ -22,7 +22,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Optional
 
-from PyQt5.QtGui import (
+from PyQt6.QtGui import (
     QPainter,
     QPainterPath,
     QBrush,
@@ -32,11 +32,16 @@ from PyQt5.QtGui import (
     QResizeEvent,
     QCloseEvent,
     QPixmap,
-    QPolygonF, QHideEvent, QShowEvent,
+    QPolygonF,
+    QHideEvent,
+    QShowEvent,
+    QColorConstants,
 )
-from PyQt5.QtCore import Qt, QPoint, QRect, QRectF, QSize
-from PyQt5.QtWidgets import QMainWindow, QGraphicsTextItem
+from PyQt6.QtCore import Qt, QPoint, QRect, QRectF, QSize, QPointF
+from PyQt6.QtWidgets import QMainWindow, QGraphicsTextItem
 from loguru import logger as log
+
+from epicpy import app_font
 from epicpy.utils.apputils import Point, Size, Rect, memoize_class_method
 from dataclasses import dataclass
 from functools import partial
@@ -99,6 +104,8 @@ class VisualViewWin(QMainWindow):
 
         self.painter = None
         self.painting = False
+        self.overlay_font = QFont(app_font)
+        self.overlay_font.setPointSize(10)
 
         self.debug_info = list()
 
@@ -118,9 +125,10 @@ class VisualViewWin(QMainWindow):
         else:
             QMainWindow.closeEvent(self, event)
 
-    def set_dot_on(self, enabled: bool):
+    @staticmethod
+    def set_dot_on(enabled: bool):
         log.warning(
-            "instead of calling set_dot_on(), just set property in config.device_cfg"
+            f"instead of calling set_dot_on({enabled}), just set property in config.device_cfg"
         )
 
     def allow_updates(self, enabled: bool):
@@ -146,15 +154,17 @@ class VisualViewWin(QMainWindow):
     def set_origin(self, x: float, y: float):
         self.origin = Point(x, y)
 
-    def set_scale(self, scale: float):
+    @staticmethod
+    def set_scale(scale: float):
         # self.scale = scale
         log.warning(
-            "instead of calling set_scale(), just set property in config.device_cfg"
+            f"instead of calling set_scale({scale}), just set property in config.device_cfg"
         )
 
-    def set_grid_on(self, enabled: bool):
+    @staticmethod
+    def set_grid_on(enabled: bool):
         log.warning(
-            "instead of calling set_grid_on(), just set property in config.device_cfg"
+            f"instead of calling set_grid_on({enabled}), just set property in config.device_cfg"
         )
 
     def clear(self):
@@ -174,7 +184,9 @@ class VisualViewWin(QMainWindow):
         x, y = (x - w / 2) + self.origin.x, (y - h / 2) + self.origin.y
         return Rect(int(x), int(y), int(w), int(h))
 
-    def cache_warn(self, msg: str):
+    @staticmethod
+    def cache_warn(msg: str):
+        global WARNING_ACCUMULATOR
         if msg not in WARNING_ACCUMULATOR:
             WARNING_ACCUMULATOR.append(msg)
             log.warning(msg)
@@ -265,8 +277,8 @@ class VisualViewWin(QMainWindow):
                 self.draw_grid()
 
             # draw objects
-            for object in self.objects.values():
-                self.draw_object(object)
+            for obj in self.objects.values():
+                self.draw_object(obj)
 
             # draw eye and dot
             self.dot_and_eye()
@@ -299,7 +311,9 @@ class VisualViewWin(QMainWindow):
             if self.dark_mode
             else QColor.fromRgbF(0.5, 0.5, 0.5, 0.3)
         )
-        para_color = Qt.lightGray if self.dark_mode else Qt.gray
+        para_color = (
+            QColorConstants.LightGray if self.dark_mode else QColorConstants.Gray
+        )
 
         self.painter.setPen(fov_color)
         self.painter.setBrush(fov_color)
@@ -307,7 +321,7 @@ class VisualViewWin(QMainWindow):
         self.painter.drawEllipse(x, y, w, h)
 
         self.painter.setPen(para_color)
-        self.painter.setBrush(Qt.NoBrush)
+        self.painter.setBrush(Qt.BrushStyle.NoBrush)
         x, y, w, h = self.center_and_scale(self.eye_pos, self.para_size)
         self.painter.drawEllipse(x, y, w, h)
 
@@ -318,8 +332,10 @@ class VisualViewWin(QMainWindow):
 
     def draw_info_overlay(self):
         # setup
-        self.painter.setPen(Qt.white if self.dark_mode else Qt.black)
-        self.painter.setFont(QFont("Arial", 10, QFont.Normal))
+        self.painter.setPen(
+            QColorConstants.White if self.dark_mode else QColorConstants.Black
+        )
+        self.painter.setFont(self.overlay_font)
 
         # draw time info
         self.painter.drawText(
@@ -352,7 +368,7 @@ class VisualViewWin(QMainWindow):
 
     def draw_grid(self):
         self.painter.setPen(QColor(0, 213, 255, 100))
-        self.painter.setBrush(QBrush(Qt.cyan))
+        self.painter.setBrush(QBrush(QColorConstants.Cyan))
         self.painter.drawPath(self.grid_cache(self.width(), self.height(), self.scale))
 
     def draw_background_image(self):
@@ -367,7 +383,7 @@ class VisualViewWin(QMainWindow):
                 log.error(f"Unable to draw background: {str(e)}")
 
     def set_background_image(self, img_file: str, scaled: bool = True):
-        if img_file and self.bg_image_file == img_file:
+        if img_file and (self.bg_image_file == img_file):
             return
         try:
             if not img_file or not Path(img_file).is_file():
@@ -403,22 +419,25 @@ class VisualViewWin(QMainWindow):
             if "Text" in obj.property:
                 self.draw_text(obj)
 
-    def obj_pen_brush(self, obj) -> tuple:
+    @staticmethod
+    def obj_pen_brush(obj) -> tuple:
         """
         Consult object and properties to determine appropriate pen and brush to use
         """
         if not obj.property.Filled:
-            brush_style = Qt.NoBrush
+            brush_style = Qt.BrushStyle.NoBrush
         else:
             if f"{obj.property.Status}" == "Disappearing":
-                brush_style = Qt.Dense4Pattern
+                brush_style = Qt.BrushStyle.Dense4Pattern
             else:
-                brush_style = Qt.SolidPattern
+                brush_style = Qt.BrushStyle.SolidPattern
 
         color = (
-            colors[obj.property.Color] if obj.property.Color in colors else Qt.lightGray
+            colors[obj.property.Color]
+            if obj.property.Color in colors
+            else QColorConstants.LightGray
         )
-        pen = QPen(color, 2, Qt.SolidLine)
+        pen = QPen(color, 2, Qt.PenStyle.SolidLine)
         brush = QBrush(color, brush_style)
         return pen, brush
 
@@ -503,10 +522,10 @@ class VisualViewWin(QMainWindow):
             path.addPolygon(
                 QPolygonF(
                     (
-                        box.bottomLeft(),
-                        QPoint(box.center().x(), box.y()),
-                        box.bottomRight(),
-                        box.bottomLeft(),
+                        QPointF(box.bottomLeft()),
+                        QPointF(box.center().x(), box.y()),
+                        QPointF(box.bottomRight()),
+                        QPointF(box.bottomLeft()),
                     )
                 )
             )
@@ -515,11 +534,11 @@ class VisualViewWin(QMainWindow):
             path.addPolygon(
                 QPolygonF(
                     (
-                        QPoint(box.left(), box.center().y()),
-                        QPoint(box.center().x(), box.y()),
-                        QPoint(box.right(), box.center().y()),
-                        QPoint(box.center().x(), box.bottomLeft().y()),
-                        QPoint(box.left(), box.center().y()),
+                        QPointF(box.left(), box.center().y()),
+                        QPointF(box.center().x(), box.y()),
+                        QPointF(box.right(), box.center().y()),
+                        QPointF(box.center().x(), box.bottomLeft().y()),
+                        QPointF(box.left(), box.center().y()),
                     )
                 )
             )
@@ -527,23 +546,23 @@ class VisualViewWin(QMainWindow):
             box = QRect(x, y, w, h)
             qtr_w = box.width() // 4
             qtr_h = box.height() // 4
-            a = QPoint(box.left() + qtr_w, box.bottomLeft().y())
-            b = QPoint(box.bottomRight().x() - qtr_w, box.bottomRight().y())
-            c = QPoint(b.x(), b.y() - qtr_h)
-            d = QPoint(box.bottomRight().x(), c.y())
-            e = QPoint(d.x(), box.topRight().y() + qtr_h)
-            f = QPoint(c.x(), e.y())
-            g = QPoint(f.x(), box.topRight().y())
-            H = QPoint(a.x(), g.y())
-            i = QPoint(a.x(), f.y())
-            j = QPoint(box.topLeft().x(), i.y())
-            k = QPoint(j.x(), c.y())
-            l = QPoint(a.x(), c.y())
+            a = QPointF(box.left() + qtr_w, box.bottomLeft().y())
+            b = QPointF(box.bottomRight().x() - qtr_w, box.bottomRight().y())
+            c = QPointF(b.x(), b.y() - qtr_h)
+            d = QPointF(box.bottomRight().x(), c.y())
+            e = QPointF(d.x(), box.topRight().y() + qtr_h)
+            f = QPointF(c.x(), e.y())
+            g = QPointF(f.x(), box.topRight().y())
+            H = QPointF(a.x(), g.y())
+            i = QPointF(a.x(), f.y())
+            j = QPointF(box.topLeft().x(), i.y())
+            k = QPointF(j.x(), c.y())
+            l = QPointF(a.x(), c.y())
             path.addPolygon(QPolygonF((a, b, c, d, e, f, g, H, i, j, k, l, a)))
         elif shape == "arc":
             box = QRect(x, y, w, h)
             path = QPainterPath()
-            # old appraoch
+            # old approach
             # path.moveTo(QPoint(box.left(), box.center().y()))
             # path.cubicTo(QPoint(box.left(), box.center().y()),
             #              QPoint(box.center().x(), box.top()),
@@ -554,36 +573,36 @@ class VisualViewWin(QMainWindow):
             path.closeSubpath()
         elif shape == "bar":
             box = QRect(x, y, w, h)
-            a = QPoint(box.left(), box.bottomLeft().y() - box.height() // 4)
-            b = QPoint(box.right(), a.y())
-            c = QPoint(b.x(), box.topRight().y() + box.height() // 4)
-            d = QPoint(a.x(), c.y())
+            a = QPointF(box.left(), box.bottomLeft().y() - box.height() // 4)
+            b = QPointF(box.right(), a.y())
+            c = QPointF(b.x(), box.topRight().y() + box.height() // 4)
+            d = QPointF(a.x(), c.y())
             path.addPolygon(QPolygonF((a, b, c, d, a)))
         elif shape == "cross_hairs":
             box = QRect(x, y, w, h)
             gap = 1
-            a = QPoint(box.center().x() - gap, box.bottomLeft().y())
-            b = QPoint(a.x() + gap, a.y())
-            c = QPoint(b.x(), box.center().y() + gap)
-            d = QPoint(box.right(), c.y())
-            e = QPoint(d.x(), d.y() - gap)
-            f = QPoint(c.x(), e.y())
-            g = QPoint(f.x(), box.topRight().y())
-            H = QPoint(a.x(), g.y())
-            i = QPoint(a.x(), e.y())
-            j = QPoint(box.left(), i.y())
-            k = QPoint(j.x(), c.y())
-            l = QPoint(a.x(), k.y() + gap)
-            path.addPolygon(QPolygonF((a, b, c, d, e, f, g, H, i, j, k, l, a)))
+            a = QPointF(box.center().x() - gap, box.bottomLeft().y())
+            b = QPointF(a.x() + gap, a.y())
+            c = QPointF(b.x(), box.center().y() + gap)
+            d = QPointF(box.right(), c.y())
+            e = QPointF(d.x(), d.y() - gap)
+            f = QPointF(c.x(), e.y())
+            g = QPointF(f.x(), box.topRight().y())
+            h = QPointF(a.x(), g.y())
+            i = QPointF(a.x(), e.y())
+            j = QPointF(box.left(), i.y())
+            k = QPointF(j.x(), c.y())
+            l = QPointF(a.x(), k.y() + gap)
+            path.addPolygon(QPolygonF((a, b, c, d, e, f, g, h, i, j, k, l, a)))
         elif shape == "right_arrow":
             box = QRect(x, y, w, h)
-            a = QPoint(box.right(), box.center().y())
-            b = QPoint(box.center().x(), box.topRight().y())
-            c = QPoint(b.x(), a.y() - box.height() // 5)
-            d = QPoint(box.left(), c.y())
-            e = QPoint(d.x(), box.center().y() + box.height() // 5)
-            f = QPoint(b.x(), e.y())
-            g = QPoint(b.x(), box.bottomLeft().y())
+            a = QPointF(box.right(), box.center().y())
+            b = QPointF(box.center().x(), box.topRight().y())
+            c = QPointF(b.x(), a.y() - box.height() // 5)
+            d = QPointF(box.left(), c.y())
+            e = QPointF(d.x(), box.center().y() + box.height() // 5)
+            f = QPointF(b.x(), e.y())
+            g = QPointF(b.x(), box.bottomLeft().y())
             path.addPolygon(QPolygonF((a, b, c, d, e, f, g, a)))
             path.closeSubpath()
         elif shape == "button":
@@ -647,12 +666,11 @@ class VisualViewWin(QMainWindow):
 
     # ------------- Draw Command Functions ---------------------------------
 
-    def add_leader(
-        self, x, y, w, h, leader: str, path: QPainterPath, inverted: bool = False
-    ):
+    @staticmethod
+    def add_leader(x, y, w, h, leader: str, path: QPainterPath, inverted: bool = False):
         """
         A fixed leader is a line from the location of the object in one of the four
-        specified directions, with a length equal to twice the greater of the object
+        specified directions, with a length equal to twice the greatest of the object
         width or height.
         """
         box = QRectF(x, y, w, h)
@@ -698,8 +716,8 @@ class VisualViewWin(QMainWindow):
             return
 
     def shape_nil(self, obj: VisualObject):
-        self.painter.setPen(QPen(Qt.lightGray, 2, Qt.SolidLine))
-        self.painter.setBrush(Qt.NoBrush)
+        self.painter.setPen(QPen(QColorConstants.LightGray, 2, Qt.PenStyle.SolidLine))
+        self.painter.setBrush(Qt.BrushStyle.NoBrush)
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
         self.painter.drawEllipse(x, y, w, h)
 
@@ -813,7 +831,7 @@ class VisualViewWin(QMainWindow):
 
     def shape_button(self, obj):
         pen, brush = self.obj_pen_brush(obj)
-        pen = Qt.black
+        pen = QColorConstants.Black
         self.painter.setPen(pen)
         self.painter.setBrush(brush)
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
@@ -824,7 +842,7 @@ class VisualViewWin(QMainWindow):
 
     def shape_keyboard_button(self, obj):
         pen, brush = self.obj_pen_brush(obj)
-        pen = Qt.black
+        pen = QColorConstants.Black
         self.painter.setPen(pen)
         self.painter.setBrush(brush)
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
@@ -879,7 +897,7 @@ class VisualViewWin(QMainWindow):
 
     def shape_hill(self, obj):
         pen, brush = self.obj_pen_brush(obj)
-        pen = Qt.black
+        pen = QColorConstants.Black
         self.painter.setPen(pen)
         self.painter.setBrush(brush)
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
@@ -890,7 +908,7 @@ class VisualViewWin(QMainWindow):
 
     def shape_inv_hill(self, obj):
         pen, brush = self.obj_pen_brush(obj)
-        pen = Qt.black
+        pen = QColorConstants.Black
         self.painter.setPen(pen)
         self.painter.setBrush(brush)
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
@@ -945,11 +963,11 @@ class VisualViewWin(QMainWindow):
     def text_cache(self, x, y, text) -> QPainterPath:
         # TODO: This isn't *quite* centered right on (x,y)
         path = QPainterPath()
-        font = QFont("Arial", round(self.scale * 0.8), QFont.Light)
+        font = QFont(app_font)
+        font.setPointSize(round(self.scale * 0.8))
+        font.setWeight(100)
         self.setFont(font)
-        text_widget = QGraphicsTextItem("TEXT4HEIGHT")
-        font_height = text_widget.boundingRect().height()
-        text_widget = None
+        font_height = QGraphicsTextItem("TEXT4HEIGHT").boundingRect().height()
         path.addText(x, y + font_height / 2, font, str(text))
         return path
 
@@ -958,16 +976,18 @@ class VisualViewWin(QMainWindow):
         #        The former should be sized to the object size. The latter should
         #        probably be a standard size?
         self.painter.setPen(
-            Qt.black if obj.property.Status != "Disappearing" else Qt.lightGray
+            QColorConstants.Black
+            if obj.property.Status != "Disappearing"
+            else QColorConstants.LightGray
         )
-        self.painter.setBrush(Qt.SolidPattern)
+        self.painter.setBrush(Qt.BrushStyle.SolidPattern)
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
         path = self.text_cache(x, y, obj.property.Text)
         self.painter.drawPath(path)
 
-    '''
+    """
     Attempt to avoid drawing to closed windows
-    '''
+    """
 
     def hideEvent(self, event: QHideEvent) -> None:
         self.previously_enabled = self.enabled

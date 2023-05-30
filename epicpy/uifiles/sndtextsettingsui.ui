@@ -24,7 +24,7 @@
   </property>
   <property name="font">
    <font>
-    <family>Consolas</family>
+    <family>Fira Mono</family>
     <pointsize>12</pointsize>
    </font>
   </property>
@@ -41,9 +41,8 @@
       <widget class="QLabel" name="label">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
-         <weight>75</weight>
          <bold>true</bold>
          <underline>true</underline>
         </font>
@@ -61,7 +60,7 @@ color: rgb(0, 0, 0);</string>
       <widget class="QCheckBox" name="checkBoxSoundKind">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -74,7 +73,7 @@ color: rgb(0, 0, 0);</string>
       <widget class="QCheckBox" name="checkBoxSoundStream">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -90,7 +89,7 @@ color: rgb(0, 0, 0);</string>
        </property>
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -109,7 +108,7 @@ color: rgb(0, 0, 0);</string>
       <widget class="QCheckBox" name="checkBoxSoundLoudness">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -122,9 +121,8 @@ color: rgb(0, 0, 0);</string>
       <widget class="QLabel" name="label_2">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
-         <weight>75</weight>
          <bold>true</bold>
          <underline>true</underline>
         </font>
@@ -142,7 +140,7 @@ color: rgb(0, 0, 0);</string>
       <widget class="QCheckBox" name="checkBoxSpeechKind">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -155,7 +153,7 @@ color: rgb(0, 0, 0);</string>
       <widget class="QCheckBox" name="checkBoxSpeechStream">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -168,7 +166,7 @@ color: rgb(0, 0, 0);</string>
       <widget class="QCheckBox" name="checkBoxSpeechPitch">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -181,7 +179,7 @@ color: rgb(0, 0, 0);</string>
       <widget class="QCheckBox" name="checkBoxSpeechLoudness">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -197,7 +195,7 @@ color: rgb(0, 0, 0);</string>
        </property>
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -213,7 +211,7 @@ color: rgb(0, 0, 0);</string>
       <widget class="QCheckBox" name="checkBoxSpeechSpeaker">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -226,7 +224,7 @@ color: rgb(0, 0, 0);</string>
       <widget class="QCheckBox" name="checkBoxSpeechGender">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -241,7 +239,7 @@ color: rgb(0, 0, 0);</string>
         <widget class="QPushButton" name="pushButtonCancel">
          <property name="font">
           <font>
-           <family>Consolas</family>
+           <family>Fira Mono</family>
            <pointsize>14</pointsize>
           </font>
          </property>
@@ -254,7 +252,7 @@ color: rgb(0, 0, 0);</string>
         <widget class="QPushButton" name="pushButtonOK">
          <property name="font">
           <font>
-           <family>Consolas</family>
+           <family>Fira Mono</family>
            <pointsize>14</pointsize>
           </font>
          </property>

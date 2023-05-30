@@ -18,8 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor
+from PyQt6.QtGui import QColor, QColorConstants
 
 from epicpy.utils.localmunch import Munch
 
@@ -32,37 +31,37 @@ epic_colors = Munch(
         "Aqua": QColor(
             0, 255, 255, 255
         ),  # aqua and cyan are synonymous? going with aquamarine
-        "Black": Qt.black,
-        "Blue": Qt.blue,
+        "Black": QColorConstants.Black,
+        "Blue": QColorConstants.Blue,
         "Brown": QColor(139, 69, 19, 255),
         "Chartreuse": QColor(127, 255, 0, 255),
         "Cyan": QColor(0, 238, 238),
-        "DarkBlue": Qt.darkBlue,
-        "DarkGray": Qt.darkGray,
-        "DarkGreen": Qt.darkGreen,
-        "DarkRed": Qt.darkRed,
+        "DarkBlue": QColorConstants.DarkBlue,
+        "DarkGray": QColorConstants.DarkGray,
+        "DarkGreen": QColorConstants.DarkGreen,
+        "DarkRed": QColorConstants.DarkRed,
         "DarkViolet": QColor(148, 0, 211, 255),
         "Gainsboro": QColor(220, 220, 220, 255),  # a very light gray
-        "Green": Qt.green,
-        "Gray": Qt.gray,
+        "Green": QColorConstants.Green,
+        "Gray": QColorConstants.Gray,
         "Fuchsia": QColor(255, 0, 255, 255),
         "Gold": QColor(255, 215, 0, 255),
         "GoldenRod": QColor(218, 165, 32, 255),
         "LightBlue": QColor(191, 239, 255, 255),
         "LightGray": QColor(211, 211, 211, 255),
-        "Magenta": Qt.magenta,
+        "Magenta": QColorConstants.Magenta,
         "Maroon": QColor(255, 52, 179, 255),
         "Navy": QColor(0, 0, 128, 255),
         "Olive": QColor(128, 128, 0, 255),
         "Pink": QColor(255, 192, 203, 255),
         "Purple": QColor(128, 0, 128, 255),
-        "Red": Qt.red,
+        "Red": QColorConstants.Red,
         "RoyalBlue": QColor(65, 105, 225, 255),
         "SlateGray": QColor(112, 128, 144, 255),
         "Teal": QColor(0, 128, 128, 255),
         "Turquoise": QColor(64, 224, 208, 255),
         "Violet": QColor(238, 130, 238, 255),
-        "White": Qt.white,
-        "Yellow": Qt.yellow,
+        "White": QColorConstants.White,
+        "Yellow": QColorConstants.Yellow,
     }
 )

@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
 
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QPlainTextEdit
+from PyQt6.QtCore import QTimer
+from PyQt6.QtWidgets import QPlainTextEdit
 
 from epicpy.constants.emoji import emoji_box, e_hourglass
 
@@ -58,7 +58,7 @@ class CachedPlainTextEdit(QPlainTextEdit):
         # NOTE:  This is a kludge to force dumping cache when sim is paused because of a
         # break on a rule. It's needed because this resulting pause does not use the pause
         # code in epicsimulation.py, but is instead handled within EPIC (initialed by
-        # PPS and carried out in the Cog Processor.
+        # PPS and carried out in the Cog Processor).
         dump_cache_this_time = "Break on this cycle from rule" in _text
 
         if dump_cache_this_time:

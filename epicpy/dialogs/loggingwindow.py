@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from epicpy.utils import config
 from epicpy.uifiles.loggingui import Ui_DialogLoggingSettings
-from PyQt5.QtWidgets import QDialog, QFileDialog
+from PyQt6.QtWidgets import QDialog, QFileDialog
 from pathlib import Path
 from functools import partial
 

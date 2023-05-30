@@ -17,9 +17,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from PyQt6.QtCore import QCoreApplication
 
 from epicpy.uifiles.texteditorui import Ui_TextEditorChooser
-from PyQt5.QtWidgets import QDialog
+from PyQt6.QtWidgets import QDialog
 from epicpy.utils import config
 
 
@@ -58,16 +59,20 @@ class TextEditChoiceWin(QDialog):
 
         try:
             from epicpy.epiccoder.customeditor import CustomEditor
-        except ImportError:
+        except ImportError as e:
+            print(f"ERROR accessing built-in editor modeule: {e}")
             self.ui.radioButtonBuiltIn.setEnabled(False)
 
     def radio_clicked(self):
-        radio_button = self.sender()
+        radio_button = self.sender()  # old way PyQt5?
+        radio_button = QCoreApplication.sender(self)  # old PyQt5? self.sender()
         if radio_button.isChecked():
             if "built-in" in radio_button.text().lower():
                 self.current_choice = "built-in"
+                print("built-in chosen")
             else:
                 self.current_choice = "default"
+                print("default chosen")
 
     def resizeEvent(self, event):
         # self.resized.emit()  # in case you want to send this signal somewhere else

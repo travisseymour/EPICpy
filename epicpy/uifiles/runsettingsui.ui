@@ -24,10 +24,7 @@
   </property>
   <property name="font">
    <font>
-    <family>Consolas</family>
-    <pointsize>14</pointsize>
-    <weight>50</weight>
-    <bold>false</bold>
+    <family>Fira Mono</family>
    </font>
   </property>
   <property name="windowTitle">
@@ -58,9 +55,8 @@
              </property>
              <property name="font">
               <font>
-               <family>Consolas</family>
+               <family>Fira Mono</family>
                <pointsize>14</pointsize>
-               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -94,9 +90,8 @@
                </property>
                <property name="font">
                 <font>
-                 <family>Consolas</family>
+                 <family>Fira Mono</family>
                  <pointsize>12</pointsize>
-                 <weight>50</weight>
                  <bold>false</bold>
                 </font>
                </property>
@@ -141,9 +136,8 @@
                </property>
                <property name="font">
                 <font>
-                 <family>Consolas</family>
+                 <family>Fira Mono</family>
                  <pointsize>12</pointsize>
-                 <weight>50</weight>
                  <bold>false</bold>
                 </font>
                </property>
@@ -191,9 +185,8 @@
                </property>
                <property name="font">
                 <font>
-                 <family>Consolas</family>
+                 <family>Fira Mono</family>
                  <pointsize>12</pointsize>
-                 <weight>50</weight>
                  <bold>false</bold>
                 </font>
                </property>
@@ -217,9 +210,8 @@
             <widget class="QRadioButton" name="radioButtonRunUntilDone">
              <property name="font">
               <font>
-               <family>Consolas</family>
+               <family>Fira Mono</family>
                <pointsize>14</pointsize>
-               <weight>50</weight>
                <bold>false</bold>
               </font>
              </property>
@@ -267,9 +259,8 @@
              </property>
              <property name="font">
               <font>
-               <family>Consolas</family>
+               <family>Fira Mono</family>
                <pointsize>14</pointsize>
-               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -316,9 +307,8 @@
                </property>
                <property name="font">
                 <font>
-                 <family>Consolas</family>
+                 <family>Fira Mono</family>
                  <pointsize>11</pointsize>
-                 <weight>50</weight>
                  <bold>false</bold>
                 </font>
                </property>
@@ -390,9 +380,8 @@
              </property>
              <property name="font">
               <font>
-               <family>Consolas</family>
+               <family>Fira Mono</family>
                <pointsize>14</pointsize>
-               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -436,9 +425,8 @@
                </property>
                <property name="font">
                 <font>
-                 <family>Consolas</family>
+                 <family>Fira Mono</family>
                  <pointsize>12</pointsize>
-                 <weight>50</weight>
                  <bold>false</bold>
                 </font>
                </property>
@@ -516,9 +504,8 @@
            </property>
            <property name="font">
             <font>
-             <family>Consolas</family>
+             <family>Fira Mono</family>
              <pointsize>12</pointsize>
-             <weight>50</weight>
              <bold>false</bold>
             </font>
            </property>
@@ -623,9 +610,8 @@
           <widget class="QLabel" name="label_3">
            <property name="font">
             <font>
-             <family>Consolas</family>
+             <family>Fira Mono</family>
              <pointsize>14</pointsize>
-             <weight>50</weight>
              <bold>false</bold>
             </font>
            </property>
@@ -638,9 +624,8 @@
           <widget class="QPushButton" name="pushButtonResetParams">
            <property name="font">
             <font>
-             <family>Consolas</family>
+             <family>Fira Mono</family>
              <pointsize>12</pointsize>
-             <weight>50</weight>
              <bold>false</bold>
             </font>
            </property>
@@ -680,9 +665,8 @@
         <widget class="QLineEdit" name="lineEditDeviceParameters">
          <property name="font">
           <font>
-           <family>Consolas</family>
+           <family>Fira Mono</family>
            <pointsize>12</pointsize>
-           <weight>50</weight>
            <bold>false</bold>
           </font>
          </property>
@@ -715,9 +699,8 @@
         <widget class="QPushButton" name="pushButtonDeleteData">
          <property name="font">
           <font>
-           <family>Consolas</family>
+           <family>Fira Mono</family>
            <pointsize>12</pointsize>
-           <weight>50</weight>
            <bold>false</bold>
           </font>
          </property>
@@ -742,9 +725,8 @@
         <widget class="QLabel" name="dataInfoLabel">
          <property name="font">
           <font>
-           <family>Consolas</family>
+           <family>Fira Mono</family>
            <pointsize>12</pointsize>
-           <weight>50</weight>
            <bold>false</bold>
           </font>
          </property>

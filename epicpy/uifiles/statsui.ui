@@ -12,7 +12,7 @@
   </property>
   <property name="font">
    <font>
-    <family>Consolas</family>
+    <family>Fira Mono</family>
     <pointsize>14</pointsize>
    </font>
   </property>
@@ -31,9 +31,8 @@
     </property>
     <property name="font">
      <font>
-      <family>Consolas</family>
+      <family>Fira Mono</family>
       <pointsize>14</pointsize>
-      <weight>75</weight>
       <bold>true</bold>
      </font>
     </property>

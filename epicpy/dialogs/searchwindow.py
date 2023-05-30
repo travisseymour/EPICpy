@@ -21,8 +21,8 @@ from functools import partial
 
 from epicpy.utils import config
 from epicpy.uifiles.searchui import Ui_DialogSearch
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtCore import Qt
+from PyQt6.QtWidgets import QDialog
+from PyQt6.QtCore import Qt
 
 
 class SearchWin(QDialog):
@@ -74,7 +74,7 @@ class SearchWin(QDialog):
         self.hide()
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Escape:
+        if event.key() == Qt.Key.Key_Escape:
             self.clicked_cancel_button()
-        elif event.key() == Qt.Key_Enter:
+        elif event.key() == Qt.Key.Key_Enter:
             self.clicked_ok_button()

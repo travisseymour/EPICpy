@@ -19,8 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from typing import Optional
 
-from PyQt5.QtCore import QThread, pyqtSignal
-from PyQt5.QtWidgets import QListWidgetItem
+from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import QThread
+from PyQt6.QtWidgets import QListWidgetItem
 
 import os
 from pathlib import Path
@@ -54,14 +55,16 @@ class SearchWorker(QThread):
         self.search_text: Optional[str] = None
         self.search_project: Optional[bool] = None
 
-    def is_binary(self, path):
+    @staticmethod
+    def is_binary(path):
         """
         Check if file is binary
         """
         with open(path, "rb") as f:
             return b"\0" in f.read(1024)
 
-    def walkdir(self, path, exclude_dirs: list, exclude_files: list):
+    @staticmethod
+    def walkdir(path, exclude_dirs: list, exclude_files: list):
         for (
             root,
             dirs,

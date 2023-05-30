@@ -9,7 +9,8 @@ from typing import Tuple, Optional
 import webbrowser
 
 import pandas as pd
-from PyQt5.QtWidgets import QAction, QMainWindow
+from PyQt6.QtGui import QAction
+from PyQt6.QtWidgets import QMainWindow
 
 import epicpy.utils.config as config
 from epicpy.utils.apputils import get_resource
@@ -179,7 +180,7 @@ def show_results():
     html_file.write_text(html)
 
     if platform.system() == "Darwin":
-        # without this, webbroser.open() crashed trying to find chrome.
+        # without this, webbrowser.open() crashed trying to find chrome.
         # rather than solve that issue, just force Safari use
         webbrowser.get(using="Safari").open(html_file.as_uri(), new=0, autoraise=True)
     else:
@@ -276,7 +277,7 @@ def run_model_test(
     data_file = Path(TEST_DEVICE_FOLDER, "choice/data_output.csv")
     data_file.unlink(missing_ok=True)
 
-    # save app_settings last device so we can put it back
+    # save app_settings last device, so we can put it back
     last_device_file = config.app_cfg.last_device_file
 
     # Load Device

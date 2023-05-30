@@ -27,7 +27,7 @@
   </property>
   <property name="font">
    <font>
-    <family>Consolas</family>
+    <family>Fira Mono</family>
     <pointsize>14</pointsize>
    </font>
   </property>
@@ -61,8 +61,14 @@
     </property>
     <item>
      <widget class="QLabel" name="label_3">
+      <property name="font">
+       <font>
+        <family>Fira Mono</family>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
       <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:20pt; font-weight:600;&quot;&gt;Application Font Name: Consolas&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:20pt; font-weight:600;&quot;&gt;Application Font Name: Fira Mono&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
      </widget>
     </item>
@@ -70,6 +76,12 @@
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
        <widget class="QLabel" name="label_4">
+        <property name="font">
+         <font>
+          <family>Fira Mono</family>
+          <pointsize>14</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:20pt; font-weight:600;&quot;&gt;Application Font Size:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
@@ -79,9 +91,8 @@
        <widget class="QSpinBox" name="spinBoxFontSize">
         <property name="font">
          <font>
-          <family>Consolas</family>
+          <family>Fira Mono</family>
           <pointsize>20</pointsize>
-          <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>
@@ -95,7 +106,6 @@
        <font>
         <family>Fira Mono</family>
         <pointsize>14</pointsize>
-        <weight>50</weight>
         <bold>false</bold>
        </font>
       </property>
@@ -134,9 +144,8 @@
         </property>
         <property name="font">
          <font>
-          <family>Consolas</family>
+          <family>Fira Mono</family>
           <pointsize>14</pointsize>
-          <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>
@@ -168,9 +177,8 @@
         </property>
         <property name="font">
          <font>
-          <family>Consolas</family>
+          <family>Fira Mono</family>
           <pointsize>14</pointsize>
-          <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>

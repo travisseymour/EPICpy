@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from copy import deepcopy
 from pathlib import Path
 
-from PyQt5.QtGui import (
+from PyQt6.QtGui import (
     QPainter,
     QPainterPath,
     QBrush,
@@ -30,11 +30,16 @@ from PyQt5.QtGui import (
     QColor,
     QResizeEvent,
     QCloseEvent,
-    QPixmap, QHideEvent, QShowEvent,
+    QPixmap,
+    QHideEvent,
+    QShowEvent,
+    QColorConstants,
 )
-from PyQt5.QtCore import Qt, QRect, QSize
-from PyQt5.QtWidgets import QMainWindow
+from PyQt6.QtCore import Qt, QRect, QSize
+from PyQt6.QtWidgets import QMainWindow
 from loguru import logger as log
+
+from epicpy import app_font
 from epicpy.utils.apputils import Point, Size, Rect, memoize_class_method
 from dataclasses import dataclass
 from epicpy.utils import config
@@ -100,6 +105,8 @@ class AuditoryViewWin(QMainWindow):
         self.setWindowTitle(self.view_title.title())
 
         self.painter = None
+        self.overlay_font = QFont(app_font)
+        self.overlay_font.setPointSize(10)
 
         self.initialize()
 
@@ -109,9 +116,10 @@ class AuditoryViewWin(QMainWindow):
         else:
             QMainWindow.closeEvent(self, event)
 
-    def set_dot_on(self, enabled: bool):
+    @staticmethod
+    def set_dot_on(enabled: bool):
         log.warning(
-            "instead of calling set_dot_on(), just set property in config.device_cfg"
+            f"instead of calling set_dot_on({enabled}), just set property in config.device_cfg"
         )
 
     def allow_updates(self, enabled: bool):
@@ -137,14 +145,16 @@ class AuditoryViewWin(QMainWindow):
     def set_origin(self, x: float, y: float):
         self.origin = Point(x, y)
 
-    def set_scale(self, scale: float):
+    @staticmethod
+    def set_scale(scale: float):
         log.warning(
-            "instead of calling set_scale(), just set property in config.device_cfg"
+            f"instead of calling set_scale({scale}), just set property in config.device_cfg"
         )
 
-    def set_grid_on(self, enabled: bool):
+    @staticmethod
+    def set_grid_on(enabled: bool):
         log.warning(
-            "instead of calling set_grid_on(), just set property in config.device_cfg"
+            f"instead of calling set_grid_on({enabled}), just set property in config.device_cfg"
         )
 
     def clear(self):
@@ -163,7 +173,9 @@ class AuditoryViewWin(QMainWindow):
         x, y = (x - w / 2) + self.origin.x, (y - h / 2) + self.origin.y
         return Rect(int(x), int(y), int(w), int(h))
 
-    def cache_warn(self, msg: str):
+    @staticmethod
+    def cache_warn(msg: str):
+        global WARNING_ACCUMULATOR
         if msg not in WARNING_ACCUMULATOR:
             WARNING_ACCUMULATOR.append(msg)
             log.warning(msg)
@@ -178,10 +190,12 @@ class AuditoryViewWin(QMainWindow):
     def create_new_stream(
         self, object_name: Symbol, pitch: float, loudness: float, location: GU.Point
     ):
-        self.cache_warn("Unhandled call to create new stream")
+        self.cache_warn(
+            f"Unhandled call to create_new_stream({object_name}, {pitch}, {loudness}, {location})"
+        )
 
     def disappear_stream(self, object_name: str):
-        self.cache_warn(f"Unhandled call to disappear stream")
+        self.cache_warn(f"Unhandled call to disappear_stream({object_name})")
 
     def create_new_object(
         self,
@@ -201,12 +215,14 @@ class AuditoryViewWin(QMainWindow):
                 else DefaultMunch(None, properties),
             )
             self.objects[object_name].property["Color"] = (
-                Qt.lightGray if "Perceptual" in self.view_type else Qt.green
+                QColorConstants.LightGray
+                if "Perceptual" in self.view_type
+                else QColorConstants.Green
             )
 
     def stop_sound(self, object_name: str):
         if object_name in self.objects:
-            self.objects[object_name].property["Color"] = Qt.red
+            self.objects[object_name].property["Color"] = QColorConstants.Red
 
     def erase_object(self, object_name: str):
         if object_name in self.objects:
@@ -227,9 +243,9 @@ class AuditoryViewWin(QMainWindow):
             self.objects[object_name].property[prop_name] = prop_value
             if prop_name == "Detection":
                 if prop_value == "Onset":
-                    self.objects[object_name].property["Color"] = Qt.green
+                    self.objects[object_name].property["Color"] = QColorConstants.Green
                 elif prop_value == "Offset":
-                    self.objects[object_name].property["Color"] = Qt.red
+                    self.objects[object_name].property["Color"] = QColorConstants.Red
             else:
                 self.cache_warn(f"AudView Prop Change: {prop_name} - {prop_value}")
 
@@ -263,8 +279,8 @@ class AuditoryViewWin(QMainWindow):
                 self.draw_grid()
 
             # draw objects
-            for object in self.objects.values():
-                self.draw_object(object)
+            for obj in self.objects.values():
+                self.draw_object(obj)
 
             if config.device_cfg.center_dot:
                 self.dot()
@@ -300,8 +316,10 @@ class AuditoryViewWin(QMainWindow):
 
     def draw_info_overlay(self):
         # setup
-        self.painter.setPen(Qt.white if self.dark_mode else Qt.black)
-        self.painter.setFont(QFont("Arial", 10, QFont.Normal))
+        self.painter.setPen(
+            QColorConstants.White if self.dark_mode else QColorConstants.Black
+        )
+        self.painter.setFont(self.overlay_font)
 
         # draw time info
         self.painter.drawText(
@@ -336,7 +354,7 @@ class AuditoryViewWin(QMainWindow):
 
     def draw_grid(self):
         self.painter.setPen(QColor(0, 213, 255, 100))
-        self.painter.setBrush(QBrush(Qt.cyan))
+        self.painter.setBrush(QBrush(QColorConstants.Cyan))
         self.painter.drawPath(self.grid_cache(self.width(), self.height(), self.scale))
 
     def draw_background_image(self):
@@ -381,10 +399,11 @@ class AuditoryViewWin(QMainWindow):
         self.shape_ellipse(obj)
         self.draw_text(obj)
 
-    def obj_pen_brush(self, obj) -> tuple:
-        brush_style = Qt.NoBrush
-        color = obj.property.Color if obj.property.Color else Qt.lightGray
-        pen = QPen(color, 2, Qt.SolidLine)
+    @staticmethod
+    def obj_pen_brush(obj) -> tuple:
+        brush_style = Qt.BrushStyle.NoBrush
+        color = obj.property.Color if obj.property.Color else QColorConstants.LightGray
+        pen = QPen(color, 2, Qt.PenStyle.SolidLine)
         brush = QBrush(color, brush_style)
         return pen, brush
 
@@ -436,7 +455,10 @@ class AuditoryViewWin(QMainWindow):
     @memoize_class_method()
     def text_cache(self, x, y, text) -> QPainterPath:
         path = QPainterPath()
-        font = QFont("Arial", 10, QFont.Light)
+        # font = QFont("Arial", 10, QFont.Light)
+        font = QFont(app_font)
+        font.setPointSize(round(self.scale * 0.8))
+        font.setWeight(100)
         for row, txt in enumerate(text.splitlines(keepends=False)):
             path.addText(x, y + row * font.pixelSize() * 15, font, txt)
         return path
@@ -471,16 +493,20 @@ class AuditoryViewWin(QMainWindow):
         else:
             return
 
-        color = Qt.black if obj.property.Status != "Fading" else Qt.lightGray
-        self.painter.setPen(QPen(color, 1, Qt.SolidLine))
-        self.painter.setBrush(QBrush(color, Qt.SolidPattern))
+        color = (
+            QColorConstants.Black
+            if obj.property.Status != "Fading"
+            else QColorConstants.LightGray
+        )
+        self.painter.setPen(QPen(color, 1, Qt.PenStyle.SolidLine))
+        self.painter.setBrush(QBrush(color, Qt.BrushStyle.SolidPattern))
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
         path = self.text_cache(x, y, text.strip())
         self.painter.drawPath(path)
 
-    '''
+    """
     Attempt to avoid drawing to closed windows
-    '''
+    """
 
     def hideEvent(self, event: QHideEvent) -> None:
         self.previously_enabled = self.enabled

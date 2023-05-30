@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from epicpy.uifiles.tracesettingsui import Ui_DialogTraceSettings
-from PyQt5.QtWidgets import QDialog
+from PyQt6.QtWidgets import QDialog
 from epicpy.utils import config
 
 

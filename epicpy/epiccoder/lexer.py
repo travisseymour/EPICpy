@@ -23,8 +23,8 @@ import re
 import types
 from typing import Optional
 
-from PyQt5.Qsci import QsciLexerCustom, QsciScintilla, QsciLexerPython
-from PyQt5.QtGui import *
+from PyQt6.Qsci import QsciLexerCustom, QsciScintilla
+from PyQt6.QtGui import *
 
 
 class PyCustomLexer(QsciLexerCustom):
@@ -37,7 +37,7 @@ class PyCustomLexer(QsciLexerCustom):
         # Default Settings
         self.setDefaultColor(QColor(self.color1))
         self.setDefaultPaper(QColor(self.color2))
-        self.setDefaultFont(QFont("Consolas", 14))
+        self.setDefaultFont(QFont("Fira Mono", 14))
 
         # Keywords
         self.KEYWORD_LIST = keyword.kwlist
@@ -88,10 +88,10 @@ class PyCustomLexer(QsciLexerCustom):
         self.setPaper(QColor(self.color2), self.FUNCTION_DEF)
 
         # font
-        self.setFont(QFont("Consolas", 14, QFont.Bold), self.DEFAULT)
-        self.setFont(QFont("Consolas", 14, QFont.Bold), self.KEYWORD)
-        self.setFont(QFont("Consolas", 14, QFont.Bold), self.CLASSES)
-        self.setFont(QFont("Consolas", 14, QFont.Bold), self.FUNCTION_DEF)
+        self.setFont(QFont("Fira Mono", 14, QFont.Weight.Bold), self.DEFAULT)
+        self.setFont(QFont("Fira Mono", 14, QFont.Weight.Bold), self.KEYWORD)
+        self.setFont(QFont("Fira Mono", 14, QFont.Weight.Bold), self.CLASSES)
+        self.setFont(QFont("Fira Mono", 14, QFont.Weight.Bold), self.FUNCTION_DEF)
 
     def language(self) -> str:
         return "PYCustomLexer"
@@ -122,7 +122,8 @@ class PyCustomLexer(QsciLexerCustom):
         else:
             return ""
 
-    def get_tokens(self, text) -> list[str, int]:
+    @staticmethod
+    def get_tokens(text) -> list[str, int]:
         # 3. Tokenize the text
         # ---------------------
         p = re.compile(r"[*]\/|\/[*]|\s+|\w+|\W")
@@ -175,7 +176,7 @@ class PyCustomLexer(QsciLexerCustom):
             if curr_token is None:
                 break
             tok: str = curr_token[0]
-            tok_len: int = curr_token[1]
+            tok_len: int = int(curr_token[1])
 
             if string_flag:
                 self.setStyling(tok_len, self.STRING)
@@ -239,7 +240,7 @@ class TextCustomLexer(QsciLexerCustom):
         # Default Settings
         self.setDefaultColor(light_gray)
         self.setDefaultPaper(charcoal)
-        self.setDefaultFont(QFont("Consolas", 14))
+        self.setDefaultFont(QFont("Fira Mono", 14))
 
         self.DEFAULT = 0
         self.NUMBER = 1
@@ -326,7 +327,7 @@ class PPSCustomLexer(QsciLexerCustom):
         # Default Settings
         self.setDefaultColor(light_gray)
         self.setDefaultPaper(charcoal)
-        self.setDefaultFont(QFont("Consolas", 14))
+        self.setDefaultFont(QFont("Fira Mono", 14))
 
         # Keywords
 
@@ -445,9 +446,9 @@ class PPSCustomLexer(QsciLexerCustom):
         self.setPaper(self.default_bg_color, self.KEYWORD)
 
         # font
-        normal_font = QFont("Consolas", 14)
-        bold_font = QFont("Consolas", 14)
-        bold_font.setWeight(QFont.Bold)
+        normal_font = QFont("Fira Mono", 14)
+        bold_font = QFont("Fira Mono", 14)
+        bold_font.setWeight(QFont.Weight.Bold)
         self.setFont(normal_font, self.DEFAULT)
         self.setFont(normal_font, self.PARENS)
         self.setFont(bold_font, self.RULE_SECTION)
@@ -553,7 +554,7 @@ class PPSCustomLexer(QsciLexerCustom):
                 break
 
             tok: str = current_token[0]
-            tok_len: int = current_token[1]
+            tok_len: int = int(current_token[1])
 
             if string_flag:
                 self.setStyling(tok_len, self.COMMENT)

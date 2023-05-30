@@ -19,13 +19,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import re
 
-from PyQt5.QtCore import Qt, QRegExp, QEvent
+from PyQt6.QtCore import Qt, QRegularExpression
 
 from epicpy.dialogs.searchwindow import SearchWin
 from epicpy.constants.stateconstants import RUNNING
 from epicpy.uifiles.traceui import Ui_TraceWindow
-from PyQt5.QtGui import QCloseEvent, QFont, QTextCursor, QTextDocument, QShowEvent, QHideEvent
-from PyQt5.QtWidgets import QMainWindow, QMenu
+from PyQt6.QtGui import (
+    QCloseEvent,
+    QFont,
+    QTextCursor,
+    QTextDocument,
+    QShowEvent,
+    QHideEvent,
+)
+from PyQt6.QtWidgets import QMainWindow, QMenu
 import datetime
 from epicpy.utils import config
 
@@ -91,7 +98,7 @@ class TraceWin(QMainWindow):
 
         contextMenu.addSeparator()
         if self.ui.plainTextEditOutput.copyAvailable and len(
-                self.ui.plainTextEditOutput.toPlainText()
+            self.ui.plainTextEditOutput.toPlainText()
         ):
             copyAction = contextMenu.addAction("Copy")
         else:
@@ -100,7 +107,7 @@ class TraceWin(QMainWindow):
 
         contextMenu.addSeparator()
 
-        action = contextMenu.exec_(self.mapToGlobal(event))
+        action = contextMenu.exec(self.mapToGlobal(event))
 
         if action is None:
             ...
@@ -117,7 +124,7 @@ class TraceWin(QMainWindow):
         self.search_dialog.ok = False
         self.search_dialog.ui.checkBoxRegEx.setChecked(self.search_using_regex)
         self.search_dialog.ui.checkBoxIgnoreCase.setChecked(self.search_ignore_case)
-        self.search_dialog.exec_()
+        self.search_dialog.exec()
 
         if self.search_dialog.ok:
             self.search_pattern = (
@@ -136,7 +143,7 @@ class TraceWin(QMainWindow):
 
     def set_text_cursor_pos(self, value):
         tc = self.get_text_cursor()
-        tc.setPosition(value, QTextCursor.KeepAnchor)
+        tc.setPosition(value, QTextCursor.MoveMode.KeepAnchor)
         self.ui.plainTextEditOutput.setTextCursor(tc)
 
     def get_text_cursor_pos(self):
@@ -149,7 +156,7 @@ class TraceWin(QMainWindow):
     def set_text_selection(self, start, end):
         cursor = self.get_text_cursor()
         cursor.setPosition(start)
-        cursor.setPosition(end, QTextCursor.KeepAnchor)
+        cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
         self.ui.plainTextEditOutput.setTextCursor(cursor)
 
     # ---------------- end text cursor utility functions
@@ -159,7 +166,9 @@ class TraceWin(QMainWindow):
             return
 
         sensitivity = (
-            Qt.CaseInsensitive if self.search_ignore_case else Qt.CaseSensitive
+            Qt.CaseSensitivity.CaseInsensitive
+            if self.search_ignore_case
+            else Qt.CaseSensitivity.CaseSensitive
         )
         pattern = (
             self.search_pattern
@@ -167,17 +176,19 @@ class TraceWin(QMainWindow):
             else re.escape(self.search_pattern)
         )
 
-        regex = QRegExp(pattern, sensitivity)
+        regex = QRegularExpression(pattern, sensitivity)
 
         text_cursor = self.get_text_cursor()
 
         if backwards:
             if text_cursor.atStart():
-                self.ui.plainTextEditOutput.moveCursor(QTextCursor.End)
-            result = self.ui.plainTextEditOutput.find(regex, QTextDocument.FindBackward)
+                self.ui.plainTextEditOutput.moveCursor(QTextCursor.MoveOperation.End)
+            result = self.ui.plainTextEditOutput.find(
+                regex, QTextDocument.FindFlag.FindBackward
+            )
         else:
             if text_cursor.atEnd():
-                self.ui.plainTextEditOutput.moveCursor(QTextCursor.Start)
+                self.ui.plainTextEditOutput.moveCursor(QTextCursor.MoveOperation.Start)
             result = self.ui.plainTextEditOutput.find(regex)
 
         if result:
@@ -197,7 +208,7 @@ class TraceWin(QMainWindow):
     def clear(self):
         self.ui.plainTextEditOutput.clear()
 
-    def closeEvent(self, event: QCloseEvent)->None:
+    def closeEvent(self, event: QCloseEvent) -> None:
         if self.can_close:
             self.hide()
         else:

@@ -25,7 +25,8 @@ from itertools import chain
 from textwrap import dedent
 
 import pandas as pd
-from PyQt5 import QtWidgets
+from PyQt6.QtCore import pyqtSignal, QEvent
+from darktheme.widget_template_pyqt6 import DarkPalette
 
 from epicpy.utils import fitness, config
 from epicpy.dialogs.aboutwindow import AboutWin
@@ -36,7 +37,7 @@ from epicpy.uifiles.mainui import Ui_MainWindow
 from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
 from epicpy.windows.statswindow import StatsWin
 from epicpy.windows.tracewindow import TraceWin
-from PyQt5.QtGui import (
+from PyQt6.QtGui import (
     QTextCursor,
     QTextDocumentWriter,
     QTextDocument,
@@ -45,26 +46,27 @@ from PyQt5.QtGui import (
     QColor,
     QMouseEvent,
     QFont,
+    QGuiApplication,
+    QColorConstants,
 )
-from PyQt5.QtCore import (
+
+from PyQt6.QtCore import (
     QTimer,
     QByteArray,
-    QRegExp,
+    QRegularExpression,
     Qt,
     QSettings,
     QObject,
     QPoint,
     QSize,
     QThread,
-    pyqtSignal,
 )
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QFileDialog,
     QMainWindow,
     QMenu,
     QApplication,
     QPlainTextEdit,
-    QInputDialog,
     QMessageBox,
 )
 
@@ -120,14 +122,26 @@ class StateChangeWatcher(QObject):
         self.minimize_func = minimize_func
         self.restore_func = restore_func
 
-    def eventFilter(self, obj, e):
-        if obj.isWidgetType() and e.type() == e.WindowStateChange:
-            if obj.windowState() & Qt.WindowMinimized:
+    def eventFilter(self, obj, event):
+        # if obj.isWidgetType() and event.type() == QEvent.WindowStateChange:
+        #     if obj.windowState() & Qt.WindowMinimized:
+        #         if self.minimize_func is not None:
+        #             self.minimize_func()
+        #     elif obj.windowState() & Qt.WindowMaximized:
+        #         pass
+        #     elif obj.windowState() & Qt.WindowNoState:
+        #         pass
+        #     else:
+        #         if self.restore_func is not None:
+        #             self.restore_func()
+
+        if obj.isWidgetType() and event.type() == QEvent.Type.Show:
+            if obj.windowState() & Qt.WindowState.WindowMinimized:
                 if self.minimize_func is not None:
                     self.minimize_func()
-            elif obj.windowState() & Qt.WindowMaximized:
+            elif obj.windowState() & Qt.WindowState.WindowMaximized:
                 pass
-            elif obj.windowState() & Qt.WindowNoState:
+            elif obj.windowState() & Qt.WindowState.WindowNoState:
                 pass
             else:
                 if self.restore_func is not None:
@@ -141,8 +155,8 @@ class UdpThread(QThread):
 
     def __init__(self, parent, udp_ip: str, udp_port: int):
         super(UdpThread, self).__init__(parent)
-        self.udp_ip = udp_ip  # e.g., "127.0.0.1"
-        self.udp_port = udp_port  # e.g., 13047
+        self.udp_ip = udp_ip  # event.g., "127.0.0.1"
+        self.udp_port = udp_port  # event.g., 13047
         self.is_running = True
 
     def run(self):
@@ -284,6 +298,14 @@ class MainWin(QMainWindow):
         self.installEventFilter(self.state_watcher)
         self.trace_win.installEventFilter(self.state_watcher)
 
+        self.visual_views: Optional[dict[str, VisualViewWin]] = None
+        self.visual_physical_view: Optional[EPICVisualView] = None
+        self.visual_sensory_view: Optional[EPICVisualView] = None
+        self.visual_perceptual_view: Optional[EPICVisualView] = None
+        self.auditory_views: Optional[dict[str, AuditoryViewWin]] = None
+        self.auditory_physical_view: Optional[EPICAuditoryView] = None
+        self.auditory_sensory_view: Optional[EPICAuditoryView] = None
+        self.auditory_perceptual_view: Optional[EPICAuditoryView] = None
         self.setup_views()
 
         self.view_updater = (
@@ -309,9 +331,9 @@ class MainWin(QMainWindow):
         self.default_palette = self.app.palette()
         self.set_stylesheet(config.app_cfg.dark_mode)
 
-        # I'm not sure Consolas is the right font for us...seems to mess up boxes.
-        # So we're forcing the font_name configuration to be JetBrains Mono for now
-        config.app_cfg.font_name = "JetBrains Mono"
+        # I'm not sure Fira Mono is the right font for us...seems to mess up boxes.
+        # So we're forcing the font_name configuration to be 'Fira Code' for now
+        config.app_cfg.font_name = "Fira Code"
         config.save_config(True)
 
         # This approach will presumably alter every widget that is a child of this window
@@ -336,7 +358,7 @@ class MainWin(QMainWindow):
         # after we show them
         for i, view in enumerate(self.visual_views.values()):
             view.show()
-        # similarly, need to make this window is shown, so do positioning after a 250ms
+        # similarly, need to make this window is shown, so do the positioning after a 250ms
         # delay (long enough for show?)
         one_off_timer = QTimer()
         one_off_timer.singleShot(250, self.position_windows)
@@ -353,10 +375,13 @@ class MainWin(QMainWindow):
             self.ui.menubar.setNativeMenuBar(False)
 
         Exists = Path(config.app_cfg.last_device_file).is_file()
-        Device = config.app_cfg.last_device_file if config.app_cfg.last_device_file else 'None'
+        Device = (
+            config.app_cfg.last_device_file
+            if config.app_cfg.last_device_file
+            else "None"
+        )
         last_session_notice = f"Last Device Loaded: {Device} [{Exists=}]"
         self.write(dedent(last_session_notice))
-
 
     def mouseDoubleClickEvent(self, event: QMouseEvent = None):
         try:
@@ -715,15 +740,15 @@ class MainWin(QMainWindow):
 
         fd_options = QFileDialog.Options()
         if platform.system() == "Linux":
-            fd_options = fd_options | QFileDialog.DontUseNativeDialog
+            fd_options = fd_options | QFileDialog.Option.DontUseNativeDialog
 
         script_file, _ = QFileDialog.getOpenFileName(
             parent=None,
             caption="Choose EPICpy Device File",
             directory=str(start_dir),
             filter="CSV Files (*.csv);;Text Files (*.txt)",
-            initialFilter="CSV Files (*.csv)"
-            # options=fd_options
+            initialFilter="CSV Files (*.csv)",
+            options=fd_options,
         )
 
         if not script_file:
@@ -771,10 +796,10 @@ class MainWin(QMainWindow):
             )
             return
 
-        def shorten_paths(row):
-            row.device_file = Path(row.device_file).name
-            row.rule_file = Path(row.rule_file).name
-            return row
+        # def shorten_paths(row):
+        #     row.device_file = Path(row.device_file).name
+        #     row.rule_file = Path(row.rule_file).name
+        #     return row
 
         run_info = []
 
@@ -1070,7 +1095,7 @@ class MainWin(QMainWindow):
             )
 
             if not self.layout_load(y_adjust=26):
-                self.layout_reset(monitor=0)
+                self.layout_reset()
         finally:
             self.manage_z_order = True
 
@@ -1114,7 +1139,7 @@ class MainWin(QMainWindow):
         # NOTE: The above seems unnecessary if we're adding/removing views from model.
         #       On Linux the above is unnecessary, but on mac, somehow the time updates
         #       are getting through causing a massive slowdown just when user has asked
-        #       for max speed. (march 2022 -- is this still the case?)
+        #       for max speed. (March 2022 -- is this still the case?)
 
     def enable_text_updates(self, enable: bool = True):
         self.ui.plainTextEditOutput.cache_text = not enable
@@ -1501,7 +1526,7 @@ class MainWin(QMainWindow):
             "This Function Has Been Disabled",
             "At the moment, the ability to switch EPIClib versions has been disabled. It is currently"
             "hard-coded to the version published in 2016 by David Kieras at https://github.com/dekieras/EPIC",
-            QMessageBox.Ok,
+            # QMessageBox.Ok,
         )
         return
 
@@ -1627,10 +1652,10 @@ class MainWin(QMainWindow):
             ):
                 if not win.isVisible():
                     continue
-                if win.windowState() & Qt.WindowNoState:
+                if win.windowState() & Qt.WindowState.WindowNoState:
                     pass
                 else:
-                    win.setWindowState(Qt.WindowActive)
+                    win.setWindowState(Qt.WindowState.WindowActive)
 
         finally:
             self.manage_z_order = True
@@ -1645,7 +1670,7 @@ class MainWin(QMainWindow):
             ):
                 if not win.isVisible():
                     continue
-                if win.windowState() & Qt.WindowMinimized:
+                if win.windowState() & Qt.WindowState.WindowMinimized:
                     pass
                 else:
                     win.showMinimized()
@@ -1684,7 +1709,8 @@ class MainWin(QMainWindow):
         else:
             self.write(f"Error opening {url} in default web browser.")
 
-    def choose_log_file(self, file_type: str, ext: str = ".txt") -> str:
+    @staticmethod
+    def choose_log_file(file_type: str, ext: str = ".txt") -> str:
         kind = file_type.title()
         assert kind in ("Trace", "Normal", "Stats")
 
@@ -1706,13 +1732,13 @@ class MainWin(QMainWindow):
             start_file = str(Path(start_dir, start_file).with_suffix(ext).resolve())
 
         if kind == "Stats":
-            filter = (
+            _filter = (
                 "HTML-Files (*.html);;Text files (*.txt);;"
                 "Markdown files (*.md);;ODF files (*.odt);;All Files (*)"
             )
             initial_filter = "HTML-Files (*.html)"
         else:
-            filter = (
+            _filter = (
                 "Text files (*.txt);;HTML-Files (*.html);;"
                 "Markdown files (*.md);;ODF files (*.odt);;All Files (*)"
             )
@@ -1722,12 +1748,12 @@ class MainWin(QMainWindow):
         if platform.system() == "Linux" and kind == "Stats":
             # if we don't do this on linux, initial filename won't have correct extension!
             # it's pretty ugly!
-            fd_options = fd_options | QFileDialog.DontUseNativeDialog
+            fd_options = fd_options | QFileDialog.Option.DontUseNativeDialog
         file, _ = QFileDialog.getSaveFileName(
             None,
             caption=f"Specify {kind} Output File",
             directory=str(start_file),
-            filter=filter,
+            filter=_filter,
             initialFilter=initial_filter,
             options=fd_options,
         )
@@ -1791,28 +1817,10 @@ class MainWin(QMainWindow):
         self.app.setStyle("Fusion")
 
         if dark_mode:
-            dark_palette = QPalette()
-            dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))
-            dark_palette.setColor(QPalette.WindowText, Qt.white)
-            dark_palette.setColor(QPalette.Base, QColor(35, 35, 35))
-            dark_palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-            dark_palette.setColor(QPalette.ToolTipBase, QColor(25, 25, 25))
-            dark_palette.setColor(QPalette.ToolTipText, Qt.white)
-            dark_palette.setColor(QPalette.Text, Qt.white)
-            dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
-            dark_palette.setColor(QPalette.ButtonText, Qt.white)
-            dark_palette.setColor(QPalette.BrightText, Qt.red)
-            dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
-            dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-            dark_palette.setColor(QPalette.HighlightedText, QColor(35, 35, 35))
-            dark_palette.setColor(QPalette.Active, QPalette.Button, QColor(53, 53, 53))
-            dark_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
-            dark_palette.setColor(QPalette.Disabled, QPalette.WindowText, Qt.darkGray)
-            dark_palette.setColor(QPalette.Disabled, QPalette.Text, Qt.darkGray)
-            dark_palette.setColor(QPalette.Disabled, QPalette.Light, QColor(53, 53, 53))
-            self.app.setPalette(dark_palette)
+            self.app.setPalette(DarkPalette())
         else:
-            self.app.setPalette(self.default_palette)
+            self.app.setPalette(QPalette())
+
 
     # =============================================
     # Layout Save/Restore
@@ -1821,7 +1829,7 @@ class MainWin(QMainWindow):
     def layout_save(self) -> bool:
         self.manage_z_order = False
 
-        # figure out which config sub-section to use
+        # figure out which config subsection to use
         if self.simulation.device and self.simulation.device.device_name:
             section = "".join(
                 [c for c in self.simulation.device.device_name if c.isalpha()]
@@ -1853,7 +1861,7 @@ class MainWin(QMainWindow):
         return True
 
     def layout_load(self, y_adjust: int = 0) -> bool:
-        # figure out which config sub-section to use
+        # figure out which config subsection to use
         if self.simulation.device and self.simulation.device.device_name:
             section = "".join(
                 [c for c in self.simulation.device.device_name if c.isalpha()]
@@ -1867,7 +1875,7 @@ class MainWin(QMainWindow):
             _ = self.window_settings.value(f"{section}/MainWindow/Size")
         except Exception as e:
             log.warning(
-                f"Failed to locate existing window layout for NoDevice state, "
+                f"Failed to locate existing window layout for NoDevice state ({e}), "
                 f"loading default layout instead..."
             )
             self.layout_reset()
@@ -1933,35 +1941,10 @@ class MainWin(QMainWindow):
 
         return result
 
-    def layout_reset(self, monitor: Optional[int] = None):
+    def layout_reset(self):
         # - Figure out the available screen geometry and starting point
-        #   (there may be multiple monitors)
 
-        info = [
-            # QtWidgets.QDesktopWidget().screenGeometry(display)
-            QtWidgets.QDesktopWidget().availableGeometry(display)
-            for display in range(QtWidgets.QDesktopWidget().screenCount())
-        ]
-
-        screen_info = info[0]
-        if len(info) > 1 and monitor is None:
-            choices = [
-                f"Display #{display}: {geom.width()} X {geom.height()}"
-                for display, geom in enumerate(info)
-            ]
-            choice, ok = QInputDialog.getItem(
-                self,
-                "Which Display?",
-                "You have multiple displays. \nChoose the "
-                "display on which to arrange the EPICpy GUI.",
-                choices,
-                0,
-                False,
-            )
-            if ok and choice:
-                screen_info = info[choices.index(choice)]
-        else:
-            screen_info = info[monitor]
+        screen_info = QGuiApplication.primaryScreen().availableGeometry()
 
         sx, sy, sw, sh = (
             screen_info.x(),
@@ -2106,7 +2089,7 @@ class MainWin(QMainWindow):
             contextMenu.addSeparator()
             searchQuit = contextMenu.addAction("Quit")
 
-        action = contextMenu.exec_(self.mapToGlobal(event))
+        action = contextMenu.exec(self.mapToGlobal(event))
 
         if action is None:
             ...
@@ -2148,7 +2131,7 @@ class MainWin(QMainWindow):
         self.search_dialog.ok = False
         self.search_dialog.ui.checkBoxRegEx.setChecked(self.search_using_regex)
         self.search_dialog.ui.checkBoxIgnoreCase.setChecked(self.search_ignore_case)
-        self.search_dialog.exec_()
+        self.search_dialog.exec()
 
         if self.search_dialog.ok:
             self.search_pattern = (
@@ -2167,7 +2150,7 @@ class MainWin(QMainWindow):
 
     def set_text_cursor_pos(self, value):
         tc = self.get_text_cursor()
-        tc.setPosition(value, QTextCursor.KeepAnchor)
+        tc.setPosition(value, QTextCursor.MoveMode.KeepAnchor)
         self.ui.plainTextEditOutput.setTextCursor(tc)
 
     def get_text_cursor_pos(self):
@@ -2180,7 +2163,7 @@ class MainWin(QMainWindow):
     def set_text_selection(self, start, end):
         cursor = self.get_text_cursor()
         cursor.setPosition(start)
-        cursor.setPosition(end, QTextCursor.KeepAnchor)
+        cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
         self.ui.plainTextEditOutput.setTextCursor(cursor)
 
     # ---------------- end text cursor utility functions
@@ -2190,7 +2173,9 @@ class MainWin(QMainWindow):
             return
 
         sensitivity = (
-            Qt.CaseInsensitive if self.search_ignore_case else Qt.CaseSensitive
+            Qt.CaseSensitivity.CaseInsensitive
+            if self.search_ignore_case
+            else Qt.CaseSensitivity.CaseSensitive
         )
         pattern = (
             self.search_pattern
@@ -2198,17 +2183,19 @@ class MainWin(QMainWindow):
             else re.escape(self.search_pattern)
         )
 
-        regex = QRegExp(pattern, sensitivity)
+        regex = QRegularExpression(pattern, sensitivity)
 
         text_cursor = self.get_text_cursor()
 
         if backwards:
             if text_cursor.atStart():
-                self.ui.plainTextEditOutput.moveCursor(QTextCursor.End)
-            result = self.ui.plainTextEditOutput.find(regex, QTextDocument.FindBackward)
+                self.ui.plainTextEditOutput.moveCursor(QTextCursor.MoveOperation.End)
+            result = self.ui.plainTextEditOutput.find(
+                regex, QTextDocument.FindFlag.FindBackward
+            )
         else:
             if text_cursor.atEnd():
-                self.ui.plainTextEditOutput.moveCursor(QTextCursor.Start)
+                self.ui.plainTextEditOutput.moveCursor(QTextCursor.MoveOperation.Start)
             result = self.ui.plainTextEditOutput.find(regex)
 
         if result:
@@ -2327,7 +2314,7 @@ class MainWin(QMainWindow):
                     self.editor_window.activateWindow()
 
                 else:
-                    # user has specified an the system default editor
+                    # user has specified the system default editor
                     OS = platform.system()
                     if OS == "Linux":
                         open_cmd = "xdg-open"
@@ -2362,10 +2349,10 @@ class MainWin(QMainWindow):
 
     def keyPressEvent(self, event):
         modifiers = QApplication.keyboardModifiers()
-        if event.key() == Qt.Key_Escape:
+        if event.key() == Qt.Key.Key_Escape:
             self.close()
-        elif event.key() == Qt.Key_F3:
-            if modifiers == Qt.ShiftModifier:
+        elif event.key() == Qt.Key.Key_F3:
+            if modifiers == Qt.KeyboardModifier.ShiftModifier:
                 self.do_search()
             else:
                 partial(self.do_search, backwards=True)

@@ -24,9 +24,17 @@ from typing import Optional
 import sys
 from pathlib import Path
 
-from PyQt5.QtCore import QSettings, Qt, QSize, QDir, QModelIndex
-from PyQt5.QtGui import QIcon, QFont, QPixmap, QResizeEvent, QCloseEvent
-from PyQt5.QtWidgets import (
+from PyQt6.QtCore import QSettings, Qt, QSize, QDir, QModelIndex
+from PyQt6.QtGui import (
+    QIcon,
+    QFont,
+    QPixmap,
+    QResizeEvent,
+    QCloseEvent,
+    QFileSystemModel,
+    QAction,
+)
+from PyQt6.QtWidgets import (
     QMainWindow,
     QLabel,
     QFrame,
@@ -34,7 +42,6 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
     QSplitter,
-    QFileSystemModel,
     QTreeView,
     QLineEdit,
     QCheckBox,
@@ -45,7 +52,6 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QApplication,
     QMenu,
-    QAction,
 )
 
 from epicpy.utils.apputils import get_resource
@@ -220,7 +226,8 @@ class MainWindow(QMainWindow):
         editor = CustomEditor(file_path=file_path, star_func=self.add_star)
         return editor
 
-    def is_binary(self, path):
+    @staticmethod
+    def is_binary(path):
         """
         Check if file is binary
         """
@@ -274,7 +281,6 @@ class MainWindow(QMainWindow):
 
         # check if file already open
         for i in range(self.tab_view.count()):
-            # print(f"{self.tab_view.widget(i).file_type=}")  # keep to remind me that I can access widget..need shortly
             if str(self.tab_view.tabText(i)).endswith(
                 f"{Path(new_file_path.parent.name, new_file_path.name)}"
             ):
@@ -296,10 +302,10 @@ class MainWindow(QMainWindow):
         self.delete_file.setEnabled(self.tab_view.count())
 
     def set_cursor_pointer(self, e):
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def set_cursor_arrow(self, e):
-        self.setCursor(Qt.ArrowCursor)
+        self.setCursor(Qt.CursorShape.ArrowCursor)
 
     def get_side_bar_label(self, path, name):
         label = QLabel()
@@ -312,10 +318,11 @@ class MainWindow(QMainWindow):
         label.leaveEvent = self.set_cursor_arrow
         return label
 
-    def get_frame(self) -> QFrame:
+    @staticmethod
+    def get_frame() -> QFrame:
         frame = QFrame()
-        frame.setFrameShape(QFrame.NoFrame)
-        frame.setFrameShadow(QFrame.Plain)
+        frame.setFrameShape(QFrame.Shape.NoFrame)
+        frame.setFrameShadow(QFrame.Shape.Plain)
         frame.setContentsMargins(0, 0, 0, 0)
         frame.setStyleSheet(
             """
@@ -336,22 +343,24 @@ class MainWindow(QMainWindow):
     def set_up_body(self):
         # Body
         body_frame = QFrame()
-        body_frame.setFrameShape(QFrame.NoFrame)
-        body_frame.setFrameShadow(QFrame.Plain)
+        body_frame.setFrameShape(QFrame.Shape.NoFrame)
+        body_frame.setFrameShadow(QFrame.Shadow.Plain)
         body_frame.setLineWidth(0)
         body_frame.setMidLineWidth(0)
         body_frame.setContentsMargins(0, 0, 0, 0)
-        body_frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        body_frame.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         body = QHBoxLayout()
         body.setContentsMargins(0, 0, 0, 0)
         body.setSpacing(0)
         body_frame.setLayout(body)
 
-        ##############################
-        ###### SIDE BAR ##########
+        # #########################
+        # ##### SIDE BAR ##########
         self.side_bar = QFrame()
-        self.side_bar.setFrameShape(QFrame.StyledPanel)
-        self.side_bar.setFrameShadow(QFrame.Plain)
+        self.side_bar.setFrameShape(QFrame.Shape.StyledPanel)
+        self.side_bar.setFrameShadow(QFrame.Shadow.Plain)
         self.side_bar.setStyleSheet(
             f"""
             background-color: {self.side_bar_clr};
@@ -360,7 +369,9 @@ class MainWindow(QMainWindow):
         side_bar_layout = QVBoxLayout()
         side_bar_layout.setContentsMargins(5, 10, 5, 0)
         side_bar_layout.setSpacing(0)
-        side_bar_layout.setAlignment(Qt.AlignTop | Qt.AlignCenter)
+        side_bar_layout.setAlignment(
+            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignCenter
+        )
 
         # setup labels
         folder_label = self.get_side_bar_label(
@@ -376,7 +387,7 @@ class MainWindow(QMainWindow):
         self.side_bar.setLayout(side_bar_layout)
 
         # split view
-        self.hsplit = QSplitter(Qt.Horizontal)
+        self.hsplit = QSplitter(Qt.LayoutDirection.Horizontal)
 
         ##############################
         ###### FILE MANAGER ##########
@@ -396,7 +407,9 @@ class MainWindow(QMainWindow):
         self.model = QFileSystemModel()
         self.model.setRootPath(os.getcwd())
         # File system filters
-        self.model.setFilter(QDir.NoDotAndDotDot | QDir.AllDirs | QDir.Files)
+        self.model.setFilter(
+            QDir.Filter.NoDotAndDotDot | QDir.Filter.AllDirs | QDir.Filter.Files
+        )
 
         ##############################
         ###### FILE VIEWER ##########
@@ -404,17 +417,19 @@ class MainWindow(QMainWindow):
         self.tree_view.setFont(QFont("Fira Code", 13))
         self.tree_view.setModel(self.model)
         self.tree_view.setRootIndex(self.model.index(os.getcwd()))
-        self.tree_view.setSelectionMode(QTreeView.SingleSelection)
-        self.tree_view.setSelectionBehavior(QTreeView.SelectRows)
-        self.tree_view.setEditTriggers(QTreeView.NoEditTriggers)
+        self.tree_view.setSelectionMode(QTreeView.SelectionMode.SingleSelection)
+        self.tree_view.setSelectionBehavior(QTreeView.SelectionBehavior.SelectRows)
+        self.tree_view.setEditTriggers(QTreeView.EditTrigger.NoEditTriggers)
         # add custom context menu
-        self.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tree_view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tree_view.customContextMenuRequested.connect(self.tree_view_context_menu)
         # handling click
         # self.tree_view.clicked.connect(self.tree_view_clicked)
         self.tree_view.doubleClicked.connect(self.tree_view_clicked)
         self.tree_view.setIndentation(10)
-        self.tree_view.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.tree_view.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding
+        )
         # Hide header and hide other columns except for name
         self.tree_view.setHeaderHidden(True)  # hiding header
         self.tree_view.setColumnHidden(1, True)
@@ -489,7 +504,7 @@ class MainWindow(QMainWindow):
         search_layout.addWidget(self.search_checkbox)
         search_layout.addWidget(search_input)
         search_layout.addSpacerItem(
-            QSpacerItem(5, 5, QSizePolicy.Minimum, QSizePolicy.Minimum)
+            QSpacerItem(5, 5, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         )
         search_layout.addWidget(self.search_list_view)
 
@@ -544,9 +559,10 @@ class MainWindow(QMainWindow):
                     self,
                     "Changed File Alert!",
                     f"Close {Path(self.tab_view.tabText(index)).name} and Ignore Changes?",
-                    buttons=QMessageBox.Yes | QMessageBox.No,
+                    buttons=QMessageBox.StandardButton.Yes
+                    | QMessageBox.StandardButton.No,
                 )
-                if ret == QMessageBox.No:
+                if ret == QMessageBox.StandardButton.No:
                     return
 
         self.tab_view.removeTab(index)
@@ -603,7 +619,7 @@ class MainWindow(QMainWindow):
 
     def verify_duplicate_file_name(self, dupe_path: Path) -> Optional[Path]:
         dlg = DuplicateFileNameWin(dupe_path)
-        dlg.exec_()
+        dlg.exec()
         if dlg.result():
             return dlg.path_result
         else:
@@ -631,9 +647,9 @@ class MainWindow(QMainWindow):
             self,
             "FIle Deletion Warning!",
             f"Are You Sure You Want To Delete {str(p)}?\n\nThis operation cannot be undone!",
-            buttons=QMessageBox.Yes | QMessageBox.No,
+            buttons=QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
-        if ret == QMessageBox.No:
+        if ret == QMessageBox.StandardButton.No:
             return
 
         try:
@@ -698,7 +714,7 @@ class MainWindow(QMainWindow):
         try:
             path.write_text(editor.text())
         except IOError as e:
-            self.statusBar().showMessage("Write Error: {e}", 5000)
+            self.statusBar().showMessage("Write Error: {event}", 5000)
             return
 
         # self.tab_view.setTabText(self.tab_view.currentIndex(), path.name)
@@ -715,7 +731,7 @@ class MainWindow(QMainWindow):
         else:
             # open file
             ops = QFileDialog.Options()  # this is optional
-            ops |= QFileDialog.DontUseNativeDialog
+            ops |= QFileDialog.Option.DontUseNativeDialog
             # TODO: add support for opening multiple files later. for now it can only open one at a time
             new_file, _ = QFileDialog.getOpenFileName(
                 self,
@@ -736,7 +752,7 @@ class MainWindow(QMainWindow):
     def open_folder(self):
         # open folder
         ops = QFileDialog.Options()  # this is optional
-        ops |= QFileDialog.DontUseNativeDialog
+        ops |= QFileDialog.Option.DontUseNativeDialog
 
         new_folder = QFileDialog.getExistingDirectory(
             self, "Pick A Folder", "", options=ops
@@ -774,9 +790,10 @@ class MainWindow(QMainWindow):
                         self,
                         "Changed File Alert!",
                         "Close Application and Ignore Changes?",
-                        buttons=QMessageBox.Yes | QMessageBox.No,
+                        buttons=QMessageBox.StandardButton.Yes
+                        | QMessageBox.StandardButton.No,
                     )
-                    if ret == QMessageBox.Yes:
+                    if ret == QMessageBox.StandardButton.Yes:
                         event.accept()
                     else:
                         event.ignore()

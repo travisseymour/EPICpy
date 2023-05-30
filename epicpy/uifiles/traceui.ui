@@ -12,7 +12,7 @@
   </property>
   <property name="font">
    <font>
-    <family>Consolas</family>
+    <family>Fira Mono</family>
     <pointsize>14</pointsize>
    </font>
   </property>
@@ -25,7 +25,7 @@
      <widget class="CachedPlainTextEdit" name="plainTextEditOutput">
       <property name="font">
        <font>
-        <family>Consolas</family>
+        <family>Fira Mono</family>
         <pointsize>14</pointsize>
        </font>
       </property>

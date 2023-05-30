@@ -25,8 +25,8 @@ import sys
 import weakref
 import timeit
 
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QFileDialog
+from PyQt6.QtCore import QTimer
+from PyQt6.QtWidgets import QFileDialog
 
 from epicpy.utils.apputils import unpack_param_string
 

@@ -137,7 +137,7 @@ class EPICAuditoryView(View_base):
             self.set_changed()
 
     # These functions should do nothing if the referred to object does not exist.
-    # The architecture elsewhere will signal an error. Currently leaving it up to
+    # The architecture elsewhere will signal an error. Currently, leaving it up to
     # self.view_window to deal with any invalid object_names that get through.
     # ----------------------------------------------------------------------------------
 
@@ -186,7 +186,7 @@ class EPICAuditoryView(View_base):
     ):
         if self.view_window.enabled:
             # NOTE: Currently only expecting property values that can be represented as string
-            #       e.g., {'Offset', 'Nil', 'Onset'}. If numeric or other types are needed, then prop_value.str()
+            #       event.g., {'Offset', 'Nil', 'Onset'}. If numeric or other types are needed, then prop_value.str()
             #       needs to be re-evaluated!
             self.view_window.change_object_property(
                 object_name.str(), prop_name.str(), prop_value.str()

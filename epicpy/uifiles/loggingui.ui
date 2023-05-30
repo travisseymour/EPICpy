@@ -24,7 +24,7 @@
   </property>
   <property name="font">
    <font>
-    <family>Consolas</family>
+    <family>Fira Mono</family>
     <pointsize>12</pointsize>
    </font>
   </property>
@@ -42,7 +42,7 @@
    </property>
    <property name="font">
     <font>
-     <family>Consolas</family>
+     <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -53,9 +53,8 @@
        <widget class="QCheckBox" name="checkBoxLogNormalOut">
         <property name="font">
          <font>
-          <family>Consolas</family>
+          <family>Fira Mono</family>
           <pointsize>12</pointsize>
-          <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>
@@ -68,7 +67,7 @@
        <spacer name="horizontalSpacer_2">
         <property name="font">
          <font>
-          <family>Consolas</family>
+          <family>Fira Mono</family>
           <pointsize>12</pointsize>
          </font>
         </property>
@@ -87,9 +86,8 @@
        <widget class="QToolButton" name="toolButtonNormalOut">
         <property name="font">
          <font>
-          <family>Consolas</family>
+          <family>Fira Mono</family>
           <pointsize>12</pointsize>
-          <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>
@@ -104,7 +102,7 @@
      <widget class="QPlainTextEdit" name="plainTextEditNormalOutFile">
       <property name="font">
        <font>
-        <family>Consolas</family>
+        <family>Fira Mono</family>
         <pointsize>12</pointsize>
        </font>
       </property>
@@ -122,9 +120,8 @@
        <widget class="QCheckBox" name="checkBoxLogTraceOut">
         <property name="font">
          <font>
-          <family>Consolas</family>
+          <family>Fira Mono</family>
           <pointsize>12</pointsize>
-          <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>
@@ -137,7 +134,7 @@
        <spacer name="horizontalSpacer">
         <property name="font">
          <font>
-          <family>Consolas</family>
+          <family>Fira Mono</family>
           <pointsize>12</pointsize>
          </font>
         </property>
@@ -156,9 +153,8 @@
        <widget class="QToolButton" name="toolButtonTraceOut">
         <property name="font">
          <font>
-          <family>Consolas</family>
+          <family>Fira Mono</family>
           <pointsize>12</pointsize>
-          <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>
@@ -173,7 +169,7 @@
      <widget class="QPlainTextEdit" name="plainTextEditTraceOutFile">
       <property name="font">
        <font>
-        <family>Consolas</family>
+        <family>Fira Mono</family>
         <pointsize>12</pointsize>
        </font>
       </property>
@@ -191,7 +187,7 @@
        <spacer name="horizontalSpacer_3">
         <property name="font">
          <font>
-          <family>Consolas</family>
+          <family>Fira Mono</family>
           <pointsize>12</pointsize>
          </font>
         </property>
@@ -212,9 +208,8 @@
          <widget class="QPushButton" name="pushButtonCancel">
           <property name="font">
            <font>
-            <family>Consolas</family>
+            <family>Fira Mono</family>
             <pointsize>12</pointsize>
-            <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
@@ -227,9 +222,8 @@
          <widget class="QPushButton" name="pushButtonOK">
           <property name="font">
            <font>
-            <family>Consolas</family>
+            <family>Fira Mono</family>
             <pointsize>12</pointsize>
-            <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>

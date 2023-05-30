@@ -18,8 +18,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from PyQt6.QtWidgets import QDialog, QApplication
+
 from epicpy.epiccoder.duplicateui import Ui_DuplicateFileDialog
-from PyQt5.QtWidgets import QDialog, QFileDialog, QApplication
 from pathlib import Path
 
 
@@ -83,6 +84,6 @@ if __name__ == "__main__":
     )
     window.show()
 
-    result = app.exec_()
+    result = app.exec()
     print(f"{window.result()=}")
     sys.exit()

@@ -39,16 +39,6 @@ from epicpy import pathEX
 OS = platform.system()
 
 
-def set_libname(libname: str):
-    global LIBNAME
-    LIBNAME = libname
-
-
-def set_headerpath(headerpath: str):
-    global HEADERPATH
-    HEADERPATH = headerpath
-
-
 # if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
 #     pathEX = Path(sys._MEIPASS)
 # else:
@@ -267,9 +257,6 @@ def fjoin(*elements):
 
 
 def get_resource(*args) -> Path:
-    OS = platform.system()
-    os_id = {"Linux": "linux", "Darwin": "mac", "Windows": "windows"}
-
     base_folder = Path(pathEX, "resources").resolve()
 
     target_path = Path(base_folder, *args)
@@ -303,6 +290,6 @@ def memoize_class_method(max_items=250):
 
 
 if __name__ == "__main__":
-    print(f"{get_resource('fonts', 'Consolas', 'ATTRIBUTION.txt')=}")
+    print(f"{get_resource('fonts', 'Fira Mono', 'ATTRIBUTION.txt')=}")
     print(f"{get_resource('epiclib', 'EPIC_LICENSE.txt')=}")
     print(f"{get_resource('fake_file.txt')=}")

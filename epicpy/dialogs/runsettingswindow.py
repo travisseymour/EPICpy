@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from epicpy.uifiles.runsettingsui import Ui_DialogRunSettings
-from PyQt5.QtWidgets import QDialog, QButtonGroup, QMessageBox
+from PyQt6.QtWidgets import QDialog, QButtonGroup, QMessageBox
 from epicpy.utils import config
 from typing import Callable
 
@@ -169,10 +169,10 @@ class RunSettingsWin(QDialog):
                 self,
                 "Confirm Action",
                 "Really DELETE the current data file?",
-                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
 
-            if ret == QMessageBox.Yes:
+            if ret == QMessageBox.StandardButton.Yes:
                 self.data_delete_func()
                 if isinstance(self.data_info_func, Callable):
                     self.ui.dataInfoLabel.setText(self.data_info_func())

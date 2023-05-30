@@ -27,6 +27,7 @@
   </property>
   <property name="font">
    <font>
+    <family>Fira Mono</family>
     <pointsize>12</pointsize>
    </font>
   </property>
@@ -43,9 +44,8 @@
       <widget class="QLabel" name="labelDeviceNameAndInfo">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
-         <weight>75</weight>
          <bold>true</bold>
         </font>
        </property>
@@ -61,7 +61,7 @@
       <widget class="QListWidget" name="listWidgetOptions">
        <property name="font">
         <font>
-         <family>Consolas</family>
+         <family>Fira Mono</family>
          <pointsize>14</pointsize>
         </font>
        </property>
@@ -73,7 +73,7 @@
         <spacer name="horizontalSpacer">
          <property name="font">
           <font>
-           <family>Consolas</family>
+           <family>Fira Mono</family>
            <pointsize>14</pointsize>
           </font>
          </property>
@@ -92,9 +92,8 @@
         <widget class="QPushButton" name="pushButtonCancel">
          <property name="font">
           <font>
-           <family>Consolas</family>
+           <family>Fira Mono</family>
            <pointsize>14</pointsize>
-           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>
@@ -107,9 +106,8 @@
         <widget class="QPushButton" name="pushButtonOK">
          <property name="font">
           <font>
-           <family>Consolas</family>
+           <family>Fira Mono</family>
            <pointsize>14</pointsize>
-           <weight>75</weight>
            <bold>true</bold>
           </font>
          </property>

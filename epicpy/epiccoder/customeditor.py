@@ -20,24 +20,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from pathlib import Path
 from typing import Callable, Optional
 
-# from PyQt5.QtWidgets import *
-# from PyQt5.QtCore import *
-# from PyQt5.QtGui import *
-#
-# from PyQt5.Qsci import *
-
 import keyword
 import pkgutil
 
-from PyQt5.Qsci import QsciScintilla
-from PyQt5.Qsci import QsciLexerPython
-from PyQt5.Qsci import QsciLexerCPP
-from PyQt5.Qsci import QsciAPIs
+from PyQt6.Qsci import QsciScintilla
+from PyQt6.Qsci import QsciLexerPython
+from PyQt6.Qsci import QsciLexerCPP
+from PyQt6.Qsci import QsciAPIs
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QColor, QKeyEvent
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QFont, QColor, QKeyEvent
 
-from epicpy.epiccoder.lexer import PyCustomLexer, PPSCustomLexer, TextCustomLexer
+from epicpy.epiccoder.lexer import PPSCustomLexer, TextCustomLexer  # , PyCustomLexer
 
 
 class CustomEditor(QsciScintilla):
@@ -99,10 +93,10 @@ class CustomEditor(QsciScintilla):
             # Default Settings
             self.pylexer.setDefaultColor(QColor(self.color1))
             self.pylexer.setDefaultPaper(QColor(self.color2))
-            self.pylexer.setDefaultFont(QFont("Consolas", 14))
+            self.pylexer.setDefaultFont(QFont("Fira Mono", 14))
 
             for i in range(50):
-                self.pylexer.setFont(QFont("Consolas", 14), i)
+                self.pylexer.setFont(QFont("Fira Mono", 14), i)
 
             self.pylexer.setColor(QColor("#4397E0"), QsciLexerPython.Number)
             self.pylexer.setColor(QColor("#F18622"), QsciLexerPython.Keyword)
@@ -125,10 +119,10 @@ class CustomEditor(QsciScintilla):
             # Default Settings
             self.pylexer.setDefaultColor(QColor(self.color1))
             self.pylexer.setDefaultPaper(QColor(self.color2))
-            self.pylexer.setDefaultFont(QFont("Consolas", 14))
+            self.pylexer.setDefaultFont(QFont("Fira Mono", 14))
 
             for i in range(50):
-                self.pylexer.setFont(QFont("Consolas", 14), i)
+                self.pylexer.setFont(QFont("Fira Mono", 14), i)
 
             self.pylexer.setColor(QColor("#4397E0"), QsciLexerCPP.Number)
             self.pylexer.setColor(QColor("#F18622"), QsciLexerCPP.Keyword)
@@ -181,7 +175,10 @@ class CustomEditor(QsciScintilla):
         self.textChanged.connect(self.onTextChanged)
 
     def keyPressEvent(self, e: QKeyEvent) -> None:
-        if e.modifiers() == Qt.ControlModifier and e.key() == Qt.Key_Space:
+        if (
+            e.modifiers() == Qt.KeyboardModifier.ControlModifier
+            and e.key() == Qt.Key.Key_Space
+        ):
             self.autoCompleteFromAll()
         else:
             return super().keyPressEvent(e)

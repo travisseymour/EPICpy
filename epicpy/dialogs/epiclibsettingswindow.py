@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pandas as pd
 
 from epicpy.uifiles.epiclibsettingsui import Ui_DialogEPICLibSettings
-from PyQt5.QtWidgets import QDialog, QMessageBox
+from PyQt6.QtWidgets import QDialog, QMessageBox
 from functools import partial
 from epicpy.utils import config
 
@@ -92,7 +92,7 @@ class EPICLibSettingsWin(QDialog):
 
         for i, info in self.epiclib_files.iterrows():
             """
-            pandas df, e.g:
+            pandas df, event.g:
                mac_ver   libdate                     filename
             2     1013  20160628  libEPIC_20160628.dylib
             3     1013  20141117  libEPIC_20141117.dylib

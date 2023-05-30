@@ -21,8 +21,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 
 os.environ["OUTDATED_IGNORE"] = "1"
-# TODO: vvv On MacOS BigSur, need to fix problem, but not sure if needed now that we switched to PyQt5
 os.environ["QT_MAC_WANTS_LAYER"] = "1"
+# os.environ["QT_DEBUG_PLUGINS"] = "1" # for more info when there are plugin load errors
+
+# fixed PyQt6 xcb plugin error on linux by installing: sudo apt install libxcb-cursor0
+# os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = "/home/nogard/GLOBAL_VENVS/EPICpy2_pyqt6/lib/python3.10/site-packages/PyQt6/Qt6/plugins/platforms"
 
 import datetime
 import ctypes.wintypes
@@ -36,27 +39,28 @@ from pathlib import Path
 from shutil import copyfile
 from loguru import logger as log
 
-from PyQt5.QtGui import QFontDatabase
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import qInstallMessageHandler, QCoreApplication
+from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFontDatabase
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import qInstallMessageHandler, QCoreApplication
 
 from epicpy.utils.apputils import get_resource, frozen
 from epicpy.utils import config
+from epicpy import set_app_font, set_app_font_bold
 
 # epiclib name (epiclib.so) is same on mac and linux.
 # just in case we were recently running on a different os,
 # let's copy the right one for this system
 try:
-    if platform.system() == 'Darwin':
-        if platform.machine() == 'x86_64':
-            copyfile(Path('epiclib', 'epiclib_macos.so'),
-                     Path('epiclib', 'epiclib.so'))
+    if platform.system() == "Darwin":
+        if platform.machine() == "x86_64":
+            copyfile(Path("epiclib", "epiclib_macos.so"), Path("epiclib", "epiclib.so"))
         else:
-            copyfile(Path('epiclib', 'epiclib_macos_arm.so'),
-                     Path('epiclib', 'epiclib.so'))
-    elif platform.system() == 'Linux':
-        copyfile(Path('epiclib', 'epiclib_linux.so'),
-                 Path('epiclib', 'epiclib.so'))
+            copyfile(
+                Path("epiclib", "epiclib_macos_arm.so"), Path("epiclib", "epiclib.so")
+            )
+    elif platform.system() == "Linux":
+        copyfile(Path("epiclib", "epiclib_linux.so"), Path("epiclib", "epiclib.so"))
 except Exception as e:
     print(f"Error trying to reset epiclib.so for {platform.system()}: '{e}'")
 
@@ -67,8 +71,8 @@ except ImportError:
     config.app_cfg.text_editor = ""
     config.save_app_config(True)
 
-
 DONE = False
+
 
 # dragon = Path('C:\\Users\\nogard\\Desktop\\mylog.txt')
 # dragon.write_text(f'{datetime.datetime.now().ctime()}')
@@ -157,6 +161,7 @@ else:
     # Unknown OS, do nothing
     ...
 
+
 # To test on Linux or Macos, run this:
 # ctypes.string_at(0)
 # NOTE: I can't figure out how to test on Windows.
@@ -167,41 +172,39 @@ else:
 
 
 def start_ui(app: QApplication):
-    global LIBNAME, HEADERPATH
     config.get_app_config()
     config.get_device_config(None)
-    fontDatabase = QFontDatabase()
-    fontDatabase.addApplicationFont(
-        str(get_resource("fonts", "Consolas", "Consolas_Regular.ttf"))
-    )
-    fontDatabase.addApplicationFont(
-        str(get_resource("fonts", "Consolas", "Consolas_Bold.ttf"))
-    )
-    fontDatabase.addApplicationFont(
-        str(get_resource("fonts", "Consolas", "Consolas_Italic.ttf"))
-    )
-    fontDatabase.addApplicationFont(
-        str(get_resource("fonts", "Consolas", "Consolas_Bold_Italic.ttf"))
-    )
 
-    fontDatabase.addApplicationFont(
-        str(get_resource("fonts", "FiraCode", "FiraCode-Regular.ttf"))
+    # prepare the default font
+    font_id = QFontDatabase.addApplicationFont(
+        str(get_resource("fonts", "FiraCode", "FiraCode-Regular.ttf").resolve())
     )
-    fontDatabase.addApplicationFont(
-        str(get_resource("fonts", "FiraCode", "FiraCode-Bold.ttf"))
-    )
-    fontDatabase.addApplicationFont(
-        str(get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Regular.ttf"))
-    )
-    fontDatabase.addApplicationFont(
-        str(get_resource("fonts", "JetBrainsMono", "JetBrainsMono-Bold.ttf"))
-    )
+    font = QFont()
+    if font_id:
+        font_families = QFontDatabase.applicationFontFamilies(font_id)
+        font_family = font_families[0] if font_families else None
+        if font_family:
+            font.setFamily(font_family)
+        else:
+            font.setFamily(font.defaultFamily())
+    else:
+        font.setFamily(font.defaultFamily())
+    font.setPointSize(12)
+
+    # Set the font for the application
+    QApplication.instance().setFont(font)
+
+    # Store global fonts for later use
+    set_app_font(font)
+    font_bold = QFont(font)
+    font_bold.setBold(True)
+    set_app_font_bold(font_bold)
 
     from epicpy.windows import mainwindow
 
-    main_win = mainwindow.MainWin(app)
+    _ = mainwindow.MainWin(app)
     app.lastWindowClosed.connect(shut_it_down)
-    return app.exec_()
+    return app.exec()
 
 
 def shut_it_down():
@@ -228,14 +231,18 @@ def main():
         # Ignore all the log messages I sprinkled throughout the code while developing
         log.remove(None)  # should disable all logs
 
-        # However, go ahead and send any error log messages to a log file
-        # in the config folder
-        config_dir = Path("~", ".config", "epicpy").expanduser()
+        # However, go ahead and send any error log messages to a log file in the config folder
+        if platform.system() == "Windows":
+            config_dir = Path(Path().home(), "Documents", "epicpy")
+        else:
+            config_dir = Path("~", ".config", "epicpy").expanduser()
 
         try:
             config_dir.mkdir(exist_ok=True)
-        except Exception as e:
-            print(f"WARNING: Unable to create config folder at {str(config_dir)}: {e}")
+        except Exception as err:
+            print(
+                f"WARNING: Unable to create config folder at {str(config_dir)}: {err}"
+            )
 
         log_file = Path(config_dir, "epicpy.log")
         log.add(log_file, level="ERROR")

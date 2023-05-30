@@ -18,11 +18,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PyQt5.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap
 
 from epicpy.utils.apputils import get_resource
 from epicpy.uifiles.aboutui import Ui_aboutDialog
-from PyQt5.QtWidgets import QDialog
+from PyQt6.QtWidgets import QDialog
 from epicpy.constants import version
 
 
