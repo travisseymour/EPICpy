@@ -1435,6 +1435,7 @@ class MainWin(QMainWindow):
             self.simulation.device.set_parameter_string(config.device_cfg.device_params)
         else:
             self.write(f"{e_info} Settings changes ignored.")
+            config.device_cfg.rollback()
 
     def show_display_settings_dialogs(self):
         if self.display_settings_dialog is None:
@@ -1451,6 +1452,7 @@ class MainWin(QMainWindow):
                 self.simulation.update_model_output_settings()
         else:
             self.write(f"{e_info} Display controls changes ignored.")
+            config.device_cfg.rollback()
 
     def show_trace_settings_dialogs(self):
         if self.trace_settings_dialog is not None:
@@ -1468,6 +1470,7 @@ class MainWin(QMainWindow):
             self.update_output_logging()
         else:
             self.write(f"{e_info} Trace Settings changes ignored.")
+            config.device_cfg.rollback()
 
     def show_log_settings_dialogs(self):
         if self.log_settings_dialog is not None:
@@ -1486,6 +1489,7 @@ class MainWin(QMainWindow):
             self.update_output_logging()
         else:
             self.write(f"{e_info} Log Settings changes ignored.")
+            config.device_cfg.rollback()
 
     def show_rule_break_settings_dialog(self):
         if not self.simulation or not self.simulation.model:
@@ -1562,6 +1566,7 @@ class MainWin(QMainWindow):
                 )
         else:
             self.write(f"{e_info} No changes made to application font size.")
+            config.app_cfg.rollback()
 
     def choose_text_editor(self):
         if self.text_editor_dialog is not None:
@@ -1580,6 +1585,7 @@ class MainWin(QMainWindow):
             self.write(
                 f"{e_info} No changes made to application EPICpy's text editor setting."
             )
+            config.device_cfg.rollback()
 
         self.ui.actionText_Editor.setText(
             f"Text Editor: {config.app_cfg.text_editor.upper()}"

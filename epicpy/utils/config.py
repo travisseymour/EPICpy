@@ -54,6 +54,9 @@ class AppConfig:
     text_editor: str = ""  # defaults to BUILT-IN editor
     config_file: str = ""
 
+    # will hold temporary config data, will not be saved to config file
+    current: dict = field(default_factory=dict)
+
     def __setattr__(self, key, value):
         super().__setattr__(key, value)
         global SAVE_CONFIG_ON_UPDATE
@@ -69,13 +72,31 @@ class AppConfig:
             config_dir = get_config_dir()
             self.config_file = str(Path(config_dir, "global_config.json").resolve())
 
+        cfg = {
+            key: value for key, value in app_cfg.__dict__.items() if not key == "current"
+        }
+
+        self.current['last_config'] = cfg
+
         try:
-            Path(self.config_file).write_text(json.dumps(app_cfg.__dict__, indent=4))
+            Path(self.config_file).write_text(json.dumps(cfg, indent=4))
             return True
         except Exception as e:
             log.error(
                 f'ERROR attempting to write to app configuration file @ "{str(self.config_file)}": {e}'
             )
+            return False
+
+    def rollback(self)->bool:
+        if 'last_config' not in self.current:
+            return False
+
+        try:
+            replace_app_config(self.current['last_config'])
+            del self.current['last_config']
+            return True
+        except Exception as e:
+            log.error(f"Unable to rollback app config, '{e}'")
             return False
 
 
@@ -174,6 +195,8 @@ class DeviceConfig:
             key: value for key, value in device_cfg.__dict__.items() if not key == "current"
         }
 
+        self.current['last_config'] = cfg
+
         try:
             Path(device_folder, device_config_file).write_text(json.dumps(cfg, indent=4))
             return True
@@ -182,6 +205,18 @@ class DeviceConfig:
                 f"Unable to write updated config file to "
                 f"{str(Path(device_folder, device_config_file))}:\n{e}"
             )
+            return False
+
+    def rollback(self)->bool:
+        if 'last_config' not in self.current:
+            return False
+
+        try:
+            replace_config(self.current['last_config'])
+            del self.current['last_config']
+            return True
+        except Exception as e:
+            log.error(f"Unable to rollback device config, '{e}'")
             return False
 
 
