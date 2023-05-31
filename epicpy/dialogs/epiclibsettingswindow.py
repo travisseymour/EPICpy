@@ -76,7 +76,6 @@ class EPICLibSettingsWin(QDialog):
             self.width(),
             self.height(),
         ]
-        config.save_app_config(quiet=True)
         super(EPICLibSettingsWin, self).resizeEvent(event)
 
     def clicked_item(self, press_ok: bool = False):

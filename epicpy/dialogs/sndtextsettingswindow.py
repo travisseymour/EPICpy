@@ -57,7 +57,6 @@ class SoundTextSettingsWin(QDialog):
             self.width(),
             self.height(),
         ]
-        config.save_app_config(quiet=True)
         super(SoundTextSettingsWin, self).resizeEvent(event)
 
     def setup_options(self):

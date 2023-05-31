@@ -98,7 +98,6 @@ class RunSettingsWin(QDialog):
     def resizeEvent(self, event):
         # self.resized.emit()  # in case you want to send this signal somewhere else
         config.app_cfg.dialog_size["runsettingswindow"] = [self.width(), self.height()]
-        config.save_app_config(quiet=True)
         super(RunSettingsWin, self).resizeEvent(event)
 
     def setup_options(self):

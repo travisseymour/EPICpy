@@ -171,9 +171,6 @@ class Simulation:
             device_file = file
 
         if device_file:
-            # save existing device config if necessary
-            if config.device_cfg.device_file:
-                config.save_config(quiet=True)
 
             # load config for this device, or create new device on if none exists already
             dark_mode = config.app_cfg.dark_mode
@@ -187,7 +184,6 @@ class Simulation:
 
             # save global app config in case we need last_device_file
             config.app_cfg.last_device_file = device_file
-            config.save_app_config(quiet=True)
 
             if not config.device_cfg.normal_out_file:
                 config.device_cfg.normal_out_file = (
@@ -465,8 +461,6 @@ class Simulation:
 
         self.parent.update_title()
 
-        config.save_config(quiet=True)
-
         self.write(f"{e_boxed_check} {kind} encoder successfully unloaded.")
 
     def on_load_encoder(self, kind: str, file: str = "", quiet: bool = False):
@@ -594,8 +588,6 @@ class Simulation:
             else:
                 config.device_cfg.auditory_encoder = encoder_file
 
-            config.save_config(quiet=True)
-
     def recompile_rules(self):
         self.current_rule_index = 0
         if (
@@ -692,7 +684,6 @@ class Simulation:
             # go ahead and save in case we need cfg.rule_files
             if not any(item.from_script for item in self.rule_files):
                 config.device_cfg.rule_files = rule_file_paths
-                config.save_config(quiet=True)
             endl = "\n"
             self.write(
                 f"\n{len(rule_file_paths)} ruleset files {note}:\n"

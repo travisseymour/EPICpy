@@ -67,7 +67,6 @@ class BreakSettingsWin(QDialog):
             self.width(),
             self.height(),
         ]
-        config.save_app_config(quiet=True)
         super(BreakSettingsWin, self).resizeEvent(event)
 
     def setup_options(self):

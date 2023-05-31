@@ -57,7 +57,6 @@ class TraceSettingsWin(QDialog):
             self.width(),
             self.height(),
         ]
-        config.save_app_config(quiet=True)
         super(TraceSettingsWin, self).resizeEvent(event)
 
     def setup_options(self):

@@ -64,13 +64,6 @@ try:
 except Exception as e:
     print(f"Error trying to reset epiclib.so for {platform.system()}: '{e}'")
 
-# some older versions of Linux won't be able to use epiccoder
-try:
-    from epicpy.epiccoder.customeditor import CustomEditor
-except ImportError:
-    config.app_cfg.text_editor = ""
-    config.save_app_config(True)
-
 DONE = False
 
 
@@ -161,7 +154,6 @@ else:
     # Unknown OS, do nothing
     ...
 
-
 # To test on Linux or Macos, run this:
 # ctypes.string_at(0)
 # NOTE: I can't figure out how to test on Windows.
@@ -170,10 +162,21 @@ else:
 # ==================================================
 # ==================================================
 
+# init config
+config.app_cfg = config.AppConfig()
+config.device_cfg = config.DeviceConfig()
+
 
 def start_ui(app: QApplication):
+    # load in any stored config data
     config.get_app_config()
     config.get_device_config(None)
+
+    # some older versions of Linux won't be able to use epiccoder
+    try:
+        from epicpy.epiccoder.customeditor import CustomEditor
+    except ImportError:
+        config.app_cfg.text_editor = ""
 
     # prepare the default font
     font_id = QFontDatabase.addApplicationFont(
@@ -212,8 +215,6 @@ def shut_it_down():
     if DONE:
         return
     DONE = True
-    config.save_config()
-    config.save_app_config()
     sys.exit()
 
 
@@ -232,17 +233,7 @@ def main():
         log.remove(None)  # should disable all logs
 
         # However, go ahead and send any error log messages to a log file in the config folder
-        if platform.system() == "Windows":
-            config_dir = Path(Path().home(), "Documents", "epicpy")
-        else:
-            config_dir = Path("~", ".config", "epicpy").expanduser()
-
-        try:
-            config_dir.mkdir(exist_ok=True)
-        except Exception as err:
-            print(
-                f"WARNING: Unable to create config folder at {str(config_dir)}: {err}"
-            )
+        config_dir = config.get_config_dir()
 
         log_file = Path(config_dir, "epicpy.log")
         log.add(log_file, level="ERROR")

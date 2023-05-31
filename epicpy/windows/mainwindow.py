@@ -155,8 +155,8 @@ class UdpThread(QThread):
 
     def __init__(self, parent, udp_ip: str, udp_port: int):
         super(UdpThread, self).__init__(parent)
-        self.udp_ip = udp_ip  # event.g., "127.0.0.1"
-        self.udp_port = udp_port  # event.g., 13047
+        self.udp_ip = udp_ip  # e.g., "127.0.0.1"
+        self.udp_port = udp_port  # e.g., 13047
         self.is_running = True
 
     def run(self):
@@ -334,7 +334,6 @@ class MainWin(QMainWindow):
         # I'm not sure Fira Mono is the right font for us...seems to mess up boxes.
         # So we're forcing the font_name configuration to be 'Fira Code' for now
         config.app_cfg.font_name = "Fira Code"
-        config.save_config(True)
 
         # This approach will presumably alter every widget that is a child of this window
         self.setStyleSheet(
@@ -366,7 +365,6 @@ class MainWin(QMainWindow):
         if config.app_cfg.auto_load_last_device:
             # this gets run when user tries to change epiclib version
             config.app_cfg.auto_load_last_device = False
-            config.save_app_config(quiet=True)
             two_off_timer = QTimer()
             two_off_timer.singleShot(500, partial(self.session_reload, quiet=True))
 
@@ -612,13 +610,12 @@ class MainWin(QMainWindow):
     # =========================================
 
     def session_reload(self, quiet: bool = True):
-        try:
-            assert Path(config.app_cfg.last_device_file).is_file()
+        if Path(config.app_cfg.last_device_file).is_file():
             self.on_load_device(config.app_cfg.last_device_file, quiet)
-        except Exception as e:
+        else:
             self.write(
                 emoji_box(
-                    f"ERROR: Unable to reload last session:\n{e}",
+                    f"ERROR: Unable to reload last session: No previous device found in settings.",
                     line="thick",
                 )
             )
@@ -757,7 +754,6 @@ class MainWin(QMainWindow):
 
         if Path(script_file).is_file():
             config.app_cfg.last_script_file = script_file
-            config.save_app_config(quiet=True)
 
         try:
             commands = pd.read_csv(
@@ -1450,11 +1446,9 @@ class MainWin(QMainWindow):
 
         if self.display_settings_dialog.ok:
             self.write(f"{e_info} Display controls changes accepted.")
-            config.save_config(quiet=True)
             if self.simulation and self.simulation.device and self.simulation.model:
                 self.update_output_logging()
                 self.simulation.update_model_output_settings()
-
         else:
             self.write(f"{e_info} Display controls changes ignored.")
 
@@ -1470,7 +1464,6 @@ class MainWin(QMainWindow):
 
         if self.trace_settings_dialog.ok:
             self.write(f"{e_info} Trace Settings changes accepted.")
-            config.save_config(quiet=True)
             self.simulation.update_model_output_settings()
             self.update_output_logging()
         else:
@@ -1493,8 +1486,6 @@ class MainWin(QMainWindow):
             self.update_output_logging()
         else:
             self.write(f"{e_info} Log Settings changes ignored.")
-
-        config.save_config()
 
     def show_rule_break_settings_dialog(self):
         if not self.simulation or not self.simulation.model:
@@ -1540,13 +1531,9 @@ class MainWin(QMainWindow):
 
         new_epiclib = config.device_cfg.epiclib_version
         if new_epiclib != old_epiclib:
-            # save new version in device config
-            if config.device_cfg.device_file:
-                config.save_config()
             # temporarily save new version in app config
             config.app_cfg.epiclib_version = new_epiclib
             config.app_cfg.auto_load_last_device = True
-            config.save_app_config()
 
     def set_application_font(self):
         # keeping the unused code from below just in case someone complains that they
@@ -1560,7 +1547,6 @@ class MainWin(QMainWindow):
 
         if self.font_size_dialog.ok:
             config.app_cfg.font_size = self.font_size_dialog.ui.spinBoxFontSize.value()
-            config.save_app_config(quiet=True)
             self.write(
                 f"{e_info} Application font size changed to {config.app_cfg.font_size} "
                 f"pt). Note that some dialogs may only use new font size after "
@@ -1604,6 +1590,8 @@ class MainWin(QMainWindow):
 
         self.set_stylesheet(config.app_cfg.dark_mode)
         self.set_stylesheet(config.app_cfg.dark_mode)
+
+
 
     def reveal_windows(self, window: str):
         try:

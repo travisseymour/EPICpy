@@ -61,7 +61,6 @@ class SearchWin(QDialog):
     def resizeEvent(self, event):
         # self.resized.emit()  # in case you want to send this signal somewhere else
         config.app_cfg.dialog_size["searchwindow"] = [self.width(), self.height()]
-        config.save_app_config(quiet=True)
         super(SearchWin, self).resizeEvent(event)
 
     def clicked_cancel_button(self):

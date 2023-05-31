@@ -57,7 +57,6 @@ class DisplayControlsWin(QDialog):
             self.width(),
             self.height(),
         ]
-        config.save_app_config(quiet=True)
         super(DisplayControlsWin, self).resizeEvent(event)
 
     def setup_options(self):

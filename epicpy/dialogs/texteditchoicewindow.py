@@ -80,7 +80,6 @@ class TextEditChoiceWin(QDialog):
             self.width(),
             self.height(),
         ]
-        config.save_app_config(quiet=True)
         super(TextEditChoiceWin, self).resizeEvent(event)
 
     def setup_options(self):
@@ -95,7 +94,6 @@ class TextEditChoiceWin(QDialog):
             self.ui.radioButtonDefault.setChecked(True)
         else:
             config.app_cfg.text_editor = "default"
-            config.save_app_config(True)
             self.setup_options()
 
     def clicked_cancel_button(self):
@@ -104,6 +102,5 @@ class TextEditChoiceWin(QDialog):
 
     def clicked_ok_button(self):
         config.app_cfg.text_editor = self.current_choice
-        config.save_app_config(True)
         self.ok = True
         self.hide()

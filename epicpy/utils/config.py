@@ -22,6 +22,11 @@ from dataclasses import dataclass, field, fields
 
 from loguru import logger as log
 
+SAVE_CONFIG_ON_UPDATE: bool = True
+
+device_cfg: Optional['DeviceConfig'] = None
+app_cfg: Optional['AppConfig'] = None
+
 """
 Global Configuration Variable
 """
@@ -47,6 +52,31 @@ class AppConfig:
         False  # only True when changing epiclib_version from UI
     )
     text_editor: str = ""  # defaults to BUILT-IN editor
+    config_file: str = ""
+
+    def __setattr__(self, key, value):
+        super().__setattr__(key, value)
+        global SAVE_CONFIG_ON_UPDATE
+        if SAVE_CONFIG_ON_UPDATE:
+            self.save_config()
+
+    def save_config(self) -> bool:
+        global app_cfg
+        if app_cfg is None:
+            return False
+
+        if not hasattr(self, 'config_file') or self.config_file == '':
+            config_dir = get_config_dir()
+            self.config_file = str(Path(config_dir, "global_config.json").resolve())
+
+        try:
+            Path(self.config_file).write_text(json.dumps(app_cfg.__dict__, indent=4))
+            return True
+        except Exception as e:
+            log.error(
+                f'ERROR attempting to write to app configuration file @ "{str(self.config_file)}": {e}'
+            )
+            return False
 
 
 @dataclass
@@ -118,12 +148,42 @@ class DeviceConfig:
     describe_parameters: bool = False
     allow_device_images: bool = False
 
+    device_config_file: str = ''
+
     # will hold temporary config data, will not be saved to config file
     current: dict = field(default_factory=dict)
 
+    def __setattr__(self, key, value):
+        super().__setattr__(key, value)
+        global SAVE_CONFIG_ON_UPDATE
+        if SAVE_CONFIG_ON_UPDATE:
+            self.save_config()
 
-device_cfg = DeviceConfig()  # *** Global Device Configuration ***
-app_cfg = AppConfig()  # *** Global App Configuration ***
+    def save_config(self):
+        global device_cfg
+        if device_cfg is None or not self.device_file:
+            return
+
+        # NOTE: it's important that this get recomputed every time!
+        device = Path(self.device_file)
+        device_folder = device.parent
+        device_name = device.stem.strip().replace(" ", "_")
+        device_config_file = f"{device_name}_config.json"
+
+        cfg = {
+            key: value for key, value in device_cfg.__dict__.items() if not key == "current"
+        }
+
+        try:
+            Path(device_folder, device_config_file).write_text(json.dumps(cfg, indent=4))
+            return True
+        except Exception as e:
+            log.error(
+                f"Unable to write updated config file to "
+                f"{str(Path(device_folder, device_config_file))}:\n{e}"
+            )
+            return False
+
 
 """
 Dataclass Utilities
@@ -137,13 +197,17 @@ def replace_config(new_items: dict):
     copying any relevant keys and values from new_items.
     """
     # https://stackoverflow.com/questions/57962873
-    global device_cfg
+    global device_cfg, SAVE_CONFIG_ON_UPDATE
+    SAVE_CONFIG_ON_UPDATE = False
     device_cfg = DeviceConfig()
-    for _field in fields(DeviceConfig):
-        try:
-            setattr(device_cfg, _field.name, new_items[_field.name])
-        except KeyError:
-            pass
+    try:
+        for _field in fields(DeviceConfig):
+            try:
+                setattr(device_cfg, _field.name, new_items[_field.name])
+            except KeyError:
+                pass
+    finally:
+        SAVE_CONFIG_ON_UPDATE = True
 
 
 def replace_app_config(new_items: dict):
@@ -153,40 +217,55 @@ def replace_app_config(new_items: dict):
     copying any relevant keys and values from new_items.
     """
     # https://stackoverflow.com/questions/57962873
-    global app_cfg
+    global app_cfg, SAVE_CONFIG_ON_UPDATE
+    SAVE_CONFIG_ON_UPDATE = False
     app_cfg = AppConfig()
-    for _field in fields(AppConfig):
-        try:
-            setattr(app_cfg, _field.name, new_items[_field.name])
-        except KeyError:
-            pass
-
+    try:
+        for _field in fields(AppConfig):
+            try:
+                setattr(app_cfg, _field.name, new_items[_field.name])
+            except KeyError:
+                pass
+    finally:
+        SAVE_CONFIG_ON_UPDATE = True
 
 """
 Configuration File Management
 """
 
 
-def get_app_config():
-    global app_cfg
+def get_config_dir() -> Path:
     if platform.system() == "Windows":
         config_dir = Path(Path().home(), "Documents", "epicpy")
     else:
         config_dir = Path("~", ".config", "epicpy").expanduser()
-    config_dir.mkdir(exist_ok=True)
+    try:
+        # just in case this is the very first run, create the config folder
+        config_dir.mkdir(exist_ok=True)
+    except Exception as err:
+        config_dir = Path().home().expanduser()
+        print(f"WARNING: Unable to create config folder at {str(config_dir)}: {err}!")
+        print(f"         Using {config_dir} instead.")
+
+    return config_dir
+
+
+def get_app_config():
+    global app_cfg
+    config_dir = get_config_dir()
     config_file = Path(config_dir, "global_config.json")
 
     try:
-        config = json.loads(config_file.read_text())
+        cfg = json.loads(config_file.read_text())
 
         try:
             # make sure config is new enough
-            cfg_ver = config["config_version"]
+            cfg_ver = cfg["config_version"]
             assert str(cfg_ver).isdigit()
             assert int(cfg_ver) >= 20211023
 
             # ok to merge loaded values into default config
-            replace_app_config(config)
+            replace_app_config(cfg)
         except (AssertionError, KeyError):
             log.info(
                 "Substantial changes have been made to the EPICpy configuration format. "
@@ -202,26 +281,6 @@ def get_app_config():
             f"using defaults."
         )
         app_cfg = AppConfig()
-
-
-def save_app_config(quiet: bool = False) -> bool:
-    if platform.system() == "Windows":
-        config_dir = Path(Path().home(), "Documents", "epicpy")
-    else:
-        config_dir = Path("~", ".config", "epicpy").expanduser()
-    config_dir.mkdir(exist_ok=True)
-    config_file = Path(config_dir, "global_config.json")
-
-    try:
-        config_file.write_text(json.dumps(app_cfg.__dict__, indent=4))
-        return True
-    except Exception as e:
-        if not quiet:
-            log.error(
-                f'ERROR attempting to read app configuration file "{config_file.name}" to '
-                f'"{str(config_dir)}: {e}"'
-            )
-        return False
 
 
 def get_device_config(device: Optional[Path]):
@@ -262,28 +321,3 @@ def get_device_config(device: Optional[Path]):
         )
         current = device_cfg.current
         device_cfg = DeviceConfig(current=current)
-
-
-def save_config(quiet: bool = False):
-    if not device_cfg.device_file:
-        return
-
-    device = Path(device_cfg.device_file)
-    device_folder = device.parent
-    device_name = device.stem.strip().replace(" ", "_")
-    device_config_file = f"{device_name}_config.json"
-
-    cfg = {
-        key: value for key, value in device_cfg.__dict__.items() if not key == "current"
-    }
-
-    try:
-        Path(device_folder, device_config_file).write_text(json.dumps(cfg, indent=4))
-        return True
-    except Exception as e:
-        if not quiet:
-            log.error(
-                f"Unable to write updated config file to "
-                f"{str(Path(device_folder, device_config_file))}:\n{e}"
-            )
-        return False

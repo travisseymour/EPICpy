@@ -65,7 +65,6 @@ class FontSizeDialog(QDialog):
     def resizeEvent(self, event: QSize):
         # self.resized.emit()  # in case you want to send this signal somewhere else
         config.app_cfg.dialog_size["fontsizewindow"] = [self.width(), self.height()]
-        config.save_app_config(quiet=True)
         super(FontSizeDialog, self).resizeEvent(event)
 
     def setup_options(self, update_spin_box: bool = True):
