@@ -26,7 +26,7 @@ from textwrap import dedent
 
 import pandas as pd
 from PyQt6.QtCore import pyqtSignal, QEvent
-from darktheme.widget_template_pyqt6 import DarkPalette
+import qdarktheme
 
 from epicpy.utils import fitness, config
 from epicpy.dialogs.aboutwindow import AboutWin
@@ -42,11 +42,9 @@ from PyQt6.QtGui import (
     QTextDocument,
     QCloseEvent,
     QPalette,
-    QColor,
     QMouseEvent,
     QFont,
     QGuiApplication,
-    QColorConstants,
 )
 
 from PyQt6.QtCore import (
@@ -326,7 +324,7 @@ class MainWin(QMainWindow):
         )
 
         self.default_palette = self.app.palette()
-        self.set_stylesheet(config.app_cfg.dark_mode)
+        self.change_darkmode(config.app_cfg.dark_mode)
 
         # I'm not sure Fira Mono is the right font for us...seems to mess up boxes.
         # So we're forcing the font_name configuration to be 'Fira Code' for now
@@ -493,8 +491,9 @@ class MainWin(QMainWindow):
         self.ui.actionMinimize_All.triggered.connect(self.minimize_windows)
         self.ui.actionClear_Output_Windows.triggered.connect(self.clear_output_windows)
         self.ui.actionSet_Application_Font.triggered.connect(self.set_application_font)
-        self.ui.actionDark_Mode_Toggle.triggered.connect(self.toggle_darkmode)
-        self.ui.actionDark_Mode_Toggle.setChecked(config.app_cfg.dark_mode)
+        self.ui.actionLight.triggered.connect(partial(self.change_darkmode, 'light'))
+        self.ui.actionDark.triggered.connect(partial(self.change_darkmode, 'dark'))
+        self.ui.actionAuto.triggered.connect(partial(self.change_darkmode, 'auto'))
         self.ui.actionDelete_Datafile.triggered.connect(self.delete_datafile)
 
         self.ui.actionRun_Simulation_Script.triggered.connect(
@@ -1558,12 +1557,15 @@ class MainWin(QMainWindow):
             self.write(f"{e_info} No changes made to application font size.")
             config.app_cfg.rollback()
 
-    def toggle_darkmode(self, dark_mode: bool):
-        config.app_cfg.dark_mode = dark_mode
+    def change_darkmode(self, dark_mode: str):
+        dm = str(dark_mode).lower()
+        if dark_mode in ('dark', 'light', 'auto'):
+            config.app_cfg.dark_mode = dm
+        else:
+            config.app_cfg.dark_mode = 'auto'
 
-        self.set_stylesheet(config.app_cfg.dark_mode)
-        self.set_stylesheet(config.app_cfg.dark_mode)
-
+        self.set_stylesheet(dm)
+        self.ui.menuDarkMode.setTitle(f'DarkMode: {dm.title()}')
 
 
     def reveal_windows(self, window: str):
@@ -1774,14 +1776,14 @@ class MainWin(QMainWindow):
     # Dark Mode Theme Switching
     # ============================================
 
-    def set_stylesheet(self, dark_mode):
+    def set_stylesheet(self, dark_mode: str):
         self.app.setStyle("Fusion")
 
-        if dark_mode:
-            self.app.setPalette(DarkPalette())
+        dm = str(dark_mode).lower()
+        if dm in ('dark', 'light'):
+            qdarktheme.setup_theme(dm)
         else:
-            self.app.setPalette(QPalette())
-
+            qdarktheme.setup_theme("auto")
 
     # =============================================
     # Layout Save/Restore

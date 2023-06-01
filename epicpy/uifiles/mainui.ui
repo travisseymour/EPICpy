@@ -107,6 +107,20 @@
     <property name="title">
      <string>Settings</string>
     </property>
+    <widget class="QMenu" name="menuDarkMode">
+     <property name="font">
+      <font>
+       <family>Fira Mono</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="title">
+      <string>Dark Mode: Light</string>
+     </property>
+     <addaction name="actionLight"/>
+     <addaction name="actionDark"/>
+     <addaction name="actionAuto"/>
+    </widget>
     <addaction name="actionTrace_Settings"/>
     <addaction name="actionDisplay_Controls"/>
     <addaction name="actionRule_Break_Settings"/>
@@ -117,7 +131,7 @@
     <addaction name="separator"/>
     <addaction name="actionSound_Text_Settings"/>
     <addaction name="actionSet_Application_Font"/>
-    <addaction name="actionDark_Mode_Toggle"/>
+    <addaction name="menuDarkMode"/>
    </widget>
    <widget class="QMenu" name="menuRun">
     <property name="title">
@@ -694,20 +708,6 @@
     </font>
    </property>
   </action>
-  <action name="actionDark_Mode_Toggle">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Dark Mode</string>
-   </property>
-   <property name="font">
-    <font>
-     <family>Fira Mono</family>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-  </action>
   <action name="actionUnload_Visual_Encoder">
    <property name="enabled">
     <bool>false</bool>
@@ -827,6 +827,39 @@
   <action name="actionRun_Simulation_Script">
    <property name="text">
     <string>Run Simulation Script</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Fira Mono</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionLight">
+   <property name="text">
+    <string>Light</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Fira Mono</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionDark">
+   <property name="text">
+    <string>Dark</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Fira Mono</family>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionAuto">
+   <property name="text">
+    <string>Auto</string>
    </property>
    <property name="font">
     <font>
