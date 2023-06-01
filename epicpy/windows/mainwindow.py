@@ -1012,11 +1012,6 @@ class MainWin(QMainWindow):
             event.ignore()
             return
 
-        try:
-            self.editor_window.close()
-        except:
-            ...
-
         self.manage_z_order = False
         self.closing = True
 
@@ -1595,14 +1590,6 @@ class MainWin(QMainWindow):
                 self.reveal_windows("visual")
                 self.reveal_windows("auditory")
                 self.reveal_windows("stats")
-
-                if self.editor_window is not None:
-                    try:
-                        self.editor_window.setHidden(False)
-                        self.editor_window.raise_()
-                        self.editor_window.activateWindow()
-                    except:
-                        ...
 
             self.raise_()
         finally:

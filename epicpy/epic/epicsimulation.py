@@ -162,7 +162,7 @@ class Simulation:
             else:
                 start_dir = str(Path.home())
             device_file, _ = QFileDialog.getOpenFileName(
-                None,
+                self.parent,
                 "Choose EPICpy Device File",
                 str(start_dir),
                 "Python Files (*.py)",
@@ -400,7 +400,7 @@ class Simulation:
             start_dir = str(Path.home())
 
         encoder_file, _ = QFileDialog.getOpenFileName(
-            None,
+            self.parent,
             f"Choose EPICpy {kind} Encoder File",
             str(start_dir),
             "Python Files (*.py)",
@@ -639,7 +639,7 @@ class Simulation:
                 start_dir = str(Path.home())
 
             rule_files = QFileDialog.getOpenFileNames(
-                None,
+                self.parent,
                 "Choose 1 or More EPIC RuleSet Files",
                 str(start_dir),
                 "Rule files (*.prs)",
