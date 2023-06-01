@@ -24,8 +24,8 @@ from loguru import logger as log
 
 SAVE_CONFIG_ON_UPDATE: bool = True
 
-device_cfg: Optional['DeviceConfig'] = None
-app_cfg: Optional['AppConfig'] = None
+device_cfg: Optional["DeviceConfig"] = None
+app_cfg: Optional["AppConfig"] = None
 
 """
 Global Configuration Variable
@@ -40,7 +40,7 @@ class AppConfig:
 
     last_device_file: str = ""  # for reloading last session
     last_script_file: str = ""
-    dark_mode: str = 'Light'  # in ('Light', 'Dark', 'Auto')
+    dark_mode: str = "Light"  # in ('Light', 'Dark', 'Auto')
     epiclib_version: str = (
         ""  # if not "", passes this value to DeviceConfig on app init
     )
@@ -68,16 +68,18 @@ class AppConfig:
         if app_cfg is None:
             return False
 
-        if not hasattr(self, 'config_file') or self.config_file == '':
+        if not hasattr(self, "config_file") or self.config_file == "":
             config_dir = get_config_dir()
             self.config_file = str(Path(config_dir, "global_config.json").resolve())
 
         cfg = {
-            key: value for key, value in app_cfg.__dict__.items() if not key == "current"
+            key: value
+            for key, value in app_cfg.__dict__.items()
+            if not key == "current"
         }
 
         try:
-            self.current['last_config'] = cfg
+            self.current["last_config"] = cfg
         except:
             ...
 
@@ -90,13 +92,13 @@ class AppConfig:
             )
             return False
 
-    def rollback(self)->bool:
-        if 'last_config' not in self.current:
+    def rollback(self) -> bool:
+        if "last_config" not in self.current:
             return False
 
         try:
-            replace_app_config(self.current['last_config'])
-            del self.current['last_config']
+            replace_app_config(self.current["last_config"])
+            del self.current["last_config"]
             return True
         except Exception as e:
             log.error(f"Unable to rollback app config, '{e}'")
@@ -172,7 +174,7 @@ class DeviceConfig:
     describe_parameters: bool = False
     allow_device_images: bool = False
 
-    device_config_file: str = ''
+    device_config_file: str = ""
 
     # will hold temporary config data, will not be saved to config file
     current: dict = field(default_factory=dict)
@@ -195,16 +197,20 @@ class DeviceConfig:
         device_config_file = f"{device_name}_config.json"
 
         cfg = {
-            key: value for key, value in device_cfg.__dict__.items() if not key == "current"
+            key: value
+            for key, value in device_cfg.__dict__.items()
+            if not key == "current"
         }
 
         try:
-            self.current['last_config'] = cfg
+            self.current["last_config"] = cfg
         except:
             ...
 
         try:
-            Path(device_folder, device_config_file).write_text(json.dumps(cfg, indent=4))
+            Path(device_folder, device_config_file).write_text(
+                json.dumps(cfg, indent=4)
+            )
             return True
         except Exception as e:
             log.error(
@@ -213,13 +219,13 @@ class DeviceConfig:
             )
             return False
 
-    def rollback(self)->bool:
-        if 'last_config' not in self.current:
+    def rollback(self) -> bool:
+        if "last_config" not in self.current:
             return False
 
         try:
-            replace_config(self.current['last_config'])
-            del self.current['last_config']
+            replace_config(self.current["last_config"])
+            del self.current["last_config"]
             return True
         except Exception as e:
             log.error(f"Unable to rollback device config, '{e}'")
@@ -269,6 +275,7 @@ def replace_app_config(new_items: dict):
                 pass
     finally:
         SAVE_CONFIG_ON_UPDATE = True
+
 
 """
 Configuration File Management

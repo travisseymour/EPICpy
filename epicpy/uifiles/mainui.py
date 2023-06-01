@@ -33,7 +33,9 @@ class Ui_MainWindow(object):
         font.setPointSize(14)
         font.setBold(False)
         self.plainTextEditOutput.setFont(font)
-        self.plainTextEditOutput.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.plainTextEditOutput.setContextMenuPolicy(
+            QtCore.Qt.ContextMenuPolicy.CustomContextMenu
+        )
         self.plainTextEditOutput.setDocumentTitle("")
         self.plainTextEditOutput.setReadOnly(True)
         self.plainTextEditOutput.setCenterOnScroll(False)
@@ -265,7 +267,9 @@ class Ui_MainWindow(object):
         self.actionAudio_Settings.setObjectName("actionAudio_Settings")
         self.actionEPIC_CLI_Debug_Messages = QtGui.QAction(parent=MainWindow)
         self.actionEPIC_CLI_Debug_Messages.setCheckable(True)
-        self.actionEPIC_CLI_Debug_Messages.setObjectName("actionEPIC_CLI_Debug_Messages")
+        self.actionEPIC_CLI_Debug_Messages.setObjectName(
+            "actionEPIC_CLI_Debug_Messages"
+        )
         self.actionFind = QtGui.QAction(parent=MainWindow)
         font = QtGui.QFont()
         font.setFamily("Fira Mono")
@@ -361,7 +365,9 @@ class Ui_MainWindow(object):
         font.setFamily("Fira Mono")
         font.setPointSize(12)
         self.actionUnload_Auditory_Encoder.setFont(font)
-        self.actionUnload_Auditory_Encoder.setObjectName("actionUnload_Auditory_Encoder")
+        self.actionUnload_Auditory_Encoder.setObjectName(
+            "actionUnload_Auditory_Encoder"
+        )
         self.actionStandard_Run = QtGui.QAction(parent=MainWindow)
         font = QtGui.QFont()
         font.setFamily("Fira Mono")
@@ -520,9 +526,13 @@ class Ui_MainWindow(object):
         self.actionRecompile_Rules.setText(_translate("MainWindow", "Recompile Rules"))
         self.actionQuit.setText(_translate("MainWindow", "Quit"))
         self.actionRun_Settings.setText(_translate("MainWindow", "Run Settings"))
-        self.actionDisplay_Controls.setText(_translate("MainWindow", "Display Controls"))
+        self.actionDisplay_Controls.setText(
+            _translate("MainWindow", "Display Controls")
+        )
         self.actionTrace_Settings.setText(_translate("MainWindow", "Trace Settings"))
-        self.actionRule_Break_Settings.setText(_translate("MainWindow", "Rule Break Settings"))
+        self.actionRule_Break_Settings.setText(
+            _translate("MainWindow", "Rule Break Settings")
+        )
         self.actionRun.setText(_translate("MainWindow", "Run"))
         self.actionRunAll.setText(_translate("MainWindow", "Run"))
         self.actionStop.setText(_translate("MainWindow", "Stop"))
@@ -530,44 +540,86 @@ class Ui_MainWindow(object):
         self.actionHelp.setText(_translate("MainWindow", "Help"))
         self.actionPause.setText(_translate("MainWindow", "Pause"))
         self.actionLogging.setText(_translate("MainWindow", "Logging"))
-        self.actionExport_Normal_Output.setText(_translate("MainWindow", "Export Normal Output"))
-        self.actionExport_Trace_Output.setText(_translate("MainWindow", "Export Trace Output"))
+        self.actionExport_Normal_Output.setText(
+            _translate("MainWindow", "Export Normal Output")
+        )
+        self.actionExport_Trace_Output.setText(
+            _translate("MainWindow", "Export Trace Output")
+        )
         self.actionSave_Layout.setText(_translate("MainWindow", "Save Layout"))
         self.actionLoad_Layout.setText(_translate("MainWindow", "Load Layout"))
-        self.actionReset_Layout.setText(_translate("MainWindow", "Restore Default Layout"))
-        self.actionReload_Session.setText(_translate("MainWindow", "Reload Last Session"))
-        self.actionShow_Trace_Window.setText(_translate("MainWindow", "Show Trace Window"))
-        self.actionShow_Visual_Views.setText(_translate("MainWindow", "Show Visual Views"))
-        self.actionShow_Auditory_Views.setText(_translate("MainWindow", "Show Auditory Views"))
+        self.actionReset_Layout.setText(
+            _translate("MainWindow", "Restore Default Layout")
+        )
+        self.actionReload_Session.setText(
+            _translate("MainWindow", "Reload Last Session")
+        )
+        self.actionShow_Trace_Window.setText(
+            _translate("MainWindow", "Show Trace Window")
+        )
+        self.actionShow_Visual_Views.setText(
+            _translate("MainWindow", "Show Visual Views")
+        )
+        self.actionShow_Auditory_Views.setText(
+            _translate("MainWindow", "Show Auditory Views")
+        )
         self.actionShow_All.setText(_translate("MainWindow", "Show All"))
-        self.actionClear_Output_Windows.setText(_translate("MainWindow", "Clear Output Windows"))
+        self.actionClear_Output_Windows.setText(
+            _translate("MainWindow", "Clear Output Windows")
+        )
         self.actionAudio_Settings.setText(_translate("MainWindow", "Audio Settings"))
-        self.actionEPIC_CLI_Debug_Messages.setText(_translate("MainWindow", "CLI and Device Debug Messages"))
+        self.actionEPIC_CLI_Debug_Messages.setText(
+            _translate("MainWindow", "CLI and Device Debug Messages")
+        )
         self.actionFind.setText(_translate("MainWindow", "Find"))
         self.actionFindNext.setText(_translate("MainWindow", "Find Next"))
         self.actionFindPrevious.setText(_translate("MainWindow", "Find Previous"))
         self.actionRun_One_Step.setText(_translate("MainWindow", "Run One Step"))
-        self.actionLoad_Visual_Encoder.setText(_translate("MainWindow", "Load Visual Encoder"))
-        self.actionLoad_Auditory_Encoder.setText(_translate("MainWindow", "Load Auditory Encoder"))
+        self.actionLoad_Visual_Encoder.setText(
+            _translate("MainWindow", "Load Visual Encoder")
+        )
+        self.actionLoad_Auditory_Encoder.setText(
+            _translate("MainWindow", "Load Auditory Encoder")
+        )
         self.actionMinimize_All.setText(_translate("MainWindow", "Minimize All"))
         self.actionDevice_Options.setText(_translate("MainWindow", "Device Options"))
-        self.actionEPICLib_Settings.setText(_translate("MainWindow", "EPICLib Settings"))
-        self.actionSet_Application_Font.setText(_translate("MainWindow", "Set Application Font"))
-        self.actionShow_Stats_Window.setText(_translate("MainWindow", "Show Stats Window"))
-        self.actionSound_Text_Settings.setText(_translate("MainWindow", "Sound Text Settings"))
-        self.actionExport_Stats_Output.setText(_translate("MainWindow", "Export Stats Output"))
-        self.actionUnload_Visual_Encoder.setText(_translate("MainWindow", "Unload Visual Encoder"))
-        self.actionUnload_Auditory_Encoder.setText(_translate("MainWindow", "Unload Auditory Encoder"))
+        self.actionEPICLib_Settings.setText(
+            _translate("MainWindow", "EPICLib Settings")
+        )
+        self.actionSet_Application_Font.setText(
+            _translate("MainWindow", "Set Application Font")
+        )
+        self.actionShow_Stats_Window.setText(
+            _translate("MainWindow", "Show Stats Window")
+        )
+        self.actionSound_Text_Settings.setText(
+            _translate("MainWindow", "Sound Text Settings")
+        )
+        self.actionExport_Stats_Output.setText(
+            _translate("MainWindow", "Export Stats Output")
+        )
+        self.actionUnload_Visual_Encoder.setText(
+            _translate("MainWindow", "Unload Visual Encoder")
+        )
+        self.actionUnload_Auditory_Encoder.setText(
+            _translate("MainWindow", "Unload Auditory Encoder")
+        )
         self.actionStandard_Run.setText(_translate("MainWindow", "Standard Run"))
         self.actionEncoder_Run.setText(_translate("MainWindow", "Encoder Run"))
         self.actionAll_Runs.setText(_translate("MainWindow", "All Runs"))
         self.actionDelete_Datafile.setText(_translate("MainWindow", "Delete Datafile"))
-        self.actionText_Editor.setText(_translate("MainWindow", "Text Editor: BUILT-IN"))
+        self.actionText_Editor.setText(
+            _translate("MainWindow", "Text Editor: BUILT-IN")
+        )
         self.actionStandardRun.setText(_translate("MainWindow", "Standard Run"))
         self.actionEncoderRun.setText(_translate("MainWindow", "Encoder Run"))
         self.actionAllRuns.setText(_translate("MainWindow", "All Runs"))
-        self.actionRun_Simulation_Script.setText(_translate("MainWindow", "Run Simulation Script"))
+        self.actionRun_Simulation_Script.setText(
+            _translate("MainWindow", "Run Simulation Script")
+        )
         self.actionLight.setText(_translate("MainWindow", "Light"))
         self.actionDark.setText(_translate("MainWindow", "Dark"))
         self.actionAuto.setText(_translate("MainWindow", "Auto"))
+
+
 from epicpy.widgets.cachedplaintextedit import CachedPlainTextEdit

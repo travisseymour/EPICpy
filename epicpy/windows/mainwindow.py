@@ -25,7 +25,10 @@ from itertools import chain
 from textwrap import dedent
 
 import pandas as pd
-from PySide6.QtCore import Signal, QEvent  # in PyQt5 it's pyqtSignal in PySide6 it's Signal
+from PySide6.QtCore import (
+    Signal,
+    QEvent,
+)  # in PyQt5 it's pyqtSignal in PySide6 it's Signal
 import qdarktheme
 from epicpy.utils import fitness, config
 from epicpy.dialogs.aboutwindow import AboutWin
@@ -490,9 +493,9 @@ class MainWin(QMainWindow):
         self.ui.actionMinimize_All.triggered.connect(self.minimize_windows)
         self.ui.actionClear_Output_Windows.triggered.connect(self.clear_output_windows)
         self.ui.actionSet_Application_Font.triggered.connect(self.set_application_font)
-        self.ui.actionLight.triggered.connect(partial(self.change_darkmode, 'light'))
-        self.ui.actionDark.triggered.connect(partial(self.change_darkmode, 'dark'))
-        self.ui.actionAuto.triggered.connect(partial(self.change_darkmode, 'auto'))
+        self.ui.actionLight.triggered.connect(partial(self.change_darkmode, "light"))
+        self.ui.actionDark.triggered.connect(partial(self.change_darkmode, "dark"))
+        self.ui.actionAuto.triggered.connect(partial(self.change_darkmode, "auto"))
         self.ui.actionDelete_Datafile.triggered.connect(self.delete_datafile)
 
         self.ui.actionRun_Simulation_Script.triggered.connect(
@@ -1558,14 +1561,13 @@ class MainWin(QMainWindow):
 
     def change_darkmode(self, dark_mode: str):
         dm = str(dark_mode).lower()
-        if dark_mode in ('dark', 'light', 'auto'):
+        if dark_mode in ("dark", "light", "auto"):
             config.app_cfg.dark_mode = dm
         else:
-            config.app_cfg.dark_mode = 'auto'
+            config.app_cfg.dark_mode = "auto"
 
         self.set_stylesheet(dm)
-        self.ui.menuDarkMode.setTitle(f'DarkMode: {dm.title()}')
-
+        self.ui.menuDarkMode.setTitle(f"DarkMode: {dm.title()}")
 
     def reveal_windows(self, window: str):
         try:
@@ -1779,7 +1781,7 @@ class MainWin(QMainWindow):
         self.app.setStyle("Fusion")
 
         dm = str(dark_mode).lower()
-        if dm in ('dark', 'light'):
+        if dm in ("dark", "light"):
             qdarktheme.setup_theme(dm)
         else:
             qdarktheme.setup_theme("auto")

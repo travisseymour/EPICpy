@@ -9,9 +9,24 @@ from pathlib import Path
 from setuptools import find_packages, setup
 
 DEPENDENCIES = [
-    "loguru", "pyqt5", "QScintilla", "python-dateutil", "ulid", "pingouin", "plum-dispatch", "ascii_frame", "ulid2"
+    "loguru",
+    "pyqt5",
+    "QScintilla",
+    "python-dateutil",
+    "ulid",
+    "pingouin",
+    "plum-dispatch",
+    "ascii_frame",
+    "ulid2",
 ]
-EXCLUDE_FROM_PACKAGES = ["contrib", "docs", "tests*", "test*", "build", "epicpy.egg-info"]
+EXCLUDE_FROM_PACKAGES = [
+    "contrib",
+    "docs",
+    "tests*",
+    "test*",
+    "build",
+    "epicpy.egg-info",
+]
 CURDIR = os.path.abspath(os.path.dirname(__file__))
 
 with io.open(os.path.join(CURDIR, "ReadMe.md"), "r", encoding="utf-8") as f:
@@ -20,21 +35,32 @@ with io.open(os.path.join(CURDIR, "ReadMe.md"), "r", encoding="utf-8") as f:
 if platform.system().lower() == "windows":
     PYTHON_VERSION = ">=3.9,<3.10"  # have yet to figure out how to compile epliclib with 3.10+ on windows using MSVC++ 2019
     epiclib_file = "epiclib.pyd"
-elif platform.system().lower() == 'linux':
+elif platform.system().lower() == "linux":
     Path("epicpy", "epiclib", "epiclib.so").unlink(missing_ok=True)
-    shutil.copyfile(Path("epicpy", "epiclib", "epiclib_linux.so"), Path("epicpy", "epiclib", "epiclib.so"))
+    shutil.copyfile(
+        Path("epicpy", "epiclib", "epiclib_linux.so"),
+        Path("epicpy", "epiclib", "epiclib.so"),
+    )
     PYTHON_VERSION = ">=3.10,<3.11"
     epiclib_file = "epiclib.so"
-elif platform.system().lower() == 'darwin':
+elif platform.system().lower() == "darwin":
     Path("epicpy", "epiclib", "epiclib.so").unlink(missing_ok=True)
     if "ARM" in os.uname().version.upper():
-        shutil.copyfile(Path("epicpy", "epiclib", "epiclib_macos_arm.so"), Path("epicpy", "epiclib", "epiclib.so"))
+        shutil.copyfile(
+            Path("epicpy", "epiclib", "epiclib_macos_arm.so"),
+            Path("epicpy", "epiclib", "epiclib.so"),
+        )
     else:
-        shutil.copyfile(Path("epicpy", "epiclib", "epiclib_macos.so"), Path("epicpy", "epiclib", "epiclib.so"))
+        shutil.copyfile(
+            Path("epicpy", "epiclib", "epiclib_macos.so"),
+            Path("epicpy", "epiclib", "epiclib.so"),
+        )
     PYTHON_VERSION = ">=3.10,<3.11"
     epiclib_file = "epiclib.so"
 else:
-    raise NotImplementedError(f'ERROR: No epiclib library for OS={platform.system()}. Unable to continue setup.')
+    raise NotImplementedError(
+        f"ERROR: No epiclib library for OS={platform.system()}. Unable to continue setup."
+    )
 
 
 def get_version():
@@ -44,6 +70,7 @@ def get_version():
         match = _version_re.search(f.read())
         version = match.group("version") if match is not None else '"unknown"'
     return str(ast.literal_eval(version))
+
 
 setup(
     name="epicpy",
@@ -56,9 +83,7 @@ setup(
     url="https://github.com/travisseymour/EPICpy",
     packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
     include_package_data=True,
-    package_data={
-        "": [epiclib_file]
-    },
+    package_data={"": [epiclib_file]},
     keywords=[],
     scripts=[],
     entry_points={
@@ -85,5 +110,5 @@ setup(
     #     I think essentially this causes setup.py to pull in ANYTHING you
     #     have added to git!
     use_scm_version=True,
-    setup_requires=['setuptools_scm']
+    setup_requires=["setuptools_scm"],
 )

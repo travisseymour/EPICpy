@@ -11,17 +11,19 @@ I only want to process ui files that actually changed.
 
 try:
     import PySide6.QtGui
-    qt_type = 'pyside6'
+
+    qt_type = "pyside6"
 except:
-    qt_type = ''
+    qt_type = ""
 
 if not qt_type:
     try:
         import PyQt6.QtGui
-        qt_type = 'pyqt6'
+
+        qt_type = "pyqt6"
     except:
-        qt_type = '???'
-        raise ValueError('Expecting To Find Either PySide6 or PyQt6!')
+        qt_type = "???"
+        raise ValueError("Expecting To Find Either PySide6 or PyQt6!")
 
 
 ui_files: List[Path] = list(Path().glob("*.ui"))
@@ -39,7 +41,9 @@ for ui in ui_files:
         found_anything = True
         print(f"Converting {ui.name} to {py.name}" | cyan)
         try:
-            local["pyuic6" if qt_type == 'pyqt6' else "pyside6-uic"]([str(ui.resolve()), "-o", str(py.resolve())])
+            local["pyuic6" if qt_type == "pyqt6" else "pyside6-uic"](
+                [str(ui.resolve()), "-o", str(py.resolve())]
+            )
             print(f"\tSuccess!" | green)
         except Exception as e:
             print(f"\tERROR: {e}" | red & bold)

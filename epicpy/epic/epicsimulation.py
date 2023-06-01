@@ -171,7 +171,6 @@ class Simulation:
             device_file = file
 
         if device_file:
-
             # load config for this device, or create new device on if none exists already
             dark_mode = config.app_cfg.dark_mode
             current = config.device_cfg.current
