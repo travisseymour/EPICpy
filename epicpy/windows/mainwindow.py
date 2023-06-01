@@ -36,6 +36,7 @@ from epicpy.dialogs.fontsizewindow import FontSizeDialog
 from epicpy.epic.runinfo import RunInfo
 from epicpy.uifiles.mainui import Ui_MainWindow
 from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
+from epicpy.utils.apputils import loading_cursor
 from epicpy.windows.statswindow import StatsWin
 from epicpy.windows.tracewindow import TraceWin
 from PySide6.QtGui import (
@@ -519,6 +520,7 @@ class MainWin(QMainWindow):
     # to nothing.
     # ==============================================================================
 
+    @loading_cursor
     def on_load_device(
         self, file: str = "", quiet: bool = False, auto_load_rules: bool = True
     ) -> bool:

@@ -22,6 +22,8 @@ import sys
 from collections import OrderedDict
 from pathlib import Path
 
+from PySide6.QtGui import QCursor, Qt
+from PySide6.QtWidgets import QApplication
 from loguru import logger as log
 
 import timeit
@@ -89,11 +91,11 @@ class Rect:
     __slots__ = "x", "y", "w", "h"
 
     def __init__(
-        self,
-        x: Union[float, int],
-        y: Union[float, int],
-        w: Union[float, int],
-        h: Union[float, int],
+            self,
+            x: Union[float, int],
+            y: Union[float, int],
+            w: Union[float, int],
+            h: Union[float, int],
     ):
         self.x = x
         self.y = y
@@ -206,7 +208,7 @@ class FancyTimer:
 
 
 def unpack_param_string(
-    pattern: str, delimiter: str = "|", left: str = "[", right: str = "]"
+        pattern: str, delimiter: str = "|", left: str = "[", right: str = "]"
 ) -> List[str]:
     """
     Expand the brace-delimited possibilities in a string.
@@ -287,6 +289,17 @@ def memoize_class_method(max_items=250):
         return memoized_func
 
     return decorator
+
+
+def loading_cursor(normal_function):
+    def decorated_function(*args, **kwargs):
+        QApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
+
+        normal_function(*args, **kwargs)
+
+        QApplication.restoreOverrideCursor()
+
+    return decorated_function
 
 
 if __name__ == "__main__":
