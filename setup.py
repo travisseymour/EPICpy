@@ -10,14 +10,15 @@ from setuptools import find_packages, setup
 
 DEPENDENCIES = [
     "loguru",
-    "pyqt5",
-    "QScintilla",
+    "PySide6",
     "python-dateutil",
     "ulid",
+    "ulid2",
     "pingouin",
     "plum-dispatch",
     "ascii_frame",
-    "ulid2",
+    "pandas",
+    "pyqtdarktheme"
 ]
 EXCLUDE_FROM_PACKAGES = [
     "contrib",
