@@ -31,7 +31,6 @@ from darktheme.widget_template_pyqt6 import DarkPalette
 from epicpy.utils import fitness, config
 from epicpy.dialogs.aboutwindow import AboutWin
 from epicpy.dialogs.fontsizewindow import FontSizeDialog
-from epicpy.dialogs.texteditchoicewindow import TextEditChoiceWin
 from epicpy.epic.runinfo import RunInfo
 from epicpy.uifiles.mainui import Ui_MainWindow
 from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
@@ -81,7 +80,6 @@ from epicpy.views.visualviewwindow import VisualViewWin
 from epicpy.views.auditoryviewwindow import AuditoryViewWin
 from epicpy.dialogs.epiclibsettingswindow import EPICLibSettingsWin
 from epicpy.dialogs.searchwindow import SearchWin
-from epicpy.epiccoder.mainwindow import MainWindow as MainEditorWindow
 from epicpy.epic.encoderpassthru import NullVisualEncoder, NullAuditoryEncoder
 import datetime
 import time
@@ -286,7 +284,6 @@ class MainWin(QMainWindow):
         self.sound_text_settings_dialog = None
         self.font_size_dialog = None
         self.text_editor_dialog = None
-        self.editor_window: Optional[MainEditorWindow] = None
 
         # setup state change watcher so all min or max together
         # note: this has to go before self.setup_view()
@@ -499,13 +496,6 @@ class MainWin(QMainWindow):
         self.ui.actionDark_Mode_Toggle.triggered.connect(self.toggle_darkmode)
         self.ui.actionDark_Mode_Toggle.setChecked(config.app_cfg.dark_mode)
         self.ui.actionDelete_Datafile.triggered.connect(self.delete_datafile)
-
-        self.ui.actionText_Editor.triggered.connect(self.choose_text_editor)
-        if not config.app_cfg.text_editor:
-            config.app_cfg.text_editor = "default"
-        self.ui.actionText_Editor.setText(
-            f"Text Editor: {config.app_cfg.text_editor.upper()}"
-        )
 
         self.ui.actionRun_Simulation_Script.triggered.connect(
             self.simulation_from_script
@@ -1568,29 +1558,6 @@ class MainWin(QMainWindow):
             self.write(f"{e_info} No changes made to application font size.")
             config.app_cfg.rollback()
 
-    def choose_text_editor(self):
-        if self.text_editor_dialog is not None:
-            self.text_editor_dialog.close()
-            self.text_editor_dialog = None
-        self.text_editor_dialog = TextEditChoiceWin()
-        self.text_editor_dialog.setup_options()
-        self.text_editor_dialog.setModal(True)
-        self.text_editor_dialog.exec()  # needed to make it modal?!
-
-        if self.text_editor_dialog.ok:
-            self.write(
-                f'{e_info} EPICpy\'s text editor setting is set to "{config.app_cfg.text_editor.upper()}".'
-            )
-        else:
-            self.write(
-                f"{e_info} No changes made to application EPICpy's text editor setting."
-            )
-            config.device_cfg.rollback()
-
-        self.ui.actionText_Editor.setText(
-            f"Text Editor: {config.app_cfg.text_editor.upper()}"
-        )
-
     def toggle_darkmode(self, dark_mode: bool):
         config.app_cfg.dark_mode = dark_mode
 
@@ -2259,80 +2226,30 @@ class MainWin(QMainWindow):
             file_path = None
 
         if file_path is not None:
-            editor_path = config.app_cfg.text_editor.lower()
             try:
-                if editor_path == "built-in":
-                    # If there is no current editor, create one
-                    if (
-                        (self.editor_window is None)
-                        or (not hasattr(self.editor_window, "isVisible"))
-                        or (not self.editor_window.isVisible())
-                    ):
-                        try:
-                            self.editor_window.close()
-                        except AttributeError:
-                            ...
-                        self.editor_window = None
-                        self.editor_window = MainEditorWindow()
-                        # FIXME: vvv this should open to current device folder if possible
-
-                        if (
-                            self.simulation
-                            and self.simulation.device
-                            and Path(config.device_cfg.device_file).is_file()
-                        ):
-                            self.editor_window.set_folder(
-                                Path(config.device_cfg.device_file).parent
-                            )
-                        else:
-                            # if all else fails, set wd to file parent
-                            self.editor_window.set_folder(
-                                file_path if file_path.is_dir() else file_path.parent
-                            )
-
-                    # In case editor was open prior to opening a device, make sure editor path is set to device path
-                    if (
-                        self.simulation
-                        and self.simulation.device
-                        and Path(self.editor_window.model.rootPath())
-                        != Path(config.device_cfg.device_file).parent
-                    ):
-                        self.editor_window.set_folder(
-                            Path(config.device_cfg.device_file).parent
-                        )
-
-                    # Time to actually open the file
-                    if file_path.is_file():
-                        self.editor_window.open_file(file_path)
-                    self.editor_window.show()
-                    self.editor_window.activateWindow()
-
+                # user has specified the system default editor
+                OS = platform.system()
+                if OS == "Linux":
+                    open_cmd = "xdg-open"
+                elif OS == "Darwin":
+                    open_cmd = "open"
+                elif OS == "Windows":
+                    open_cmd = "start"
                 else:
-                    # user has specified the system default editor
-                    OS = platform.system()
-                    if OS == "Linux":
-                        open_cmd = "xdg-open"
-                    elif OS == "Darwin":
-                        open_cmd = "open"
-                    elif OS == "Windows":
-                        open_cmd = "start"
-                    else:
-                        open_cmd = ""
-                        err_msg = (
-                            f"ERROR: EPICpy can only open system default editor on\n"
-                            f"Linux, Darwin, and Windows based operating systems.\n"
-                            f"It does not currently support your operating system type ({OS})."
-                        )
-                        self.write(emoji_box(err_msg, line="thick"))
-                    if open_cmd:
-                        subprocess.run([open_cmd, str(file_path.resolve())])
+                    open_cmd = ""
+                    err_msg = (
+                        f"ERROR: EPICpy can only open system default editor on\n"
+                        f"Linux, Darwin, and Windows based operating systems.\n"
+                        f"It does not currently support your operating system type ({OS})."
+                    )
+                    self.write(emoji_box(err_msg, line="thick"))
+                if open_cmd:
+                    subprocess.run([open_cmd, str(file_path.resolve())])
             except Exception as e:
                 self.write(
                     emoji_box(
                         f"ERROR: Unable to open {which_file} file\n"
-                        f"{file_path.name} in {'internal' if not editor_path else 'external'} text editor\n"
-                        f"({'BUILT-IN [EPICcoder]' if not editor_path else str(editor_path)}):\n"
-                        f"{e}",
+                        f"{file_path.name} in external text editor\n: {e}",
                         line="thick",
                     )
                 )

@@ -172,12 +172,6 @@ def start_ui(app: QApplication):
     config.get_app_config()
     config.get_device_config(None)
 
-    # some older versions of Linux won't be able to use epiccoder
-    try:
-        from epicpy.epiccoder.customeditor import CustomEditor
-    except ImportError:
-        config.app_cfg.text_editor = ""
-
     # prepare the default font
     font_id = QFontDatabase.addApplicationFont(
         str(get_resource("fonts", "FiraCode", "FiraCode-Regular.ttf").resolve())

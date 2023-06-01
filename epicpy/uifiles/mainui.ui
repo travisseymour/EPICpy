@@ -117,7 +117,6 @@
     <addaction name="separator"/>
     <addaction name="actionSound_Text_Settings"/>
     <addaction name="actionSet_Application_Font"/>
-    <addaction name="actionText_Editor"/>
     <addaction name="actionDark_Mode_Toggle"/>
    </widget>
    <widget class="QMenu" name="menuRun">
