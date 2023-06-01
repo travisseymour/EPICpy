@@ -25,7 +25,7 @@ import sys
 import weakref
 import timeit
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QTimer, QCoreApplication
 from PySide6.QtWidgets import QFileDialog
 
 from epicpy.utils.apputils import unpack_param_string
@@ -985,7 +985,11 @@ class Simulation:
         self.write("", copy_to_trace=True)
 
         duration = timeit.default_timer() - self.run_start_time
-        self.write(f"{e_info} (run took {duration:0.4f} seconds)")
+        while self.parent.ui.plainTextEditOutput.text_cache or self.parent.trace_win.ui.plainTextEditOutput.text_cache:
+            log.debug(f'waiting {timeit.default_timer() - self.run_start_time}')
+            QCoreApplication.processEvents()
+        self.write(f"{e_info} {self.rule_files[self.current_rule_index].parameter_string} (run took {duration:0.4f} seconds)", True)
+        log.info(f"{e_info} {self.rule_files[self.current_rule_index].parameter_string} (run took {duration:0.4f} seconds)")
 
         # For ensuring that all param string versions get run
         #  when done, drop to next section to make sure all files get run!

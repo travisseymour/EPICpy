@@ -24,8 +24,6 @@ os.environ["OUTDATED_IGNORE"] = "1"
 os.environ["QT_MAC_WANTS_LAYER"] = "1"
 # os.environ["QT_DEBUG_PLUGINS"] = "1" # for more info when there are plugin load errors
 
-# fixed PyQt6 xcb plugin error on linux by installing: sudo apt install libxcb-cursor0
-# os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = "/home/nogard/GLOBAL_VENVS/EPICpy2_pyqt6/lib/python3.10/site-packages/PyQt6/Qt6/plugins/platforms"
 
 import datetime
 import ctypes.wintypes
