@@ -21,11 +21,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from datetime import datetime
 from functools import partial
 
-from PyQt6.QtCore import QTimer
+from PySide6.QtCore import QTimer
 
 from epicpy.uifiles.statsui import Ui_StatsWindow
-from PyQt6.QtGui import QCloseEvent, QFont
-from PyQt6.QtWidgets import QMainWindow
+from PySide6.QtGui import QCloseEvent, QFont
+from PySide6.QtWidgets import QMainWindow
 from epicpy.utils import config
 
 

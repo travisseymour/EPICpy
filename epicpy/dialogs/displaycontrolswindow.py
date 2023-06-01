@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from epicpy.uifiles.displaycontrolsui import Ui_DialogDisplayControls
-from PyQt6.QtWidgets import QDialog
+from PySide6.QtWidgets import QDialog
 from epicpy.utils import config
 
 

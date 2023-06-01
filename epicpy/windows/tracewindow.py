@@ -19,12 +19,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import re
 
-from PyQt6.QtCore import Qt, QRegularExpression
+from PySide6.QtCore import Qt, QRegularExpression
 
 from epicpy.dialogs.searchwindow import SearchWin
 from epicpy.constants.stateconstants import RUNNING
 from epicpy.uifiles.traceui import Ui_TraceWindow
-from PyQt6.QtGui import (
+from PySide6.QtGui import (
     QCloseEvent,
     QFont,
     QTextCursor,
@@ -32,7 +32,7 @@ from PyQt6.QtGui import (
     QShowEvent,
     QHideEvent,
 )
-from PyQt6.QtWidgets import QMainWindow, QMenu
+from PySide6.QtWidgets import QMainWindow, QMenu
 import datetime
 from epicpy.utils import config
 

@@ -25,9 +25,8 @@ from itertools import chain
 from textwrap import dedent
 
 import pandas as pd
-from PyQt6.QtCore import pyqtSignal, QEvent
+from PySide6.QtCore import Signal, QEvent  # in PyQt5 it's pyqtSignal in PySide6 it's Signal
 import qdarktheme
-
 from epicpy.utils import fitness, config
 from epicpy.dialogs.aboutwindow import AboutWin
 from epicpy.dialogs.fontsizewindow import FontSizeDialog
@@ -36,7 +35,7 @@ from epicpy.uifiles.mainui import Ui_MainWindow
 from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
 from epicpy.windows.statswindow import StatsWin
 from epicpy.windows.tracewindow import TraceWin
-from PyQt6.QtGui import (
+from PySide6.QtGui import (
     QTextCursor,
     QTextDocumentWriter,
     QTextDocument,
@@ -47,7 +46,7 @@ from PyQt6.QtGui import (
     QGuiApplication,
 )
 
-from PyQt6.QtCore import (
+from PySide6.QtCore import (
     QTimer,
     QByteArray,
     QRegularExpression,
@@ -58,7 +57,7 @@ from PyQt6.QtCore import (
     QSize,
     QThread,
 )
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QFileDialog,
     QMainWindow,
     QMenu,
@@ -147,7 +146,7 @@ class StateChangeWatcher(QObject):
 
 
 class UdpThread(QThread):
-    messageReceived = pyqtSignal(str)
+    messageReceived = Signal(str)
 
     def __init__(self, parent, udp_ip: str, udp_port: int):
         super(UdpThread, self).__init__(parent)

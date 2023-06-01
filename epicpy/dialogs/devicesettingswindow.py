@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from epicpy.utils import config
 from epicpy.uifiles.devicesettingsui import Ui_DialogDeviceOptions
-from PyQt6.QtWidgets import QDialog, QCheckBox, QListWidgetItem
+from PySide6.QtWidgets import QDialog, QCheckBox, QListWidgetItem
 
 
 class DeviceOptionsWin(QDialog):

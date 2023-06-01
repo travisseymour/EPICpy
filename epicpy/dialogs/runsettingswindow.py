@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from epicpy.uifiles.runsettingsui import Ui_DialogRunSettings
-from PyQt6.QtWidgets import QDialog, QButtonGroup, QMessageBox
+from PySide6.QtWidgets import QDialog, QButtonGroup, QMessageBox
 from epicpy.utils import config
 from typing import Callable
 

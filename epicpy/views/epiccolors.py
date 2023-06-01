@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PyQt6.QtGui import QColor, QColorConstants
+from PySide6.QtGui import QColor, QColorConstants
 
 from epicpy.utils.localmunch import Munch
 

@@ -22,7 +22,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtGui import (
+from PySide6.QtGui import (
     QPainter,
     QPainterPath,
     QBrush,
@@ -37,8 +37,8 @@ from PyQt6.QtGui import (
     QShowEvent,
     QColorConstants,
 )
-from PyQt6.QtCore import Qt, QPoint, QRect, QRectF, QSize, QPointF
-from PyQt6.QtWidgets import QMainWindow, QGraphicsTextItem
+from PySide6.QtCore import Qt, QPoint, QRect, QRectF, QSize, QPointF
+from PySide6.QtWidgets import QMainWindow, QGraphicsTextItem
 from loguru import logger as log
 
 from epicpy import app_font
@@ -965,7 +965,10 @@ class VisualViewWin(QMainWindow):
         path = QPainterPath()
         font = QFont(app_font)
         font.setPointSize(round(self.scale * 0.8))
-        font.setWeight(100)
+        try:
+            font.setWeight(QFont.Light)  # PySide6
+        except TypeError:
+            font.setWeight(100)  # PyQt6
         self.setFont(font)
         font_height = QGraphicsTextItem("TEXT4HEIGHT").boundingRect().height()
         path.addText(x, y + font_height / 2, font, str(text))

@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from copy import deepcopy
 from pathlib import Path
 
-from PyQt6.QtGui import (
+from PySide6.QtGui import (
     QPainter,
     QPainterPath,
     QBrush,
@@ -35,8 +35,8 @@ from PyQt6.QtGui import (
     QShowEvent,
     QColorConstants,
 )
-from PyQt6.QtCore import Qt, QRect, QSize
-from PyQt6.QtWidgets import QMainWindow
+from PySide6.QtCore import Qt, QRect, QSize
+from PySide6.QtWidgets import QMainWindow
 from loguru import logger as log
 
 from epicpy import app_font
@@ -455,10 +455,12 @@ class AuditoryViewWin(QMainWindow):
     @memoize_class_method()
     def text_cache(self, x, y, text) -> QPainterPath:
         path = QPainterPath()
-        # font = QFont("Arial", 10, QFont.Light)
         font = QFont(app_font)
         font.setPointSize(round(self.scale * 0.8))
-        font.setWeight(100)
+        try:
+            font.setWeight(QFont.Light)  # PySide6
+        except TypeError:
+            font.setWeight(100)  # PyQt6
         for row, txt in enumerate(text.splitlines(keepends=False)):
             path.addText(x, y + row * font.pixelSize() * 15, font, txt)
         return path

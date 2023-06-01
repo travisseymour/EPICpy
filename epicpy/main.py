@@ -39,10 +39,10 @@ from pathlib import Path
 from shutil import copyfile
 from loguru import logger as log
 
-from PyQt6.QtGui import QFont
-from PyQt6.QtGui import QFontDatabase
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import qInstallMessageHandler, QCoreApplication
+from PySide6.QtGui import QFont
+from PySide6.QtGui import QFontDatabase
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import qInstallMessageHandler, QCoreApplication
 
 from epicpy.utils.apputils import get_resource, frozen
 from epicpy.utils import config

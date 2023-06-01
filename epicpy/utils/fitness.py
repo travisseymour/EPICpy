@@ -9,8 +9,8 @@ from typing import Tuple, Optional
 import webbrowser
 
 import pandas as pd
-from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QMainWindow
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QMainWindow
 
 import epicpy.utils.config as config
 from epicpy.utils.apputils import get_resource

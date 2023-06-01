@@ -18,11 +18,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PyQt6.QtCore import QSize
-from PyQt6.QtGui import QShowEvent
+from PySide6.QtCore import QSize
+from PySide6.QtGui import QShowEvent
 
 from epicpy.uifiles.fontsizeui import Ui_DialogFontSize
-from PyQt6.QtWidgets import QDialog
+from PySide6.QtWidgets import QDialog
 from epicpy.utils import config
 
 
