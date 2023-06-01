@@ -76,7 +76,10 @@ class AppConfig:
             key: value for key, value in app_cfg.__dict__.items() if not key == "current"
         }
 
-        self.current['last_config'] = cfg
+        try:
+            self.current['last_config'] = cfg
+        except:
+            ...
 
         try:
             Path(self.config_file).write_text(json.dumps(cfg, indent=4))
@@ -195,7 +198,10 @@ class DeviceConfig:
             key: value for key, value in device_cfg.__dict__.items() if not key == "current"
         }
 
-        self.current['last_config'] = cfg
+        try:
+            self.current['last_config'] = cfg
+        except:
+            ...
 
         try:
             Path(device_folder, device_config_file).write_text(json.dumps(cfg, indent=4))
