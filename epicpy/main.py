@@ -199,8 +199,10 @@ def start_ui(app: QApplication):
 
     _ = mainwindow.MainWin(app)
     app.lastWindowClosed.connect(shut_it_down)
-    return app.exec()
-
+    try:
+        return app.exec()
+    except AttributeError:
+        return app.exec_()
 
 def shut_it_down():
     global DONE
