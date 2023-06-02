@@ -19,9 +19,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os
+import platform
 
 os.environ["OUTDATED_IGNORE"] = "1"
-# os.environ["QT_MAC_WANTS_LAYER"] = "1"
+if platform.platform().split('-')[1].startswith('10.'):
+    os.environ["QT_MAC_WANTS_LAYER"] = "1"
+
 # os.environ["QT_DEBUG_PLUGINS"] = "1" # for more info when there are plugin load errors
 
 
@@ -30,7 +33,6 @@ import ctypes.wintypes
 import signal
 import sys
 import os
-import platform
 import re
 import subprocess
 from pathlib import Path
