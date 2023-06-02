@@ -22,7 +22,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtGui import (
+from qtpy.QtGui import (
     QPainter,
     QPainterPath,
     QBrush,
@@ -37,8 +37,8 @@ from PySide6.QtGui import (
     QShowEvent,
     QColorConstants,
 )
-from PySide6.QtCore import Qt, QPoint, QRect, QRectF, QSize, QPointF
-from PySide6.QtWidgets import QMainWindow, QGraphicsTextItem
+from qtpy.QtCore import Qt, QPoint, QRect, QRectF, QSize, QPointF
+from qtpy.QtWidgets import QMainWindow, QGraphicsTextItem
 from loguru import logger as log
 
 from epicpy import app_font

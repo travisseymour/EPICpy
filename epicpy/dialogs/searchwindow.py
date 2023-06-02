@@ -21,8 +21,8 @@ from functools import partial
 
 from epicpy.utils import config
 from epicpy.uifiles.searchui import Ui_DialogSearch
-from PySide6.QtWidgets import QDialog
-from PySide6.QtCore import Qt
+from qtpy.QtWidgets import QDialog
+from qtpy.QtCore import Qt
 
 
 class SearchWin(QDialog):

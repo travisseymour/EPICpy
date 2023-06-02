@@ -18,7 +18,7 @@ DEPENDENCIES = [
     "plum-dispatch",
     "ascii_frame",
     "pandas",
-    "pyqtdarktheme"
+    "pyqtdarktheme",
 ]
 EXCLUDE_FROM_PACKAGES = [
     "contrib",

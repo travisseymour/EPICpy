@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtGui import QFont
+from qtpy.QtGui import QFont
 
 if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
     pathEX = Path(sys._MEIPASS)

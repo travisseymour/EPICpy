@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
 
-from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QPlainTextEdit
+from qtpy.QtCore import QTimer
+from qtpy.QtWidgets import QPlainTextEdit
 
 from epicpy.constants.emoji import emoji_box, e_hourglass
 

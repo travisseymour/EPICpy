@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from epicpy.uifiles.sndtextsettingsui import Ui_DialogSndTextSettings
-from PySide6.QtWidgets import QDialog
+from qtpy.QtWidgets import QDialog
 from epicpy.utils import config
 
 

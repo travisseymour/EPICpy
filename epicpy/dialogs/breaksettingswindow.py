@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from epicpy.utils import config
 from epicpy.uifiles.breaksettingsui import Ui_DialogRuleBreak
-from PySide6.QtWidgets import QDialog, QCheckBox, QListWidgetItem
+from qtpy.QtWidgets import QDialog, QCheckBox, QListWidgetItem
 
 from epicpy.epiclib.epiclib import Model, Symbol
 

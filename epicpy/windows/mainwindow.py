@@ -25,7 +25,7 @@ from itertools import chain
 from textwrap import dedent
 
 import pandas as pd
-from PySide6.QtCore import (
+from qtpy.QtCore import (
     Signal,
     QEvent,
 )  # in PyQt5 it's pyqtSignal in PySide6 it's Signal
@@ -39,7 +39,7 @@ from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
 from epicpy.utils.apputils import loading_cursor
 from epicpy.windows.statswindow import StatsWin
 from epicpy.windows.tracewindow import TraceWin
-from PySide6.QtGui import (
+from qtpy.QtGui import (
     QTextCursor,
     QTextDocumentWriter,
     QTextDocument,
@@ -50,7 +50,7 @@ from PySide6.QtGui import (
     QGuiApplication,
 )
 
-from PySide6.QtCore import (
+from qtpy.QtCore import (
     QTimer,
     QByteArray,
     QRegularExpression,
@@ -61,7 +61,7 @@ from PySide6.QtCore import (
     QSize,
     QThread,
 )
-from PySide6.QtWidgets import (
+from qtpy.QtWidgets import (
     QFileDialog,
     QMainWindow,
     QMenu,

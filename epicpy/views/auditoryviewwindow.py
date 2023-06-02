@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from copy import deepcopy
 from pathlib import Path
 
-from PySide6.QtGui import (
+from qtpy.QtGui import (
     QPainter,
     QPainterPath,
     QBrush,
@@ -35,8 +35,8 @@ from PySide6.QtGui import (
     QShowEvent,
     QColorConstants,
 )
-from PySide6.QtCore import Qt, QRect, QSize
-from PySide6.QtWidgets import QMainWindow
+from qtpy.QtCore import Qt, QRect, QSize
+from qtpy.QtWidgets import QMainWindow
 from loguru import logger as log
 
 from epicpy import app_font
