@@ -1,9 +1,13 @@
 
 # EPICpy Changelog
-#### (lasted updated Thu Jun  1 23:30:47 2023)
+#### (lasted updated Thu Jun  1 23:31:28 2023)
 
 ---
 
+
+## VERSION: 2023.6.1
+
+---
 1. Attempting to use PySide6 on any OS except MacOs 10.x and below.
 2. Using qtpy instead of specific reference to pyside6 or pyqt6.
 3. Changed pyqt5 to pyside6 in setup.py, also added pyqtdarktheme and pandas explicitly.
