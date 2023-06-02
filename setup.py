@@ -8,9 +8,15 @@ from pathlib import Path
 
 from setuptools import find_packages, setup
 
+if platform.system() == 'Darwin' and platform.platform().split('-')[1].startswith('10.'):
+    qt_package = 'PySide2'
+else:
+    qt_package =  'PySide6'  # requires MacOS version 11 or higher
+
 DEPENDENCIES = [
     "loguru",
-    "PySide6",
+    "qtpy",
+    qt_package,
     "python-dateutil",
     "ulid",
     "ulid2",
@@ -18,7 +24,7 @@ DEPENDENCIES = [
     "plum-dispatch",
     "ascii_frame",
     "pandas",
-    "pyqtdarktheme",
+    "pyqtdarktheme"
 ]
 EXCLUDE_FROM_PACKAGES = [
     "contrib",
@@ -26,8 +32,9 @@ EXCLUDE_FROM_PACKAGES = [
     "tests*",
     "test*",
     "build",
-    "epicpy.egg-info",
+    "epicpy.egg-info"
 ]
+
 CURDIR = os.path.abspath(os.path.dirname(__file__))
 
 with io.open(os.path.join(CURDIR, "ReadMe.md"), "r", encoding="utf-8") as f:
@@ -76,7 +83,7 @@ def get_version():
 setup(
     name="epicpy",
     version=get_version(),
-    author="Travis Seymour",
+    author="Travis L. Seymour, PhD",
     author_email="nogard@ucsc.edu",
     description="Python interface to the EPIC computational cognitive architecture simulation environment.",
     long_description=README,
