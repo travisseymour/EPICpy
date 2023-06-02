@@ -1,8 +1,27 @@
 
 # EPICpy Changelog
-#### (lasted updated Mon May 29 13:22:11 2023)
+#### (lasted updated Thu Jun  1 23:30:47 2023)
 
 ---
+
+1. Attempting to use PySide6 on any OS except MacOs 10.x and below.
+2. Using qtpy instead of specific reference to pyside6 or pyqt6.
+3. Changed pyqt5 to pyside6 in setup.py, also added pyqtdarktheme and pandas explicitly.
+4. Fixed some QFileDialog.getOpenFileName calls and removed last bastion of code referencing the editor window.
+5. Nailed down minimal reqs. worked on getting duration to show after all other text. not succeeded but dumping it to console and trace window help for now.
+6. Added: Spinning cursor during device load.
+7. Quick format.
+8. PySide6 seems to be working fine.
+9. **CHANGE**: Using better approach to darkmode. Also has Auto mode that follows system settings.
+
+10. **CHANGE**: Removed built-in editor and menu to toggle it!
+
+11. Put last_config delete in try-except block - seems to be needed when going from old version of config file to new one.
+12. **FIXED**: ui settings changes are properly rolled back if user presses Cancel button.
+
+13. **CHANGE**: internally, updating config properties automatically saves config to disk.
+
+14. **CHANGE**: Updated EPICpy from PyQt5 to PyQt6
 
 
 ## VERSION: 2023.5.29
