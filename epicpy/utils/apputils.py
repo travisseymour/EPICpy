@@ -22,7 +22,8 @@ import sys
 from collections import OrderedDict
 from pathlib import Path
 
-from qtpy.QtGui import QCursor, Qt
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QCursor
 from qtpy.QtWidgets import QApplication
 from loguru import logger as log
 
