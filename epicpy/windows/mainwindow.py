@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
+import os
 import platform
 import socket
 
@@ -2236,7 +2236,10 @@ class MainWin(QMainWindow):
                     )
                     self.write(emoji_box(err_msg, line="thick"))
                 if open_cmd:
-                    subprocess.run([open_cmd, str(file_path.resolve())])
+                    if OS == "Windows":
+                        os.startfile(str(file_path.resolve()))
+                    else:
+                        subprocess.run([open_cmd, str(file_path.resolve())])
             except Exception as e:
                 self.write(
                     emoji_box(

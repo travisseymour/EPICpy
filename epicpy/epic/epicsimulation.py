@@ -50,9 +50,8 @@ warnings.filterwarnings("ignore", module="pingouin\..*")
 # KEEP HERE, NEEDED FOR DEVICES
 
 from epicpy.epiclib.epiclib import Model, Coordinator, Normal_out
-from epicpy.epiclib.epiclib import describe_parameters
+from epicpy.epiclib.epiclib import describe_parameters_u
 from epicpy.epiclib.epiclib import set_visual_encoder_ptr, set_auditory_encoder_ptr
-
 
 class Simulation:
     def __init__(self, parent):
@@ -819,9 +818,9 @@ class Simulation:
             self.model.initialize()
 
             if config.device_cfg.describe_parameters:
-                # self.model.get_human_ptr().describe_parameters(Normal_out)
-                describe_parameters(self.model, Normal_out)
-                self.write("\n")
+                self.write('\n')
+                self.write(describe_parameters_u(self.model))
+                self.write('\n')
 
             self.write(emoji_box("\nSIMULATION STARTING\n", line="double"))
 

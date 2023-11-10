@@ -60,7 +60,8 @@ try:
                 Path("epiclib", "epiclib_macos_arm.so"), Path("epiclib", "epiclib.so")
             )
     elif platform.system() == "Linux":
-        copyfile(Path("epiclib", "epiclib_linux.so"), Path("epiclib", "epiclib.so"))
+        copyfile(Path("epiclib", "epiclib_linux_temp.so"), Path("epiclib", "epiclib.so"))
+        # copyfile(Path("epiclib", "epiclib_linux.so"), Path("epiclib", "epiclib.so"))
 except Exception as e:
     print(f"Error trying to reset epiclib.so for {platform.system()}: '{e}'")
 
