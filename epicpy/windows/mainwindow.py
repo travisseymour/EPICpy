@@ -728,17 +728,16 @@ class MainWin(QMainWindow):
         else:
             start_dir = str(Path.home())
 
-        fd_options = QFileDialog.Options()
+        file_dialog = QFileDialog()
         if platform.system() == "Linux":
-            fd_options = fd_options | QFileDialog.Option.DontUseNativeDialog
+            file_dialog.setOption(QFileDialog.Option.DontUseNativeDialog, True)
 
         script_file, _ = QFileDialog.getOpenFileName(
             parent=None,
             caption="Choose EPICpy Device File",
-            directory=str(start_dir),
+            dir=str(start_dir),
             filter="CSV Files (*.csv);;Text Files (*.txt)",
-            initialFilter="CSV Files (*.csv)",
-            options=fd_options,
+            selectedFilter="CSV Files (*.csv)",
         )
 
         if not script_file:
@@ -1697,18 +1696,17 @@ class MainWin(QMainWindow):
             )
             initial_filter = "Text files (*.txt)"
 
-        fd_options = QFileDialog.Options()
+        file_dialog = QFileDialog()
         if platform.system() == "Linux" and kind == "Stats":
             # if we don't do this on linux, initial filename won't have correct extension!
             # it's pretty ugly!
-            fd_options = fd_options | QFileDialog.Option.DontUseNativeDialog
-        file, _ = QFileDialog.getSaveFileName(
+            file_dialog.setOption(QFileDialog.Option.DontUseNativeDialog, True)
+        file, _ = file_dialog.getSaveFileName(
             None,
             caption=f"Specify {kind} Output File",
-            directory=str(start_file),
+            dir=str(start_file),
             filter=_filter,
-            initialFilter=initial_filter,
-            options=fd_options,
+            selectedFilter=initial_filter,
         )
 
         return file
