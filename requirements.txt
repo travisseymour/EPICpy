@@ -1,3 +1,9 @@
+# NOTE: Currently using 3.10 on linux and macos, 3.9 on Win10
+# NOTE: Currently, the devices in fullbindings are the ones that work
+# NOTE: Fix PyQt6/PySide6 xcb plugin error on linux by installing: sudo apt install libxcb-cursor0
+#       (nothing seems required on windows)
+#       (mac??)
+
 # All
 # ------
 
@@ -12,7 +18,20 @@ pingouin==0.5.3
 plum_dispatch==2.0.1
 ascii_frame==0.0.1
 pandas==2.0.2
-pyqtdarktheme
+pyqtdarktheme==2.1.0
+
+PyQt5==5.15.10
+PyQt-Qt==55.15.2
+# Pillow
+# pyinstaller
+# sortedcontainers
+# QScintilla
+PyQt5-stubs==5.15.6.0
+# pyinstaller-hooks-contrib
+# hypothesis
+PyQt5-sip==12.13.0
+lazy_loader==0.4
+# altgraph
 
 # Development Only
 # -----------------
@@ -23,9 +42,4 @@ pytest==7.2.2
 # qt6-applications==6.4.3.2.3
 # pyqt6-tools==6.4.2.3.3
 qt6-tools==6.4.3.1.3
-
-# NOTE
-# ----
-# fixed PyQt6/PySide6 xcb plugin error on linux by installing: sudo apt install libxcb-cursor0
-#       (nothing seems required on windows)
-#       (mac??)
+# pip-check-reqs  # pip-missing-reqs [folder] OR pip-check-reqs [folder]
