@@ -1,15 +1,17 @@
 
 # EPICpy Changelog
-#### (lasted updated Tue Apr  9 12:35:04 2024)
+#### (lasted updated Tue Apr  9 12:37:21 2024)
 
 ---
 
-1. **FIXED**: requirements.txt did not seem to be a complete set of what was required.
+1. **FIXED**: requirements.txt had version error
 
-2. **FIXED**: save normal and trace output dialogs working properly now.
+2. **FIXED**: requirements.txt did not seem to be a complete set of what was required.
 
-3. Fixed 1) problem opening text files in default app from GUI on Windows. 2) printing of default epic params on model start.
-4. Fixed Qt import.
+3. **FIXED**: save normal and trace output dialogs working properly now.
+
+4. Fixed 1) problem opening text files in default app from GUI on Windows. 2) printing of default epic params on model start.
+5. Fixed Qt import.
 
 ## VERSION: 2023.6.1
 
