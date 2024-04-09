@@ -21,7 +21,7 @@ pandas==2.0.2
 pyqtdarktheme==2.1.0
 
 PyQt5==5.15.10
-PyQt-Qt==55.15.2
+PyQt-Qt==5.15.2
 # Pillow
 # pyinstaller
 # sortedcontainers
