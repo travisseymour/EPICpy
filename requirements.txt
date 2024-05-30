@@ -21,7 +21,7 @@ pandas==2.0.2
 pyqtdarktheme==2.1.0
 
 PyQt5==5.15.10
-PyQt-Qt==5.15.2
+# --> was on, but won't install on office pc PyQt-Qt==5.15.10
 # Pillow
 # pyinstaller
 # sortedcontainers

@@ -984,12 +984,12 @@ class Simulation:
         self.write("", copy_to_trace=True)
 
         duration = timeit.default_timer() - self.run_start_time
-        while (
-            self.parent.ui.plainTextEditOutput.text_cache
-            or self.parent.trace_win.ui.plainTextEditOutput.text_cache
-        ):
-            log.debug(f"waiting {timeit.default_timer() - self.run_start_time}")
-            QCoreApplication.processEvents()
+        # while (
+        #     self.parent.ui.plainTextEditOutput.text_cache
+        #     or self.parent.trace_win.ui.plainTextEditOutput.text_cache
+        # ):
+        #     log.debug(f"waiting {timeit.default_timer() - self.run_start_time}")
+        #     QCoreApplication.processEvents()
         self.write(
             f"{e_info} {self.rule_files[self.current_rule_index].parameter_string} (run took {duration:0.4f} seconds)",
             True,
