@@ -207,6 +207,7 @@ def start_ui(app: QApplication):
     except AttributeError:
         return app.exec_()
 
+
 def shut_it_down():
     global DONE
     if DONE:

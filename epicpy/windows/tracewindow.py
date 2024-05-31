@@ -37,14 +37,23 @@ import datetime
 from epicpy.utils import config
 from epicpy.widgets.largetextview import LargeTextView
 
+class Ui_TraceWindowCustom(Ui_TraceWindow):
+    """
+    This is so that we can add the LargeTextView and still
+    have PyCharm do proper lookups where it understands that
+    self.ui.plainTextEditOutput is a LargeTextView object
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.plainTextEditOutput: LargeTextView = LargeTextView()
 
 class TraceWin(QMainWindow):
     def __init__(self, parent):
-        super(TraceWin, self).__init__()
+        super(TraceWin, self).__init__(parent)
         self._parent = parent
         self.view_type = b"TraceOut"
         self.setObjectName("TraceWindow")
-        self.ui = Ui_TraceWindow()
+        self.ui = Ui_TraceWindowCustom()
         self.ui.setupUi(self)
         self.ui.plainTextEditOutput = LargeTextView()
         self.setCentralWidget(self.ui.plainTextEditOutput)
@@ -198,16 +207,14 @@ class TraceWin(QMainWindow):
 
     # ----------------------------------------
 
-    def enable_text_updates(self, enable: bool = True):
-        self.ui.plainTextEditOutput.cache_text = not enable
+    def enable_output_updating(self):
+        self.ui.plainTextEditOutput.set_updating(True)
+
+    def disable_output_updating(self):
+        self.ui.plainTextEditOutput.set_updating(False)
 
     def write(self, text: str):
         self.ui.plainTextEditOutput.write(text)
-
-    def dump_cache(self):
-        # return self.ui.plainTextEditOutput.dump_cache()
-        # TODO: I don't think we need to do this now!
-        pass
 
     def clear(self):
         self.ui.plainTextEditOutput.clear()
@@ -219,9 +226,10 @@ class TraceWin(QMainWindow):
             QMainWindow.closeEvent(self, event)
 
     def hideEvent(self, event: QHideEvent) -> None:
-        self.ui.plainTextEditOutput.can_write = False
+        self.ui.plainTextEditOutput.set_updating(False)
         QMainWindow.hideEvent(self, event)
 
     def showEvent(self, event: QShowEvent) -> None:
-        self.ui.plainTextEditOutput.can_write = True
+        # self.ui.plainTextEditOutput.can_write = True
+        self.ui.plainTextEditOutput.set_updating(True)
         QMainWindow.showEvent(self, event)

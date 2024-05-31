@@ -25,6 +25,7 @@ from itertools import chain
 from textwrap import dedent
 
 import pandas as pd
+from qtpy.QtGui import QHideEvent, QShowEvent
 from qtpy.QtCore import (
     Signal,
     QEvent,
@@ -171,6 +172,16 @@ class UdpThread(QThread):
         self.is_running = False
 
 
+class Ui_MainWindowCustom(Ui_MainWindow):
+    """
+    This is so that we can add the LargeTextView and still
+    have PyCharm do proper lookups where it understands that
+    self.ui.plainTextEditOutput is a LargeTextView object
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.plainTextEditOutput: LargeTextView = LargeTextView()
+
 class MainWin(QMainWindow):
     def __init__(self, app: QApplication):
         super(MainWin, self).__init__()
@@ -181,7 +192,7 @@ class MainWin(QMainWindow):
         self.tmp_folder = tempfile.TemporaryDirectory()
         self.closing = False
 
-        self.ui = Ui_MainWindow()
+        self.ui = Ui_MainWindowCustom()
         self.ui.setupUi(self)
 
         # add central widget and setup
@@ -1074,6 +1085,15 @@ class MainWin(QMainWindow):
 
         event.accept()
 
+    def hideEvent(self, event: QHideEvent) -> None:
+        self.ui.plainTextEditOutput.set_updating(False)
+        QMainWindow.hideEvent(self, event)
+
+    def showEvent(self, event: QShowEvent) -> None:
+        # self.ui.plainTextEditOutput.can_write = True
+        self.ui.plainTextEditOutput.set_updating(True)
+        QMainWindow.showEvent(self, event)
+
     def position_windows(self):
         try:
             self.manage_z_order = False
@@ -1131,8 +1151,8 @@ class MainWin(QMainWindow):
         #       for max speed. (March 2022 -- is this still the case?)
 
     def enable_text_updates(self, enable: bool = True):
-        self.ui.plainTextEditOutput.cache_text = not enable
-        self.trace_win.ui.plainTextEditOutput.cache_text = not enable
+        self.ui.plainTextEditOutput.set_updating(enable)
+        self.trace_win.ui.plainTextEditOutput.set_updating(enable)
 
     def clear_ui(
         self,
@@ -1170,11 +1190,6 @@ class MainWin(QMainWindow):
             self.ui.plainTextEditOutput.write(text)
             if copy_to_trace:
                 self.trace_win.ui.plainTextEditOutput.write(text)
-
-    def dump_cache(self):
-        # return self.ui.plainTextEditOutput.dump_cache()
-        # TODO: I don't think we need to do this now!
-        pass
 
     def clear(self):
         self.ui.plainTextEditOutput.clear()

@@ -103,23 +103,6 @@ class Simulation:
                 self.last_update_time = timeit.default_timer()
         # ** if 'never_during_run' then this function does nothing
 
-    def call_for_text_update(self, force: bool = False):
-        if config.device_cfg.text_refresh == "after_each_step":
-            if (
-                force
-                or self.steps_since_last_text_out
-                >= config.device_cfg.text_refresh_value
-            ):
-                self.parent.dump_cache()
-                self.parent.trace_win.dump_cache()
-
-                self.steps_since_last_text_out = 0
-            else:
-                self.steps_since_last_text_out += 1
-
-        # note: if text_refresh was 'continuously', there is no caching and so no need
-        # to update anything here if text_refresh was 'none_during_run', caching is
-        # supposed to stay on until the entire run is over
 
     def update_model_output_settings(self):
         # set some output and tracing options
@@ -766,7 +749,6 @@ class Simulation:
             # self.parent.write_plain('\n')
             self.instance.run_for(50)
             self.call_for_display_refresh()
-            self.call_for_text_update()
 
             run_result = self.device.state != self.device.SHUTDOWN
             self.run_time = self.model.get_time()
@@ -878,11 +860,8 @@ class Simulation:
         self.parent.run_state = RUNNING
 
         disable_views = config.device_cfg.display_refresh == "none_during_run"
+        disable_text = config.device_cfg.text_refresh == "none_during_run"
         self.parent.enable_view_updates(not disable_views)
-        disable_text = config.device_cfg.text_refresh in (
-            "after_each_step",
-            "none_during_run",
-        )
         self.parent.enable_text_updates(not disable_text)
 
         self.steps_run = 0
@@ -899,7 +878,6 @@ class Simulation:
             # self.parent.write_plain('\n')
             self.instance.run_for(50)
             self.call_for_display_refresh()
-            self.call_for_text_update()
 
             run_result = self.device.state != self.device.SHUTDOWN
             self.run_time = self.model.get_time()
@@ -953,7 +931,6 @@ class Simulation:
             self.parent.run_state = PAUSED
 
         self.call_for_display_refresh()
-        self.call_for_text_update(force=True)
 
         # just in case these were disabled during the run
         self.parent.enable_view_updates(True)
@@ -972,7 +949,6 @@ class Simulation:
         self.stop_model_now = True
 
         self.call_for_display_refresh()
-        self.call_for_text_update(force=True)
 
         # just in case these were disabled during the run
         self.parent.enable_view_updates(True)
