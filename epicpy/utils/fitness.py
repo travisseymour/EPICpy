@@ -14,7 +14,7 @@ from qtpy.QtWidgets import QMainWindow
 
 import epicpy.utils.config as config
 from epicpy.utils.apputils import get_resource
-from epicpy.widgets.cachedplaintextedit import CachedPlainTextEdit
+from epicpy.widgets.largetextview import LargeTextView
 
 """
 Code for testing various EPICpy functionality
@@ -221,7 +221,7 @@ def wait(window: QMainWindow, duration: float):
 
 def wait_for_output(
     window: QMainWindow,
-    text_edit: CachedPlainTextEdit,
+    text_edit: LargeTextView,
     target: str,
     sigil: Optional[str] = None,
     timeout_secs: float = 0.0,
@@ -236,7 +236,7 @@ def wait_for_output(
             break
         elif all(
             [
-                re.findall(pattern, text_edit.toPlainText())
+                re.findall(pattern, text_edit.get_text())
                 for pattern in target.split("||")
             ]
         ):

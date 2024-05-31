@@ -35,6 +35,7 @@ from qtpy.QtGui import (
 from qtpy.QtWidgets import QMainWindow, QMenu
 import datetime
 from epicpy.utils import config
+from epicpy.widgets.largetextview import LargeTextView
 
 
 class TraceWin(QMainWindow):
@@ -45,6 +46,7 @@ class TraceWin(QMainWindow):
         self.setObjectName("TraceWindow")
         self.ui = Ui_TraceWindow()
         self.ui.setupUi(self)
+        self.ui.plainTextEditOutput = LargeTextView()
         self.setCentralWidget(self.ui.plainTextEditOutput)
         self.can_close: bool = False
 
@@ -203,7 +205,9 @@ class TraceWin(QMainWindow):
         self.ui.plainTextEditOutput.write(text)
 
     def dump_cache(self):
-        return self.ui.plainTextEditOutput.dump_cache()
+        # return self.ui.plainTextEditOutput.dump_cache()
+        # TODO: I don't think we need to do this now!
+        pass
 
     def clear(self):
         self.ui.plainTextEditOutput.clear()

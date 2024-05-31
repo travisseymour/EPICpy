@@ -25,7 +25,7 @@ from qtpy.QtWidgets import QPlainTextEdit
 from epicpy.constants.emoji import emoji_box, e_hourglass
 
 
-class CachedPlainTextEdit(QPlainTextEdit):
+class XXXCachedPlainTextEdit(QPlainTextEdit):
     """
     When something is appended to this QPlainTextEdit widget, it gets added to the
     cache no matter what. If cache_text is enabled, then no further action is taken.

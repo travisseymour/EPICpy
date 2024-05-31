@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file '/home/nogard/Dropbox/Documents/EPICSTUFF/EPICpy2/EPICpy2_pyqt6/epicpy/uifiles/traceui.ui'
+# Form implementation generated from reading ui file '/home/nogard/Dropbox/Documents/EPICSTUFF/EPICpy2/EPICpy2/epicpy/uifiles/traceui.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.2
 #
@@ -21,19 +21,6 @@ class Ui_TraceWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout.setObjectName("gridLayout")
-        self.plainTextEditOutput = CachedPlainTextEdit(parent=self.centralwidget)
-        font = QtGui.QFont()
-        font.setFamily("Fira Mono")
-        font.setPointSize(14)
-        self.plainTextEditOutput.setFont(font)
-        self.plainTextEditOutput.setContextMenuPolicy(
-            QtCore.Qt.ContextMenuPolicy.CustomContextMenu
-        )
-        self.plainTextEditOutput.setDocumentTitle("")
-        self.plainTextEditOutput.setReadOnly(True)
-        self.plainTextEditOutput.setCenterOnScroll(False)
-        self.plainTextEditOutput.setObjectName("plainTextEditOutput")
-        self.gridLayout.addWidget(self.plainTextEditOutput, 0, 0, 1, 1)
         TraceWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(parent=TraceWindow)
         self.statusbar.setObjectName("statusbar")
@@ -45,7 +32,3 @@ class Ui_TraceWindow(object):
     def retranslateUi(self, TraceWindow):
         _translate = QtCore.QCoreApplication.translate
         TraceWindow.setWindowTitle(_translate("TraceWindow", "Trace Output Window"))
-        self.plainTextEditOutput.setPlainText(_translate("TraceWindow", "Ready."))
-
-
-from epicpy.widgets.cachedplaintextedit import CachedPlainTextEdit

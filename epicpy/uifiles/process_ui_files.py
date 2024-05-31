@@ -9,12 +9,14 @@ This converts .ui files to .py files for PyQt6, but to keep GIT history accurate
 I only want to process ui files that actually changed.
 """
 
-try:
-    import PySide6.QtGui
+# try:
+#     import PySide6.QtGui
+#
+#     qt_type = "pyside6"
+# except:
+#     qt_type = ""
 
-    qt_type = "pyside6"
-except:
-    qt_type = ""
+qt_type = "pyqt6"  # required for current designer built windows.
 
 if not qt_type:
     try:

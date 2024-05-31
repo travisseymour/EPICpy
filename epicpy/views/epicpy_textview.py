@@ -20,8 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from pathlib import Path
 from typing import List, Optional
 
-from epicpy.widgets.cachedplaintextedit import CachedPlainTextEdit
 import _io  # for type hinting only
+
+from epicpy.widgets.largetextview import LargeTextView
 
 
 class EPICTextViewCachedWrite:
@@ -32,7 +33,7 @@ class EPICTextViewCachedWrite:
           for use with PyStreamer objects (see py_streamer.h)
     """
 
-    def __init__(self, text_widget: CachedPlainTextEdit):
+    def __init__(self, text_widget: LargeTextView):
         super(EPICTextViewCachedWrite, self).__init__()
         self.text_widget = text_widget
         self.buffer = []

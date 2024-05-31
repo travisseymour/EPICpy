@@ -37,6 +37,7 @@ from epicpy.epic.runinfo import RunInfo
 from epicpy.uifiles.mainui import Ui_MainWindow
 from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
 from epicpy.utils.apputils import loading_cursor
+from epicpy.widgets.largetextview import LargeTextView
 from epicpy.windows.statswindow import StatsWin
 from epicpy.windows.tracewindow import TraceWin
 from qtpy.QtGui import (
@@ -44,7 +45,6 @@ from qtpy.QtGui import (
     QTextDocumentWriter,
     QTextDocument,
     QCloseEvent,
-    QPalette,
     QMouseEvent,
     QFont,
     QGuiApplication,
@@ -183,7 +183,16 @@ class MainWin(QMainWindow):
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        # add central widget and setup
+        self.ui.plainTextEditOutput = LargeTextView()
+        font = QFont("Fira Mono", 14)
+        self.ui.plainTextEditOutput.setFont(font)
+        self.ui.plainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.ui.plainTextEditOutput.setObjectName("MainWindow")  # "plainTextEditOutput"
+        self.ui.plainTextEditOutput.setPlainText(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
         self.setCentralWidget(self.ui.plainTextEditOutput)
+        self.normal_out_view = EPICTextViewCachedWrite( text_widget=self.ui.plainTextEditOutput )
 
         self.setUnifiedTitleAndToolBarOnMac(True)  # doesn't appear to make a difference
 
@@ -208,9 +217,6 @@ class MainWin(QMainWindow):
         self.run_state = UNREADY
 
         # attach Normal_out and PPS_out output to this window
-        self.normal_out_view = EPICTextViewCachedWrite(
-            text_widget=self.ui.plainTextEditOutput
-        )
         self.normal_out_view.text_widget.dark_mode = config.app_cfg.dark_mode
         self.normal_out_view_thread = UdpThread(
             self, udp_ip="127.0.0.1", udp_port=13050
@@ -1166,7 +1172,9 @@ class MainWin(QMainWindow):
                 self.trace_win.ui.plainTextEditOutput.write(text)
 
     def dump_cache(self):
-        return self.ui.plainTextEditOutput.dump_cache()
+        # return self.ui.plainTextEditOutput.dump_cache()
+        # TODO: I don't think we need to do this now!
+        pass
 
     def clear(self):
         self.ui.plainTextEditOutput.clear()
@@ -2003,9 +2011,7 @@ class MainWin(QMainWindow):
             selectAllAction = contextMenu.addAction("Select All")
 
             contextMenu.addSeparator()
-            if self.ui.plainTextEditOutput.copyAvailable and len(
-                self.ui.plainTextEditOutput.toPlainText()
-            ):
+            if self.ui.plainTextEditOutput.lines:
                 copyAction = contextMenu.addAction("Copy")
             else:
                 copyAction = None

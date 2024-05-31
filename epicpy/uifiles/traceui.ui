@@ -20,43 +20,10 @@
    <string>Trace Output Window</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
-     <widget class="CachedPlainTextEdit" name="plainTextEditOutput">
-      <property name="font">
-       <font>
-        <family>Fira Mono</family>
-        <pointsize>14</pointsize>
-       </font>
-      </property>
-      <property name="contextMenuPolicy">
-       <enum>Qt::CustomContextMenu</enum>
-      </property>
-      <property name="documentTitle">
-       <string/>
-      </property>
-      <property name="readOnly">
-       <bool>true</bool>
-      </property>
-      <property name="plainText">
-       <string>Ready.</string>
-      </property>
-      <property name="centerOnScroll">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
-   </layout>
+   <layout class="QGridLayout" name="gridLayout"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>CachedPlainTextEdit</class>
-   <extends>QPlainTextEdit</extends>
-   <header location="global">cachedplaintextedit.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -101,7 +101,7 @@
      </layout>
     </item>
     <item>
-     <widget class="CachedPlainTextEdit" name="plainTextEditFontSample">
+     <widget class="QPlainTextEdit" name="plainTextEditFontSample">
       <property name="font">
        <font>
         <family>Fira Mono</family>
@@ -192,13 +192,6 @@
    </layout>
   </widget>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>CachedPlainTextEdit</class>
-   <extends>QPlainTextEdit</extends>
-   <header location="global">cachedplaintextedit.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
