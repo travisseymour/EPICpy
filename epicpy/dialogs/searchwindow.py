@@ -19,6 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
 
+from qtpy.QtCore import QSize
+
 from epicpy.utils import config
 from epicpy.uifiles.searchui import Ui_DialogSearch
 from qtpy.QtWidgets import QDialog
@@ -26,8 +28,8 @@ from qtpy.QtCore import Qt
 
 
 class SearchWin(QDialog):
-    def __init__(self):
-        super(SearchWin, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(SearchWin, self).__init__(*args, **kwargs)
         self.ok = False
         self.ui = Ui_DialogSearch()
         self.ui.setupUi(self)
@@ -42,25 +44,26 @@ class SearchWin(QDialog):
 
         self.setStyleSheet(
             'QWidget {font: "'
-            + config.app_cfg.font_name
+            + config.app_cfg.font_name if hasattr(config.app_cfg, 'font_name') else 'Arial'
             + '"; font-size: '
-            + str(config.app_cfg.font_size)
+            + str(config.app_cfg.font_size) if hasattr(config.app_cfg, 'font_size') else '14'
             + "pt}"
         )
 
-        if "searchwindow" in config.app_cfg.dialog_size:
+        if hasattr(config.app_cfg, 'dialog_size') and "searchwindow" in config.app_cfg.dialog_size:
             w, h = config.app_cfg.dialog_size["searchwindow"]
             w = max(w, self.minimumWidth())
             w = min(w, self.maximumWidth())
             h = max(h, self.minimumHeight())
             h = min(h, self.maximumHeight())
-            self.resize(w, h)
+            self.resize(QSize(w, h))
 
         # self.setLayout(self.ui.verticalLayout_2)
 
     def resizeEvent(self, event):
         # self.resized.emit()  # in case you want to send this signal somewhere else
-        config.app_cfg.dialog_size["searchwindow"] = [self.width(), self.height()]
+        if hasattr(config.app_cfg, 'searchwindow'):
+            config.app_cfg.dialog_size["searchwindow"] = [self.width(), self.height()]
         super(SearchWin, self).resizeEvent(event)
 
     def clicked_cancel_button(self):

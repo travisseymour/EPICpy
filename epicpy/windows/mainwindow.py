@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+
 import os
 import platform
 import socket
@@ -116,7 +117,7 @@ class StateChangeWatcher(QObject):
     """
 
     def __init__(
-        self, parent=None, minimize_func: Callable = None, restore_func: Callable = None
+            self, parent=None, minimize_func: Callable = None, restore_func: Callable = None
     ):
         super(StateChangeWatcher, self).__init__(parent)
         self.minimize_func = minimize_func
@@ -178,9 +179,11 @@ class Ui_MainWindowCustom(Ui_MainWindow):
     have PyCharm do proper lookups where it understands that
     self.ui.plainTextEditOutput is a LargeTextView object
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.plainTextEditOutput: LargeTextView = LargeTextView()
+
 
 class MainWin(QMainWindow):
     def __init__(self, app: QApplication):
@@ -203,7 +206,7 @@ class MainWin(QMainWindow):
         self.ui.plainTextEditOutput.setObjectName("MainWindow")  # "plainTextEditOutput"
         self.ui.plainTextEditOutput.setPlainText(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
         self.setCentralWidget(self.ui.plainTextEditOutput)
-        self.normal_out_view = EPICTextViewCachedWrite( text_widget=self.ui.plainTextEditOutput )
+        self.normal_out_view = EPICTextViewCachedWrite(text_widget=self.ui.plainTextEditOutput)
 
         self.setUnifiedTitleAndToolBarOnMac(True)  # doesn't appear to make a difference
 
@@ -226,6 +229,7 @@ class MainWin(QMainWindow):
         QApplication.instance().focusWindowChanged.connect(self.window_focus_changed)
 
         self.run_state = UNREADY
+        self.last_search_spec = None
 
         # attach Normal_out and PPS_out output to this window
         self.normal_out_view.text_widget.dark_mode = config.app_cfg.dark_mode
@@ -278,19 +282,14 @@ class MainWin(QMainWindow):
 
         self.simulation = Simulation(self)
 
-        self.search_pattern = ""
-        self.search_using_regex = False
-        self.search_ignore_case = False
-        self.search_dialog = SearchWin()
-        self.search_dialog.setModal(True)
-        self.ui.actionFind.triggered.connect(self.query_search)
+        self.ui.actionFind.triggered.connect(self.ui.plainTextEditOutput.query_search)
         self.ui.actionFind.setShortcut("Ctrl+F")
-        self.ui.actionFindNext.triggered.connect(self.do_search)
-        self.ui.actionFindNext.setShortcut("F3")
-        self.ui.actionFindPrevious.triggered.connect(
-            partial(self.do_search, backwards=True)
-        )
-        self.ui.actionFindPrevious.setShortcut("Shift+F3")
+        # self.ui.actionFindNext.triggered.connect(self.do_search)
+        # self.ui.actionFindNext.setShortcut("F3")
+        # self.ui.actionFindPrevious.triggered.connect(
+        #     partial(self.do_search, backwards=True)
+        # )
+        # self.ui.actionFindPrevious.setShortcut("Shift+F3")
 
         self.run_settings_dialog = None
         self.display_settings_dialog = None
@@ -400,9 +399,9 @@ class MainWin(QMainWindow):
         try:
             self.manage_z_order = False
             for win in chain(
-                [self, self.trace_win, self.stats_win],
-                self.visual_views.values(),
-                self.auditory_views.values(),
+                    [self, self.trace_win, self.stats_win],
+                    self.visual_views.values(),
+                    self.auditory_views.values(),
             ):
                 if win.isVisible():
                     #     or win.windowState() == Qt.WindowMinimized:
@@ -539,7 +538,7 @@ class MainWin(QMainWindow):
 
     @loading_cursor
     def on_load_device(
-        self, file: str = "", quiet: bool = False, auto_load_rules: bool = True
+            self, file: str = "", quiet: bool = False, auto_load_rules: bool = True
     ) -> bool:
         self.layout_save()
 
@@ -734,8 +733,8 @@ class MainWin(QMainWindow):
 
     def simulation_from_script(self):
         if (
-            hasattr(config.app_cfg, "last_script_file")
-            and Path(config.app_cfg.last_script_file).is_file()
+                hasattr(config.app_cfg, "last_script_file")
+                and Path(config.app_cfg.last_script_file).is_file()
         ):
             start_dir = Path(config.app_cfg.last_script_file)
         elif Path(config.device_cfg.device_file).is_file():
@@ -838,7 +837,7 @@ class MainWin(QMainWindow):
         self.ui.plainTextEditOutput.write(pd.DataFrame(pretty).to_string(index=False))
 
         if self.on_load_device(
-            run_info[0].device_file, auto_load_rules=False
+                run_info[0].device_file, auto_load_rules=False
         ) and self.choose_rules(run_info):
             if run_info[0].clear_data:
                 self.delete_datafile()
@@ -989,12 +988,12 @@ class MainWin(QMainWindow):
         )
 
         for win in (
-            self.visual_physical_view,
-            self.visual_sensory_view,
-            self.visual_perceptual_view,
-            self.auditory_physical_view,
-            self.auditory_sensory_view,
-            self.auditory_perceptual_view,
+                self.visual_physical_view,
+                self.visual_sensory_view,
+                self.visual_perceptual_view,
+                self.auditory_physical_view,
+                self.auditory_sensory_view,
+                self.auditory_perceptual_view,
         ):
             win.set_changed()
 
@@ -1109,7 +1108,7 @@ class MainWin(QMainWindow):
             self.manage_z_order = True
 
     def set_view_background_image(
-        self, view_type: str, img_filename: str, scaled: bool = True
+            self, view_type: str, img_filename: str, scaled: bool = True
     ):
         if not config.device_cfg.allow_device_images:
             return
@@ -1155,12 +1154,12 @@ class MainWin(QMainWindow):
         self.trace_win.ui.plainTextEditOutput.set_updating(enable)
 
     def clear_ui(
-        self,
-        visual_views: bool = True,
-        auditory_views: bool = True,
-        normal_output: bool = True,
-        trace_output: bool = True,
-        stats_output: bool = True,
+            self,
+            visual_views: bool = True,
+            auditory_views: bool = True,
+            normal_output: bool = True,
+            trace_output: bool = True,
+            stats_output: bool = True,
     ):
         if visual_views:
             for view in self.visual_views.values():
@@ -1232,8 +1231,8 @@ class MainWin(QMainWindow):
         has_rules = (
             True
             if self.simulation
-            and self.simulation.model
-            and self.simulation.model.get_prs_filename() != ""
+               and self.simulation.model
+               and self.simulation.model.get_prs_filename() != ""
             else False
         )
         has_device = (
@@ -1241,14 +1240,14 @@ class MainWin(QMainWindow):
         )
 
         has_visual_encoder = (
-            self.simulation
-            and (self.simulation.visual_encoder is not None)
-            and (not hasattr(self.simulation.visual_encoder, "is_null_encoder"))
+                self.simulation
+                and (self.simulation.visual_encoder is not None)
+                and (not hasattr(self.simulation.visual_encoder, "is_null_encoder"))
         )
         has_auditory_encoder = (
-            self.simulation
-            and (self.simulation.auditory_encoder is not None)
-            and (not hasattr(self.simulation.auditory_encoder, "is_null_encoder"))
+                self.simulation
+                and (self.simulation.auditory_encoder is not None)
+                and (not hasattr(self.simulation.auditory_encoder, "is_null_encoder"))
         )
 
         self.ui.actionStop.setEnabled(True)
@@ -1290,8 +1289,8 @@ class MainWin(QMainWindow):
         has_rules = (
             True
             if self.simulation
-            and self.simulation.model
-            and self.simulation.model.get_prs_filename() != ""
+               and self.simulation.model
+               and self.simulation.model.get_prs_filename() != ""
             else False
         )
         has_device = (
@@ -1299,14 +1298,14 @@ class MainWin(QMainWindow):
         )
 
         has_visual_encoder = (
-            self.simulation
-            and (self.simulation.visual_encoder is not None)
-            and (not hasattr(self.simulation.visual_encoder, "is_null_encoder"))
+                self.simulation
+                and (self.simulation.visual_encoder is not None)
+                and (not hasattr(self.simulation.visual_encoder, "is_null_encoder"))
         )
         has_auditory_encoder = (
-            self.simulation
-            and (self.simulation.auditory_encoder is not None)
-            and (not hasattr(self.simulation.auditory_encoder, "is_null_encoder"))
+                self.simulation
+                and (self.simulation.auditory_encoder is not None)
+                and (not hasattr(self.simulation.auditory_encoder, "is_null_encoder"))
         )
 
         self.ui.actionStop.setEnabled(False)
@@ -1363,11 +1362,11 @@ class MainWin(QMainWindow):
 
         encoders = []
         if self.simulation.visual_encoder and not isinstance(
-            self.simulation.visual_encoder, NullVisualEncoder
+                self.simulation.visual_encoder, NullVisualEncoder
         ):
             encoders.append("Visual")
         if self.simulation.auditory_encoder and not isinstance(
-            self.simulation.auditory_encoder, NullAuditoryEncoder
+                self.simulation.auditory_encoder, NullAuditoryEncoder
         ):
             encoders.append("Auditory")
         if encoders:
@@ -1621,9 +1620,9 @@ class MainWin(QMainWindow):
         try:
             self.manage_z_order = False
             for win in chain(
-                [self, self.trace_win, self.stats_win],
-                (self.visual_views.values()),
-                self.auditory_views.values(),
+                    [self, self.trace_win, self.stats_win],
+                    (self.visual_views.values()),
+                    self.auditory_views.values(),
             ):
                 if not win.isVisible():
                     continue
@@ -1639,9 +1638,9 @@ class MainWin(QMainWindow):
         try:
             self.manage_z_order = False
             for win in chain(
-                [self, self.trace_win, self.stats_win],
-                self.visual_views.values(),
-                self.auditory_views.values(),
+                    [self, self.trace_win, self.stats_win],
+                    self.visual_views.values(),
+                    self.auditory_views.values(),
             ):
                 if not win.isVisible():
                     continue
@@ -1813,9 +1812,9 @@ class MainWin(QMainWindow):
 
         # save window states
         for win in chain(
-            [self, self.trace_win, self.stats_win],
-            self.visual_views.values(),
-            self.auditory_views.values(),
+                [self, self.trace_win, self.stats_win],
+                self.visual_views.values(),
+                self.auditory_views.values(),
         ):
             obj_name = win.objectName().replace(" ", "")
 
@@ -1857,9 +1856,9 @@ class MainWin(QMainWindow):
         try:
             # reposition/size windows according to saved values
             for win in chain(
-                [self, self.trace_win, self.stats_win],
-                self.visual_views.values(),
-                self.auditory_views.values(),
+                    [self, self.trace_win, self.stats_win],
+                    self.visual_views.values(),
+                    self.auditory_views.values(),
             ):
                 obj_name = win.objectName().replace(" ", "")
 
@@ -2023,13 +2022,12 @@ class MainWin(QMainWindow):
             stopAction = None
 
             searchAction = contextMenu.addAction("Search")
-            selectAllAction = contextMenu.addAction("Select All")
+            # selectAllAction = contextMenu.addAction("Select All")
 
             contextMenu.addSeparator()
-            if self.ui.plainTextEditOutput.lines:
-                copyAction = contextMenu.addAction("Copy")
-            else:
-                copyAction = None
+
+            copyAction = contextMenu.addAction("Copy")
+            copyAction.setText(f'Copy All ({len(self.ui.plainTextEditOutput.lines)} lines)')
             clearAction = contextMenu.addAction("Clear")
 
             contextMenu.addSeparator()
@@ -2068,15 +2066,15 @@ class MainWin(QMainWindow):
         elif action == clearAction:
             self.clear()
         elif action == searchAction:
-            self.query_search()
+            self.ui.plainTextEditOutput.query_search()
         elif action == searchQuit:
             self.close()
         elif action == stopAction:
             self.halt_simulation()
-        elif action == selectAllAction:
-            self.ui.plainTextEditOutput.selectAll()
+        # elif action == selectAllAction:
+        #     self.ui.plainTextEditOutput.selectAll()
         elif action == copyAction:
-            self.ui.plainTextEditOutput.copy()
+            self.ui.plainTextEditOutput.copy_to_clipboard()
         elif action == EditNormalOutAction:
             self.launchEditor(which_file="NormalOut")
         elif action == EditRulesAction:
@@ -2099,82 +2097,31 @@ class MainWin(QMainWindow):
             if open_cmd:
                 subprocess.run([open_cmd, str(Path(device_file).resolve().parent)])
 
-    def query_search(self):
-        self.search_dialog.ok = False
-        self.search_dialog.ui.checkBoxRegEx.setChecked(self.search_using_regex)
-        self.search_dialog.ui.checkBoxIgnoreCase.setChecked(self.search_ignore_case)
-        self.search_dialog.exec()
 
-        if self.search_dialog.ok:
-            self.search_pattern = (
-                self.search_dialog.ui.lineEditSearchText.text().strip()
-            )
-            self.search_using_regex = self.search_dialog.ui.checkBoxRegEx.isChecked()
-            self.search_ignore_case = (
-                self.search_dialog.ui.checkBoxIgnoreCase.isChecked()
-            )
-            self.search_active = True
-            self.do_search(backwards=self.search_dialog.backwards)
 
     # start text cursor utility functions --------
-    def get_text_cursor(self):
-        return self.ui.plainTextEditOutput.textCursor()
-
-    def set_text_cursor_pos(self, value):
-        tc = self.get_text_cursor()
-        tc.setPosition(value, QTextCursor.MoveMode.KeepAnchor)
-        self.ui.plainTextEditOutput.setTextCursor(tc)
-
-    def get_text_cursor_pos(self):
-        return self.get_text_cursor().position()
-
-    def get_text_selection(self):
-        cursor = self.get_text_cursor()
-        return cursor.selectionStart(), cursor.selectionEnd()
-
-    def set_text_selection(self, start, end):
-        cursor = self.get_text_cursor()
-        cursor.setPosition(start)
-        cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
-        self.ui.plainTextEditOutput.setTextCursor(cursor)
+    # def get_text_cursor(self):
+    #     return self.ui.plainTextEditOutput.textCursor()
+    #
+    # def set_text_cursor_pos(self, value):
+    #     tc = self.get_text_cursor()
+    #     tc.setPosition(value, QTextCursor.MoveMode.KeepAnchor)
+    #     self.ui.plainTextEditOutput.setTextCursor(tc)
+    #
+    # def get_text_cursor_pos(self):
+    #     return self.get_text_cursor().position()
+    #
+    # def get_text_selection(self):
+    #     cursor = self.get_text_cursor()
+    #     return cursor.selectionStart(), cursor.selectionEnd()
+    #
+    # def set_text_selection(self, start, end):
+    #     cursor = self.get_text_cursor()
+    #     cursor.setPosition(start)
+    #     cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
+    #     self.ui.plainTextEditOutput.setTextCursor(cursor)
 
     # ---------------- end text cursor utility functions
-
-    def do_search(self, backwards: bool = False):
-        if not self.search_pattern:
-            return
-
-        sensitivity = (
-            Qt.CaseSensitivity.CaseInsensitive
-            if self.search_ignore_case
-            else Qt.CaseSensitivity.CaseSensitive
-        )
-        pattern = (
-            self.search_pattern
-            if self.search_using_regex
-            else re.escape(self.search_pattern)
-        )
-
-        regex = QRegularExpression(pattern, sensitivity)
-
-        text_cursor = self.get_text_cursor()
-
-        if backwards:
-            if text_cursor.atStart():
-                self.ui.plainTextEditOutput.moveCursor(QTextCursor.MoveOperation.End)
-            result = self.ui.plainTextEditOutput.find(
-                regex, QTextDocument.FindFlag.FindBackward
-            )
-        else:
-            if text_cursor.atEnd():
-                self.ui.plainTextEditOutput.moveCursor(QTextCursor.MoveOperation.Start)
-            result = self.ui.plainTextEditOutput.find(regex)
-
-        if result:
-            self.ui.plainTextEditOutput.setFocus()
-        # else:
-        #     pos = self.get_text_cursor_pos()
-        #     self.set_text_selection(pos, pos)
 
     def launchEditor(self, which_file: str = "NormalOut"):
         if which_file == "NormalOut":
@@ -2182,7 +2129,7 @@ class MainWin(QMainWindow):
             file_path = Path(
                 self.tmp_folder.name, f"TEMP_EPICPY_NORMALOUT_{file_id}.txt"
             )
-            file_path.write_text(self.ui.plainTextEditOutput.toPlainText())
+            file_path.write_text(self.ui.plainTextEditOutput.get_text())
         elif which_file == "RuleFile":
             if self.simulation.rule_files:
                 if self.simulation.current_rule_index < len(self.simulation.rule_files):
@@ -2195,7 +2142,7 @@ class MainWin(QMainWindow):
                     file_path = Path(
                         self.simulation.rule_files[
                             self.simulation.current_rule_index - 1
-                        ].rule_file
+                            ].rule_file
                     )
             else:
                 file_path = None
@@ -2277,6 +2224,7 @@ class MainWin(QMainWindow):
         if event.key() == Qt.Key.Key_Escape:
             self.close()
         elif event.key() == Qt.Key.Key_F3:
+            raise NotImplemented('not yet linked F3 to largettextview search')
             if modifiers == Qt.KeyboardModifier.ShiftModifier:
                 self.do_search()
             else:

@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import sys
+import time
 from collections import OrderedDict
 from pathlib import Path
 
@@ -195,9 +196,7 @@ class FancyTimer:
             l = len(self.msg)
             print(f'\n{self.msg}\n{"=" * l if l < 50 else 50}')
         if self.verbose:
-            print(
-                f'Timer Started at {datetime.datetime.now().strftime("%H:%M:%S")}'
-            )  # add %f for microseconds
+            print(f'Timer Started at {datetime.datetime.now().strftime("%H:%M:%S")}')  # add %f for microseconds
         self.start = timeit.default_timer()
 
     def __exit__(self, *args):
@@ -208,9 +207,7 @@ class FancyTimer:
         print(f"Duration: {self.duration:0.4f} sec ({self.duration * 1000:0.4f} msec)")
 
 
-def unpack_param_string(
-    pattern: str, delimiter: str = "|", left: str = "[", right: str = "]"
-) -> List[str]:
+def unpack_param_string(pattern: str, delimiter: str = "|", left: str = "[", right: str = "]") -> List[str]:
     """
     Expand the brace-delimited possibilities in a string.
     E.g.: "10 Easy Dash" or "10 [Easy|Hard] Dash" or "10 [Easy|Hard] [Dash|HUD]"
@@ -301,6 +298,19 @@ def loading_cursor(normal_function):
         QApplication.restoreOverrideCursor()
 
     return decorated_function
+
+
+def timeit_decorator(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Function '{func.__name__}' executed in {elapsed_time:.6f} seconds\n")
+        return result
+
+    return wrapper
 
 
 if __name__ == "__main__":

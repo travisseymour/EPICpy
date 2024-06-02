@@ -17,9 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import re
-
-from qtpy.QtCore import Qt, QRegularExpression
+from PySide6.QtWidgets import QMessageBox
 
 from epicpy.dialogs.searchwindow import SearchWin
 from epicpy.constants.stateconstants import RUNNING
@@ -27,8 +25,6 @@ from epicpy.uifiles.traceui import Ui_TraceWindow
 from qtpy.QtGui import (
     QCloseEvent,
     QFont,
-    QTextCursor,
-    QTextDocument,
     QShowEvent,
     QHideEvent,
 )
@@ -37,15 +33,18 @@ import datetime
 from epicpy.utils import config
 from epicpy.widgets.largetextview import LargeTextView
 
+
 class Ui_TraceWindowCustom(Ui_TraceWindow):
     """
     This is so that we can add the LargeTextView and still
     have PyCharm do proper lookups where it understands that
     self.ui.plainTextEditOutput is a LargeTextView object
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.plainTextEditOutput: LargeTextView = LargeTextView()
+
 
 class TraceWin(QMainWindow):
     def __init__(self, parent):
@@ -59,22 +58,14 @@ class TraceWin(QMainWindow):
         self.setCentralWidget(self.ui.plainTextEditOutput)
         self.can_close: bool = False
 
-        self.ui.plainTextEditOutput.setPlainText(
-            f'Trace Out! ({datetime.datetime.now().strftime("%r")})\n'
-        )
+        self.ui.plainTextEditOutput.setPlainText(f'Trace Out! ({datetime.datetime.now().strftime("%r")})\n')
 
         self.trace_out_view = None
 
         self.setStyleSheet(
-            'QWidget {font: "'
-            + config.app_cfg.font_name
-            + '"; font-size: '
-            + str(config.app_cfg.font_size)
-            + "pt}"
+            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
         )
-        self.ui.plainTextEditOutput.setFont(
-            QFont(config.app_cfg.font_name, int(config.app_cfg.font_size))
-        )
+        self.ui.plainTextEditOutput.setFont(QFont(config.app_cfg.font_name, int(config.app_cfg.font_size)))
 
         self.ui.plainTextEditOutput.mouseDoubleClickEvent = parent.mouseDoubleClickEvent
 
@@ -87,9 +78,7 @@ class TraceWin(QMainWindow):
         self.search_dialog = SearchWin()
         self.search_dialog.setModal(True)
 
-        self.ui.plainTextEditOutput.customContextMenuRequested.connect(
-            self.search_context_menu
-        )
+        self.ui.plainTextEditOutput.customContextMenuRequested.connect(self.search_context_menu)
 
         # connect self.write directly to widget's write!
         self.write = self.ui.plainTextEditOutput.write
@@ -105,105 +94,25 @@ class TraceWin(QMainWindow):
             return
 
         searchAction = contextMenu.addAction("Search")
-        selectAllAction = contextMenu.addAction("Select All")
-
-        contextMenu.addSeparator()
-        if self.ui.plainTextEditOutput.copyAvailable and len(
-            self.ui.plainTextEditOutput.toPlainText()
-        ):
-            copyAction = contextMenu.addAction("Copy")
-        else:
-            copyAction = None
         clearAction = contextMenu.addAction("Clear")
-
-        contextMenu.addSeparator()
+        # contextMenu.addSeparator()
+        # selectAllAction = contextMenu.addAction("Select All")
+        copyAction = contextMenu.addAction("Copy")
+        copyAction.setText(f"Copy All ({len(self.ui.plainTextEditOutput.lines)} lines)")
+        # contextMenu.addSeparator()
 
         action = contextMenu.exec(self.mapToGlobal(event))
 
         if action is None:
             ...
         elif action == clearAction:
-            self.clear()
+            self.ui.plainTextEditOutput.flush()
         elif action == searchAction:
-            self.query_search()
-        elif action == selectAllAction:
-            self.ui.plainTextEditOutput.selectAll()
+            self.ui.plainTextEditOutput.query_search()
+        # elif action == selectAllAction:
+        #     self.ui.plainTextEditOutput.selectAll()
         elif action == copyAction:
-            self.ui.plainTextEditOutput.copy()
-
-    def query_search(self):
-        self.search_dialog.ok = False
-        self.search_dialog.ui.checkBoxRegEx.setChecked(self.search_using_regex)
-        self.search_dialog.ui.checkBoxIgnoreCase.setChecked(self.search_ignore_case)
-        self.search_dialog.exec()
-
-        if self.search_dialog.ok:
-            self.search_pattern = (
-                self.search_dialog.ui.lineEditSearchText.text().strip()
-            )
-            self.search_using_regex = self.search_dialog.ui.checkBoxRegEx.isChecked()
-            self.search_ignore_case = (
-                self.search_dialog.ui.checkBoxIgnoreCase.isChecked()
-            )
-            self.search_active = True
-            self.do_search(backwards=self.search_dialog.backwards)
-
-    # start text cursor utility functions --------
-    def get_text_cursor(self):
-        return self.ui.plainTextEditOutput.textCursor()
-
-    def set_text_cursor_pos(self, value):
-        tc = self.get_text_cursor()
-        tc.setPosition(value, QTextCursor.MoveMode.KeepAnchor)
-        self.ui.plainTextEditOutput.setTextCursor(tc)
-
-    def get_text_cursor_pos(self):
-        return self.get_text_cursor().position()
-
-    def get_text_selection(self):
-        cursor = self.get_text_cursor()
-        return cursor.selectionStart(), cursor.selectionEnd()
-
-    def set_text_selection(self, start, end):
-        cursor = self.get_text_cursor()
-        cursor.setPosition(start)
-        cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
-        self.ui.plainTextEditOutput.setTextCursor(cursor)
-
-    # ---------------- end text cursor utility functions
-
-    def do_search(self, backwards: bool = False):
-        if not self.search_pattern:
-            return
-
-        sensitivity = (
-            Qt.CaseSensitivity.CaseInsensitive
-            if self.search_ignore_case
-            else Qt.CaseSensitivity.CaseSensitive
-        )
-        pattern = (
-            self.search_pattern
-            if self.search_using_regex
-            else re.escape(self.search_pattern)
-        )
-
-        regex = QRegularExpression(pattern, sensitivity)
-
-        text_cursor = self.get_text_cursor()
-
-        if backwards:
-            if text_cursor.atStart():
-                self.ui.plainTextEditOutput.moveCursor(QTextCursor.MoveOperation.End)
-            result = self.ui.plainTextEditOutput.find(
-                regex, QTextDocument.FindFlag.FindBackward
-            )
-        else:
-            if text_cursor.atEnd():
-                self.ui.plainTextEditOutput.moveCursor(QTextCursor.MoveOperation.Start)
-            result = self.ui.plainTextEditOutput.find(regex)
-
-        if result:
-            self.ui.plainTextEditOutput.setFocus()
+            self.ui.plainTextEditOutput.copy_to_clipboard()
 
     # ----------------------------------------
 
@@ -217,13 +126,7 @@ class TraceWin(QMainWindow):
         self.ui.plainTextEditOutput.write(text)
 
     def clear(self):
-        self.ui.plainTextEditOutput.clear()
-
-    def closeEvent(self, event: QCloseEvent) -> None:
-        if self.can_close:
-            self.hide()
-        else:
-            QMainWindow.closeEvent(self, event)
+        self.ui.plainTextEditOutput.flush()
 
     def hideEvent(self, event: QHideEvent) -> None:
         self.ui.plainTextEditOutput.set_updating(False)
@@ -233,3 +136,9 @@ class TraceWin(QMainWindow):
         # self.ui.plainTextEditOutput.can_write = True
         self.ui.plainTextEditOutput.set_updating(True)
         QMainWindow.showEvent(self, event)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        if self.can_close:  # FIXME: Is this backwards...shouldn't can_close lead to a close??
+            self.hide()
+        else:
+            QMainWindow.closeEvent(self, event)
