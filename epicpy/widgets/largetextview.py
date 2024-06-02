@@ -78,7 +78,7 @@ class LargeTextView(QWidget):
         self.write(text)
 
     def write(self, text):
-        if '\n' in text:
+        if "\n" in text:
             for aline in text.splitlines(keepends=False):
                 self.pending_lines.append(aline)
         else:
@@ -88,6 +88,9 @@ class LargeTextView(QWidget):
         self.update_timer.stop()
         self.lines = []
         self.pending_lines = []
+        self.current_line_location = 0
+        self.scroll_bar.setValue(0)
+        self.scroll_bar.setMaximum(0)
         self.update_timer.start(self.update_frequency_ms)
 
     def flush(self):
@@ -241,7 +244,7 @@ class LargeTextView(QWidget):
             super().keyPressEvent(event)
 
     def query_search(self):
-        if not len(self.ui.plainTextEditOutput.lines):
+        if not len(self.lines):
             QMessageBox.warning(self, "Warning", "There is currently no text to search.", QMessageBox.StandardButton.Ok)
 
         self.search_dialog.ok = False
