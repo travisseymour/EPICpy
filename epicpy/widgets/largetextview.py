@@ -194,6 +194,26 @@ class LargeTextView(QWidget):
     def update_wait_label_position(self):
         self.wait_label.setGeometry(0, 0, self.width(), self.height())
 
+    def continue_find_text(self)->bool:
+        if not self.last_search_spec or not len(self.lines):
+            return False
+
+        if self.last_search_spec["backwards"] is True:
+            if self.current_line_location - 1 < 0:
+                self.current_line_location -= 1
+        if self.last_search_spec["backwards"] is False:
+            if self.current_line_location + 1 < len(self.lines):
+                self.current_line_location += 1
+
+        self.find_text(
+            pattern=self.last_search_spec["pattern"],
+            use_regex=self.last_search_spec["use_regex"],
+            ignore_case=self.last_search_spec["ignore_case"],
+            backwards=self.last_search_spec["backwards"],
+        )
+
+        return True
+
     def find_text(
         self,
         pattern: str,
@@ -208,10 +228,13 @@ class LargeTextView(QWidget):
             "backwards": backwards,
         }
 
+        if self.current_line_location > len(self.lines) - 1:
+            self.current_line_location = len(self.lines) - 1
+
         result = find_next_index_with_target_parallel_concurrent(
             lines=self.lines,
             target=pattern,
-            start_line=self.scroll_bar.value(),
+            start_line=self.current_line_location, # self.scroll_bar.value(),
             direction="backward" if backwards else "forward",
             is_regex=use_regex,
             ignore_case=ignore_case,
@@ -253,10 +276,8 @@ class LargeTextView(QWidget):
                 # print("Text:", self.lines[self.current_line_location])
 
     def keyPressEvent(self, event):
-        print(self.last_search_spec)
         if event.key() == Qt.Key.Key_F3:
-            if self.last_search_spec is not None:
-                self.find_text(**self.last_search_spec)
+            self.continue_find_text()
         else:
             super().keyPressEvent(event)
 

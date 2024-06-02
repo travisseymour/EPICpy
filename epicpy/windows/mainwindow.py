@@ -276,8 +276,8 @@ class MainWin(QMainWindow):
 
         self.simulation = Simulation(self)
 
-        self.ui.actionFind.triggered.connect(self.ui.plainTextEditOutput.query_search)
-        self.ui.actionFind.setShortcut("Ctrl+F")
+        # self.ui.actionFind.triggered.connect(self.ui.plainTextEditOutput.query_search)
+        # self.ui.actionFind.setShortcut("Ctrl+F")
         # self.ui.actionFindNext.triggered.connect(self.do_search)
         # self.ui.actionFindNext.setShortcut("F3")
         # self.ui.actionFindPrevious.triggered.connect(
@@ -1832,12 +1832,6 @@ class MainWin(QMainWindow):
     # Context Menu Behavior
     # =============================================
 
-    def enable_all_context_items(self, ignore: Optional[list[str]] = None):
-        _ignore = [item for item in ignore if item] if ignore else []
-        for action_name, action_item in self.context_items.items():
-            if action_name not in _ignore:
-                action_item.setEnabled(True)
-
     def disable_all_context_items(self, ignore: Optional[list[str]] = None):
         _ignore = [item for item in ignore if item] if ignore else []
         for action_name, action_item in self.context_items.items():
@@ -1863,7 +1857,6 @@ class MainWin(QMainWindow):
         self.context_items["Quit"] = self.context_menu.addAction("Quit")
 
     def search_context_menu(self, event):
-        log.debug("INSTIDE SEARCH CONTEXT MENU")
         device_file = config.device_cfg.device_file
         rules_file = config.device_cfg.rule_files[0] if config.device_cfg.rule_files else ""
 
@@ -2015,16 +2008,17 @@ class MainWin(QMainWindow):
     # =============================================
 
     def keyPressEvent(self, event):
-        modifiers = QApplication.keyboardModifiers()
         if event.key() == Qt.Key.Key_Escape:
             self.close()
         elif event.key() == Qt.Key.Key_F3:
-            raise NotImplemented("not yet linked F3 to largettextview search")
-            if modifiers == Qt.KeyboardModifier.ShiftModifier:
-                self.do_search()
+            if not self.ui.plainTextEditOutput.continue_find_text():
+                self.ui.plainTextEditOutput.query_search()
             else:
-                partial(self.do_search, backwards=True)
-
+                super().keyPressEvent(event)
+        elif event.key() == Qt.Key.Key_F and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            self.ui.plainTextEditOutput.query_search()
+        else:
+            super().keyPressEvent(event)
     # =============================================
     # Device Helpers
     # =============================================

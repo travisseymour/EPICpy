@@ -78,10 +78,11 @@ def find_next_index_with_target_parallel_concurrent(
         target = re.escape(target)
 
     chunk_size = len(lines) // num_workers
+    print(f'{num_workers=} {len(lines)=} {start_line=}')
     futures = []
     with ProcessPoolExecutor(max_workers=num_workers) as executor:
         if direction == "forward":
-            for i in range(start_line, len(lines), chunk_size):
+            for i in range(start_line, len(lines), chunk_size if chunk_size else 1):
                 chunk_end = min(i + chunk_size, len(lines))
                 chunk = lines[i:chunk_end]
                 futures.append(executor.submit(find_next_index_in_chunk, chunk, target, i, ignore_case, direction))

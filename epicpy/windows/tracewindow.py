@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from qtpy.QtCore import Qt
 
 from epicpy.dialogs.searchwindow import SearchWin
 from epicpy.constants.stateconstants import RUNNING
@@ -53,7 +54,7 @@ class TraceWin(QMainWindow):
         self.setObjectName("TraceWindow")
         self.ui = Ui_TraceWindowCustom()
         self.ui.setupUi(self)
-        self.ui.plainTextEditOutput = LargeTextView()
+        self.ui.plainTextEditOutput = LargeTextView(enable_context_menu=False)
         self.setCentralWidget(self.ui.plainTextEditOutput)
         self.can_close: bool = False
 
@@ -77,6 +78,7 @@ class TraceWin(QMainWindow):
         self.search_dialog = SearchWin()
         self.search_dialog.setModal(True)
 
+        self.ui.plainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.ui.plainTextEditOutput.customContextMenuRequested.connect(self.search_context_menu)
 
         # connect self.write directly to widget's write!
@@ -140,3 +142,14 @@ class TraceWin(QMainWindow):
             self.hide()
         else:
             QMainWindow.closeEvent(self, event)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_F3:
+            if not self.ui.plainTextEditOutput.continue_find_text():
+                self.ui.plainTextEditOutput.query_search()
+            else:
+                super().keyPressEvent(event)
+        elif event.key() == Qt.Key.Key_F and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            self.ui.plainTextEditOutput.query_search()
+        else:
+            super().keyPressEvent(event)
