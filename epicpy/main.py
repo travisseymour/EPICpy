@@ -22,7 +22,7 @@ import os
 import platform
 
 os.environ["OUTDATED_IGNORE"] = "1"
-if platform.platform().split('-')[1].startswith('10.'):
+if platform.platform().split("-")[1].startswith("10."):
     os.environ["QT_MAC_WANTS_LAYER"] = "1"
 
 # os.environ["QT_DEBUG_PLUGINS"] = "1" # for more info when there are plugin load errors
@@ -56,9 +56,7 @@ try:
         if platform.machine() == "x86_64":
             copyfile(Path("epiclib", "epiclib_macos.so"), Path("epiclib", "epiclib.so"))
         else:
-            copyfile(
-                Path("epiclib", "epiclib_macos_arm.so"), Path("epiclib", "epiclib.so")
-            )
+            copyfile(Path("epiclib", "epiclib_macos_arm.so"), Path("epiclib", "epiclib.so"))
     elif platform.system() == "Linux":
         copyfile(Path("epiclib", "epiclib_linux_temp.so"), Path("epiclib", "epiclib.so"))
         # copyfile(Path("epiclib", "epiclib_linux.so"), Path("epiclib", "epiclib.so"))
@@ -99,7 +97,7 @@ OS = platform.system()
 def segfault_handler(signal, frame):
     log.warning("Segmentation fault occurred")
     os._exit(1)
-
+    sys.exit(1)
 
 if OS in ("Linux", "Darwin"):
     # Define the C function prototype
@@ -129,9 +127,7 @@ if OS in ("Linux", "Darwin"):
                 )
         else:
             libc_path = ""
-            log.warning(
-                "ERROR: Cannot find libc path. Unable to install SIGSEGV handler."
-            )
+            log.warning("ERROR: Cannot find libc path. Unable to install SIGSEGV handler.")
     elif OS == "Darwin":
         libc_path = "/usr/lib/libc.dylib"  # Update with the correct path on macOS
     else:
@@ -174,9 +170,7 @@ def start_ui(app: QApplication):
     config.get_device_config(None)
 
     # prepare the default font
-    font_id = QFontDatabase.addApplicationFont(
-        str(get_resource("fonts", "FiraCode", "FiraCode-Regular.ttf").resolve())
-    )
+    font_id = QFontDatabase.addApplicationFont(str(get_resource("fonts", "FiraCode", "FiraCode-Regular.ttf").resolve()))
     font = QFont()
     if font_id:
         font_families = QFontDatabase.applicationFontFamilies(font_id)
@@ -235,10 +229,7 @@ def main():
 
         log_file = Path(config_dir, "epicpy.log")
         log.add(log_file, level="ERROR")
-        print(
-            f"NOTE: Logging errors to file ({log_file.name}) "
-            f"in config_dir ({str(config_dir.resolve())})"
-        )
+        print(f"NOTE: Logging errors to file ({log_file.name}) " f"in config_dir ({str(config_dir.resolve())})")
         # Disable pyqt warnings when not developing
         qInstallMessageHandler(pyqt_warning_handler)
 

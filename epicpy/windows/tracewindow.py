@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PySide6.QtWidgets import QMessageBox
 
 from epicpy.dialogs.searchwindow import SearchWin
 from epicpy.constants.stateconstants import RUNNING
@@ -28,7 +27,7 @@ from qtpy.QtGui import (
     QShowEvent,
     QHideEvent,
 )
-from qtpy.QtWidgets import QMainWindow, QMenu
+from qtpy.QtWidgets import QMainWindow, QMenu, QMessageBox
 import datetime
 from epicpy.utils import config
 from epicpy.widgets.largetextview import LargeTextView
@@ -133,7 +132,6 @@ class TraceWin(QMainWindow):
         QMainWindow.hideEvent(self, event)
 
     def showEvent(self, event: QShowEvent) -> None:
-        # self.ui.plainTextEditOutput.can_write = True
         self.ui.plainTextEditOutput.set_updating(True)
         QMainWindow.showEvent(self, event)
 

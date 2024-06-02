@@ -9,7 +9,6 @@ from qtpy.QtCore import Qt, QTimer
 from qtpy.QtGui import QPainter, QFontMetrics, QWheelEvent, QFont, QContextMenuEvent
 
 from epicpy.dialogs.searchwindow import SearchWin
-from epicpy.utils.apputils import copy_to_clipboard
 from epicpy.utils.viewsearch import find_next_index_with_target_parallel_concurrent
 
 
@@ -20,7 +19,6 @@ class LargeTextView(QWidget):
         super().__init__(parent)
         self.lines: list[str] = []
         self.pending_lines: list[str] = []
-        self.can_write: bool = True
 
         self.current_line_location = 0
         self.default_pen = None
@@ -80,10 +78,11 @@ class LargeTextView(QWidget):
         self.write(text)
 
     def write(self, text):
-        if self.can_write:
-            # print(f'"{text}"')
+        if '\n' in text:
             for aline in text.splitlines(keepends=False):
                 self.pending_lines.append(aline)
+        else:
+            self.pending_lines.append(text)
 
     def clear(self):
         self.update_timer.stop()
