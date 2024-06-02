@@ -14,16 +14,37 @@ from epicpy.utils.viewsearch import find_next_index_with_target_parallel_concurr
 
 class LargeTextView(QWidget):
     def __init__(
-        self, parent=None, update_frequency_ms: int = 100, page_step_lines: int = 100, wait_msg_limit: int = 100_1000
+        self,
+        parent=None,
+        update_frequency_ms: int = 100,
+        page_step_lines: int = 100,
+        wait_msg_limit: int = 100_1000,
+        enable_context_menu: bool = True,
     ):
         super().__init__(parent)
         self.lines: list[str] = []
         self.pending_lines: list[str] = []
 
+        self.enable_context_menu = enable_context_menu
         self.current_line_location = 0
         self.default_pen = None
         self.update_frequency_ms = update_frequency_ms
         self.wait_msg_limit = wait_msg_limit
+
+        # create context menu
+        if self.enable_context_menu:
+            self.context_menu = QMenu(self)
+            self.search_action = self.context_menu.addAction("Search")
+            self.context_menu.addSeparator()
+            self.copy_action = self.context_menu.addAction("Copy")
+            self.copy_action.setText(f"Copy All")
+            self.context_menu.addSeparator()
+            self.clear_action = self.context_menu.addAction("Clear")
+            self.contextMenuEvent = self.context_menu_event_handler
+        else:
+            self.context_menu = None
+            self.clear_action = None
+            self.search_action = None
 
         # Create the scrollbar and set it to the right
         self.scroll_bar = QScrollBar(Qt.Orientation.Vertical, self)
@@ -209,18 +230,14 @@ class LargeTextView(QWidget):
                 f"(Line {self.current_line_location}).",
             )
 
-    def contextMenuEvent(self, event: QContextMenuEvent):
-        context_menu = QMenu(self)
-
-        clear_action = context_menu.addAction("Clear")
-        search_action = context_menu.addAction("Search")
-
-        action = context_menu.exec(event.globalPos())
-
-        if action == clear_action:
+    def context_menu_event_handler(self, event: QContextMenuEvent):
+        action = self.context_menu.exec(event.globalPos())
+        if action == self.clear_action:
             self.clear()
-        elif action == search_action:
+        elif action == self.search_action:
             self.query_search()
+        elif action == self.copy_action:
+            self.copy_to_clipboard()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:

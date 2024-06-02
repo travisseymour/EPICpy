@@ -196,8 +196,12 @@ class MainWin(QMainWindow):
         self.ui = Ui_MainWindowCustom()
         self.ui.setupUi(self)
 
+        self.context_menu = QMenu(self)
+        self.context_items = {}
+        self.create_context_menu_items()
+
         # add central widget and setup
-        self.ui.plainTextEditOutput = LargeTextView()
+        self.ui.plainTextEditOutput = LargeTextView(enable_context_menu=False)
         font = QFont("Fira Mono", 14)
         self.ui.plainTextEditOutput.setFont(font)
         self.ui.plainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -1828,84 +1832,90 @@ class MainWin(QMainWindow):
     # Context Menu Behavior
     # =============================================
 
+    def enable_all_context_items(self, ignore: Optional[list[str]] = None):
+        _ignore = [item for item in ignore if item] if ignore else []
+        for action_name, action_item in self.context_items.items():
+            if action_name not in _ignore:
+                action_item.setEnabled(True)
+
+    def disable_all_context_items(self, ignore: Optional[list[str]] = None):
+        _ignore = [item for item in ignore if item] if ignore else []
+        for action_name, action_item in self.context_items.items():
+            if action_name not in _ignore:
+                action_item.setEnabled(False)
+
+    def create_context_menu_items(self):
+        # only ones active if self.run_state == RUNNING
+        self.context_items["Stop"] = self.context_menu.addAction("Stop")
+        self.context_items["Search"] = self.context_menu.addAction("Search")
+        # self.context_items['SelectAll'] = self.context_menu.addAction("Select All")
+        self.context_menu.addSeparator()
+        self.context_items["Copy"] = self.context_menu.addAction("Copy")
+        self.context_items["Copy"].setText(f"Copy All Lines")
+        self.context_items["Clear"] = self.context_menu.addAction("Clear")
+        self.context_menu.addSeparator()
+        self.context_items["OpenOutput"] = self.context_menu.addAction("Open Normal Output In Text Editor")
+        self.context_items["EditRules"] = self.context_menu.addAction("Edit Production Rule File")
+        self.context_items["EditData"] = self.context_menu.addAction("Edit Data Output File")
+        self.context_menu.addSeparator()
+        self.context_items["OpenFolder"] = self.context_menu.addAction("Open Device Folder")
+        self.context_menu.addSeparator()
+        self.context_items["Quit"] = self.context_menu.addAction("Quit")
+
     def search_context_menu(self, event):
-        contextMenu = QMenu(self)
+        log.debug("INSTIDE SEARCH CONTEXT MENU")
         device_file = config.device_cfg.device_file
         rules_file = config.device_cfg.rule_files[0] if config.device_cfg.rule_files else ""
 
         if self.run_state == RUNNING:
-            stopAction = contextMenu.addAction("Stop")
-            searchQuit = contextMenu.addAction("Quit")
-            clearAction = None
-            searchAction = None
-            selectAllAction = None
-            copyAction = None
-            EditNormalOutAction = None
-            EditRulesAction = contextMenu.addAction("Edit Rule File")
-            EditDataAction = None
-            OpenDeviceFolder = None
+            self.disable_all_context_items()
+            for item in ["Stop", "EditPRS", "OpenOutput", "Quit"]:
+                self.context_items[item].setEnabled(True)
         else:
-            stopAction = None
+            self.disable_all_context_items()
 
-            searchAction = contextMenu.addAction("Search")
-            # selectAllAction = contextMenu.addAction("Select All")
+            self.context_items["Search"].setEnabled(True)
+            # self.context_items["SelectAll"].setEnabled(True)
 
-            contextMenu.addSeparator()
+            self.context_items["Copy"].setEnabled(True)
+            self.context_items["Clear"].setEnabled(True)
 
-            copyAction = contextMenu.addAction("Copy")
-            copyAction.setText(f"Copy All ({len(self.ui.plainTextEditOutput.lines)} lines)")
-            clearAction = contextMenu.addAction("Clear")
+            self.context_items["OpenOutput"].setEnabled(True)
 
-            contextMenu.addSeparator()
+            if self.run_state:
+                self.context_items["EditData"].setEnabled(True)
 
-            EditNormalOutAction = (
-                contextMenu.addAction("Open Normal Output In Text Editor") if self.run_state != RUNNING else None
-            )
+            if Path(rules_file).is_file():
+                self.context_items["EditRules"].setEnabled(True)
 
-            EditRulesAction = (
-                (contextMenu.addAction("Edit Production Rule File"))
-                if (self.run_state != RUNNING and Path(rules_file).is_file())
-                else None
-            )
+            if Path(device_file).is_file():
+                self.context_items["OpenFolder"].setEnabled(True)
 
-            EditDataAction = (
-                (contextMenu.addAction("Edit Data Output File"))
-                if self.run_state and self.run_state != RUNNING
-                else None
-            )
+            self.context_items["Quit"].setEnabled(True)
 
-            if Path(device_file).is_file() and self.run_state != RUNNING:
-                contextMenu.addSeparator()
-                OpenDeviceFolder = contextMenu.addAction("Open Device Folder")
-            else:
-                OpenDeviceFolder = None
-
-            contextMenu.addSeparator()
-            searchQuit = contextMenu.addAction("Quit")
-
-        action = contextMenu.exec(self.mapToGlobal(event))
+        action = self.context_menu.exec(self.mapToGlobal(event))
 
         if action is None:
-            ...
-        elif action == clearAction:
+            return
+        elif action == self.context_items["Clear"]:
             self.clear()
-        elif action == searchAction:
+        elif action == self.context_items["Search"]:
             self.ui.plainTextEditOutput.query_search()
-        elif action == searchQuit:
+        elif action == self.context_items["Quit"]:
             self.close()
-        elif action == stopAction:
+        elif action == self.context_items["Stop"]:
             self.halt_simulation()
-        # elif action == selectAllAction:
+        # elif action == self.context_items['SelectAll']:
         #     self.ui.plainTextEditOutput.selectAll()
-        elif action == copyAction:
+        elif action == self.context_items["Copy"]:
             self.ui.plainTextEditOutput.copy_to_clipboard()
-        elif action == EditNormalOutAction:
+        elif action == self.context_items["OpenOutput"]:
             self.launchEditor(which_file="NormalOut")
-        elif action == EditRulesAction:
+        elif action == self.context_items["EditRules"]:
             self.launchEditor(which_file="RuleFile")
-        elif action == EditDataAction:
+        elif action == self.context_items["EditData"]:
             self.launchEditor(which_file="DataFile")
-        elif action == OpenDeviceFolder:
+        elif action == self.context_items["OpenFolder"]:
             OS = platform.system()
             if OS == "Linux":
                 open_cmd = "xdg-open"
@@ -1917,7 +1927,6 @@ class MainWin(QMainWindow):
                 open_cmd = ""
                 err_msg = f"ERROR: Opening device folder when OS=='{OS}' is not yet implemented!"
                 self.write(emoji_box(err_msg, line="thick"))
-
             if open_cmd:
                 subprocess.run([open_cmd, str(Path(device_file).resolve().parent)])
 
