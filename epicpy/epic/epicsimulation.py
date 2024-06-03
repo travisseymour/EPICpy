@@ -50,9 +50,14 @@ warnings.filterwarnings("ignore", module="pingouin\..*")
 # KEEP HERE, NEEDED FOR DEVICES
 
 from epicpy.epiclib.epiclib import Model, Coordinator, Normal_out
-from epicpy.epiclib.epiclib import describe_parameters_u
 from epicpy.epiclib.epiclib import set_visual_encoder_ptr, set_auditory_encoder_ptr
 
+try:
+    from epicpy.epiclib.epiclib import describe_parameters_u
+    desc_param_loaded = True
+except:
+    desc_param_loaded = False
+    log.warning(f'Failed to load "describe_parameters_u" from epiclib. Will not be able to dump parameters.')
 
 class Simulation:
     def __init__(self, parent):
@@ -718,9 +723,10 @@ class Simulation:
             self.model.initialize()
 
             if config.device_cfg.describe_parameters:
-                self.write("\n")
-                self.write(describe_parameters_u(self.model))
-                self.write("\n")
+                if desc_param_loaded:
+                    self.write("\n")
+                    self.write(describe_parameters_u(self.model))
+                    self.write("\n")
 
             self.write(emoji_box("\nSIMULATION STARTING\n", line="double"))
 
