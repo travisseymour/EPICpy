@@ -112,6 +112,9 @@ class LargeTextView(QWidget):
         self.scroll_bar.setMaximum(0)
         self.update_timer.start(self.update_frequency_ms)
 
+    def is_idle(self):
+        return not self.pending_lines
+
     def flush(self):
         self.clear()
 
@@ -168,7 +171,7 @@ class LargeTextView(QWidget):
         for i in range(visible_lines):
             line_number = start_line + i
 
-            highlighted_line_number = self.current_line_location - self.scroll_bar.value()  # was + 1
+            highlighted_line_number = self.current_line_location - self.scroll_bar.value()
             if 0 <= highlighted_line_number < visible_lines:
                 painter.drawRect(0, highlighted_line_number * line_height, text_area_width, line_height)
 
@@ -180,7 +183,7 @@ class LargeTextView(QWidget):
                     text_area_width,
                     line_height,
                     Qt.AlignmentFlag.AlignLeft,
-                    line_text,  # was (i + 1)
+                    line_text,
                 )
 
     def resizeEvent(self, event):

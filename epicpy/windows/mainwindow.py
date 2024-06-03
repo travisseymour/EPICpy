@@ -118,18 +118,6 @@ class StateChangeWatcher(QObject):
         self.restore_func = restore_func
 
     def eventFilter(self, obj, event):
-        # if obj.isWidgetType() and event.type() == QEvent.WindowStateChange:
-        #     if obj.windowState() & Qt.WindowMinimized:
-        #         if self.minimize_func is not None:
-        #             self.minimize_func()
-        #     elif obj.windowState() & Qt.WindowMaximized:
-        #         pass
-        #     elif obj.windowState() & Qt.WindowNoState:
-        #         pass
-        #     else:
-        #         if self.restore_func is not None:
-        #             self.restore_func()
-
         if obj.isWidgetType() and event.type() == QEvent.Type.Show:
             if obj.windowState() & Qt.WindowState.WindowMinimized:
                 if self.minimize_func is not None:

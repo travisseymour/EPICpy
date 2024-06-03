@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
+import time
 import warnings
 from typing import Optional, List
 from pathlib import Path
@@ -25,7 +25,7 @@ import sys
 import weakref
 import timeit
 
-from qtpy.QtCore import QTimer
+from qtpy.QtCore import QTimer, QCoreApplication, QEventLoop
 from qtpy.QtWidgets import QFileDialog
 
 from epicpy.utils.apputils import unpack_param_string
@@ -793,14 +793,8 @@ class Simulation:
             self.steps_run += 1
         except Exception as e:
             run_result = False
-            self.write(
-                emoji_box(
-                    f"ERROR: Run of\n" f"{self.device.rule_filename}\n" f"Stopped With Error:\n" f"{e}",
-                    line="thick",
-                )
-            )
-            self.write(e)
-            self.halt_simulation("error")
+            msg = f"\nERROR: Run of {self.device.rule_filename} Stopped With Error:\n{e}"
+            self.halt_simulation("error", emoji_box(msg, line="thick"))
             return
 
         if self.instance.is_paused():
@@ -824,8 +818,8 @@ class Simulation:
                 if config.device_cfg.run_command == "run_for_cycles":
                     self.steps_run = 0
             elif self.parent.run_state == RUNNABLE:
-                self.write(f"{e_boxed_ok} Run of {self.device.rule_filename} Finished.")
-                self.halt_simulation("finished")
+                msg = f"\n{e_boxed_ok} Run of {self.device.rule_filename} Finished."
+                self.halt_simulation("finished", msg)
 
     def pause_simulation(self):
         if self.parent.run_state == RUNNING:
@@ -837,12 +831,26 @@ class Simulation:
         self.parent.enable_view_updates(True)
         self.parent.enable_text_updates(True)
 
+        _ = self.wait_until_text_outputs_are_idle()
+
         self.write(f"{e_info} Run paused\n", copy_to_trace=True)
 
-    def halt_simulation(self, reason: str = ""):
-        # self.device.stop_simulation()  # TODO: Check to see if this is now ok with the new epiclib approach
+    def wait_until_text_outputs_are_idle(self) -> bool:
+        start = time.time()
+        while time.time() - start < 3.0:
+            QCoreApplication.processEvents(QEventLoop.AllEvents, 1000)
+            if self.parent.ui.plainTextEditOutput.is_idle or self.parent.trace_win.ui.plainTextEditOutput.is_idle:
+                break
+        return True
+
+    def halt_simulation(self, reason: str = "", extra: str = ""):
+        try:
+            # TODO: Not clear on whether this is needed or even a good idea.
+            self.device.stop_simulation()
+        except Exception as e:
+            log.debug(f'While calling `self.device.stop_simulation()` got this error: {e}')
         self.model.stop()
-        self.instance.stop()  # added march 26 2023...needed?
+        self.instance.stop()
 
         # self.model.initialized = False  # model.stop should do this!
         # self.model.running = False      # model.stop should do this!
@@ -855,22 +863,23 @@ class Simulation:
         self.parent.enable_view_updates(True)
         self.parent.enable_text_updates(True)
 
-        if not reason:
-            self.write(f"{e_bangbang} Run halted\n")
+        _ = self.wait_until_text_outputs_are_idle()
 
-        self.write("", copy_to_trace=True)
+        if not reason:
+            self.write(f"\n{e_bangbang} Run halted\n")
+
+        self.write(extra, copy_to_trace=True)
 
         duration = timeit.default_timer() - self.run_start_time
-        # while (
-        #     self.parent.ui.plainTextEditOutput.text_cache
-        #     or self.parent.trace_win.ui.plainTextEditOutput.text_cache
-        # ):
-        #     log.debug(f"waiting {timeit.default_timer() - self.run_start_time}")
-        #     QCoreApplication.processEvents()
+
         self.write(
-            f"{e_info} {self.rule_files[self.current_rule_index].parameter_string} (run took {duration:0.4f} seconds)",
+            f"\n{e_info} {self.rule_files[self.current_rule_index].parameter_string} "
+            f"(run took {duration:0.4f} seconds)\n",
             True,
         )
+        # FIXME: This vvv is silly, if logging is supposed to be on, then all writes to the output windows should alslo
+        #        call this log command. In fact, because you can set a widget as a log target, you could just call
+        #        log.info() once and write to ui and logfile!
         log.info(
             f"{e_info} {self.rule_files[self.current_rule_index].parameter_string} (run took {duration:0.4f} seconds)"
         )
@@ -902,7 +911,7 @@ class Simulation:
                     self.parent.delete_datafile()
 
                 # NOTE: when not running from script, next_sim.device_file & prev_sim.device_file are both ''
-                #       and next_sim.reload_device is False. This, this section gets bypassed
+                #       and next_sim.reload_device is False. Thus, this section gets bypassed
                 if (next_sim.device_file and next_sim.device_file != prev_sim.device_file) or next_sim.reload_device:
                     if not self.parent.on_load_device(next_sim.device_file, auto_load_rules=False, quiet=True):
                         self.write(
