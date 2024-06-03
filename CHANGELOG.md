@@ -1,9 +1,16 @@
 
 # EPICpy Changelog
-#### (lasted updated Sun Jun  2 22:33:32 2024)
+#### (lasted updated Mon Jun  3 12:24:10 2024)
 
 ---
 
+## VERSION: 2024.6.3
+
+---
+
+1. **CHANGE**: view and text display options have been reduced to either always on or always off. Updated settings dialog to reflect this.
+2. **FIXED**: Post halt_simulation messages now wait for output text to be idle so that the messages are always visible at the end of the trace.
+3. Changelog saved.
 
 ## VERSION: 2024.6.2
 
@@ -21,12 +28,9 @@
 11. **UPDATED**: Much faster text display enabled. various issues need to be resolved.
 12. **FIXED**: Turned off text save debug messages. fixed requirements.
 13. **FIXED**: requirements.txt had version error
-
 14. **FIXED**: requirements.txt did not seem to be a complete set of what was required.
-
 15. **FIXED**: save normal and trace output dialogs working properly now.
-
-16. Fixed 1) problem opening text files in default app from GUI on Windows. 2) printing of default epic params on model start.
+16. **FIXED**: 1) problem opening text files in default app from GUI on Windows. 2) printing of default epic params on model start.
 17. Fixed Qt import.
 
 ## VERSION: 2023.6.1
@@ -41,14 +45,10 @@
 7. Quick format.
 8. PySide6 seems to be working fine.
 9. **CHANGE**: Using better approach to darkmode. Also has Auto mode that follows system settings.
-
 10. **CHANGE**: Removed built-in editor and menu to toggle it!
-
 11. Put last_config delete in try-except block - seems to be needed when going from old version of config file to new one.
 12. **FIXED**: ui settings changes are properly rolled back if user presses Cancel button.
-
 13. **CHANGE**: internally, updating config properties automatically saves config to disk.
-
 14. **CHANGE**: Updated EPICpy from PyQt5 to PyQt6
 
 
@@ -72,25 +72,18 @@
 ---
 1. Updated: 1. Demo choice and detection devices will show image underlay if enabled in display_controls. 2. Last device noted when app first starts.
 2. **CHANGE**: view windows no longer updated when closed.
-
 3. **CHANGE**: trace window no longer written to when closed.
-
 4. Corrected typo on about screen and ran black.
 5. **FIXED**: Trace settings now saves changes.
-
 6. Added a few simple optimizations.
 7. Fixed - Normal Output text stream was broken, now fixed.
 8. Bumped version to 2023.5.21.
 9. **FIXED**: Initial and reset layouts work in a more accurate and consistent way across OSs.
-
 10. **CHANGE**: for proper operation on windows,had to move back to local copy of munch module.
-
 11. Layout_reset draft change completed, needs testing on smaller desktops.
 12. Now forcing sync after layout save.
 13. **FIXED**: Now using a less problematic lru_cache.
-
 14. **CHANGE**: Localmunch scheme replaced by just importing the munch library from pypi.
-
 15. **FIXED**: More gracefully handling SEGSEGV caused by epiclib.
 
 
@@ -99,12 +92,9 @@
 ---
 1. Updated setup.py for windows pipx install.
 2. **CHANGE**: Now using udp broadcasting to get normal and trace outputs to GUI. Debug and PPS outs are untested.
-
 3. Quick cleanup.
 4. **FIXED**: had to deal with qscintilla issue with older versions of glibc on linux. now handles this gracefully.
-
 5. **CHANGE**: unified menu bar on mac, now at normal output window like windows and linux.
-
 6. Fix setup.py to properly notice mac and win hosts.
 
 ## VERSION: 2023.5.6
@@ -114,14 +104,11 @@
 
 2. Another resource movement but still pipx isnt pulling it in.
 3. **CHANGE**: ReArranged everything to work properly with pipx. includes devices, encoders, and text devices. everything put into subfolders except for main.py
-
 4. Installs but having import issue with modules in root folder.
 5. Done encoders now work. printing of model parameters also works.
 6. Remove some debug messages prior to attempting to remove the need to ever call model.get_human_ptr.
 7. **CHANGE**: Clearing of stats ui before each sim run has been REINSTATED.
-
 8. **FIXED**: default window sizing uses more reasonable defaults and includes or removes windows depending on available real-estate
-
 9. Edited freezing and packaging scripts.
 10. Updated changelog.
 
@@ -132,13 +119,11 @@
 2. Pystreamer update is done. output_tee related sigbart is gone.
 3. Seems to work but still getting fault on quit.
 4. **CHANGE**: stats output window no longer clears when running multiple simulations back to back. if all sims produce stats output, they get APPENDED to what's already there. A new run, single or multiple, will still clear stats output window.
-
 5. Test run now works without neededing to pull devices from internet. also added 4 virtual subjects so stat test in choice_task stats output will work.
 6. No longer makes a federal case if rule file is not found on device reload.
 7. Getting EPICpy2 to work with epiclib on linux mac and windows.
 8. Remove article folder.
 9. **CHANGE**: Major Changes: 1) Replaced use of cppyy with a pre-compiled Python module compiled using PyBind11. I.e., the project contains no more C++ code. This has led to major changes to the project file structure. 2) Several minor but unavoidable changes to device and encoders. 3) EPICpy is now using Python 3.10.
-
 10. **CHANGE**: Major Dev update: Abandoned use of FBSpro (paid) and now using only pyinstaller (free and opensource) to generate binaries. Significant changes to folder structure.
 
 11. Added pyinstaller to requirements.txt and updated exact_requirements.txt.
@@ -151,7 +136,6 @@
 18. Updated main app code to work with epiclib including removing various cppyy related modules.
 19. Getting ready to pivot to epiclib python module.
 20. **CHANGE**: No longer relying on FBS for build - now using plain pyinstaller. Also, major folder re-organization.
-
 21. Removed fbs frm reqs.
 22. Removed former epiclibworkout stuff, will add proper tests shortly.
 23. I made an error -- I forgot which branch I was in. These changes primarily have to do with removing the dependency on fbs pro. there is also a bit of epiclib testing that was never finished.
@@ -167,7 +151,6 @@
 
 ---
 1. **FIXED**: Various features of Normal Output popup window. Added: First pass of run-script feature. Fixed: Extra spaces in Trace Window.
-
 2. Last script now being saved in app config.
 3. Script feature seems to be working. only tested for now as far as I need for grading final exam.
 4. Script run works with hardcoded script path. also fixed default filename when exporting stats window.
@@ -177,10 +160,8 @@
 8. Removed some improperly added files from main.
 9. Accidentally staged files needed for next feature!
 10. **FIXED**: NO popup edit options availability makes better use of run_state. fixed: Ability to edit rules following rule load error restored.
-
 11. Added: NO popup menu has option to open device folder.
 12. **FIXED**: null action warning on popup. added: popup to search, copy, and clear tracewindow text.
-
 13. **FIXED**: eliminated big blank sections in trace output.
 
 
@@ -213,11 +194,8 @@
 ---
 1. Manually renaming erronous 2022.10.1 version in changelog - should have been 2202.8.1.
 2. **FIXED**: editor won't close automatically if any open file has changed.
-
 3. **NEW FEATURE**: Built-in editor is available (based on the EPICcoder project)
-
 4. **CHANGE**: EPICpy license changed to GPLv3 due to use of PyQT5.
-
 5. **CHANGE**: EPICpy GUI qt-bindings switched from Pyside2 to PyQt5
 
 
