@@ -43,9 +43,7 @@ from epicpy.widgets.largetextview import LargeTextView
 from epicpy.windows.statswindow import StatsWin
 from epicpy.windows.tracewindow import TraceWin
 from qtpy.QtGui import (
-    QTextCursor,
     QTextDocumentWriter,
-    QTextDocument,
     QCloseEvent,
     QMouseEvent,
     QFont,
@@ -55,7 +53,6 @@ from qtpy.QtGui import (
 from qtpy.QtCore import (
     QTimer,
     QByteArray,
-    QRegularExpression,
     Qt,
     QSettings,
     QObject,
@@ -82,7 +79,6 @@ from epicpy.dialogs.loggingwindow import LoggingSettingsWin
 from epicpy.views.visualviewwindow import VisualViewWin
 from epicpy.views.auditoryviewwindow import AuditoryViewWin
 from epicpy.dialogs.epiclibsettingswindow import EPICLibSettingsWin
-from epicpy.dialogs.searchwindow import SearchWin
 from epicpy.epic.encoderpassthru import NullVisualEncoder, NullAuditoryEncoder
 import datetime
 import time

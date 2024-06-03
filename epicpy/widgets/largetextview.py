@@ -1,15 +1,13 @@
 import sys
 import timeit
-from typing import re
 
-from qtpy.QtWidgets import QInputDialog
 from qtpy.QtTest import QTest
 from qtpy.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QScrollBar, QLabel, QMessageBox, QMenu
 from qtpy.QtCore import Qt, QTimer
 from qtpy.QtGui import QPainter, QFontMetrics, QWheelEvent, QFont, QContextMenuEvent
 
 from epicpy.dialogs.searchwindow import SearchWin
-from epicpy.utils.viewsearch import find_next_index_with_target_parallel_concurrent
+from epicpy.utils.viewsearch import find_next_index_with_target_parallel_concurrent, find_next_index_with_target_serial
 
 
 class LargeTextView(QWidget):
@@ -170,14 +168,19 @@ class LargeTextView(QWidget):
         for i in range(visible_lines):
             line_number = start_line + i
 
-            highlighted_line_number = self.current_line_location - self.scroll_bar.value() + 1
+            highlighted_line_number = self.current_line_location - self.scroll_bar.value()  # was + 1
             if 0 <= highlighted_line_number < visible_lines:
                 painter.drawRect(0, highlighted_line_number * line_height, text_area_width, line_height)
 
             if line_number < len(self.lines):
                 line_text = self.lines[line_number]
                 painter.drawText(
-                    0, (i + 1) * line_height, text_area_width, line_height, Qt.AlignmentFlag.AlignLeft, line_text
+                    0,
+                    (i + 0) * line_height,
+                    text_area_width,
+                    line_height,
+                    Qt.AlignmentFlag.AlignLeft,
+                    line_text,  # was (i + 1)
                 )
 
     def resizeEvent(self, event):
@@ -194,7 +197,7 @@ class LargeTextView(QWidget):
     def update_wait_label_position(self):
         self.wait_label.setGeometry(0, 0, self.width(), self.height())
 
-    def continue_find_text(self)->bool:
+    def continue_find_text(self) -> bool:
         if not self.last_search_spec or not len(self.lines):
             return False
 
@@ -231,7 +234,12 @@ class LargeTextView(QWidget):
         if self.current_line_location > len(self.lines) - 1:
             self.current_line_location = len(self.lines) - 1
 
-        result = find_next_index_with_target_parallel_concurrent(
+        if len(self.lines) > 500_000:
+            find_func = find_next_index_with_target_parallel_concurrent
+        else:
+            find_func = find_next_index_with_target_serial
+
+        result = find_func(
             lines=self.lines,
             target=pattern,
             start_line=self.current_line_location, # self.scroll_bar.value(),
@@ -271,7 +279,7 @@ class LargeTextView(QWidget):
 
             # Ensure clicked_row is within the range of lines
             if 0 <= clicked_row < len(self.lines):
-                self.current_line_location = int(clicked_row - 1)
+                self.current_line_location = int(clicked_row)  # was clicked_row - 1
                 # print("Clicked row:", self.current_line_location)
                 # print("Text:", self.lines[self.current_line_location])
 

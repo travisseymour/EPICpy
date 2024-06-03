@@ -18,19 +18,21 @@ def search_chunk(params):
     return -1
 
 
-def find_next_index_with_target_serial(lines, target, current_line, direction="forward", is_regex=False):
+def find_next_index_with_target_serial(
+    lines, target, start_line, direction="forward", is_regex=False, ignore_case: bool = False
+):
     # Compile the pattern based on whether the target is a regex
-    if is_regex:
-        pattern = re.compile(target)  # , re.IGNORECASE)
+    if ignore_case:
+        pattern = re.compile(target if is_regex else re.escape(target), re.IGNORECASE)
     else:
-        pattern = re.compile(re.escape(target))  # , re.IGNORECASE)
+        pattern = re.compile(target if is_regex else re.escape(target))
 
     if direction == "forward":
-        for i in range(current_line, len(lines)):
+        for i in range(start_line, len(lines)):
             if pattern.search(lines[i]):
                 return i
     elif direction == "backward":
-        for i in range(current_line, -1, -1):
+        for i in range(start_line, -1, -1):
             if pattern.search(lines[i]):
                 return i
 
@@ -78,7 +80,6 @@ def find_next_index_with_target_parallel_concurrent(
         target = re.escape(target)
 
     chunk_size = len(lines) // num_workers
-    print(f'{num_workers=} {len(lines)=} {start_line=}')
     futures = []
     with ProcessPoolExecutor(max_workers=num_workers) as executor:
         if direction == "forward":
@@ -87,7 +88,7 @@ def find_next_index_with_target_parallel_concurrent(
                 chunk = lines[i:chunk_end]
                 futures.append(executor.submit(find_next_index_in_chunk, chunk, target, i, ignore_case, direction))
         elif direction == "backward":
-            for i in range(start_line, -1, -chunk_size):
+            for i in range(start_line, -1, -chunk_size if chunk_size else -1):
                 chunk_start = max(i - chunk_size, 0)
                 chunk = lines[chunk_start:i]
                 futures.append(
