@@ -114,16 +114,24 @@ class RunSettingsWin(QDialog):
 
         if config.device_cfg.display_refresh == "after_each_step":
             self.ui.radioButtonRefreshEachCycle.setChecked(True)
-        elif config.device_cfg.display_refresh == "after_every_sec":
-            self.ui.radioButtonRefreshEachSecs.setChecked(True)
-            self.ui.doubleSpinBoxRefreshSecs.setValue(config.device_cfg.display_refresh_value)
         else:
             self.ui.radioButtonRefreshNone.setChecked(True)
 
+        # FIXME: Do this stuff in the ui file instead of here.
+        # ------------------------------------------------------------------
+        dep_msg = "This option is depreciated and will be removed shortly."
+        self.ui.radioButtonRefreshEachCycleText.setEnabled(False)
+        self.ui.radioButtonRefreshEachCycleText.setToolTip(dep_msg)
+        self.ui.spinBoxTextRefreshSteps.setEnabled(False)
+        self.ui.spinBoxTextRefreshSteps.setToolTip(dep_msg)
+
+        self.ui.radioButtonRefreshEachSecs.setToolTip(dep_msg)
+        self.ui.doubleSpinBoxRefreshSecs.setToolTip(dep_msg)
+        self.ui.radioButtonRefreshContinuouslyText.setText("Continuously")
+        # ------------------------------------------------------------------
+
         if config.device_cfg.text_refresh == "continuously":
             self.ui.radioButtonRefreshContinuouslyText.setChecked(True)
-        elif config.device_cfg.text_refresh == "after_each_step":
-            self.ui.radioButtonRefreshEachCycleText.setChecked(True)
         else:
             self.ui.radioButtonRefreshNoneText.setChecked(True)
 
@@ -187,17 +195,12 @@ class RunSettingsWin(QDialog):
         if self.ui.radioButtonRefreshEachCycle.isChecked():
             config.device_cfg.display_refresh = "after_each_step"
             config.device_cfg.display_refresh_value = 1
-        elif self.ui.radioButtonRefreshEachSecs.isChecked():
-            config.device_cfg.display_refresh = "after_every_sec"
-            config.device_cfg.display_refresh_value = self.ui.doubleSpinBoxRefreshSecs.value()
         else:
             config.device_cfg.display_refresh = "none_during_run"
             config.device_cfg.display_refresh_value = 1
 
         if self.ui.radioButtonRefreshContinuouslyText.isChecked():
             config.device_cfg.text_refresh = "continuously"
-        elif self.ui.radioButtonRefreshEachCycleText.isChecked():
-            config.device_cfg.text_refresh = "after_each_step"
         else:
             config.device_cfg.text_refresh = "none_during_run"
 

@@ -13,7 +13,6 @@ You should have received a copy of the GNU General Public License along with EPI
 If not, see <https://www.gnu.org/licenses/>.
 """
 
-import os
 import json
 from pathlib import Path
 import platform
@@ -118,7 +117,7 @@ class DeviceConfig:
     run_command: str = "run_until_done"
     run_command_value: float = 1.0
     display_refresh: str = "after_each_step"
-    text_refresh: str = "after_each_step"
+    text_refresh: str = "continuously"
     display_refresh_value: float = 1.0
     text_refresh_value: float = 2.0
 
