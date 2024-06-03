@@ -242,7 +242,7 @@ class LargeTextView(QWidget):
         result = find_func(
             lines=self.lines,
             target=pattern,
-            start_line=self.current_line_location, # self.scroll_bar.value(),
+            start_line=self.current_line_location,  # self.scroll_bar.value(),
             direction="backward" if backwards else "forward",
             is_regex=use_regex,
             ignore_case=ignore_case,

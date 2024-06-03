@@ -75,13 +75,9 @@ class EPICAuditoryView(View_base):
     # this creation functions do nothing if the named object already exists.
     # The architecture elsewhere will signal an error.
 
-    def notify_auditory_stream_appear(
-        self, object_name: Symbol, pitch: float, loudness: float, location: GU.Point
-    ):
+    def notify_auditory_stream_appear(self, object_name: Symbol, pitch: float, loudness: float, location: GU.Point):
         if self.view_window.enabled:
-            self.view_window.create_new_stream(
-                object_name.str(), pitch, loudness, location
-            )
+            self.view_window.create_new_stream(object_name.str(), pitch, loudness, location)
             self.set_changed()
 
     def notify_auditory_sound_start(
@@ -181,16 +177,12 @@ class EPICAuditoryView(View_base):
             self.view_window.erase_object(object_name.str())
             self.set_changed()
 
-    def notify_auditory_sound_property_changed(
-        self, object_name: Symbol, prop_name: Symbol, prop_value: Symbol
-    ):
+    def notify_auditory_sound_property_changed(self, object_name: Symbol, prop_name: Symbol, prop_value: Symbol):
         if self.view_window.enabled:
             # NOTE: Currently only expecting property values that can be represented as string
             #       event.g., {'Offset', 'Nil', 'Onset'}. If numeric or other types are needed, then prop_value.str()
             #       needs to be re-evaluated!
-            self.view_window.change_object_property(
-                object_name.str(), prop_name.str(), prop_value.str()
-            )
+            self.view_window.change_object_property(object_name.str(), prop_name.str(), prop_value.str())
             self.set_changed()
 
     # def notify_append_text(self, text: str):
@@ -200,9 +192,7 @@ class EPICAuditoryView(View_base):
     #     self.curr_time = current_time
 
     def __lshift__(self, *args, **kwargs):
-        log.warning(
-            f"epicpy_auditoryview.py:__lshift__() called with these parameters: {kwargs}"
-        )
+        log.warning(f"epicpy_auditoryview.py:__lshift__() called with these parameters: {kwargs}")
 
     def __getattr__(self, name):
         def _missing(*args, **kwargs):

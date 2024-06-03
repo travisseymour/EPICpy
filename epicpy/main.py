@@ -99,6 +99,7 @@ def segfault_handler(signal, frame):
     os._exit(1)
     sys.exit(1)
 
+
 if OS in ("Linux", "Darwin"):
     # Define the C function prototype
     handler_func_type = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)

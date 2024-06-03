@@ -426,11 +426,11 @@ class MainWin(QMainWindow):
 
         self.ui.actionSound_Text_Settings.triggered.connect(self.show_sound_text_settings_dialog)
         self.ui.actionExport_Normal_Output.triggered.connect(
-            partial(self.export_output, source=self.ui.plainTextEditOutput, name="Normal")
+            partial(self.export_output_txt, source=self.ui.plainTextEditOutput, name="Normal")
         )
         self.ui.actionExport_Trace_Output.triggered.connect(
             partial(
-                self.export_output,
+                self.export_output_txt,
                 source=self.trace_win.ui.plainTextEditOutput,
                 name="Trace",
             )
@@ -679,9 +679,9 @@ class MainWin(QMainWindow):
         script_file, _ = QFileDialog.getOpenFileName(
             parent=None,
             caption="Choose EPICpy Device File",
-            dir=str(start_dir),
+            directory=str(start_dir),
             filter="CSV Files (*.csv);;Text Files (*.txt)",
-            selectedFilter="CSV Files (*.csv)",
+            initialFilter="CSV Files (*.csv)",
         )
 
         if not script_file:
@@ -1575,9 +1575,9 @@ class MainWin(QMainWindow):
         file, _ = file_dialog.getSaveFileName(
             None,
             caption=f"Specify {kind} Output File",
-            dir=str(start_file),
+            directory=str(start_file),
             filter=_filter,
-            selectedFilter=initial_filter,
+            initialFilter=initial_filter,
         )
 
         return file
@@ -1617,6 +1617,36 @@ class MainWin(QMainWindow):
             self.write(
                 emoji_box(
                     f"ERROR: Unable to write output text from " f"{name.title()} " f"to" f"{out_file})",
+                    line="thick",
+                )
+            )
+
+    def export_output_txt(self, source: LargeTextView, name: str):
+        default_exts = {"Normal": ".txt", "Trace": ".txt"}
+        try:
+            ext = default_exts[name]
+        except NameError:
+            ext = ".txt"
+
+        out_file = self.choose_log_file(name, ext)
+        if not out_file:
+            self.write(f"{e_info} {name.title()} window text export abandoned.")
+            return
+
+        try:
+            Path(out_file).write_text(source.get_text())
+            success = True
+            error = ""
+        except Exception as e:
+            success = False
+            error = str(e)
+
+        if success:
+            self.write(f"{e_boxed_check} {name.title()} Output window text written to {out_file}")
+        else:
+            self.write(
+                emoji_box(
+                    f"ERROR: Unable to write output text from " f"{name.title()} " f"to" f"{out_file} ({error})",
                     line="thick",
                 )
             )
@@ -2015,6 +2045,7 @@ class MainWin(QMainWindow):
             self.ui.plainTextEditOutput.query_search()
         else:
             super().keyPressEvent(event)
+
     # =============================================
     # Device Helpers
     # =============================================

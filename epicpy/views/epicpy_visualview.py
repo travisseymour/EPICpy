@@ -55,9 +55,7 @@ class EPICVisualView(View_base):
             self.view_window.update_eye_position(new_eye_location)
             self.set_changed()
 
-    def notify_object_appear(
-        self, object_name: Symbol, location: GU.Point, size: GU.Size
-    ):
+    def notify_object_appear(self, object_name: Symbol, location: GU.Point, size: GU.Size):
         # this function does nothing if the named object already exists.
         # The architecture elsewhere will signal an error.
         if self.view_window.enabled:
@@ -92,14 +90,10 @@ class EPICVisualView(View_base):
             self.view_window.change_object_size(object_name.str(), size)
             self.set_changed()
 
-    def notify_visual_property_changed(
-        self, object_name: Symbol, prop_name: Symbol, prop_value: Symbol
-    ):
+    def notify_visual_property_changed(self, object_name: Symbol, prop_name: Symbol, prop_value: Symbol):
         if self.view_window.enabled:
             if prop_name in ("Status", "Color", "Shape", "Text", "Leader"):
-                self.view_window.change_object_property(
-                    object_name.str(), prop_name.str(), prop_value.str()
-                )
+                self.view_window.change_object_property(object_name.str(), prop_name.str(), prop_value.str())
                 self.set_changed()
 
     # def notify_append_text(self, text: str):

@@ -70,19 +70,13 @@ class RunSettingsWin(QDialog):
 
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
-        self.ui.pushButtonRunContinuously.clicked.connect(
-            self.clicked_continuous_button
-        )
+        self.ui.pushButtonRunContinuously.clicked.connect(self.clicked_continuous_button)
         self.ui.pushButtonDeleteData.clicked.connect(self.delete_device_data)
 
         self.ui.pushButtonDeleteData.setVisible(self.data_delete_func is not None)
 
         self.setStyleSheet(
-            'QWidget {font: "'
-            + config.app_cfg.font_name
-            + '"; font-size: '
-            + str(config.app_cfg.font_size)
-            + "pt}"
+            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
         )
 
         if "runsettingswindow" in config.app_cfg.dialog_size:
@@ -104,9 +98,7 @@ class RunSettingsWin(QDialog):
         self.ui.spinBoxRunRealSecs.setValue(config.device_cfg.setting_run_for_real_secs)
         self.ui.spinBoxRunSimMsecs.setValue(config.device_cfg.setting_run_until_msecs)
         self.ui.spinBoxRunSimCycles.setValue(config.device_cfg.setting_run_cycles)
-        self.ui.doubleSpinBoxRefreshSecs.setValue(
-            config.device_cfg.setting_refresh_secs
-        )
+        self.ui.doubleSpinBoxRefreshSecs.setValue(config.device_cfg.setting_refresh_secs)
 
         if config.device_cfg.run_command == "run_for":
             self.ui.radioButtonRunForSecs.setChecked(True)
@@ -124,9 +116,7 @@ class RunSettingsWin(QDialog):
             self.ui.radioButtonRefreshEachCycle.setChecked(True)
         elif config.device_cfg.display_refresh == "after_every_sec":
             self.ui.radioButtonRefreshEachSecs.setChecked(True)
-            self.ui.doubleSpinBoxRefreshSecs.setValue(
-                config.device_cfg.display_refresh_value
-            )
+            self.ui.doubleSpinBoxRefreshSecs.setValue(config.device_cfg.display_refresh_value)
         else:
             self.ui.radioButtonRefreshNone.setChecked(True)
 
@@ -137,16 +127,12 @@ class RunSettingsWin(QDialog):
         else:
             self.ui.radioButtonRefreshNoneText.setChecked(True)
 
-        self.ui.spinBoxTextRefreshSteps.setValue(
-            int(config.device_cfg.text_refresh_value)
-        )
+        self.ui.spinBoxTextRefreshSteps.setValue(int(config.device_cfg.text_refresh_value))
 
         self.ui.spinBoxTimeDelay.setValue(int(config.device_cfg.step_time_delay))
 
         if config.device_cfg.device_params.strip():
-            self.ui.lineEditDeviceParameters.setText(
-                config.device_cfg.device_params.strip()
-            )
+            self.ui.lineEditDeviceParameters.setText(config.device_cfg.device_params.strip())
         else:
             self.reset_device_params()
 
@@ -203,9 +189,7 @@ class RunSettingsWin(QDialog):
             config.device_cfg.display_refresh_value = 1
         elif self.ui.radioButtonRefreshEachSecs.isChecked():
             config.device_cfg.display_refresh = "after_every_sec"
-            config.device_cfg.display_refresh_value = (
-                self.ui.doubleSpinBoxRefreshSecs.value()
-            )
+            config.device_cfg.display_refresh_value = self.ui.doubleSpinBoxRefreshSecs.value()
         else:
             config.device_cfg.display_refresh = "none_during_run"
             config.device_cfg.display_refresh_value = 1
@@ -226,9 +210,7 @@ class RunSettingsWin(QDialog):
         config.device_cfg.setting_run_for_real_secs = self.ui.spinBoxRunRealSecs.value()
         config.device_cfg.setting_run_until_msecs = self.ui.spinBoxRunSimMsecs.value()
         config.device_cfg.setting_run_cycles = self.ui.spinBoxRunSimCycles.value()
-        config.device_cfg.setting_refresh_secs = (
-            self.ui.doubleSpinBoxRefreshSecs.value()
-        )
+        config.device_cfg.setting_refresh_secs = self.ui.doubleSpinBoxRefreshSecs.value()
 
         self.hide()
 

@@ -34,23 +34,15 @@ class BreakSettingsWin(QDialog):
 
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
-        self.ui.checkBoxEnableRuleBreaks.stateChanged.connect(
-            self.clicked_rule_break_checkbox
-        )
+        self.ui.checkBoxEnableRuleBreaks.stateChanged.connect(self.clicked_rule_break_checkbox)
 
         self.all_rules = [str(break_rule) for break_rule in self.model.get_rule_names()]
-        self.break_rules = [
-            str(break_rule) for break_rule in self.model.get_break_rule_names()
-        ]
+        self.break_rules = [str(break_rule) for break_rule in self.model.get_break_rule_names()]
 
         # self.setLayout(self.ui.verticalLayout)
 
         self.setStyleSheet(
-            'QWidget {font: "'
-            + config.app_cfg.font_name
-            + '"; font-size: '
-            + str(config.app_cfg.font_size)
-            + "pt}"
+            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
         )
 
         if "breaksettingswindow" in config.app_cfg.dialog_size:
@@ -88,9 +80,7 @@ class BreakSettingsWin(QDialog):
     def clicked_ok_button(self):
         self.ok = True
         states = [
-            self.ui.listWidgetRules.itemWidget(
-                self.ui.listWidgetRules.item(index)
-            ).checkState()
+            self.ui.listWidgetRules.itemWidget(self.ui.listWidgetRules.item(index)).checkState()
             for index in range(self.ui.listWidgetRules.count())
         ]
         rule_states = list(zip(self.all_rules, states))

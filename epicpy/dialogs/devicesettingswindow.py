@@ -34,11 +34,7 @@ class DeviceOptionsWin(QDialog):
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
 
         self.setStyleSheet(
-            'QWidget {font: "'
-            + config.app_cfg.font_name
-            + '"; font-size: '
-            + str(config.app_cfg.font_size)
-            + "pt}"
+            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
         )
 
         if "deviceoptionswindow" in config.app_cfg.dialog_size:
@@ -67,10 +63,7 @@ class DeviceOptionsWin(QDialog):
             or not isinstance(self.device.option, dict)
             or not len(self.device.option.keys())
         ):
-            msg = (
-                f"Device {self.device.device_name} does not expose any user "
-                f"adjustable options."
-            )
+            msg = f"Device {self.device.device_name} does not expose any user " f"adjustable options."
             self.ui.labelDeviceNameAndInfo.setText(msg)
         else:
             msg = f"Device {self.device.device_name} User Options:"
@@ -89,9 +82,7 @@ class DeviceOptionsWin(QDialog):
 
     def clicked_ok_button(self):
         states = [
-            self.ui.listWidgetOptions.itemWidget(
-                self.ui.listWidgetOptions.item(index)
-            ).checkState()
+            self.ui.listWidgetOptions.itemWidget(self.ui.listWidgetOptions.item(index)).checkState()
             for index in range(self.ui.listWidgetOptions.count())
         ]
         if states:

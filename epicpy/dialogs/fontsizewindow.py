@@ -38,11 +38,7 @@ class FontSizeDialog(QDialog):
         self.ui.spinBoxFontSize.valueChanged.connect(self.font_size_changed)
 
         self.setStyleSheet(
-            'QWidget {font: "'
-            + config.app_cfg.font_name
-            + '"; font-size: '
-            + str(config.app_cfg.font_size)
-            + "pt}"
+            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
         )
 
         if "fontsizewindow" in config.app_cfg.dialog_size:

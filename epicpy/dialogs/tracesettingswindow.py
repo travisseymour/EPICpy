@@ -34,11 +34,7 @@ class TraceSettingsWin(QDialog):
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
 
         self.setStyleSheet(
-            'QWidget {font: "'
-            + config.app_cfg.font_name
-            + '"; font-size: '
-            + str(config.app_cfg.font_size)
-            + "pt}"
+            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
         )
 
         if "tracesettingswindow" in config.app_cfg.dialog_size:

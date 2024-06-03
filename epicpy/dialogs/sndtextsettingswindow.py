@@ -34,11 +34,7 @@ class SoundTextSettingsWin(QDialog):
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
 
         self.setStyleSheet(
-            'QWidget {font: "'
-            + config.app_cfg.font_name
-            + '"; font-size: '
-            + str(config.app_cfg.font_size)
-            + "pt}"
+            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
         )
 
         if "sndtextsettingswindow" in config.app_cfg.dialog_size:
@@ -68,9 +64,7 @@ class SoundTextSettingsWin(QDialog):
         self.ui.checkBoxSpeechKind.setChecked(config.device_cfg.speech_text_kind)
         self.ui.checkBoxSoundStream.setChecked(config.device_cfg.speech_text_stream)
         self.ui.checkBoxSpeechPitch.setChecked(config.device_cfg.speech_text_pitch)
-        self.ui.checkBoxSpeechLoudness.setChecked(
-            config.device_cfg.speech_text_loudness
-        )
+        self.ui.checkBoxSpeechLoudness.setChecked(config.device_cfg.speech_text_loudness)
         self.ui.checkBoxSpeechContent.setChecked(config.device_cfg.speech_text_content)
         self.ui.checkBoxSpeechSpeaker.setChecked(config.device_cfg.speech_text_speaker)
         self.ui.checkBoxSpeechGender.setChecked(config.device_cfg.speech_text_gender)
@@ -85,22 +79,14 @@ class SoundTextSettingsWin(QDialog):
         config.device_cfg.sound_text_kind = self.ui.checkBoxSoundKind.isChecked()
         config.device_cfg.sound_text_stream = self.ui.checkBoxSoundStream.isChecked()
         config.device_cfg.sound_text_timbre = self.ui.checkBoxSoundTimbre.isChecked()
-        config.device_cfg.sound_text_loudness = (
-            self.ui.checkBoxSoundLoudness.isChecked()
-        )
+        config.device_cfg.sound_text_loudness = self.ui.checkBoxSoundLoudness.isChecked()
 
         config.device_cfg.speech_text_kind = self.ui.checkBoxSpeechKind.isChecked()
         config.device_cfg.speech_text_stream = self.ui.checkBoxSpeechStream.isChecked()
         config.device_cfg.speech_text_pitch = self.ui.checkBoxSpeechPitch.isChecked()
-        config.device_cfg.speech_text_loudness = (
-            self.ui.checkBoxSpeechLoudness.isChecked()
-        )
-        config.device_cfg.speech_text_content = (
-            self.ui.checkBoxSpeechContent.isChecked()
-        )
-        config.device_cfg.speech_text_speaker = (
-            self.ui.checkBoxSpeechSpeaker.isChecked()
-        )
+        config.device_cfg.speech_text_loudness = self.ui.checkBoxSpeechLoudness.isChecked()
+        config.device_cfg.speech_text_content = self.ui.checkBoxSpeechContent.isChecked()
+        config.device_cfg.speech_text_speaker = self.ui.checkBoxSpeechSpeaker.isChecked()
         config.device_cfg.speech_text_gender = self.ui.checkBoxSpeechGender.isChecked()
 
         self.close()

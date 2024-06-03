@@ -1,6 +1,7 @@
 import platform
 import re
 import tempfile
+import time
 import timeit
 import zipfile
 from copy import deepcopy
@@ -9,6 +10,7 @@ from typing import Tuple, Optional
 import webbrowser
 
 import pandas as pd
+from qtpy.QtCore import QCoreApplication
 from qtpy.QtGui import QAction
 from qtpy.QtWidgets import QMainWindow
 
@@ -91,9 +93,7 @@ def setup_test_device_folder(window: QMainWindow):
 
     devices = get_resource("other", "devices.zip")
     if not devices.is_file():
-        window.write(
-            "  Unable to locate test device archive inside application package! Contact project maintainer."
-        )
+        window.write("  Unable to locate test device archive inside application package! Contact project maintainer.")
         return False
 
     window.write("  Unzipping test device package...")
@@ -102,9 +102,7 @@ def setup_test_device_folder(window: QMainWindow):
             infile.extractall(Path(TEMP_DIR))
         assert Path(
             TEMP_DIR, "devices"
-        ).is_dir(), (
-            "Uncompressed folder devices could not be located in temporary folder."
-        )
+        ).is_dir(), "Uncompressed folder devices could not be located in temporary folder."
     except Exception as e:
         window.write(f"ERROR: {e}")
         return False
@@ -189,9 +187,7 @@ def show_results():
 
 def add_string(name: str):
     global TEST_RESULTS
-    TEST_RESULTS.append(
-        {"Name": f"<b>{name}</b>", "Worked": "", "Outcome": "", "Kind": "String"}
-    )
+    TEST_RESULTS.append({"Name": f"<b>{name}</b>", "Worked": "", "Outcome": "", "Kind": "String"})
 
 
 def clear_results():
@@ -214,7 +210,7 @@ def add_result(name: str, worked: bool, outcome: str):
 def wait(window: QMainWindow, duration: float):
     start = timeit.default_timer()
     while True:
-        window.app.processEvents()
+        QCoreApplication.processEvents()
         if timeit.default_timer() - start > duration:
             break
 
@@ -229,26 +225,16 @@ def wait_for_output(
     _timeout = timeout_secs if timeout_secs else 20.0
     start = timeit.default_timer()
     while True:
-        window.app.processEvents()
+        QCoreApplication.processEvents()
         if timeit.default_timer() - start > _timeout:
             result = False
             outcome = "Operation Timed Out."
             break
-        elif all(
-            [
-                re.findall(pattern, text_edit.get_text())
-                for pattern in target.split("||")
-            ]
-        ):
+        elif all([re.findall(pattern, text_edit.get_text()) for pattern in target.split("||")]):
             result = True
             outcome = "Success"
             break
-        elif all(
-            [
-                re.findall(pattern, text_edit.toPlainText())
-                for pattern in sigil.split("||")
-            ]
-        ):
+        elif all([re.findall(pattern, text_edit.get_text()) for pattern in sigil.split("||")]):
             result = False
             outcome = "Fail"
             break
@@ -303,6 +289,11 @@ def run_model_test(
                     encoder_loaded = False
 
                 if encoder_loaded or not load_encoders:
+                    # Clear Data File
+                    try:
+                        window.delete_datafile()
+                    except AttributeError:
+                        ...
                     # Run Model
                     model_run, outcome = test_run_model(window)
                     add_result("Run Model", model_run, outcome)
@@ -310,8 +301,22 @@ def run_model_test(
                     if model_run:
                         # Check Stats output
                         # "N=10, CORRECT=5 INCORRECT=0 MEAN_RT=573 ACCURACY=100.00%"
-                        text = window.stats_win.ui.statsTextBrowser.toPlainText()
-                        correct_N = "N=10" in text
+
+                        print("\nWaiting for stats window to populate...", end="")
+                        text = ""
+                        start = time.time()
+                        while time.time() - start < 10.0:
+                            text = window.stats_win.ui.statsTextBrowser.toPlainText()
+                            if text:
+                                break
+                            print(".", end="")
+                            QCoreApplication.processEvents()
+                        if text:
+                            print(f'\n\nGot access to stats window text after {time.time()-start:0.4f} sec:\n{text}\n')
+                        else:
+                            print(f'\n\nFAILED to retrieve text from stats window after test!!\n\n')
+
+                        correct_N = "N=10" in text  # 10 trials for 4 runs
                         correct_ACCURACY = "ACCURACY=100.00" in text
                         if load_encoders:
                             correct_ACCURACY = not correct_ACCURACY
@@ -356,9 +361,7 @@ def run_model_test(
                                     "INCORRECT",
                                 ]
                             else:
-                                correct_accuracy_range = sorted(set(data.Accuracy)) == [
-                                    "CORRECT"
-                                ]
+                                correct_accuracy_range = sorted(set(data.Accuracy)) == ["CORRECT"]
                         except:
                             can_read_data = False
                             correct_header = False
@@ -373,9 +376,9 @@ def run_model_test(
                             correct_header,
                             "Success" if correct_header else "Failed",
                         )
+
                         add_result(
-                            f"DataFile: {'NOT' if load_encoders else ''} "
-                            f"All trial 'CORRECT'",
+                            f"DataFile: {'NOT' if encoder_loaded else ''} " f"All trial 'CORRECT'",
                             correct_accuracy_range,
                             "Success" if correct_accuracy_range else "Failed",
                         )
@@ -395,19 +398,13 @@ def run_model_test(
     return model_run
 
 
-def run_all_model_tests(
-    window: QMainWindow, close_on_finish: bool = True, see_results: bool = True
-):
+def run_all_model_tests(window: QMainWindow, close_on_finish: bool = True, see_results: bool = True):
     add_string("RUNNING MODEL WITHOUT ENCODER (Expecting 100% Accuracy)")
-    _ = run_model_test(
-        window, load_encoders=False, close_on_finish=False, see_results=False
-    )
+    _ = run_model_test(window, load_encoders=False, close_on_finish=False, see_results=False)
 
     wait(window, 2)
     add_string("RUNNING MODEL WITH VISUAL ENCODER (Expecting <100% Accuracy)")
-    _ = run_model_test(
-        window, load_encoders=True, close_on_finish=False, see_results=False
-    )
+    _ = run_model_test(window, load_encoders=True, close_on_finish=False, see_results=False)
 
     if see_results:
         wait(window, 2)
@@ -437,9 +434,7 @@ def test_load_device(window: QMainWindow) -> Tuple[bool, str]:
 
 
 def test_compile_rules(window: QMainWindow) -> Tuple[bool, str]:
-    rule_path = str(
-        Path(TEST_DEVICE_FOLDER, "choice/rules/choicetask_rules_VM.prs").resolve()
-    )
+    rule_path = str(Path(TEST_DEVICE_FOLDER, "choice/rules/choicetask_rules_VM.prs").resolve())
     window.simulation.choose_rules(files=[rule_path])
 
     return wait_for_output(
@@ -452,9 +447,7 @@ def test_compile_rules(window: QMainWindow) -> Tuple[bool, str]:
 
 
 def test_load_encoder(window: QMainWindow) -> Tuple[bool, str]:
-    encoder_path = str(
-        Path(TEST_DEVICE_FOLDER, "choice/encoders/donders_visual_encoder.py").resolve()
-    )
+    encoder_path = str(Path(TEST_DEVICE_FOLDER, "choice/encoders/donders_visual_encoder.py").resolve())
     window.simulation.on_load_encoder(kind="Visual", file=encoder_path)
 
     return wait_for_output(

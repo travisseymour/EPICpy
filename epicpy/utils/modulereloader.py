@@ -88,8 +88,7 @@ def reset_module(module, inner_modules_also=True):
         submods = {
             submod
             for _, submod in inspect.getmembers(module)
-            if (type(submod).__name__ == "module")
-            and (submod.__package__.startswith(module.__name__))
+            if (type(submod).__name__ == "module") and (submod.__package__.startswith(module.__name__))
         }
         for submod in submods:
             reset_module(submod, True)
@@ -123,9 +122,7 @@ def _update_referrers(item, new_item):
                 coll[key] = new_item
 
 
-def _get_tree_references_to_reset_recursively(
-    item, module_name, grayed_out_item_ids=None
-):
+def _get_tree_references_to_reset_recursively(item, module_name, grayed_out_item_ids=None):
     if grayed_out_item_ids is None:
         grayed_out_item_ids = set()
 

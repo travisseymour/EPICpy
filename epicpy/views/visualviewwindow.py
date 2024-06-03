@@ -127,9 +127,7 @@ class VisualViewWin(QMainWindow):
 
     @staticmethod
     def set_dot_on(enabled: bool):
-        log.warning(
-            f"instead of calling set_dot_on({enabled}), just set property in config.device_cfg"
-        )
+        log.warning(f"instead of calling set_dot_on({enabled}), just set property in config.device_cfg")
 
     def allow_updates(self, enabled: bool):
         self.enabled = enabled
@@ -157,15 +155,11 @@ class VisualViewWin(QMainWindow):
     @staticmethod
     def set_scale(scale: float):
         # self.scale = scale
-        log.warning(
-            f"instead of calling set_scale({scale}), just set property in config.device_cfg"
-        )
+        log.warning(f"instead of calling set_scale({scale}), just set property in config.device_cfg")
 
     @staticmethod
     def set_grid_on(enabled: bool):
-        log.warning(
-            f"instead of calling set_grid_on({enabled}), just set property in config.device_cfg"
-        )
+        log.warning(f"instead of calling set_grid_on({enabled}), just set property in config.device_cfg")
 
     def clear(self):
         self.objects = {}
@@ -211,9 +205,7 @@ class VisualViewWin(QMainWindow):
                 name=object_name,
                 location=Point(location.x, location.y * -1),
                 size=Size(size.h, size.v),
-                property=DefaultMunch(None)
-                if not properties
-                else DefaultMunch(None, properties),
+                property=DefaultMunch(None) if not properties else DefaultMunch(None, properties),
             )
 
     def erase_object(self, object_name: str):
@@ -297,23 +289,13 @@ class VisualViewWin(QMainWindow):
         if self.bg_image_file:
             self.bg_image = QPixmap(f"{self.bg_image_file}")
             if isinstance(self.bg_image, QPixmap) and self.bg_image_scaled:
-                self.bg_image = self.bg_image.scaled(
-                    self.width(), self.height()
-                )  # , Qt.KeepAspectRatio
+                self.bg_image = self.bg_image.scaled(self.width(), self.height())  # , Qt.KeepAspectRatio
         self.update()
 
     def dot_and_eye(self):
-        dot_color = (
-            QColor(255, 255, 255, 255) if self.dark_mode else QColor(0, 0, 0, 255)
-        )
-        fov_color = (
-            QColor.fromRgbF(0.75, 0.75, 0.75, 0.5)
-            if self.dark_mode
-            else QColor.fromRgbF(0.5, 0.5, 0.5, 0.3)
-        )
-        para_color = (
-            QColorConstants.LightGray if self.dark_mode else QColorConstants.Gray
-        )
+        dot_color = QColor(255, 255, 255, 255) if self.dark_mode else QColor(0, 0, 0, 255)
+        fov_color = QColor.fromRgbF(0.75, 0.75, 0.75, 0.5) if self.dark_mode else QColor.fromRgbF(0.5, 0.5, 0.5, 0.3)
+        para_color = QColorConstants.LightGray if self.dark_mode else QColorConstants.Gray
 
         self.painter.setPen(fov_color)
         self.painter.setBrush(fov_color)
@@ -332,21 +314,14 @@ class VisualViewWin(QMainWindow):
 
     def draw_info_overlay(self):
         # setup
-        self.painter.setPen(
-            QColorConstants.White if self.dark_mode else QColorConstants.Black
-        )
+        self.painter.setPen(QColorConstants.White if self.dark_mode else QColorConstants.Black)
         self.painter.setFont(self.overlay_font)
 
         # draw time info
-        self.painter.drawText(
-            10, self.y_min + 10, f"{int(self.current_time) / 1000:0.2f}"
-        )
+        self.painter.drawText(10, self.y_min + 10, f"{int(self.current_time) / 1000:0.2f}")
 
         # draw view info
-        s = (
-            f"{self.width() / self.scale:0.2f} X {self.height() / self.scale:0.2f} "
-            f"DVA, (0 , 0), {self.scale} p/DVA"
-        )
+        s = f"{self.width() / self.scale:0.2f} X {self.height() / self.scale:0.2f} " f"DVA, (0 , 0), {self.scale} p/DVA"
         self.painter.drawText(5, self.height() - 20, s)
 
     @memoize_class_method()
@@ -376,9 +351,7 @@ class VisualViewWin(QMainWindow):
             w, h = self.width(), self.height()
             pw, ph = self.bg_image.width(), self.bg_image.height()
             try:
-                self.painter.drawPixmap(
-                    w // 2 - pw // 2, h // 2 - ph // 2, self.bg_image
-                )
+                self.painter.drawPixmap(w // 2 - pw // 2, h // 2 - ph // 2, self.bg_image)
             except Exception as e:
                 log.error(f"Unable to draw background: {str(e)}")
 
@@ -394,9 +367,7 @@ class VisualViewWin(QMainWindow):
                 self.bg_image_file = img_file
                 self.bg_image = QPixmap(f"{img_file}")
                 if isinstance(self.bg_image, QPixmap) and scaled:
-                    self.bg_image = self.bg_image.scaled(
-                        self.width(), self.height()
-                    )  # , Qt.KeepAspectRatio
+                    self.bg_image = self.bg_image.scaled(self.width(), self.height())  # , Qt.KeepAspectRatio
                 self.bg_image_scaled = scaled
         except Exception as e:
             self.bg_image_file = ""
@@ -432,11 +403,7 @@ class VisualViewWin(QMainWindow):
             else:
                 brush_style = Qt.BrushStyle.SolidPattern
 
-        color = (
-            colors[obj.property.Color]
-            if obj.property.Color in colors
-            else QColorConstants.LightGray
-        )
+        color = colors[obj.property.Color] if obj.property.Color in colors else QColorConstants.LightGray
         pen = QPen(color, 2, Qt.PenStyle.SolidLine)
         brush = QBrush(color, brush_style)
         return pen, brush
@@ -493,9 +460,7 @@ class VisualViewWin(QMainWindow):
         try:
             self.shape_router[obj.property.Shape](obj=obj)
         except KeyError:
-            self.cache_warn(
-                f"VisualObject received unhandled Shape value {obj.property.Shape}"
-            )
+            self.cache_warn(f"VisualObject received unhandled Shape value {obj.property.Shape}")
             self.shape_nil(obj)
 
     # ------------- Shape Drawing Cache ---------------------------------
@@ -979,9 +944,7 @@ class VisualViewWin(QMainWindow):
         #        The former should be sized to the object size. The latter should
         #        probably be a standard size?
         self.painter.setPen(
-            QColorConstants.Black
-            if obj.property.Status != "Disappearing"
-            else QColorConstants.LightGray
+            QColorConstants.Black if obj.property.Status != "Disappearing" else QColorConstants.LightGray
         )
         self.painter.setBrush(Qt.BrushStyle.SolidPattern)
         x, y, w, h = self.center_and_scale(obj.location, obj.size)

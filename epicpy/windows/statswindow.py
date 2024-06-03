@@ -46,15 +46,9 @@ class StatsWin(QMainWindow):
         self.trace_out_view = None
 
         self.setStyleSheet(
-            'QWidget {font: "'
-            + config.app_cfg.font_name
-            + '"; font-size: '
-            + str(config.app_cfg.font_size)
-            + "pt}"
+            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
         )
-        self.ui.statsTextBrowser.setFont(
-            QFont(config.app_cfg.font_name, int(config.app_cfg.font_size))
-        )
+        self.ui.statsTextBrowser.setFont(QFont(config.app_cfg.font_name, int(config.app_cfg.font_size)))
 
         self.ui.statsTextBrowser.mouseDoubleClickEvent = parent.mouseDoubleClickEvent
 

@@ -52,9 +52,7 @@ class EPICTextViewCachedWrite:
             if self.file_writer.enabled:
                 self.file_writer.write(txt + extra)
         else:
-            self.buffer.append(
-                char
-            )  # NOTE: if this leads to double-spaced output, move this to an else block
+            self.buffer.append(char)  # NOTE: if this leads to double-spaced output, move this to an else block
 
     def write(self, text: str):
         """writes given text to attached text_widget"""

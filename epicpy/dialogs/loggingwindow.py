@@ -36,19 +36,11 @@ class LoggingSettingsWin(QDialog):
 
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
-        self.ui.toolButtonNormalOut.clicked.connect(
-            partial(self.choose_log_file, file_type="normal")
-        )
-        self.ui.toolButtonTraceOut.clicked.connect(
-            partial(self.choose_log_file, file_type="trace")
-        )
+        self.ui.toolButtonNormalOut.clicked.connect(partial(self.choose_log_file, file_type="normal"))
+        self.ui.toolButtonTraceOut.clicked.connect(partial(self.choose_log_file, file_type="trace"))
 
         self.setStyleSheet(
-            'QWidget {font: "'
-            + config.app_cfg.font_name
-            + '"; font-size: '
-            + str(config.app_cfg.font_size)
-            + "pt}"
+            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
         )
 
         # self.setLayout(self.ui.verticalLayout)
@@ -108,9 +100,7 @@ class LoggingSettingsWin(QDialog):
         if not config.device_cfg.trace_out_file:
             config.device_cfg.trace_out_file = self.default_log_filename("trace")
 
-        self.ui.plainTextEditNormalOutFile.setPlainText(
-            config.device_cfg.normal_out_file
-        )
+        self.ui.plainTextEditNormalOutFile.setPlainText(config.device_cfg.normal_out_file)
         self.ui.plainTextEditTraceOutFile.setPlainText(config.device_cfg.trace_out_file)
 
         self.ui.checkBoxLogNormalOut.setChecked(config.device_cfg.log_normal_out)
@@ -124,10 +114,6 @@ class LoggingSettingsWin(QDialog):
         self.ok = True
         config.device_cfg.log_normal_out = self.ui.checkBoxLogNormalOut.isChecked()
         config.device_cfg.log_trace_out = self.ui.checkBoxLogTraceOut.isChecked()
-        config.device_cfg.normal_out_file = (
-            self.ui.plainTextEditNormalOutFile.toPlainText()
-        )
-        config.device_cfg.trace_out_file = (
-            self.ui.plainTextEditTraceOutFile.toPlainText()
-        )
+        config.device_cfg.normal_out_file = self.ui.plainTextEditNormalOutFile.toPlainText()
+        config.device_cfg.trace_out_file = self.ui.plainTextEditTraceOutFile.toPlainText()
         self.hide()

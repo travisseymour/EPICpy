@@ -118,9 +118,7 @@ class AuditoryViewWin(QMainWindow):
 
     @staticmethod
     def set_dot_on(enabled: bool):
-        log.warning(
-            f"instead of calling set_dot_on({enabled}), just set property in config.device_cfg"
-        )
+        log.warning(f"instead of calling set_dot_on({enabled}), just set property in config.device_cfg")
 
     def allow_updates(self, enabled: bool):
         self.enabled = enabled
@@ -147,15 +145,11 @@ class AuditoryViewWin(QMainWindow):
 
     @staticmethod
     def set_scale(scale: float):
-        log.warning(
-            f"instead of calling set_scale({scale}), just set property in config.device_cfg"
-        )
+        log.warning(f"instead of calling set_scale({scale}), just set property in config.device_cfg")
 
     @staticmethod
     def set_grid_on(enabled: bool):
-        log.warning(
-            f"instead of calling set_grid_on({enabled}), just set property in config.device_cfg"
-        )
+        log.warning(f"instead of calling set_grid_on({enabled}), just set property in config.device_cfg")
 
     def clear(self):
         self.objects = {}
@@ -187,12 +181,8 @@ class AuditoryViewWin(QMainWindow):
     def update_eye_position(self, point: GU.Point):
         self.eye_pos = Point(point.x, point.y * -1)
 
-    def create_new_stream(
-        self, object_name: Symbol, pitch: float, loudness: float, location: GU.Point
-    ):
-        self.cache_warn(
-            f"Unhandled call to create_new_stream({object_name}, {pitch}, {loudness}, {location})"
-        )
+    def create_new_stream(self, object_name: Symbol, pitch: float, loudness: float, location: GU.Point):
+        self.cache_warn(f"Unhandled call to create_new_stream({object_name}, {pitch}, {loudness}, {location})")
 
     def disappear_stream(self, object_name: str):
         self.cache_warn(f"Unhandled call to disappear_stream({object_name})")
@@ -210,14 +200,10 @@ class AuditoryViewWin(QMainWindow):
                 name=object_name,
                 location=Point(location.x, location.y * -1),
                 size=Size(size.h, size.v),
-                property=DefaultMunch(None)
-                if not properties
-                else DefaultMunch(None, properties),
+                property=DefaultMunch(None) if not properties else DefaultMunch(None, properties),
             )
             self.objects[object_name].property["Color"] = (
-                QColorConstants.LightGray
-                if "Perceptual" in self.view_type
-                else QColorConstants.Green
+                QColorConstants.LightGray if "Perceptual" in self.view_type else QColorConstants.Green
             )
 
     def stop_sound(self, object_name: str):
@@ -236,9 +222,7 @@ class AuditoryViewWin(QMainWindow):
         if object_name in self.objects:
             self.objects[object_name].size = Size(size.h, size.v)
 
-    def change_object_property(
-        self, object_name: str, prop_name: str, prop_value: Symbol
-    ):
+    def change_object_property(self, object_name: str, prop_name: str, prop_value: Symbol):
         if object_name in self.objects:
             self.objects[object_name].property[prop_name] = prop_value
             if prop_name == "Detection":
@@ -300,15 +284,11 @@ class AuditoryViewWin(QMainWindow):
         if self.bg_image_file:
             self.bg_image = QPixmap(f"{self.bg_image_file}")
             if isinstance(self.bg_image, QPixmap) and self.bg_image_scaled:
-                self.bg_image = self.bg_image.scaled(
-                    self.width(), self.height()
-                )  # , Qt.KeepAspectRatio
+                self.bg_image = self.bg_image.scaled(self.width(), self.height())  # , Qt.KeepAspectRatio
         self.update()
 
     def dot(self):
-        dot_color = (
-            QColor(255, 255, 255, 255) if self.dark_mode else QColor(0, 0, 0, 255)
-        )
+        dot_color = QColor(255, 255, 255, 255) if self.dark_mode else QColor(0, 0, 0, 255)
 
         self.painter.setPen(dot_color)
         self.painter.setBrush(dot_color)
@@ -316,21 +296,14 @@ class AuditoryViewWin(QMainWindow):
 
     def draw_info_overlay(self):
         # setup
-        self.painter.setPen(
-            QColorConstants.White if self.dark_mode else QColorConstants.Black
-        )
+        self.painter.setPen(QColorConstants.White if self.dark_mode else QColorConstants.Black)
         self.painter.setFont(self.overlay_font)
 
         # draw time info
-        self.painter.drawText(
-            10, self.y_min + 10, f"{int(self.current_time) / 1000:0.2f}"
-        )
+        self.painter.drawText(10, self.y_min + 10, f"{int(self.current_time) / 1000:0.2f}")
 
         # draw view info
-        s = (
-            f"{self.width() / self.scale:0.2f} X {self.height() / self.scale:0.2f} "
-            f"DVA, (0 , 0), {self.scale} p/DVA"
-        )
+        s = f"{self.width() / self.scale:0.2f} X {self.height() / self.scale:0.2f} " f"DVA, (0 , 0), {self.scale} p/DVA"
         self.painter.drawText(5, self.height() - 20, s)
 
     @memoize_class_method()
@@ -362,9 +335,7 @@ class AuditoryViewWin(QMainWindow):
             w, h = self.width(), self.height()
             pw, ph = self.bg_image.width(), self.bg_image.height()
             try:
-                self.painter.drawPixmap(
-                    w // 2 - pw // 2, h // 2 - ph // 2, self.bg_image
-                )
+                self.painter.drawPixmap(w // 2 - pw // 2, h // 2 - ph // 2, self.bg_image)
             except Exception as e:
                 log.error(f"Unable to draw background: {str(e)}")
 
@@ -380,9 +351,7 @@ class AuditoryViewWin(QMainWindow):
                 self.bg_image_file = img_file
                 self.bg_image = QPixmap(f"{img_file}")
                 if isinstance(self.bg_image, QPixmap) and scaled:
-                    self.bg_image = self.bg_image.scaled(
-                        self.width(), self.height()
-                    )  # , Qt.KeepAspectRatio
+                    self.bg_image = self.bg_image.scaled(self.width(), self.height())  # , Qt.KeepAspectRatio
                 self.bg_image_scaled = scaled
         except Exception as e:
             self.bg_image_file = ""
@@ -495,11 +464,7 @@ class AuditoryViewWin(QMainWindow):
         else:
             return
 
-        color = (
-            QColorConstants.Black
-            if obj.property.Status != "Fading"
-            else QColorConstants.LightGray
-        )
+        color = QColorConstants.Black if obj.property.Status != "Fading" else QColorConstants.LightGray
         self.painter.setPen(QPen(color, 1, Qt.PenStyle.SolidLine))
         self.painter.setBrush(QBrush(color, Qt.BrushStyle.SolidPattern))
         x, y, w, h = self.center_and_scale(obj.location, obj.size)

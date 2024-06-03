@@ -46,18 +46,12 @@ class EPICLibSettingsWin(QDialog):
         self.ui.setupUi(self)
 
         self.ui.listWidgetOptions.itemClicked.connect(self.clicked_item)
-        self.ui.listWidgetOptions.itemDoubleClicked.connect(
-            partial(self.clicked_item, press_ok=True)
-        )
+        self.ui.listWidgetOptions.itemDoubleClicked.connect(partial(self.clicked_item, press_ok=True))
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
 
         self.setStyleSheet(
-            'QWidget {font: "'
-            + config.app_cfg.font_name
-            + '"; font-size: '
-            + str(config.app_cfg.font_size)
-            + "pt}"
+            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
         )
 
         if "epiclibsettingswindow" in config.app_cfg.dialog_size:
@@ -103,9 +97,7 @@ class EPICLibSettingsWin(QDialog):
             day = dt[-2:]
             label = f"{year}/{month}/{day} | {info.filename}"
             self.ui.listWidgetOptions.insertItem(i + 1, label)
-            if config.device_cfg.epiclib_version and str(
-                config.device_cfg.epiclib_version
-            ) == str(info.libdate):
+            if config.device_cfg.epiclib_version and str(config.device_cfg.epiclib_version) == str(info.libdate):
                 self.ui.listWidgetOptions.setCurrentRow(i + 1)
 
     def clicked_cancel_button(self):
@@ -119,17 +111,14 @@ class EPICLibSettingsWin(QDialog):
             if self.selection == 0:
                 epiclib_version = ""
             else:
-                epiclib_version = str(
-                    self.epiclib_files.iloc[self.selection - 1].libdate
-                )
+                epiclib_version = str(self.epiclib_files.iloc[self.selection - 1].libdate)
 
             config.device_cfg.epiclib_version = epiclib_version
 
             QMessageBox.information(
                 None,
                 "Notice About EPIClib Version Change",
-                "You have altered the EPIClib version. This change will take place after EPICpy "
-                "is restarted.",
+                "You have altered the EPIClib version. This change will take place after EPICpy " "is restarted.",
             )
 
             self.close()

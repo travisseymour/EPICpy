@@ -37,20 +37,18 @@ class SearchWin(QDialog):
 
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonSearchForward.clicked.connect(self.clicked_ok_button)
-        self.ui.pushButtonSearchBackward.clicked.connect(
-            partial(self.clicked_ok_button, backwards=True)
-        )
+        self.ui.pushButtonSearchBackward.clicked.connect(partial(self.clicked_ok_button, backwards=True))
         self.ui.lineEditSearchText.editingFinished.connect(self.clicked_ok_button)
 
         self.setStyleSheet(
-            'QWidget {font: "'
-            + config.app_cfg.font_name if hasattr(config.app_cfg, 'font_name') else 'Arial'
-            + '"; font-size: '
-            + str(config.app_cfg.font_size) if hasattr(config.app_cfg, 'font_size') else '14'
-            + "pt}"
+            'QWidget {font: "' + config.app_cfg.font_name
+            if hasattr(config.app_cfg, "font_name")
+            else "Arial" + '"; font-size: ' + str(config.app_cfg.font_size)
+            if hasattr(config.app_cfg, "font_size")
+            else "14" + "pt}"
         )
 
-        if hasattr(config.app_cfg, 'dialog_size') and "searchwindow" in config.app_cfg.dialog_size:
+        if hasattr(config.app_cfg, "dialog_size") and "searchwindow" in config.app_cfg.dialog_size:
             w, h = config.app_cfg.dialog_size["searchwindow"]
             w = max(w, self.minimumWidth())
             w = min(w, self.maximumWidth())
@@ -62,7 +60,7 @@ class SearchWin(QDialog):
 
     def resizeEvent(self, event):
         # self.resized.emit()  # in case you want to send this signal somewhere else
-        if hasattr(config.app_cfg, 'searchwindow'):
+        if hasattr(config.app_cfg, "searchwindow"):
             config.app_cfg.dialog_size["searchwindow"] = [self.width(), self.height()]
         super(SearchWin, self).resizeEvent(event)
 
