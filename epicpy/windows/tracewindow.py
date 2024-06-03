@@ -99,7 +99,7 @@ class TraceWin(QMainWindow):
         # contextMenu.addSeparator()
         # selectAllAction = contextMenu.addAction("Select All")
         copyAction = contextMenu.addAction("Copy")
-        copyAction.setText(f"Copy All ({len(self.ui.plainTextEditOutput.lines)} lines)")
+        copyAction.setText(f"Copy All Lines)")
         # contextMenu.addSeparator()
 
         action = contextMenu.exec(self.mapToGlobal(event))
