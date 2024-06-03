@@ -1,21 +1,25 @@
 
 # EPICpy Changelog
-#### (lasted updated Sun Jun  2 22:30:44 2024)
+#### (lasted updated Sun Jun  2 22:33:32 2024)
 
 ---
 
-1. Adjusted choicetask device uses for tests to remove depreciated stuff. Also fixed graph yaxis behavior.
+
+## VERSION: 2024.6.2
+
+---
+1. **FIXED**: Adjusted choicetask device uses for tests to remove depreciated stuff. Also fixed graph yaxis behavior.
 2. Formatted code using black. fixed problem with tests. fixed problem with loading scripts and saving outputs.
-3. Wording fix.
-4. Fixed search issues. only using concurrent search when number of lines is very large.
+3. **FIXED**: Wording fix.
+4. **FIXED**: Fixed search issues. only using concurrent search when number of lines is very large.
 5. Working except for search in tracewin.
 6. Seems to work.
-7. Fixed clear and search methods in LargeTextView.
-8. Definitely faster. as much functionality as can be restored given that we are no longer using plaingtextedit, has been. with the exception of F3 and ShftF3 to continue search and a horiz scrollbar.
-9. Got context menu working again. efficient search works. copy to clipboard works.
-10. Simulation handles enable and disable of text output when using LargeTextView. Better logic for hidden and unhidden windows. Fixed lack of inspection for late added LargeTextView to main and trace windows.
-11. Much faster text display enabled. various issues need to be resolved.
-12. Turned off text save debug messages. fixed requirements.
+7. **FIXED**: Fixed clear and search methods in LargeTextView.
+8. **NOTE**: Search definitely faster. As much functionality as can be hass been restored following switch to LargeTextView. With the exception of horiz scrollbar.
+9. **FIXED**: Got context menu working again. efficient search works. copy to clipboard works.
+10. **UPDATED**: Simulation handles enable and disable of text output when using LargeTextView. Better logic for hidden and unhidden windows. Fixed lack of inspection for late added LargeTextView to main and trace windows.
+11. **UPDATED**: Much faster text display enabled. various issues need to be resolved.
+12. **FIXED**: Turned off text save debug messages. fixed requirements.
 13. **FIXED**: requirements.txt had version error
 
 14. **FIXED**: requirements.txt did not seem to be a complete set of what was required.
