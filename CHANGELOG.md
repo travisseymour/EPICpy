@@ -1,17 +1,29 @@
 
 # EPICpy Changelog
-#### (lasted updated Tue Apr  9 12:37:21 2024)
+#### (lasted updated Sun Jun  2 22:30:44 2024)
 
 ---
 
-1. **FIXED**: requirements.txt had version error
+1. Adjusted choicetask device uses for tests to remove depreciated stuff. Also fixed graph yaxis behavior.
+2. Formatted code using black. fixed problem with tests. fixed problem with loading scripts and saving outputs.
+3. Wording fix.
+4. Fixed search issues. only using concurrent search when number of lines is very large.
+5. Working except for search in tracewin.
+6. Seems to work.
+7. Fixed clear and search methods in LargeTextView.
+8. Definitely faster. as much functionality as can be restored given that we are no longer using plaingtextedit, has been. with the exception of F3 and ShftF3 to continue search and a horiz scrollbar.
+9. Got context menu working again. efficient search works. copy to clipboard works.
+10. Simulation handles enable and disable of text output when using LargeTextView. Better logic for hidden and unhidden windows. Fixed lack of inspection for late added LargeTextView to main and trace windows.
+11. Much faster text display enabled. various issues need to be resolved.
+12. Turned off text save debug messages. fixed requirements.
+13. **FIXED**: requirements.txt had version error
 
-2. **FIXED**: requirements.txt did not seem to be a complete set of what was required.
+14. **FIXED**: requirements.txt did not seem to be a complete set of what was required.
 
-3. **FIXED**: save normal and trace output dialogs working properly now.
+15. **FIXED**: save normal and trace output dialogs working properly now.
 
-4. Fixed 1) problem opening text files in default app from GUI on Windows. 2) printing of default epic params on model start.
-5. Fixed Qt import.
+16. Fixed 1) problem opening text files in default app from GUI on Windows. 2) printing of default epic params on model start.
+17. Fixed Qt import.
 
 ## VERSION: 2023.6.1
 
