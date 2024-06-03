@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 # year.month.version
-__version__ = "2024.6.3"
+__version__ = "2024.6.3.1"
 
 __loglevel__ = "INFO"
 
