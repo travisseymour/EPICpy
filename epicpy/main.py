@@ -215,7 +215,7 @@ def main():
     import sys
     from pathlib import Path
 
-    log.info('Loading EPICpy, please wait...')
+    print('Loading EPICpy, please wait...')
 
     application = QApplication([])
 
