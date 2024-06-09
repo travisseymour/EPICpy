@@ -1,9 +1,24 @@
 
 # EPICpy Changelog
-#### (lasted updated Mon Jun  3 16:44:28 2024)
+#### (lasted updated Sat Jun  8 17:45:13 2024)
 
 ---
 
+
+## VERSION: 2024.6.8
+
+---
+1. **FIXED**: Output save action complained about using the selectedFilter parameter. Removed it for now.
+
+2. Minor: using print for initial cml message, instead of using log.
+
+## VERSION: 2024.6.3.2
+
+---
+
+## VERSION: 2024.6.3.1
+
+---
 1. **FIXED**: Windows epiclib dll was missing describe_parameters_u function causing EPICpy to crash. Now ignores this call if it can't be found. Note that Windows EPICpy will not be able to dump parameters.
 
 
