@@ -669,7 +669,7 @@ class MainWin(QMainWindow):
             caption="Choose EPICpy Device File",
             directory=str(start_dir),
             filter="CSV Files (*.csv);;Text Files (*.txt)",
-            initialFilter="CSV Files (*.csv)",
+            # selectedFilter="CSV Files (*.csv)",
         )
 
         if not script_file:
@@ -1565,7 +1565,8 @@ class MainWin(QMainWindow):
             caption=f"Specify {kind} Output File",
             directory=str(start_file),
             filter=_filter,
-            initialFilter=initial_filter,
+            # selectedFilter=initial_filter,
+
         )
 
         return file
