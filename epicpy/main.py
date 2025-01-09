@@ -66,14 +66,17 @@ try:
         source = None
 
     if source:
-        # Define the destination path and make it absolute
-        destination = (Path("epiclib") / "epiclib.so").resolve()
-
-        # Safely copy the resource to the destination
-        print(f'Copying {source}')
-        print(f'  to {destination}')
+        # Resolve the source path
         with as_file(source) as source_path:
-            copyfile(source_path, destination)
+            source_path_resolved = Path(source_path).resolve()
+
+            # Define the destination path relative to the source directory
+            destination = source_path_resolved.parent / "epiclib.so"
+
+            # Safely copy the resource to the destination
+            print(f'Copying {source_path_resolved}')
+            print(f'     to {destination}')
+            copyfile(source_path_resolved, destination)
 
 except Exception as e:
     print(f"Error trying to reset epiclib.so for {platform.system()} using {source}: '{e}'")
