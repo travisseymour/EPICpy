@@ -255,15 +255,15 @@ class add_path:
 
 def get_resource(*args: str) -> Path:
     """
-    Constructs and returns the full path to a resource within 'epicpy/resources'.
+    Constructs and returns the full absolute path to a resource within 'epicpy/resources'.
 
     Args:
         *args: A sequence of strings representing the relative path components
                within 'epicpy/resources', e.g., ("other", "devices.zip").
 
     Returns:
-        pathlib.Path: A Path object pointing to the resource that works during
-                      development and when packaged.
+        pathlib.Path: An absolute Path object pointing to the resource that works
+                      during development and when packaged.
 
     Raises:
         FileNotFoundError: If the resource does not exist.
@@ -278,7 +278,7 @@ def get_resource(*args: str) -> Path:
 
         # Ensure the resource path is accessible as a file
         with as_file(resource_path) as resolved_path:
-            return Path(resolved_path)  # Return the resolved path as a Path object
+            return Path(resolved_path).resolve()  # Ensure the path is absolute
     except FileNotFoundError:
         raise FileNotFoundError(f"Resource not found: {'/'.join(args)}")
     except Exception as e:

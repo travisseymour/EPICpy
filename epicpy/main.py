@@ -52,28 +52,31 @@ from epicpy import set_app_font, set_app_font_bold
 # epiclib name (epiclib.so) is same on mac and linux.
 # just in case we were recently running on a different os,
 # let's copy the right one for this system
+
 try:
     # Determine the source file based on the platform
     if platform.system() == "Darwin":
         if platform.machine() == "x86_64":
-            source = files("epicpy").joinpath(Path("epiclib") / "epiclib_macos.so")
+            source = files("epicpy").joinpath("epiclib/epiclib_macos.so")
         else:
-            source = files("epicpy").joinpath(Path("epiclib") / "epiclib_macos_arm.so")
+            source = files("epicpy").joinpath("epiclib/epiclib_macos_arm.so")
     elif platform.system() == "Linux":
-        source = files("epicpy").joinpath(Path("epiclib") / "epiclib_linux.so")
+        source = files("epicpy").joinpath("epiclib/epiclib_linux.so")
     else:
         source = None
 
     if source:
-        # Define the destination path
-        destination = Path("epiclib") / "epiclib.so"
+        # Define the destination path and make it absolute
+        destination = (Path("epiclib") / "epiclib.so").resolve()
 
         # Safely copy the resource to the destination
+        print(f'Copying {source}')
+        print(f'  to {destination}')
         with as_file(source) as source_path:
             copyfile(source_path, destination)
 
 except Exception as e:
-    print(f"Error trying to reset epiclib.so for {platform.system()}: '{e}'")
+    print(f"Error trying to reset epiclib.so for {platform.system()} using {source}: '{e}'")
 
 DONE = False
 
