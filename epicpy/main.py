@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import platform
+from importlib.resources import files, as_file
 
 os.environ["OUTDATED_IGNORE"] = "1"
 if platform.platform().split("-")[1].startswith("10."):
@@ -52,14 +53,25 @@ from epicpy import set_app_font, set_app_font_bold
 # just in case we were recently running on a different os,
 # let's copy the right one for this system
 try:
+    # Determine the source file based on the platform
     if platform.system() == "Darwin":
         if platform.machine() == "x86_64":
-            copyfile(Path("epiclib", "epiclib_macos.so"), Path("epiclib", "epiclib.so"))
+            source = files("epicpy").joinpath(Path("epiclib") / "epiclib_macos.so")
         else:
-            copyfile(Path("epiclib", "epiclib_macos_arm.so"), Path("epiclib", "epiclib.so"))
+            source = files("epicpy").joinpath(Path("epiclib") / "epiclib_macos_arm.so")
     elif platform.system() == "Linux":
-        copyfile(Path("epiclib", "epiclib_linux_temp.so"), Path("epiclib", "epiclib.so"))
-        # copyfile(Path("epiclib", "epiclib_linux.so"), Path("epiclib", "epiclib.so"))
+        source = files("epicpy").joinpath(Path("epiclib") / "epiclib_linux.so")
+    else:
+        source = None
+
+    if source:
+        # Define the destination path
+        destination = Path("epiclib") / "epiclib.so"
+
+        # Safely copy the resource to the destination
+        with as_file(source) as source_path:
+            copyfile(source_path, destination)
+
 except Exception as e:
     print(f"Error trying to reset epiclib.so for {platform.system()}: '{e}'")
 
