@@ -1,8 +1,10 @@
 
 # EPICpy Changelog
-#### (lasted updated Sun Aug 25 00:46:51 2024)
+#### (lasted updated Wed Jan  8 22:09:18 2025)
 
 ---
+
+1. **FIXED**: using more robust scheme for referencing app resources when packaged.
 
 
 ## VERSION: 2024.6.8
