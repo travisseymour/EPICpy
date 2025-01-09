@@ -24,7 +24,8 @@ DEPENDENCIES = [
     "plum-dispatch",
     "ascii_frame",
     "pandas",
-    "pyqtdarktheme"
+    "pyqtdarktheme",
+    "typing-extensions"
 ]
 EXCLUDE_FROM_PACKAGES = [
     "contrib",
