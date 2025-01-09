@@ -20,12 +20,18 @@ DEPENDENCIES = [
     "python-dateutil",
     "ulid",
     "ulid2",
-    "pingouin",
+
+    #"pingouin",
+    "numpy",
+    "scipy",
+    "statsmodels",
+    "seaborn",
+    "matplotlib"
+    
     "plum-dispatch",
     "ascii_frame",
     "pandas",
     "pyqtdarktheme",
-    "typing-extensions"
 ]
 EXCLUDE_FROM_PACKAGES = [
     "contrib",
