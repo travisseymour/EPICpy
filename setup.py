@@ -21,12 +21,12 @@ DEPENDENCIES = [
     "ulid",
     "ulid2",
 
-    #"pingouin",
+    "pingouin",
     "numpy",
     "scipy",
     "statsmodels",
     "seaborn",
-    "matplotlib"
+    "matplotlib",
     
     "plum-dispatch",
     "ascii_frame",
