@@ -1901,7 +1901,15 @@ class MainWin(QMainWindow):
 
             self.context_items["Quit"].setEnabled(True)
 
-        action = self.context_menu.exec(self.mapToGlobal(event))
+        action = None
+        if hasattr():
+            action = self.context_menu.exec(self.mapToGlobal(event))
+        elif hasattr():
+            action = self.context_menu.exec_(self.mapToGlobal(event))
+        else:
+            self.write(f'Error bringing up context-menu (contact maintainer about exec/exe_ bug)')
+            action = None
+            return
 
         if action is None:
             return

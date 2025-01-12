@@ -1,19 +1,15 @@
 
 # EPICpy Changelog
-#### (lasted updated Wed Jan  11 2025)
+#### (lasted updated Wed Jan 11 2025)
 
 ---
 
-## VERSION: 2025.1.11.2
-
-1. **CHANGED**: Trying to fix bug in project requirements.
-
----
-
-## VERSION: 2025.1.11.1
+## VERSION: 2025.1.11.3
 
 1. **FIXED**: There was a syntax error in setup.py, fixed. 
 2. **CHANGED**: Re-added pingouin to see if this was part of the problem addressed by 2025.1.9.1
+3. **FIXED**: Fixed bug rated to issues with older pinned project requirements resulting in tying.Self error.
+4. **FIXED**: Issue on older MacOS versions where normal output window context window glitched (exec/exec_ error).
 
 ---
 
