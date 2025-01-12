@@ -8,30 +8,40 @@ from pathlib import Path
 
 from setuptools import find_packages, setup
 
+'''
+NOTES:
+- Currently using Python 3.10 on linux and macos, but Python 3.9 on Win10
+- Currently, the devices in fullbindings are the ones that work
+- Fix PyQt6/PySide6 xcb plugin error on Linux by installing: 
+  sudo apt install libxcb-cursor0
+'''
+
 if platform.system() == 'Darwin' and platform.platform().split('-')[1].startswith('10.'):
     qt_package = 'PySide2'
 else:
-    qt_package =  'PySide6'  # requires MacOS version 11 or higher
+    qt_package =  'PySide6==6.8.1.1'  # requires MacOS version 11 or higher
 
 DEPENDENCIES = [
-    "loguru",
-    "qtpy",
+    "loguru==0.7.3",
+    "qtpy==2.4.2",
     qt_package,
-    "python-dateutil",
-    "ulid",
-    "ulid2",
-
-    "pingouin",
-    "numpy",
-    "scipy",
-    "statsmodels",
-    "seaborn",
-    "matplotlib",
-    
-    "plum-dispatch",
-    "ascii_frame",
-    "pandas",
-    "pyqtdarktheme",
+    "python-dateutil==2.9.0.post0",
+    "ulid==1.1",
+    "ulid2==0.3.0",
+    "pingouin==0.5.5",
+    "plum-dispatch==2.0.1",
+    "ascii_frame==0.0.1",
+    "pandas==2.2.3",
+    "pyqtdarktheme==2.1.0",
+]
+# install these with `pip install .[dev]`
+DEVELOPMENT_DEPENDENCIES = [
+    [
+        "black>=23.3.0",
+        "plumbum>=1.8.1",
+        "pytest>=7.2.2",
+        "qt6-tools==6.4.3.1.3"
+    ]
 ]
 EXCLUDE_FROM_PACKAGES = [
     "contrib",
@@ -106,6 +116,9 @@ setup(
     },
     zip_safe=False,
     install_requires=DEPENDENCIES,
+    extras_require={
+        "dev": DEVELOPMENT_DEPENDENCIES
+    },
     test_suite="",
     python_requires=PYTHON_VERSION,
     # license and classifier list:
