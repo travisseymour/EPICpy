@@ -4,7 +4,7 @@
 
 ---
 
-## VERSION: 2025.1.11.3
+## VERSION: 2025.1.11.4
 
 1. **FIXED**: There was a syntax error in setup.py, fixed. 
 2. **CHANGED**: Re-added pingouin to see if this was part of the problem addressed by 2025.1.9.1
