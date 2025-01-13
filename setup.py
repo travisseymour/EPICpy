@@ -28,6 +28,8 @@ DEPENDENCIES = [
     "python-dateutil==2.9.0.post0",
     "ulid==1.1",
     "ulid2==0.3.0",
+    "numpy",
+    "scipy",
     "pingouin==0.5.5",
     "plum-dispatch==2.0.1",
     "ascii_frame==0.0.1",
