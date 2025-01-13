@@ -60,9 +60,11 @@ with io.open(os.path.join(CURDIR, "ReadMe.md"), "r", encoding="utf-8") as f:
     README = f.read()
 
 if platform.system().lower() == "windows":
-    PYTHON_VERSION = ">=3.9,<3.10"  # have yet to figure out how to compile epliclib with 3.10+ on windows using MSVC++ 2019
+    print('setup.py running on Windows.')
+    PYTHON_VERSION = ">=3.9,<3.10"
     epiclib_file = "epiclib.pyd"
 elif platform.system().lower() == "linux":
+    print('setup.py running on Linux.')
     Path("epicpy", "epiclib", "epiclib.so").unlink(missing_ok=True)
     shutil.copyfile(
         Path("epicpy", "epiclib", "epiclib_linux.so"),
@@ -71,6 +73,7 @@ elif platform.system().lower() == "linux":
     PYTHON_VERSION = ">=3.10,<3.11"
     epiclib_file = "epiclib.so"
 elif platform.system().lower() == "darwin":
+    print('setup.py running on MacOS.')
     Path("epicpy", "epiclib", "epiclib.so").unlink(missing_ok=True)
     if "ARM" in os.uname().version.upper():
         shutil.copyfile(
@@ -86,7 +89,7 @@ elif platform.system().lower() == "darwin":
     epiclib_file = "epiclib.so"
 else:
     raise NotImplementedError(
-        f"ERROR: No epiclib library for OS={platform.system()}. Unable to continue setup."
+        f"ERROR: No epiclib library for OS={platform.system()}. Unable to continue EPICpy setup."
     )
 
 
