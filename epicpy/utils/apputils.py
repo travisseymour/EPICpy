@@ -17,8 +17,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
+import os
+import subprocess
 import sys
+import tempfile
 import time
 from collections import OrderedDict
 from importlib.resources import files, as_file
@@ -39,15 +41,7 @@ import itertools
 import warnings
 from functools import wraps
 
-from epicpy import pathEX
-
 OS = platform.system()
-
-
-# if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-#     pathEX = Path(sys._MEIPASS)
-# else:
-#     pathEX = Path(__file__).parent
 
 
 class Point:
@@ -332,7 +326,102 @@ def timeit_decorator(func):
     return wrapper
 
 
+def has_epiccoder() -> str:
+    """
+    Determines whether the application "epiccoder" is installed by checking for its
+    executable using the appropriate command for the current platform.
+
+    On macOS and Linux, it runs `which epiccoder`.
+    On Windows, it runs `where epiccoder`.
+
+    Returns:
+        The full path to the "epiccoder" executable if it exists and is a local file;
+        otherwise, returns an empty string.
+    """
+    try:
+        # Choose the command based on the operating system.
+        if platform.system() == "Windows":
+            cmd = ["where", "epiccoder"]
+        else:
+            cmd = ["which", "epiccoder"]
+
+        # Run the command and decode its output.
+        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode().strip()
+        if not output:
+            return ""
+        # In case multiple paths are returned, use the first one.
+        epiccoder_path = output.splitlines()[0].strip()
+        # Verify that the path refers to a local file.
+        if os.path.isfile(epiccoder_path):
+            return epiccoder_path
+        else:
+            return ""
+    except Exception:
+        return ""
+
+
+def default_run(file_path: Union[str, Path]) -> bool:
+    """
+    Opens the file specified by file_path using the current operating system's
+    default command for launching files. The file is opened in the background.
+
+    Parameters:
+        file_path (Union[str, Path]): The path to the file to be opened.
+
+    Returns:
+        bool: True if the file was successfully launched, False otherwise.
+    """
+    try:
+        # Convert to string if file_path is a Path object.
+        if isinstance(file_path, Path):
+            file_path = str(file_path)
+
+        system = platform.system()
+
+        if system == "Windows":
+            # On Windows, use os.startfile (this opens the file with its default application).
+            os.startfile(file_path)
+        elif system == "Darwin":
+            # On macOS, use the 'open' command.
+            subprocess.Popen(["open", file_path],
+                             stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL)
+        elif system == "Linux":
+            # On Linux, use 'xdg-open' which is desktop-environment agnostic.
+            subprocess.Popen(["xdg-open", file_path],
+                             stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL)
+        else:
+            # Unsupported operating system.
+            return False
+
+        return True
+    except Exception:
+        return False
+
 if __name__ == "__main__":
     print(f"{get_resource('fonts', 'Fira Mono', 'ATTRIBUTION.txt')=}")
     print(f"{get_resource('epiclib', 'EPIC_LICENSE.txt')=}")
     print(f"{get_resource('fake_file.txt')=}")
+
+    path = has_epiccoder()
+    if path:
+        print(f"epiccoder is installed at: {path}")
+    else:
+        print("epiccoder is not installed or its executable was not found.")
+
+    temp = tempfile.NamedTemporaryFile(suffix=".txt", mode="w", delete=False)
+    try:
+        # Write the specified text to the file.
+        temp.write("this is a temp file used for testing")
+        temp.close()  # Close the file so that other processes can access it.
+
+        print("Created temporary file:", temp.name)
+
+        # Use default_run to open the temporary file.
+        if default_run(temp.name):
+            print("File launched successfully!")
+        else:
+            print("Failed to launch the file.")
+    except Exception as e:
+        print("An error occurred:", e)

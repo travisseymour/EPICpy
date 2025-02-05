@@ -1623,7 +1623,7 @@ class MainWin(QMainWindow):
             return
 
         try:
-            Path(out_file).write_text(source.get_text())
+            Path(out_file).write_text(source.get_text(), encoding='utf-8')
             success = True
             error = ""
         except Exception as e:
@@ -1635,7 +1635,7 @@ class MainWin(QMainWindow):
         else:
             self.write(
                 emoji_box(
-                    f"ERROR: Unable to write output text from " f"{name.title()} " f"to" f"{out_file} ({error})",
+                    f"ERROR: Unable to write output text from '{name.title()}' to '{out_file}' ({error})",
                     line="thick",
                 )
             )

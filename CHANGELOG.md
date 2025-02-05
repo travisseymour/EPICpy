@@ -4,6 +4,10 @@
 
 ---
 
+## VERSION: 2024.2.5.0
+
+1. **FIXED**: Encoding error when saving output windows to text on MacOS.
+
 ## VERSION: 2025.1.11.4
 
 1. **FIXED**: There was a syntax error in setup.py, fixed. 
