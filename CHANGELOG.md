@@ -4,6 +4,12 @@
 
 ---
 
+## VERSION: 2025.2.6.1
+
+1. **FIXED**: epiccoder fallback now working on Linux and MacOS (no test on Windows). If config entry "text_editor" is either empty or contains "default" __and__ epiccoder has been installed, then epiccoder is used for text and prs editing. Otherwise, EPICpy attempts to launch the sytem default (if set).
+2. **CHANGED**: default font family is monospace, not sans-serif
+---
+
 ## VERSION: 2025.2.5.3
 
 1. **CHANGED**: When running external apps to edit simulation text files; a) if app path is set  in global config for text, it is used. b) If noting is set, but epiccoder is installed, it is used. c) otherwise, default app for text is called. d) for data file editing, default app is always called.

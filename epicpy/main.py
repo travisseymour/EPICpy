@@ -187,7 +187,7 @@ def start_ui(app: QApplication):
     if not hasattr(config.app_cfg, "font_family") or \
             not isinstance(config.app_cfg.font_family, str) or \
             config.app_cfg.font_family not in ["sans-serif", "serif", "monospace"]:
-        config.app_cfg.font_family = "sans-serif"  # Apply fallback
+        config.app_cfg.font_family = "monospace"  # Apply fallback
 
     if not hasattr(config.app_cfg, "font_size") or \
             not isinstance(config.app_cfg.font_size, (str, int)) or \
@@ -195,7 +195,10 @@ def start_ui(app: QApplication):
             not 12 < int(config.app_cfg.font_size) < 72:
         config.app_cfg.font_size = 14  # Apply fallback
 
-    default_font = get_default_font(family=config.app_cfg.font_family, size=config.app_cfg.font_size)
+    default_font = get_default_font(
+        family=config.app_cfg.font_family,
+        size=config.app_cfg.font_size
+    )
 
     # Set the font for the application
     QApplication.instance().setFont(default_font)

@@ -42,7 +42,7 @@ class AppConfig:
     last_script_file: str = ""
     dark_mode: Literal['Light', 'Dark', 'Auto'] = "Light"
     epiclib_version: str = ""  # if not "", passes this value to DeviceConfig on app init
-    font_family: Literal["sans-serif", "serif", "monospace"] = "sans-serif"
+    font_family: Literal["sans-serif", "serif", "monospace"] = "monospace"
     font_size: int = 14
     dialog_size: dict = field(default_factory=dict)  # hold dialog sizes if changed
     main_geom: list = field(default_factory=list)  # does nothing yet

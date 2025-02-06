@@ -4,7 +4,7 @@ from qtpy.QtGui import QFont
 
 
 def get_default_font(
-        family: Literal["sans-serif", "serif", "monospace"]="sans-serif",
+        family: Literal["sans-serif", "serif", "monospace"]="monospace",
         size: int = 14
 ) -> QFont:
     """Returns a cross-platform QFont object with fallbacks."""

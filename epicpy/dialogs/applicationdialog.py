@@ -346,7 +346,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     # prepare the default font
-    default_font = get_default_font(family="sans-serif", size=14)
+    default_font = get_default_font(family="monospace", size=14)
 
     # Set the font for the application
     QApplication.instance().setFont(default_font)

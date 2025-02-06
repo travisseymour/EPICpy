@@ -144,7 +144,7 @@ def show_results():
                 <title>EPICpy Test Results</title>
             <style>
             table {
-                font-family: arial, sans-serif;
+                font-family: "Courier New", Courier, monospace;
                 border-collapse: collapse;
                 <!-- width: 100%; -->
             }
