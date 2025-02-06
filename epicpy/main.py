@@ -44,12 +44,10 @@ from pathlib import Path
 from shutil import copyfile
 from loguru import logger as log
 
-from qtpy.QtGui import QFont
-from qtpy.QtGui import QFontDatabase
 from qtpy.QtWidgets import QApplication
 from qtpy.QtCore import qInstallMessageHandler, QCoreApplication
 
-from epicpy.utils.apputils import get_resource, frozen
+from epicpy.utils.apputils import frozen
 from epicpy.utils import config
 
 # epiclib name (epiclib.so) is same on mac and linux.

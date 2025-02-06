@@ -4,9 +4,11 @@
 
 ---
 
-## VERSION: 2024.2.5.0
+## VERSION: 2025.2.5.2
 
 1. **FIXED**: Encoding error when saving output windows to text on MacOS.
+2. **CHANGED**: Better cross os control of font and font size changes across ui. 
+3. **CHANGED**: Faster lru_cache behavior for flywheel patterns.
 
 ## VERSION: 2025.1.11.4
 
