@@ -24,6 +24,7 @@ from epicpy.uifiles.epiclibsettingsui import Ui_DialogEPICLibSettings
 from qtpy.QtWidgets import QDialog, QMessageBox
 from functools import partial
 from epicpy.utils import config
+from epicpy.utils.apputils import clear_font
 
 
 # FIXME: This window needs update now that were are no longer using cppyy.
@@ -45,14 +46,13 @@ class EPICLibSettingsWin(QDialog):
         self.ui = Ui_DialogEPICLibSettings()
         self.ui.setupUi(self)
 
+        clear_font(self)
+
         self.ui.listWidgetOptions.itemClicked.connect(self.clicked_item)
         self.ui.listWidgetOptions.itemDoubleClicked.connect(partial(self.clicked_item, press_ok=True))
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
 
-        self.setStyleSheet(
-            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
-        )
 
         if "epiclibsettingswindow" in config.app_cfg.dialog_size:
             w, h = config.app_cfg.dialog_size["epiclibsettingswindow"]

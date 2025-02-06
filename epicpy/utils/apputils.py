@@ -25,7 +25,10 @@ import time
 from collections import OrderedDict
 from importlib.resources import files, as_file
 from pathlib import Path
+from threading import Lock
+from weakref import WeakKeyDictionary
 
+from qtpy.QtWidgets import QWidget
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 from qtpy.QtWidgets import QApplication
@@ -201,20 +204,28 @@ class FancyTimer:
             print(f'Timer Ended at {datetime.datetime.now().strftime("%H:%M:%S")}')
         print(f"Duration: {self.duration:0.4f} sec ({self.duration * 1000:0.4f} msec)")
 
-
 def unpack_param_string(pattern: str, delimiter: str = "|", left: str = "[", right: str = "]") -> List[str]:
     """
-    Expand the brace-delimited possibilities in a string.
+    Expand the bracket-delimited possibilities in a string.
     E.g.: "10 Easy Dash" or "10 [Easy|Hard] Dash" or "10 [Easy|Hard] [Dash|HUD]"
-    Based on solution from stackoverflow.com/MarekG Jan 2 22
+
+    Based on solution from stackoverflow.com/MarekG Jan 2 22.
     """
-    seg_choices = (
+    # Escape left/right brackets to avoid regex issues
+    left_escaped = re.escape(left)
+    right_escaped = re.escape(right)
+
+    # Split pattern while keeping the brackets
+    segments = re.split(rf"({left_escaped}.*?{right_escaped})", pattern)
+
+    # Process each segment
+    seg_choices = [
         seg.strip(left + right).split(delimiter) if seg.startswith(left) else [seg]
-        for seg in re.split(rf"(\{left}.*?\{right})", pattern)
-    )
+        for seg in segments
+    ]
 
+    # Generate all possible combinations
     return ["".join(parts) for parts in itertools.product(*seg_choices)]
-
 
 def ignore_warnings(f):
     # https://stackoverflow.com/questions/879173
@@ -281,21 +292,29 @@ def get_resource(*args: str) -> Path:
 
 def memoize_class_method(max_items=250):
     """
-    Class method for an alternative lru_cache.
-    Python's lru_cache has big issues with used on class methods.
+    A class method decorator for an alternative LRU cache.
+    This version:
+    - Uses WeakKeyDictionary to avoid memory leaks.
+    - Supports keyword arguments (`kwargs`).
+    - Is thread-safe.
     """
-    cache = OrderedDict()
+    cache = WeakKeyDictionary()
+    lock = Lock()
 
     def decorator(func):
         def memoized_func(instance, *args, **kwargs):
-            if instance not in cache:
-                cache[instance] = OrderedDict()
-            if args not in cache[instance]:
-                if len(cache[instance]) >= max_items:
-                    # Remove the least recently used item from the cache
-                    cache[instance].popitem(last=False)
-                cache[instance][args] = func(instance, *args, **kwargs)
-            return cache[instance][args]
+            key = (args, frozenset(kwargs.items()))  # Support for kwargs
+
+            with lock:  # Thread safety
+                if instance not in cache:
+                    cache[instance] = OrderedDict()
+
+                if key not in cache[instance]:
+                    if len(cache[instance]) >= max_items:
+                        cache[instance].popitem(last=False)  # LRU eviction
+                    cache[instance][key] = func(instance, *args, **kwargs)
+
+            return cache[instance][key]
 
         return memoized_func
 
@@ -399,6 +418,12 @@ def default_run(file_path: Union[str, Path]) -> bool:
     except Exception:
         return False
 
+def clear_font(widget: QWidget):
+    """Recursively reset fonts for all child widgets."""
+    widget.setFont(QApplication.instance().font())  # Set default app font
+    for child in widget.findChildren(QWidget):
+        child.setFont(QApplication.instance().font())
+
 if __name__ == "__main__":
     print(f"{get_resource('fonts', 'Fira Mono', 'ATTRIBUTION.txt')=}")
     print(f"{get_resource('epiclib', 'EPIC_LICENSE.txt')=}")
@@ -425,3 +450,9 @@ if __name__ == "__main__":
             print("Failed to launch the file.")
     except Exception as e:
         print("An error occurred:", e)
+
+    print(f'''{unpack_param_string("10 Easy Dash")=}\n\t➝ ['10 Easy Dash']''')
+
+    print(f'''{unpack_param_string("10 [Easy|Hard] Dash")=}\n\t➝ ['10 Easy Dash', '10 Hard Dash']''')
+
+    print(f'''{unpack_param_string("10 [Easy|Hard] [Dash|HUD]")=}\n\t➝ ['10 Easy Dash', '10 Easy HUD', '10 Hard Dash', '10 Hard HUD']''')

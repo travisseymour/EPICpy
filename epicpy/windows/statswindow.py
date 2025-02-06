@@ -24,9 +24,9 @@ from functools import partial
 from qtpy.QtCore import QTimer
 
 from epicpy.uifiles.statsui import Ui_StatsWindow
-from qtpy.QtGui import QCloseEvent, QFont
+from qtpy.QtGui import QCloseEvent
 from qtpy.QtWidgets import QMainWindow
-from epicpy.utils import config
+from epicpy.utils.apputils import clear_font
 
 
 class StatsWin(QMainWindow):
@@ -37,6 +37,10 @@ class StatsWin(QMainWindow):
         self.setObjectName("StatsWindow")
         self.ui = Ui_StatsWindow()
         self.ui.setupUi(self)
+
+        # replace designed font with application-wide font
+        clear_font(self)
+
         self.setCentralWidget(self.ui.statsTextBrowser)
         self.can_close = False
 
@@ -44,11 +48,6 @@ class StatsWin(QMainWindow):
         self.ui.statsTextBrowser.append(f"{f'Stats Out! ({now})'}")
 
         self.trace_out_view = None
-
-        self.setStyleSheet(
-            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
-        )
-        self.ui.statsTextBrowser.setFont(QFont(config.app_cfg.font_name, int(config.app_cfg.font_size)))
 
         self.ui.statsTextBrowser.mouseDoubleClickEvent = parent.mouseDoubleClickEvent
 

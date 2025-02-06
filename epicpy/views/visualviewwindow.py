@@ -22,6 +22,8 @@ from itertools import chain
 from pathlib import Path
 from typing import Optional
 
+from fastnumbers import fast_int
+from qdarktheme.qtpy.QtWidgets import QApplication
 from qtpy.QtGui import (
     QPainter,
     QPainterPath,
@@ -41,10 +43,9 @@ from qtpy.QtCore import Qt, QPoint, QRect, QRectF, QSize, QPointF
 from qtpy.QtWidgets import QMainWindow, QGraphicsTextItem
 from loguru import logger as log
 
-from epicpy import app_font
-from epicpy.utils.apputils import Point, Size, Rect, memoize_class_method
+from epicpy.utils.apputils import Point, Size, Rect
 from dataclasses import dataclass
-from functools import partial
+from functools import partial, lru_cache
 
 from epicpy.utils.localmunch import Munch, DefaultMunch
 from epicpy.views.epiccolors import epic_colors as colors
@@ -55,6 +56,12 @@ from epicpy.epiclib.epiclib import geometric_utilities as GU
 
 WARNING_ACCUMULATOR = []
 
+
+def cache_warn(msg: str):
+    global WARNING_ACCUMULATOR
+    if msg not in WARNING_ACCUMULATOR:
+        WARNING_ACCUMULATOR.append(msg)
+        log.warning(msg)
 
 @dataclass
 class VisualObject:
@@ -76,7 +83,6 @@ class VisualViewWin(QMainWindow):
         self.view_type = view_type
         self.view_title = view_title
         self.setObjectName(view_type)
-        self.dark_mode = config.app_cfg.dark_mode  # local lookup...
         self.can_close = False
         self.bg_image_file = ""
         self.bg_image = None
@@ -104,8 +110,11 @@ class VisualViewWin(QMainWindow):
 
         self.painter = None
         self.painting = False
-        self.overlay_font = QFont(app_font)
-        self.overlay_font.setPointSize(10)
+
+        self.setFont(QApplication.instance().font())
+
+        self.overlay_font = QFont(self.font())
+        self.overlay_font.setPointSize(self.overlay_font.pointSize()-2)
 
         self.debug_info = list()
 
@@ -118,6 +127,12 @@ class VisualViewWin(QMainWindow):
         self.setWindowTitle(self.view_title.title())
 
         self.initialize()
+
+    def reset_font(self):
+        self.setFont(QApplication.instance().font())
+
+        self.overlay_font = QFont(self.font())
+        self.overlay_font.setPointSize(self.overlay_font.pointSize()-2)
 
     def closeEvent(self, event: QCloseEvent):
         if not self.can_close:
@@ -177,13 +192,6 @@ class VisualViewWin(QMainWindow):
         w, h = (v * self.scale for v in size)
         x, y = (x - w / 2) + self.origin.x, (y - h / 2) + self.origin.y
         return Rect(int(x), int(y), int(w), int(h))
-
-    @staticmethod
-    def cache_warn(msg: str):
-        global WARNING_ACCUMULATOR
-        if msg not in WARNING_ACCUMULATOR:
-            WARNING_ACCUMULATOR.append(msg)
-            log.warning(msg)
 
     # ========================================================================
     # ViewWindow Visual Updates From VisualView
@@ -293,9 +301,10 @@ class VisualViewWin(QMainWindow):
         self.update()
 
     def dot_and_eye(self):
-        dot_color = QColor(255, 255, 255, 255) if self.dark_mode else QColor(0, 0, 0, 255)
-        fov_color = QColor.fromRgbF(0.75, 0.75, 0.75, 0.5) if self.dark_mode else QColor.fromRgbF(0.5, 0.5, 0.5, 0.3)
-        para_color = QColorConstants.LightGray if self.dark_mode else QColorConstants.Gray
+        dm = config.app_cfg.dark_mode
+        dot_color = QColor(255, 255, 255, 255) if dm else QColor(0, 0, 0, 255)
+        fov_color = QColor.fromRgbF(0.75, 0.75, 0.75, 0.5) if dm else QColor.fromRgbF(0.5, 0.5, 0.5, 0.3)
+        para_color = QColorConstants.LightGray if dm else QColorConstants.Gray
 
         self.painter.setPen(fov_color)
         self.painter.setBrush(fov_color)
@@ -314,7 +323,7 @@ class VisualViewWin(QMainWindow):
 
     def draw_info_overlay(self):
         # setup
-        self.painter.setPen(QColorConstants.White if self.dark_mode else QColorConstants.Black)
+        self.painter.setPen(QColorConstants.White if config.app_cfg.dark_mode else QColorConstants.Black)
         self.painter.setFont(self.overlay_font)
 
         # draw time info
@@ -324,8 +333,9 @@ class VisualViewWin(QMainWindow):
         s = f"{self.width() / self.scale:0.2f} X {self.height() / self.scale:0.2f} " f"DVA, (0 , 0), {self.scale} p/DVA"
         self.painter.drawText(5, self.height() - 20, s)
 
-    @memoize_class_method()
-    def grid_cache(self, w, h, scale) -> QPainterPath:
+    @staticmethod
+    @lru_cache()
+    def grid_cache(w, h, scale) -> QPainterPath:
         """
         Grids are expensive to draw, so we're using the flyweight pattern again.
         """
@@ -460,13 +470,14 @@ class VisualViewWin(QMainWindow):
         try:
             self.shape_router[obj.property.Shape](obj=obj)
         except KeyError:
-            self.cache_warn(f"VisualObject received unhandled Shape value {obj.property.Shape}")
+            cache_warn(f"VisualObject received unhandled Shape value {obj.property.Shape}")
             self.shape_nil(obj)
 
     # ------------- Shape Drawing Cache ---------------------------------
 
-    @memoize_class_method()
-    def shape_cache(self, shape, x, y, w, h) -> QPainterPath:
+    @staticmethod
+    @lru_cache()
+    def shape_cache(shape, x, y, w, h) -> QPainterPath:
         """
         This is my attempt to replicate DK's flyweight pattern for efficient
         object creation. The key is the custom lru_cache!
@@ -589,15 +600,15 @@ class VisualViewWin(QMainWindow):
             path.lineTo(box.bottomRight())
         elif shape == "hill":
             box = QRectF(x, y, w, h)
-            cpx = box.center().x()
-            cpy = box.bottomRight().y() + box.height()
+            cpx = fast_int(box.center().x())
+            cpy = fast_int(box.bottomRight().y() + box.height())
             path.moveTo(box.topRight())
             path.cubicTo(box.topRight(), QPoint(cpx, cpy), box.topLeft())
             path.closeSubpath()
         elif shape == "inv_hill":
             box = QRectF(x, y, w, h)
-            cpx = box.center().x()
-            cpy = box.topRight().y() - box.height()
+            cpx = fast_int(box.center().x())
+            cpy = fast_int(box.topRight().y() - box.height())
             path.moveTo(box.bottomRight())
             path.cubicTo(box.bottomRight(), QPoint(cpx, cpy), box.bottomLeft())
             path.closeSubpath()
@@ -626,7 +637,7 @@ class VisualViewWin(QMainWindow):
             # draw stem
             path.addRect(cx - offset // 2, box.bottom() - offset // 2, offset, offset)
         else:
-            self.cache_warn(f'shape_cache has no handler for "{shape}"')
+            cache_warn(f'shape_cache has no handler for "{shape}"')
         return path
 
     # ------------- Draw Command Functions ---------------------------------
@@ -924,17 +935,18 @@ class VisualViewWin(QMainWindow):
             self.add_leader(x, y, w, h, obj.property.Leader, path)
             self.painter.drawPath(path)
 
-    @memoize_class_method()
-    def text_cache(self, x, y, text) -> QPainterPath:
+    @staticmethod
+    @lru_cache()
+    def text_cache(x, y, text, scale) -> QPainterPath:
+        """
+        scale parameter is used to invalidate this cache entry when self.scale changes
+        """
         # TODO: This isn't *quite* centered right on (x,y)
         path = QPainterPath()
-        font = QFont(app_font)
-        font.setPointSize(round(self.scale * 0.8))
-        try:
-            font.setWeight(QFont.Light)  # PySide6
-        except TypeError:
-            font.setWeight(100)  # PyQt6
-        self.setFont(font)
+        font = QFont(QApplication.instance().font())
+        font.setPointSize(round(scale * 0.8))
+        font.setWeight(QFont.Weight.Light)
+        # self.setFont(font)  # turned this off bc I wasn't sure it was doing anything useful
         font_height = QGraphicsTextItem("TEXT4HEIGHT").boundingRect().height()
         path.addText(x, y + font_height / 2, font, str(text))
         return path
@@ -948,7 +960,7 @@ class VisualViewWin(QMainWindow):
         )
         self.painter.setBrush(Qt.BrushStyle.SolidPattern)
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.text_cache(x, y, obj.property.Text)
+        path = self.text_cache(x, y, obj.property.Text, self.scale)
         self.painter.drawPath(path)
 
     """

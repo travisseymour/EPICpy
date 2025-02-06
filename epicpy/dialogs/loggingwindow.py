@@ -24,6 +24,8 @@ from qtpy.QtWidgets import QDialog, QFileDialog
 from pathlib import Path
 from functools import partial
 
+from epicpy.utils.apputils import clear_font
+
 
 class LoggingSettingsWin(QDialog):
     def __init__(self):
@@ -32,16 +34,15 @@ class LoggingSettingsWin(QDialog):
         self.ui = Ui_DialogLoggingSettings()
         self.ui.setupUi(self)
 
+        # replace designed font with application-wide font
+        clear_font(self)
+
         self.device_stem = Path(config.device_cfg.device_file).stem
 
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
         self.ui.toolButtonNormalOut.clicked.connect(partial(self.choose_log_file, file_type="normal"))
         self.ui.toolButtonTraceOut.clicked.connect(partial(self.choose_log_file, file_type="trace"))
-
-        self.setStyleSheet(
-            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
-        )
 
         # self.setLayout(self.ui.verticalLayout)
 

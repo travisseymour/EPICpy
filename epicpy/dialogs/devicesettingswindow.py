@@ -17,10 +17,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from PySide6.QtWidgets import QApplication
 
 from epicpy.utils import config
 from epicpy.uifiles.devicesettingsui import Ui_DialogDeviceOptions
 from qtpy.QtWidgets import QDialog, QCheckBox, QListWidgetItem
+
+from epicpy.utils.apputils import clear_font
 
 
 class DeviceOptionsWin(QDialog):
@@ -30,12 +33,10 @@ class DeviceOptionsWin(QDialog):
         self.ui = Ui_DialogDeviceOptions()
         self.ui.setupUi(self)
 
+        clear_font(self)
+
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
-
-        self.setStyleSheet(
-            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
-        )
 
         if "deviceoptionswindow" in config.app_cfg.dialog_size:
             w, h = config.app_cfg.dialog_size["deviceoptionswindow"]
@@ -68,9 +69,12 @@ class DeviceOptionsWin(QDialog):
         else:
             msg = f"Device {self.device.device_name} User Options:"
             self.ui.labelDeviceNameAndInfo.setText(msg)
+            font = QApplication.instance().font()
             for option_name in self.device.option:
                 item = QListWidgetItem(self.ui.listWidgetOptions)
+                item.setFont(font)
                 cb = QCheckBox(option_name)
+                cb.setFont(font)
                 cb.setChecked(self.device.option[option_name])
                 self.ui.listWidgetOptions.setItemWidget(item, cb)
 

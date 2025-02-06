@@ -2,7 +2,6 @@ import re
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import cpu_count
 
-from epicpy.utils.apputils import timeit_decorator
 
 
 # **************************************************************

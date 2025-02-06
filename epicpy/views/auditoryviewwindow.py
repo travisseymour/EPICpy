@@ -19,8 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from copy import deepcopy
+from functools import lru_cache
 from pathlib import Path
 
+from qtpy.QtWidgets import QApplication
 from qtpy.QtGui import (
     QPainter,
     QPainterPath,
@@ -39,8 +41,7 @@ from qtpy.QtCore import Qt, QRect, QSize
 from qtpy.QtWidgets import QMainWindow
 from loguru import logger as log
 
-from epicpy import app_font
-from epicpy.utils.apputils import Point, Size, Rect, memoize_class_method
+from epicpy.utils.apputils import Point, Size, Rect
 from dataclasses import dataclass
 from epicpy.utils import config
 
@@ -75,7 +76,6 @@ class AuditoryViewWin(QMainWindow):
         self.view_type = view_type
         self.view_title = view_title
         self.setObjectName(view_type)
-        self.dark_mode = config.app_cfg.dark_mode
         self.can_close = False
         self.bg_image_file = ""
         self.bg_image = None
@@ -105,8 +105,11 @@ class AuditoryViewWin(QMainWindow):
         self.setWindowTitle(self.view_title.title())
 
         self.painter = None
-        self.overlay_font = QFont(app_font)
-        self.overlay_font.setPointSize(10)
+
+        self.setFont(QApplication.instance().font())
+
+        self.overlay_font = QFont(self.font())
+        self.overlay_font.setPointSize(self.overlay_font.pointSize()-2)
 
         self.initialize()
 
@@ -115,6 +118,12 @@ class AuditoryViewWin(QMainWindow):
             self.hide()
         else:
             QMainWindow.closeEvent(self, event)
+
+    def reset_font(self):
+        self.setFont(QApplication.instance().font())
+
+        self.overlay_font = QFont(self.font())
+        self.overlay_font.setPointSize(self.overlay_font.pointSize()-2)
 
     @staticmethod
     def set_dot_on(enabled: bool):
@@ -288,7 +297,7 @@ class AuditoryViewWin(QMainWindow):
         self.update()
 
     def dot(self):
-        dot_color = QColor(255, 255, 255, 255) if self.dark_mode else QColor(0, 0, 0, 255)
+        dot_color = QColor(255, 255, 255, 255) if config.app_cfg.dark_mode else QColor(0, 0, 0, 255)
 
         self.painter.setPen(dot_color)
         self.painter.setBrush(dot_color)
@@ -296,7 +305,7 @@ class AuditoryViewWin(QMainWindow):
 
     def draw_info_overlay(self):
         # setup
-        self.painter.setPen(QColorConstants.White if self.dark_mode else QColorConstants.Black)
+        self.painter.setPen(QColorConstants.White if config.app_cfg.dark_mode else QColorConstants.Black)
         self.painter.setFont(self.overlay_font)
 
         # draw time info
@@ -306,8 +315,7 @@ class AuditoryViewWin(QMainWindow):
         s = f"{self.width() / self.scale:0.2f} X {self.height() / self.scale:0.2f} " f"DVA, (0 , 0), {self.scale} p/DVA"
         self.painter.drawText(5, self.height() - 20, s)
 
-    @memoize_class_method()
-    def grid_cache(self, w, h, scale) -> QPainterPath:
+    def _grid_cache(self, w, h, scale) -> QPainterPath:
         """
         Grids are expensive to draw, so we're using the flyweight pattern again.
         """
@@ -324,6 +332,10 @@ class AuditoryViewWin(QMainWindow):
             path.moveTo(x, 0)
             path.lineTo(x, h)
         return path
+
+    @lru_cache()
+    def grid_cache(self, w, h, scale) -> QPainterPath:
+        return self._grid_cache(w, h, scale)
 
     def draw_grid(self):
         self.painter.setPen(QColor(0, 213, 255, 100))
@@ -376,8 +388,7 @@ class AuditoryViewWin(QMainWindow):
         brush = QBrush(color, brush_style)
         return pen, brush
 
-    @memoize_class_method()
-    def shape_cache(self, shape, x, y, w, h) -> QPainterPath:
+    def _shape_cache(self, shape, x, y, w, h) -> QPainterPath:
         """
         This is my attempt to replicate DK's flyweight pattern for efficient
         object creation. The key is the custom lru_cache!
@@ -396,6 +407,10 @@ class AuditoryViewWin(QMainWindow):
         else:
             self.cache_warn(f'shape_cache has no handler for "{shape}"')
         return path
+
+    @lru_cache()
+    def shape_cache(self, shape, x, y, w, h) -> QPainterPath:
+        return self._shape_cache(shape, x, y, w, h)
 
     def shape_ellipse(self, obj):
         pen, brush = self.obj_pen_brush(obj)
@@ -421,18 +436,21 @@ class AuditoryViewWin(QMainWindow):
         path = self.shape_cache("rectangle", x, y, w, h)
         self.painter.drawPath(path)
 
-    @memoize_class_method()
-    def text_cache(self, x, y, text) -> QPainterPath:
+    def _text_cache(self, x, y, text, scale) -> QPainterPath:
         path = QPainterPath()
-        font = QFont(app_font)
-        font.setPointSize(round(self.scale * 0.8))
-        try:
-            font.setWeight(QFont.Light)  # PySide6
-        except TypeError:
-            font.setWeight(100)  # PyQt6
+        font = QFont(QApplication.instance().font())
+        font.setPointSize(round(scale * 0.8))
+        font.setWeight(QFont.Weight.Light)
         for row, txt in enumerate(text.splitlines(keepends=False)):
             path.addText(x, y + row * font.pixelSize() * 15, font, txt)
         return path
+
+    @lru_cache()
+    def text_cache(self, x, y, text) -> QPainterPath:
+        """
+        This indirection gets around issue with using lru_cache with non-static class instances
+        """
+        return self._text_cache(x, y, text, self.scale)
 
     def draw_text(self, obj: SoundObject):
         text = ""

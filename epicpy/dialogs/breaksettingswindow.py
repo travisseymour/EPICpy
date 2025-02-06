@@ -17,12 +17,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from qdarktheme.qtpy.QtWidgets import QApplication
 
 from epicpy.utils import config
 from epicpy.uifiles.breaksettingsui import Ui_DialogRuleBreak
 from qtpy.QtWidgets import QDialog, QCheckBox, QListWidgetItem
 
 from epicpy.epiclib.epiclib import Model, Symbol
+
+from epicpy.utils.apputils import clear_font
 
 
 class BreakSettingsWin(QDialog):
@@ -32,18 +35,18 @@ class BreakSettingsWin(QDialog):
         self.ui = Ui_DialogRuleBreak()
         self.ui.setupUi(self)
 
+        clear_font(self)
+
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
         self.ui.checkBoxEnableRuleBreaks.stateChanged.connect(self.clicked_rule_break_checkbox)
+
+        self.ok: bool = False
 
         self.all_rules = [str(break_rule) for break_rule in self.model.get_rule_names()]
         self.break_rules = [str(break_rule) for break_rule in self.model.get_break_rule_names()]
 
         # self.setLayout(self.ui.verticalLayout)
-
-        self.setStyleSheet(
-            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
-        )
 
         if "breaksettingswindow" in config.app_cfg.dialog_size:
             w, h = config.app_cfg.dialog_size["breaksettingswindow"]
@@ -62,9 +65,12 @@ class BreakSettingsWin(QDialog):
         super(BreakSettingsWin, self).resizeEvent(event)
 
     def setup_options(self):
+        font = QApplication.instance().font()
         for rule_name in self.all_rules:
             item = QListWidgetItem(self.ui.listWidgetRules)
+            item.setFont(font)
             cb = QCheckBox(rule_name)
+            cb.setFont(font)
             cb.setChecked(rule_name in self.break_rules)
             self.ui.listWidgetRules.setItemWidget(item, cb)
 
@@ -75,6 +81,7 @@ class BreakSettingsWin(QDialog):
         self.model.set_break_enabled(bool(state))
 
     def clicked_cancel_button(self):
+        self.ok = False
         self.close()
 
     def clicked_ok_button(self):

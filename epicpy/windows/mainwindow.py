@@ -1,6 +1,6 @@
 """
-This file is part of the EPICpy source code. EPICpy is a tool for simulating 
-human performance tasks using the EPIC computational cognitive architecture 
+This file is part of the EPICpy source code. EPICpy is a tool for simulating
+human performance tasks using the EPIC computational cognitive architecture
 (David Kieras and David Meyer 1997a) using the Python programming language.
 Copyright (C) 2022 Travis L. Seymour, PhD
 
@@ -38,7 +38,8 @@ from epicpy.dialogs.fontsizewindow import FontSizeDialog
 from epicpy.epic.runinfo import RunInfo
 from epicpy.uifiles.mainui import Ui_MainWindow
 from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
-from epicpy.utils.apputils import loading_cursor
+from epicpy.utils.apputils import loading_cursor, clear_font
+from epicpy.utils.defaultfont import get_default_font
 from epicpy.widgets.largetextview import LargeTextView
 from epicpy.windows.statswindow import StatsWin
 from epicpy.windows.tracewindow import TraceWin
@@ -180,14 +181,18 @@ class MainWin(QMainWindow):
         self.ui = Ui_MainWindowCustom()
         self.ui.setupUi(self)
 
+        # replace designed font with application-wide font
+        clear_font(self)
+
         self.context_menu = QMenu(self)
         self.context_items = {}
         self.create_context_menu_items()
 
+
         # add central widget and setup
         self.ui.plainTextEditOutput = LargeTextView(enable_context_menu=False)
-        font = QFont("Fira Mono", 14)
-        self.ui.plainTextEditOutput.setFont(font)
+
+
         self.ui.plainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.ui.plainTextEditOutput.setObjectName("MainWindow")  # "plainTextEditOutput"
         self.ui.plainTextEditOutput.setPlainText(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
@@ -314,16 +319,6 @@ class MainWin(QMainWindow):
 
         self.default_palette = self.app.palette()
         self.change_darkmode(config.app_cfg.dark_mode)
-
-        # I'm not sure Fira Mono is the right font for us...seems to mess up boxes.
-        # So we're forcing the font_name configuration to be 'Fira Code' for now
-        config.app_cfg.font_name = "Fira Code"
-
-        # This approach will presumably alter every widget that is a child of this window
-        self.setStyleSheet(
-            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
-        )
-        self.ui.plainTextEditOutput.setFont(QFont(config.app_cfg.font_name, int(config.app_cfg.font_size)))
 
         # setup some ui timers
         self.ui_timer.timeout.connect(self.update_ui_status)
@@ -1401,17 +1396,17 @@ class MainWin(QMainWindow):
             config.app_cfg.font_size = self.font_size_dialog.ui.spinBoxFontSize.value()
             self.write(
                 f"{e_info} Application font size changed to {config.app_cfg.font_size} "
-                f"pt). Note that some dialogs may only use new font size after "
-                f"application restart."
+                f"pt). NOTE: Some font changes may only take place after application restart."
             )
-            for target in (self, self.trace_win, self.stats_win):
-                target.setStyleSheet(
-                    'QWidget {font: "'
-                    + config.app_cfg.font_name
-                    + '"; font-size: '
-                    + str(config.app_cfg.font_size)
-                    + "pt}"
-                )
+
+            new_font = get_default_font(family=config.app_cfg.font_family, size=config.app_cfg.font_size)
+            QApplication.instance().setFont(new_font)
+            clear_font(self)
+            for win in self.visual_views.values():
+                win.reset_font()
+            for win in self.auditory_views.values():
+                win.reset_font()
+
         else:
             self.write(f"{e_info} No changes made to application font size.")
             config.app_cfg.rollback()

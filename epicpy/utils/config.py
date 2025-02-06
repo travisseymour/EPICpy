@@ -16,7 +16,7 @@ If not, see <https://www.gnu.org/licenses/>.
 import json
 from pathlib import Path
 import platform
-from typing import Optional
+from typing import Optional, Literal
 from dataclasses import dataclass, field, fields
 
 from loguru import logger as log
@@ -30,19 +30,20 @@ app_cfg: Optional["AppConfig"] = None
 Global Configuration Variable
 """
 
+VALID_FONTS_FAMILIES = {"sans-serif", "serif", "monospace"}
 
 @dataclass
 class AppConfig:
     """Class for keeping track of device-independent EpicPy config info"""
 
-    config_version: str = "20211023"
+    config_version: str = "20250205"
 
     last_device_file: str = ""  # for reloading last session
     last_script_file: str = ""
-    dark_mode: str = "Light"  # in ('Light', 'Dark', 'Auto')
+    dark_mode: Literal['Light', 'Dark', 'Auto'] = "Light"
     epiclib_version: str = ""  # if not "", passes this value to DeviceConfig on app init
-    font_name: str = "Fira Mono"  # default, user can change to whatever they want
-    font_size: int = 12
+    font_family: Literal["sans-serif", "serif", "monospace"] = "sans-serif"
+    font_size: int = 14
     dialog_size: dict = field(default_factory=dict)  # hold dialog sizes if changed
     main_geom: list = field(default_factory=list)  # does nothing yet
     auto_load_last_device: bool = False  # only True when changing epiclib_version from UI
@@ -98,7 +99,7 @@ class AppConfig:
 class DeviceConfig:
     """Class for keeping track of EpicPy configuration"""
 
-    config_version: str = "20211023"
+    config_version: str = "20250205"
 
     device_file: str = ""
     rule_files: list = field(default_factory=list)

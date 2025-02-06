@@ -22,6 +22,10 @@ import os
 import platform
 from importlib.resources import files, as_file
 
+from fastnumbers import check_int
+
+from epicpy.utils.defaultfont import get_default_font
+
 os.environ["OUTDATED_IGNORE"] = "1"
 if platform.platform().split("-")[1].startswith("10."):
     os.environ["QT_MAC_WANTS_LAYER"] = "1"
@@ -47,7 +51,6 @@ from qtpy.QtCore import qInstallMessageHandler, QCoreApplication
 
 from epicpy.utils.apputils import get_resource, frozen
 from epicpy.utils import config
-from epicpy import set_app_font, set_app_font_bold
 
 # epiclib name (epiclib.so) is same on mac and linux.
 # just in case we were recently running on a different os,
@@ -82,13 +85,6 @@ except Exception as e:
     print(f"Error trying to reset epiclib.so for {platform.system()} using {source}: '{e}'")
 
 DONE = False
-
-
-# dragon = Path('C:\\Users\\nogard\\Desktop\\mylog.txt')
-# dragon.write_text(f'{datetime.datetime.now().ctime()}')
-# def mog(msg:str):
-#     global dragon
-#     dragon.write_text(dragon.read_text() + '\n' + msg)
 
 
 def pyqt_warning_handler(msg_type, msg_log_content, msg_string):
@@ -189,28 +185,24 @@ def start_ui(app: QApplication):
     config.get_device_config(None)
 
     # prepare the default font
-    font_id = QFontDatabase.addApplicationFont(str(get_resource("fonts", "FiraCode", "FiraCode-Regular.ttf").resolve()))
-    font = QFont()
-    if font_id:
-        font_families = QFontDatabase.applicationFontFamilies(font_id)
-        font_family = font_families[0] if font_families else None
-        if font_family:
-            font.setFamily(font_family)
-        else:
-            font.setFamily(font.defaultFamily())
-    else:
-        font.setFamily(font.defaultFamily())
-    font.setPointSize(12)
+
+    if not hasattr(config.app_cfg, "font_family") or \
+            not isinstance(config.app_cfg.font_family, str) or \
+            config.app_cfg.font_family not in ["sans-serif", "serif", "monospace"]:
+        config.app_cfg.font_family = "sans-serif"  # Apply fallback
+
+    if not hasattr(config.app_cfg, "font_size") or \
+            not isinstance(config.app_cfg.font_size, (str, int)) or \
+            not check_int(config.app_cfg.font_size) or \
+            not 12 < int(config.app_cfg.font_size) < 72:
+        config.app_cfg.font_size = 14  # Apply fallback
+
+    default_font = get_default_font(family=config.app_cfg.font_family, size=config.app_cfg.font_size)
 
     # Set the font for the application
-    QApplication.instance().setFont(font)
+    QApplication.instance().setFont(default_font)
 
-    # Store global fonts for later use
-    set_app_font(font)
-    font_bold = QFont(font)
-    font_bold.setBold(True)
-    set_app_font_bold(font_bold)
-
+    # NOTE: This is down here because we need to setup app font before loading any gui windows!
     from epicpy.windows import mainwindow
 
     _ = mainwindow.MainWin(app)

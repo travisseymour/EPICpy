@@ -26,6 +26,8 @@ from epicpy.uifiles.searchui import Ui_DialogSearch
 from qtpy.QtWidgets import QDialog
 from qtpy.QtCore import Qt
 
+from epicpy.utils.apputils import clear_font
+
 
 class SearchWin(QDialog):
     def __init__(self, *args, **kwargs):
@@ -33,20 +35,16 @@ class SearchWin(QDialog):
         self.ok = False
         self.ui = Ui_DialogSearch()
         self.ui.setupUi(self)
+
+        # replace designed font with application-wide font
+        clear_font(self)
+
         self.backwards: bool = False
 
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonSearchForward.clicked.connect(self.clicked_ok_button)
         self.ui.pushButtonSearchBackward.clicked.connect(partial(self.clicked_ok_button, backwards=True))
         self.ui.lineEditSearchText.editingFinished.connect(self.clicked_ok_button)
-
-        self.setStyleSheet(
-            'QWidget {font: "' + config.app_cfg.font_name
-            if hasattr(config.app_cfg, "font_name")
-            else "Arial" + '"; font-size: ' + str(config.app_cfg.font_size)
-            if hasattr(config.app_cfg, "font_size")
-            else "14" + "pt}"
-        )
 
         if hasattr(config.app_cfg, "dialog_size") and "searchwindow" in config.app_cfg.dialog_size:
             w, h = config.app_cfg.dialog_size["searchwindow"]

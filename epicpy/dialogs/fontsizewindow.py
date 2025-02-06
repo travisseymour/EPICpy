@@ -17,13 +17,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
+from PySide6.QtGui import QFont
+from qdarktheme.qtpy.QtWidgets import QApplication
 from qtpy.QtCore import QSize
 from qtpy.QtGui import QShowEvent
 
 from epicpy.uifiles.fontsizeui import Ui_DialogFontSize
 from qtpy.QtWidgets import QDialog
 from epicpy.utils import config
+from epicpy.utils.apputils import clear_font
+from epicpy.utils.defaultfont import get_default_font
 
 
 class FontSizeDialog(QDialog):
@@ -33,13 +36,26 @@ class FontSizeDialog(QDialog):
         self.ui = Ui_DialogFontSize()
         self.ui.setupUi(self)
 
+        # replace designed font with application-wide font
+        clear_font(self)
+
+        font = QFont(QApplication.instance().font())
+        self.ui.label_3.setText(
+            f'<html>'
+            f'<head/>'
+            f'<body>'
+            f'<p>'
+            f'<span style=" font-size:20pt; font-weight:600;">'
+            f'Application Font Name: {font.styleName()}'
+            f'</span>'
+            f'</p>'
+            f'</body>'
+            f'</html>'
+        )
+
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
         self.ui.spinBoxFontSize.valueChanged.connect(self.font_size_changed)
-
-        self.setStyleSheet(
-            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
-        )
 
         if "fontsizewindow" in config.app_cfg.dialog_size:
             w, h = config.app_cfg.dialog_size["fontsizewindow"]
@@ -67,22 +83,27 @@ class FontSizeDialog(QDialog):
         if update_spin_box:
             # usually called when dialog opened (pulls size from config)
             self.ui.spinBoxFontSize.setValue(int(config.app_cfg.font_size))
-            self.ui.plainTextEditFontSample.setStyleSheet(
-                'QWidget {font: "'
-                + config.app_cfg.font_name
-                + '"; font-size: '
-                + str(int(config.app_cfg.font_size))
-                + "pt}"
-            )
+            # self.ui.plainTextEditFontSample.setStyleSheet(
+            #     'QWidget {font: "'
+            #     + config.app_cfg.font_name
+            #     + '"; font-size: '
+            #     + str(int(config.app_cfg.font_size))
+            #     + "pt}"
+            # )
+            font = get_default_font(config.app_cfg.font_family, config.app_cfg.font_size)
+            self.ui.plainTextEditFontSample.setFont(font)
         else:
             # usually called when spinbox changes (pulls size from widget)
-            self.ui.plainTextEditFontSample.setStyleSheet(
-                'QWidget {font: "'
-                + config.app_cfg.font_name
-                + '"; font-size: '
-                + str(int(self.ui.spinBoxFontSize.value()))
-                + "pt}"
-            )
+            # self.ui.plainTextEditFontSample.setStyleSheet(
+            #     'QWidget {font: "'
+            #     + config.app_cfg.font_name
+            #     + '"; font-size: '
+            #     + str(int(self.ui.spinBoxFontSize.value()))
+            #     + "pt}"
+            # )
+            font = get_default_font(config.app_cfg.font_family, int(self.ui.spinBoxFontSize.value()))
+            self.ui.plainTextEditFontSample.setFont(font)
+            self.ui.plainTextEditFontSample.update()
 
         self.ui.plainTextEditFontSample.update()
 

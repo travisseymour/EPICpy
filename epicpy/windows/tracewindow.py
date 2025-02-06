@@ -28,9 +28,10 @@ from qtpy.QtGui import (
     QShowEvent,
     QHideEvent,
 )
-from qtpy.QtWidgets import QMainWindow, QMenu, QMessageBox
+from qtpy.QtWidgets import QMainWindow, QMenu
 import datetime
 from epicpy.utils import config
+from epicpy.utils.apputils import clear_font
 from epicpy.widgets.largetextview import LargeTextView
 
 
@@ -54,6 +55,10 @@ class TraceWin(QMainWindow):
         self.setObjectName("TraceWindow")
         self.ui = Ui_TraceWindowCustom()
         self.ui.setupUi(self)
+
+        # replace designed font with application-wide font
+        clear_font(self)
+
         self.ui.plainTextEditOutput = LargeTextView(enable_context_menu=False)
         self.setCentralWidget(self.ui.plainTextEditOutput)
         self.can_close: bool = False
@@ -61,11 +66,6 @@ class TraceWin(QMainWindow):
         self.ui.plainTextEditOutput.setPlainText(f'Trace Out! ({datetime.datetime.now().strftime("%r")})\n')
 
         self.trace_out_view = None
-
-        self.setStyleSheet(
-            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
-        )
-        self.ui.plainTextEditOutput.setFont(QFont(config.app_cfg.font_name, int(config.app_cfg.font_size)))
 
         self.ui.plainTextEditOutput.mouseDoubleClickEvent = parent.mouseDoubleClickEvent
 
@@ -91,7 +91,7 @@ class TraceWin(QMainWindow):
     def search_context_menu(self, event):
         contextMenu = QMenu(self)
 
-        if hasattr(self._parent, "run_state") and self._parent.run_state == RUNNING:
+        if hasattr(self._parent, "simulation") and self._parent.run_state == RUNNING:
             return
 
         searchAction = contextMenu.addAction("Search")

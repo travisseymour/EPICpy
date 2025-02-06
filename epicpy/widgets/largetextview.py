@@ -56,17 +56,16 @@ class LargeTextView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        self.font_metrics = QFontMetrics(self.font())
-        self.line_height = self.font_metrics.lineSpacing()
-
         # search dialog setup
         self.search_dialog = SearchWin()
         self.search_dialog.setModal(True)
         self.last_search_spec = {}
 
         # Create a QLabel for the "Please Wait" message
+        wait_font = QFont(QApplication.instance().font())
+        wait_font.setPointSize(48)  # was 54
         self.wait_label = QLabel("Please Wait")
-        self.wait_label.setFont(QFont("Arial", 54))
+        self.wait_label.setFont(wait_font)
         self.wait_label.setStyleSheet("color: rgba(106, 121, 240, 50);")
         self.wait_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.wait_label.setVisible(False)
@@ -76,6 +75,10 @@ class LargeTextView(QWidget):
         self.update_timer = QTimer(self)
         self.update_timer.timeout.connect(self.process_pending_lines)
         self.set_updating(True)
+
+    @property
+    def line_height(self):
+        return QFontMetrics(self.font()).lineSpacing()
 
     @property
     def is_updating(self) -> bool:
@@ -188,7 +191,7 @@ class LargeTextView(QWidget):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self.scroll_bar.setSingleStep(self.height() // QFontMetrics(self.font()).lineSpacing())
+        self.scroll_bar.setSingleStep(self.height() // self.line_height)
         self.update_wait_label_position()
 
     def wheelEvent(self, event: QWheelEvent):

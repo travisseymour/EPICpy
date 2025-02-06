@@ -23,6 +23,8 @@ from qtpy.QtWidgets import QDialog, QButtonGroup, QMessageBox
 from epicpy.utils import config
 from typing import Callable
 
+from epicpy.utils.apputils import clear_font
+
 
 class RunSettingsWin(QDialog):
     def __init__(
@@ -38,6 +40,9 @@ class RunSettingsWin(QDialog):
         self.ok = False
         self.ui = Ui_DialogRunSettings()
         self.ui.setupUi(self)
+
+        # replace designed font with application-wide font
+        clear_font(self)
 
         if isinstance(self.data_info_func, Callable):
             self.ui.dataInfoLabel.setText(self.data_info_func())
@@ -74,10 +79,6 @@ class RunSettingsWin(QDialog):
         self.ui.pushButtonDeleteData.clicked.connect(self.delete_device_data)
 
         self.ui.pushButtonDeleteData.setVisible(self.data_delete_func is not None)
-
-        self.setStyleSheet(
-            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
-        )
 
         if "runsettingswindow" in config.app_cfg.dialog_size:
             w, h = config.app_cfg.dialog_size["runsettingswindow"]
@@ -162,7 +163,8 @@ class RunSettingsWin(QDialog):
                 self,
                 "Confirm Action",
                 "Really DELETE the current data file?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes,
+                QMessageBox.StandardButton.No,
             )
 
             if ret == QMessageBox.StandardButton.Yes:

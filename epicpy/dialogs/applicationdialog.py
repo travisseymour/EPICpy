@@ -2,6 +2,7 @@ import sys
 import os
 import platform
 from pathlib import Path
+from typing import Optional
 
 from qtpy.QtWidgets import (
     QDialog,
@@ -30,24 +31,26 @@ class EPICpyDialog(QDialog):
         super().__init__(parent)
 
         # Define widget variables for the two fields.
-        self.label_text = None
-        self.edit_text = None
-        self.button_text_browse = None
-        self.button_text_default = None
-        self.button_epiccoder = None
+        self.label_text: Optional[QLabel] = None
+        self.edit_text: Optional[QTextEdit] = None
+        self.button_text_browse: Optional[QToolButton] = None
+        self.button_text_default: Optional[QToolButton] = None
+        self.button_epiccoder: Optional[QToolButton] = None
 
-        self.label_data = None
-        self.edit_data = None
-        self.button_data_browse = None
-        self.button_data_default = None
-        self.button_data_placeholder = None
+        self.label_data: Optional[QLabel] = None
+        self.edit_data: Optional[QTextEdit] = None
+        self.button_data_browse: Optional[QToolButton] = None
+        self.button_data_default: Optional[QToolButton] = None
+        self.button_data_placeholder: Optional[QToolButton] = None
 
-        self.info_label = None
-        self.sub_info_label = None
-        self.button_ok = None
-        self.button_cancel = None
+        self.info_label: Optional[QLabel] = None
+        self.sub_info_label: Optional[QLabel] = None
+        self.button_ok: Optional[QPushButton] = None
+        self.button_cancel: Optional[QPushButton] = None
 
         self.ok = False
+
+        self.setFont(QApplication.instance().font())
 
         self.setWindowTitle("Applications to open EPICpy file types")
         self.setup_ui()
@@ -105,17 +108,17 @@ class EPICpyDialog(QDialog):
         self.button_epiccoder = QToolButton(self)
 
         # Set tool button style to show text under the icon.
-        self.button_text_browse.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-        self.button_text_default.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-        self.button_epiccoder.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.button_text_browse.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        self.button_text_default.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        self.button_epiccoder.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
 
         # Set icons, texts, and tooltips for text field buttons.
-        self.button_text_browse.setIcon(self.style().standardIcon(QStyle.SP_DirOpenIcon))
+        self.button_text_browse.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DirOpenIcon))
         self.button_text_browse.setText("Select")
         self.button_text_browse.setToolTip("Select an application for editing text")
 
         # Update the default (now clear) button.
-        self.button_text_default.setIcon(self.style().standardIcon(QStyle.SP_DialogResetButton))
+        self.button_text_default.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogResetButton))
         self.button_text_default.setText("Clear")
         self.button_text_default.setToolTip("Clear the text field")
 
@@ -138,18 +141,18 @@ class EPICpyDialog(QDialog):
         # Create a placeholder button for alignment.
         self.button_data_placeholder = QToolButton(self)
 
-        self.button_data_browse.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-        self.button_data_default.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-        self.button_data_placeholder.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.button_data_browse.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        self.button_data_default.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        self.button_data_placeholder.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         self.button_data_placeholder.setAutoRaise(True)
         self.button_data_placeholder.setStyleSheet("QToolButton { border: none; background: none; }")
 
-        self.button_data_browse.setIcon(self.style().standardIcon(QStyle.SP_DirOpenIcon))
+        self.button_data_browse.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DirOpenIcon))
         self.button_data_browse.setText("Select")
         self.button_data_browse.setToolTip("Select an application for editing rules")
 
         # Update the default (now clear) button for the data field.
-        self.button_data_default.setIcon(self.style().standardIcon(QStyle.SP_DialogResetButton))
+        self.button_data_default.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogResetButton))
         self.button_data_default.setText("Clear")
         self.button_data_default.setToolTip("Clear the data field")
 
@@ -159,7 +162,7 @@ class EPICpyDialog(QDialog):
         self.button_data_placeholder.setEnabled(False)
 
         # Make the SP_DirOpenIcon and SP_DialogResetButton buttons 3 times larger.
-        default_icon_size = self.style().pixelMetric(QStyle.PM_ButtonIconSize)
+        default_icon_size = self.style().pixelMetric(QStyle.PixelMetric.PM_ButtonIconSize)
         large_icon_size = QSize(default_icon_size * 3, default_icon_size * 3)
         for btn in (
             self.button_text_browse,
@@ -179,9 +182,9 @@ class EPICpyDialog(QDialog):
         # Bottom Buttons: Cancel and OK
         # ------------------------------------------
         self.button_cancel = QPushButton("Cancel")
-        self.button_cancel.setIcon(self.style().standardIcon(QStyle.SP_DialogCancelButton))
+        self.button_cancel.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton))
         self.button_ok = QPushButton("OK")
-        self.button_ok.setIcon(self.style().standardIcon(QStyle.SP_DialogApplyButton))
+        self.button_ok.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogApplyButton))
 
         # Make the QTextEdits horizontally and vertically expandable.
         for edit in (self.edit_text, self.edit_data):
@@ -255,13 +258,29 @@ class EPICpyDialog(QDialog):
         """
         home_dir = str(Path.home())
         filter_str = self.get_executable_filter()
-        file_path, _ = QFileDialog.getOpenFileName(parent=self, caption="Select Executable", directory=home_dir, filter=filter_str)
+
+        from PySide6.QtWidgets import QFileDialog
+
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,  # Parent widget (or None if not inside a class)
+            "Select Executable",  # Dialog title (caption)
+            home_dir,  # Default directory
+            filter_str  # File filter
+        )
+
         if file_path:
             system = platform.system()
             if system == "Windows":
                 # On Windows, ensure the file ends with ".exe"
                 if not file_path.lower().endswith('.exe'):
-                    QMessageBox.information(parent=self, title="Invalid Executable", text="The selected file is not an executable application.",button0=QMessageBox.Ok)
+
+                    QMessageBox.information(
+                        self,  # Parent widget (if inside a class, otherwise use None)
+                        "Invalid Executable",  # Title
+                        "The selected file is not an executable application.",  # Message text
+                        QMessageBox.StandardButton.Ok  # Buttons
+                    )
+
                     return
             else:
                 # On macOS and Linux, check for executable permission.
@@ -270,7 +289,14 @@ class EPICpyDialog(QDialog):
                     pass
                 else:
                     if not os.access(file_path, os.X_OK):
-                        QMessageBox.information(parent=self, title="Invalid Executable", text="The selected file is not an executable application.", button0=QMessageBox.Ok)
+
+                        QMessageBox.information(
+                            self,  # Parent widget (use None if not inside a class)
+                            "Invalid Executable",  # Title
+                            "The selected file is not an executable application.",  # Message text
+                            QMessageBox.StandardButton.Ok  # Buttons
+                        )
+
                         return
             target_edit.setPlainText(file_path)
 
@@ -320,7 +346,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     # prepare the default font
-    default_font = get_default_font(family="sans-serif", size=16)
+    default_font = get_default_font(family="sans-serif", size=14)
 
     # Set the font for the application
     QApplication.instance().setFont(default_font)

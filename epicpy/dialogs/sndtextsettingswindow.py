@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from epicpy.uifiles.sndtextsettingsui import Ui_DialogSndTextSettings
 from qtpy.QtWidgets import QDialog
 from epicpy.utils import config
+from epicpy.utils.apputils import clear_font
 
 
 class SoundTextSettingsWin(QDialog):
@@ -30,12 +31,11 @@ class SoundTextSettingsWin(QDialog):
         self.ui = Ui_DialogSndTextSettings()
         self.ui.setupUi(self)
 
+        # replace designed font with application-wide font
+        clear_font(self)
+
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
-
-        self.setStyleSheet(
-            'QWidget {font: "' + config.app_cfg.font_name + '"; font-size: ' + str(config.app_cfg.font_size) + "pt}"
-        )
 
         if "sndtextsettingswindow" in config.app_cfg.dialog_size:
             w, h = config.app_cfg.dialog_size["sndtextsettingswindow"]
