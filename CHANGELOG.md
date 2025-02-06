@@ -4,10 +4,11 @@
 
 ---
 
-## VERSION: 2025.2.6.1
+## VERSION: 2025.2.6.2
 
 1. **FIXED**: epiccoder fallback now working on Linux and MacOS (no test on Windows). If config entry "text_editor" is either empty or contains "default" __and__ epiccoder has been installed, then epiccoder is used for text and prs editing. Otherwise, EPICpy attempts to launch the sytem default (if set).
 2. **CHANGED**: default font family is monospace, not sans-serif
+3. **FIXED**: fixed extention fallback when saving stats window content to external file.
 ---
 
 ## VERSION: 2025.2.5.3

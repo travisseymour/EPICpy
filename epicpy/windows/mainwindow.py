@@ -1529,6 +1529,8 @@ class MainWin(QMainWindow):
             start_file = config.device_cfg.trace_out_file
         elif kind == "Stats":
             start_file = config.device_cfg.stats_out_file
+            if start_file.endswith(".txt"):
+                start_file = start_file.replace(".txt", ".html")
         else:
             start_file = ""
 
@@ -1537,7 +1539,7 @@ class MainWin(QMainWindow):
                 start_dir = Path(config.device_cfg.device_file).parent
             else:
                 start_dir = Path().home().expanduser()
-            start_file = f"{start_dir.stem}_{kind}_output.txt"
+            start_file = f"{start_dir.stem}_{kind}_output.html" if kind == "Stats" else f"{start_dir.stem}_{kind}_output.txt"
             start_file = str(Path(start_dir, start_file).with_suffix(ext).resolve())
 
         if kind == "Stats":
@@ -1561,8 +1563,7 @@ class MainWin(QMainWindow):
             caption=f"Specify {kind} Output File",
             directory=str(start_file),
             filter=_filter,
-            # selectedFilter=initial_filter,
-
+            selectedFilter=initial_filter,
         )
 
         return file
@@ -1570,8 +1571,8 @@ class MainWin(QMainWindow):
     def export_output(self, source: QPlainTextEdit, name: str):
         default_exts = {"Normal": ".txt", "Trace": ".txt", "Stats": ".html"}
         try:
-            ext = default_exts[name]
-        except NameError:
+            ext = default_exts[str(name).title()]
+        except (ValueError, NameError, IndexError):
             ext = ".txt"
 
         out_file = self.choose_log_file(name, ext)
@@ -1609,8 +1610,8 @@ class MainWin(QMainWindow):
     def export_output_txt(self, source: LargeTextView, name: str):
         default_exts = {"Normal": ".txt", "Trace": ".txt"}
         try:
-            ext = default_exts[name]
-        except NameError:
+            ext = default_exts[str(name).title()]
+        except (ValueError, NameError, IndexError):
             ext = ".txt"
 
         out_file = self.choose_log_file(name, ext)
