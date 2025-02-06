@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import platform
 import socket
+from io import open_code
 
 from itertools import chain
 from textwrap import dedent
@@ -38,7 +39,7 @@ from epicpy.dialogs.fontsizewindow import FontSizeDialog
 from epicpy.epic.runinfo import RunInfo
 from epicpy.uifiles.mainui import Ui_MainWindow
 from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
-from epicpy.utils.apputils import loading_cursor, clear_font
+from epicpy.utils.apputils import loading_cursor, clear_font, run_without_waiting, has_epiccoder
 from epicpy.utils.defaultfont import get_default_font
 from epicpy.widgets.largetextview import LargeTextView
 from epicpy.windows.statswindow import StatsWin
@@ -1990,10 +1991,18 @@ class MainWin(QMainWindow):
             file_path = None
 
         if file_path is not None:
+
+
+
             try:
                 # user has specified the system default editor
+                ec_path = has_epiccoder()
                 OS = platform.system()
-                if OS == "Linux":
+                if hasattr(config.app_cfg, "text_editor") and (config.app_cfg.text_editor.lower() not in ("", "default")) and (Path(config.app_cfg.text_editor).resolve().is_file()):
+                    open_cmd = config.app_cfg.text_editor
+                elif hasattr(config.app_cfg, "text_editor") and (config.app_cfg.text_editor.lower() in ("", "default")) and which_file != "DataFile" and ec_path:
+                    open_cmd = ec_path
+                elif OS == "Linux":
                     open_cmd = "xdg-open"
                 elif OS == "Darwin":
                     open_cmd = "open"
@@ -2011,7 +2020,8 @@ class MainWin(QMainWindow):
                     if OS == "Windows":
                         os.startfile(str(file_path.resolve()))
                     else:
-                        subprocess.run([open_cmd, str(file_path.resolve())])
+                        # subprocess.run([open_cmd, str(file_path.resolve())])
+                        run_without_waiting(open_cmd, str(file_path.resolve()))
             except Exception as e:
                 self.write(
                     emoji_box(

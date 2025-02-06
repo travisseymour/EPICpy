@@ -378,6 +378,20 @@ def has_epiccoder() -> str:
     except Exception:
         return ""
 
+def run_without_waiting(exe_path: str, filename: str):
+    try:
+        # Ensure the executable path and filename are properly formatted
+        filename = os.path.abspath(filename)
+
+        # Use different process spawning methods based on the OS
+        if sys.platform == "win32":
+            # Windows: Use `creationflags=subprocess.DETACHED_PROCESS` to detach
+            subprocess.Popen([exe_path, filename], creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
+        else:
+            # macOS/Linux: Use `start_new_session=True` to detach
+            subprocess.Popen([exe_path, filename], start_new_session=True)
+    except Exception as e:
+        print(f"Error starting process: {e}")
 
 def default_run(file_path: Union[str, Path]) -> bool:
     """
