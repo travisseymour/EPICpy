@@ -1999,7 +1999,7 @@ class MainWin(QMainWindow):
                 if which_file != "DataFile" and hasattr(config.app_cfg, "text_editor") and (config.app_cfg.text_editor.lower() not in ("", "default")) and (Path(config.app_cfg.text_editor).resolve().is_file()):
                     open_cmd = config.app_cfg.text_editor
                 elif which_file != "DataFile" and hasattr(config.app_cfg, "text_editor") and (config.app_cfg.text_editor.lower() in ("", "default")) and ec_path:
-                    open_cmd = ec_path
+                    open_cmd = "epiccoder" # ec_path
                 elif OS == "Linux":
                     open_cmd = "xdg-open"
                 elif OS == "Darwin":
