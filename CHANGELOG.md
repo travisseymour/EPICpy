@@ -4,11 +4,20 @@
 
 ---
 
+## VERSION: 2025.2.5.3
+
+1. **CHANGED**: When running external apps to edit simulation text files; a) if app path is set  in global config for text, it is used. b) If noting is set, but epiccoder is installed, it is used. c) otherwise, default app for text is called. d) for data file editing, default app is always called.
+2. **FIXED**: Removed all emoji and ascii_box for windows due to corresponding issue exporting text from output windows. Will try to recover this functionality on windows shortly.
+
+---
+
 ## VERSION: 2025.2.5.2
 
 1. **FIXED**: Encoding error when saving output windows to text on MacOS.
 2. **CHANGED**: Better cross os control of font and font size changes across ui. 
 3. **CHANGED**: Faster lru_cache behavior for flywheel patterns.
+
+---
 
 ## VERSION: 2025.1.11.4
 

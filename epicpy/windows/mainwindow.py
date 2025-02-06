@@ -1992,15 +1992,13 @@ class MainWin(QMainWindow):
 
         if file_path is not None:
 
-
-
             try:
                 # user has specified the system default editor
                 ec_path = has_epiccoder()
                 OS = platform.system()
-                if hasattr(config.app_cfg, "text_editor") and (config.app_cfg.text_editor.lower() not in ("", "default")) and (Path(config.app_cfg.text_editor).resolve().is_file()):
+                if which_file != "DataFile" and hasattr(config.app_cfg, "text_editor") and (config.app_cfg.text_editor.lower() not in ("", "default")) and (Path(config.app_cfg.text_editor).resolve().is_file()):
                     open_cmd = config.app_cfg.text_editor
-                elif hasattr(config.app_cfg, "text_editor") and (config.app_cfg.text_editor.lower() in ("", "default")) and which_file != "DataFile" and ec_path:
+                elif which_file != "DataFile" and hasattr(config.app_cfg, "text_editor") and (config.app_cfg.text_editor.lower() in ("", "default")) and ec_path:
                     open_cmd = ec_path
                 elif OS == "Linux":
                     open_cmd = "xdg-open"
