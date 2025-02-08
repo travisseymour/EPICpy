@@ -1,6 +1,12 @@
 
 # EPICpy Changelog
-#### (lasted updated Wed Jan 11 2025)
+
+
+## VERSION: 2025.2.6.3
+
+1. **FIXED**: More efficient batching approach to text updates.
+2. **FIXED**: Incorrect text generation in test case.
+3. **CHANGED**: Temporarily ignoring debug message from epiclib
 
 ---
 

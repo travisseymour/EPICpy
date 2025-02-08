@@ -1,7 +1,7 @@
+
 import sys
 import timeit
 
-from qtpy.QtTest import QTest
 from qtpy.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QScrollBar, QLabel, QMessageBox, QMenu
 from qtpy.QtCore import Qt, QTimer
 from qtpy.QtGui import QPainter, QFontMetrics, QWheelEvent, QFont, QContextMenuEvent
@@ -101,10 +101,12 @@ class LargeTextView(QWidget):
 
     def write(self, text):
         if "\n" in text:
-            for aline in text.splitlines(keepends=False):
-                self.pending_lines.append(aline)
-        else:
+            self.pending_lines.extend(line for line in text.splitlines(False) if "TLSDEBUG" not in line)
+        elif "TLSDEBUG" not in text:
             self.pending_lines.append(text)
+
+        if not self.is_updating:
+            self.set_updating(True)
 
     def clear(self):
         self.update_timer.stop()
@@ -133,6 +135,7 @@ class LargeTextView(QWidget):
         if not self.update_timer.isActive():
             return
 
+        # Show/hide "Please Wait" label based on pending line count
         if len(self.pending_lines) > self.wait_threshold:
             if not self.wait_label.isVisible():
                 self.wait_label.setVisible(True)
@@ -140,18 +143,27 @@ class LargeTextView(QWidget):
             if self.wait_label.isVisible():
                 self.wait_label.setVisible(False)
 
-        self.update()
+        self.update()  # Trigger UI repaint
 
         if self.pending_lines:
-            self.lines.extend(self.pending_lines)
-            self.pending_lines = []
+            # Process in controlled batches
+            batch_size = min(5000, len(self.pending_lines))  # Adjust batch size if needed
+            self.lines.extend(self.pending_lines[:batch_size])
+            del self.pending_lines[:batch_size]  # Remove processed lines
+
+            # Adjust scrollbar max value
             self.scroll_bar.setMaximum(len(self.lines) - 1)
 
-            start_line = max(0, len(self.lines) - self.height() // self.line_height)
-            end_line = min(len(self.lines), start_line + self.height() // self.line_height)
+            # Calculate how many lines fit in the visible area
+            visible_lines = self.height() // self.line_height
 
-            if start_line > 0 or end_line < len(self.lines):
-                self.scroll_bar.setSliderPosition(start_line)
+            # Ensure last line stays at the bottom
+            new_scroll_value = max(0, len(self.lines) - visible_lines)
+            self.scroll_bar.setValue(new_scroll_value)
+
+            # If there are still pending lines, schedule another round
+            if self.pending_lines:
+                QTimer.singleShot(0, self.process_pending_lines)
 
     def lines_in_view(self):
         visible_lines = self.height() // self.line_height
@@ -342,16 +354,28 @@ if __name__ == "__main__":
 
         def populate_text(self):
             # n = 33_000_000
-            # n = 10_000_000
+            n = 10_000_000
             # n = 1_000_000
-            n = 100_000
+            # n = 100_000
             # n = 1000
             start = timeit.default_timer()
+
+            batch_size = 5000  # Number of lines to add before processing events
+            buffer = []
+
             for i in range(n):
-                self.viewer.append_text(f"Line {i}")
-                if i % 1000 == 0:
-                    QTest.qWait(1)
+                buffer.append(f"Line {i}")
+
+                if len(buffer) >= batch_size:
+                    self.viewer.append_text("\n".join(buffer))
+                    buffer.clear()
+                    QApplication.processEvents()  # Process events without blocking updates
+
+            if buffer:  # Add any remaining lines
+                self.viewer.append_text("\n".join(buffer))
+
             print(f"populate_text added {n} lines in {timeit.default_timer() - start} sec.")
+
 
     app = QApplication(sys.argv)
     window = LTTTestMainWindow()
