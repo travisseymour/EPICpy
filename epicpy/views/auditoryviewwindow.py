@@ -20,7 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from copy import deepcopy
 from functools import lru_cache
+from itertools import chain
 from pathlib import Path
+from typing import Optional
 
 from qtpy.QtWidgets import QApplication
 from qtpy.QtGui import (
@@ -49,16 +51,23 @@ from epicpy.epiclib.epiclib import Symbol, geometric_utilities as GU
 
 from epicpy.utils.localmunch import DefaultMunch, Munch
 
-WARNING_ACCUMULATOR = []
+WARNING_ACCUMULATOR = set()
 
 
-@dataclass
+def cache_warn(msg: str):
+    global WARNING_ACCUMULATOR
+    if msg not in WARNING_ACCUMULATOR:
+        WARNING_ACCUMULATOR.add(msg)
+        log.warning(msg)
+
+@dataclass(slots=True)
 class SoundObject:
     kind: str
     name: str
     location: Point
     size: Size
     property: Munch
+
 
 
 class AuditoryViewWin(QMainWindow):
@@ -89,6 +98,7 @@ class AuditoryViewWin(QMainWindow):
         min_size = QSize(390, 301)
         self.resize(min_size)
         self.setMinimumSize(min_size)
+
         self.y_min = 10  # minimum visible y position
 
         self.scale = config.device_cfg.spatial_scale_degree  # num pixels per DVA
@@ -99,31 +109,34 @@ class AuditoryViewWin(QMainWindow):
         self.eye_pos = Point(0, 0)
         self.painting = False
 
-        # objects
-        self.objects = {}
-
-        self.setWindowTitle(self.view_title.title())
-
-        self.painter = None
-
         self.setFont(QApplication.instance().font())
 
         self.overlay_font = QFont(self.font())
         self.overlay_font.setPointSize(self.overlay_font.pointSize()-2)
 
-        self.initialize()
+        self.debug_info = list()
 
-    def closeEvent(self, event: QCloseEvent):
-        if not self.can_close:
-            self.hide()
-        else:
-            QMainWindow.closeEvent(self, event)
+        # objects
+        self.objects = {}
+        self.shape_router = self.make_shape_router()
+
+        self.setWindowTitle(self.view_title.title())
+
+        self.cached_grid = self.grid_cache(self.width(), self.height(), self.scale)
+
+        self.initialize()
 
     def reset_font(self):
         self.setFont(QApplication.instance().font())
 
         self.overlay_font = QFont(self.font())
         self.overlay_font.setPointSize(self.overlay_font.pointSize()-2)
+
+    def closeEvent(self, event: QCloseEvent):
+        if not self.can_close:
+            self.hide()
+        else:
+            QMainWindow.closeEvent(self, event)
 
     @staticmethod
     def set_dot_on(enabled: bool):
@@ -154,6 +167,7 @@ class AuditoryViewWin(QMainWindow):
 
     @staticmethod
     def set_scale(scale: float):
+        # self.scale = scale
         log.warning(f"instead of calling set_scale({scale}), just set property in config.device_cfg")
 
     @staticmethod
@@ -162,6 +176,7 @@ class AuditoryViewWin(QMainWindow):
 
     def clear(self):
         self.objects = {}
+        self.update()
 
     def update_time(self, current_time: int):
         self.current_time = current_time
@@ -176,13 +191,6 @@ class AuditoryViewWin(QMainWindow):
         x, y = (x - w / 2) + self.origin.x, (y - h / 2) + self.origin.y
         return Rect(int(x), int(y), int(w), int(h))
 
-    @staticmethod
-    def cache_warn(msg: str):
-        global WARNING_ACCUMULATOR
-        if msg not in WARNING_ACCUMULATOR:
-            WARNING_ACCUMULATOR.append(msg)
-            log.warning(msg)
-
     # ========================================================================
     # ViewWindow Visual Updates From AuditoryView
     # ========================================================================
@@ -190,18 +198,20 @@ class AuditoryViewWin(QMainWindow):
     def update_eye_position(self, point: GU.Point):
         self.eye_pos = Point(point.x, point.y * -1)
 
-    def create_new_stream(self, object_name: Symbol, pitch: float, loudness: float, location: GU.Point):
-        self.cache_warn(f"Unhandled call to create_new_stream({object_name}, {pitch}, {loudness}, {location})")
+    @staticmethod
+    def create_new_stream(object_name: Symbol, pitch: float, loudness: float, location: GU.Point):
+        cache_warn(f"Unhandled call to create_new_stream({object_name}, {pitch}, {loudness}, {location})")
 
-    def disappear_stream(self, object_name: str):
-        self.cache_warn(f"Unhandled call to disappear_stream({object_name})")
+    @staticmethod
+    def disappear_stream(object_name: str):
+        cache_warn(f"Unhandled call to disappear_stream({object_name})")
 
     def create_new_object(
         self,
         object_name: str,
         location: GU.Point,
         size: GU.Size,
-        properties: dict = None,
+        properties: Optional[dict] = None,
     ):
         if object_name not in self.objects:
             self.objects[object_name] = SoundObject(
@@ -240,7 +250,7 @@ class AuditoryViewWin(QMainWindow):
                 elif prop_value == "Offset":
                     self.objects[object_name].property["Color"] = QColorConstants.Red
             else:
-                self.cache_warn(f"AudView Prop Change: {prop_name} - {prop_value}")
+                cache_warn(f"AudView Prop Change: {prop_name} - {prop_value}")
 
     # ========================================================================
     # Drawing Routines
@@ -248,111 +258,109 @@ class AuditoryViewWin(QMainWindow):
 
     def paintEvent(self, event):
         if not self.enabled or not self.can_draw:
+            self.painting = False
+            self.can_draw = False
             return
 
         if self.painting:
-            return
-        else:
-            self.painting = True
+            return  # Prevent re-entry
 
-        if not self.painter:
-            self.painter = QPainter(self)
-
-        self.scale = config.device_cfg.spatial_scale_degree
+        self.painting = True
+        painter = QPainter(self)  # No need to call begin(self)
 
         try:
-            self.painter.begin(self)
+            self.scale = config.device_cfg.spatial_scale_degree
 
             # draw image underlay
             if config.device_cfg.allow_device_images and self.bg_image:
-                self.draw_background_image()
+                self.draw_background_image(painter)
 
             # draw grid
             if config.device_cfg.calibration_grid:
-                self.draw_grid()
+                self.draw_grid(painter)
 
             # draw objects
             for obj in self.objects.values():
-                self.draw_object(obj)
+                self.draw_object(obj, painter)
 
             if config.device_cfg.center_dot:
-                self.dot()
+                self.dot(painter)
 
             # draw info overlay
-            self.draw_info_overlay()
-
+            self.draw_info_overlay(painter)
         finally:
-            self.painter.end()
+            painter.end()
 
         self.painting = False
         self.can_draw = False
 
     def resizeEvent(self, event: QResizeEvent):
-        QMainWindow.resizeEvent(self, event)
+        super().resizeEvent(event)
         self.origin = Point(self.width() // 2, self.height() // 2)
+
         if self.bg_image_file:
-            self.bg_image = QPixmap(f"{self.bg_image_file}")
+            self.bg_image = QPixmap(self.bg_image_file)
             if isinstance(self.bg_image, QPixmap) and self.bg_image_scaled:
-                self.bg_image = self.bg_image.scaled(self.width(), self.height())  # , Qt.KeepAspectRatio
+                self.bg_image = self.bg_image.scaled(self.width(), self.height())
+
+        # Cache the grid when the window resizes
+        self.cached_grid = self.grid_cache(self.width(), self.height(), self.scale)
+        
         self.update()
 
-    def dot(self):
+    def dot(self, painter: QPainter):
         dot_color = QColor(255, 255, 255, 255) if config.app_cfg.dark_mode else QColor(0, 0, 0, 255)
 
-        self.painter.setPen(dot_color)
-        self.painter.setBrush(dot_color)
-        self.painter.drawEllipse(self.origin.x - 1, self.origin.y - 1, 1, 1)
+        painter.setPen(dot_color)
+        painter.setBrush(dot_color)
+        painter.drawEllipse(self.origin.x - 1, self.origin.y - 1, 1, 1)
 
-    def draw_info_overlay(self):
+    def draw_info_overlay(self, painter: QPainter):
         # setup
-        self.painter.setPen(QColorConstants.White if config.app_cfg.dark_mode else QColorConstants.Black)
-        self.painter.setFont(self.overlay_font)
+        painter.setPen(QColorConstants.White if config.app_cfg.dark_mode else QColorConstants.Black)
+        painter.setFont(self.overlay_font)
 
         # draw time info
-        self.painter.drawText(10, self.y_min + 10, f"{int(self.current_time) / 1000:0.2f}")
+        painter.drawText(10, self.y_min + 10, f"{int(self.current_time) / 1000:0.2f}")
 
         # draw view info
         s = f"{self.width() / self.scale:0.2f} X {self.height() / self.scale:0.2f} " f"DVA, (0 , 0), {self.scale} p/DVA"
-        self.painter.drawText(5, self.height() - 20, s)
+        painter.drawText(5, self.height() - 20, s)
 
-    def _grid_cache(self, w, h, scale) -> QPainterPath:
+    @staticmethod
+    @lru_cache()
+    def grid_cache(w, h, scale) -> QPainterPath:
         """
         Grids are expensive to draw, so we're using the flyweight pattern again.
         """
         cx, cy = w // 2, h // 2
         path = QPainterPath()
-        Ys = list(range(cy - scale // 2, 0, -scale))
-        Ys += list(range(cy + scale // 2, h, scale))
-        Xs = list(range(cx - scale // 2, 0, -scale))
-        Xs += list(range(cx + scale // 2, w, scale))
-        for y in Ys:
+        y_s = chain(range(cy - scale // 2, 0, -scale), range(cy + scale // 2, h, scale))
+        x_s = chain(range(cx - scale // 2, 0, -scale), range(cx + scale // 2, w, scale))
+        for y in y_s:
             path.moveTo(0, y)
             path.lineTo(w, y)
-        for x in Xs:
+        for x in x_s:
             path.moveTo(x, 0)
             path.lineTo(x, h)
         return path
 
-    @lru_cache()
-    def grid_cache(self, w, h, scale) -> QPainterPath:
-        return self._grid_cache(w, h, scale)
+    def draw_grid(self, painter: QPainter):
+        painter.setPen(QColor(0, 213, 255, 100))
+        painter.setBrush(QBrush(QColorConstants.Cyan))
+        painter.drawPath(self.cached_grid)
 
-    def draw_grid(self):
-        self.painter.setPen(QColor(0, 213, 255, 100))
-        self.painter.setBrush(QBrush(QColorConstants.Cyan))
-        self.painter.drawPath(self.grid_cache(self.width(), self.height(), self.scale))
-
-    def draw_background_image(self):
+    def draw_background_image(self, painter: QPainter):
         if self.bg_image is not None:
             w, h = self.width(), self.height()
             pw, ph = self.bg_image.width(), self.bg_image.height()
             try:
-                self.painter.drawPixmap(w // 2 - pw // 2, h // 2 - ph // 2, self.bg_image)
+                painter.drawPixmap(w // 2 - pw // 2, h // 2 - ph // 2, self.bg_image)
             except Exception as e:
                 log.error(f"Unable to draw background: {str(e)}")
 
     def set_background_image(self, img_file: str, scaled: bool = True):
-        if img_file and self.bg_image_file == img_file:
+        if img_file and (self.bg_image_file == img_file):
             return
         try:
             if not img_file or not Path(img_file).is_file():
@@ -376,9 +384,17 @@ class AuditoryViewWin(QMainWindow):
 
     # note: status can be Visible, Disappearing, Reappearing, Fading, Audible
 
-    def draw_object(self, obj: SoundObject):
-        self.shape_ellipse(obj)
-        self.draw_text(obj)
+    def make_shape_router(self) -> dict:
+        return {
+            "Ellipse": self.shape_ellipse,
+            "Rectangle": self.shape_rectangle,
+            "Line": self.shape_line,
+        }
+
+    def draw_object(self, obj: SoundObject, painter: QPainter):
+        shape = obj.property.get("Shape", "ellipse")  # Default to ellipse
+        self.shape_router.get(shape, self.shape_ellipse)(obj, painter)
+        self.draw_text(obj, painter)
 
     @staticmethod
     def obj_pen_brush(obj) -> tuple:
@@ -388,7 +404,9 @@ class AuditoryViewWin(QMainWindow):
         brush = QBrush(color, brush_style)
         return pen, brush
 
-    def _shape_cache(self, shape, x, y, w, h) -> QPainterPath:
+    @staticmethod
+    @lru_cache()
+    def shape_cache(shape, x, y, w, h) -> QPainterPath:
         """
         This is my attempt to replicate DK's flyweight pattern for efficient
         object creation. The key is the custom lru_cache!
@@ -405,38 +423,37 @@ class AuditoryViewWin(QMainWindow):
         elif shape == "rectangle":
             path.addRect(x, y, w, h)
         else:
-            self.cache_warn(f'shape_cache has no handler for "{shape}"')
+            cache_warn(f'shape_cache has no handler for "{shape}"')
         return path
 
-    @lru_cache()
-    def shape_cache(self, shape, x, y, w, h) -> QPainterPath:
-        return self._shape_cache(shape, x, y, w, h)
 
-    def shape_ellipse(self, obj):
+    def shape_ellipse(self, obj, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
+        painter.setPen(pen)
+        painter.setBrush(brush)
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
         path = self.shape_cache("ellipse", x, y, w, h)
-        self.painter.drawPath(path)
+        painter.drawPath(path)
 
-    def shape_line(self, obj):
+    def shape_line(self, obj, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
+        painter.setPen(pen)
+        painter.setBrush(brush)
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
         path = self.shape_cache("line", x, y, w, h)
-        self.painter.drawPath(path)
+        painter.drawPath(path)
 
-    def shape_rectangle(self, obj):
+    def shape_rectangle(self, obj, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
+        painter.setPen(pen)
+        painter.setBrush(brush)
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
         path = self.shape_cache("rectangle", x, y, w, h)
-        self.painter.drawPath(path)
+        painter.drawPath(path)
 
-    def _text_cache(self, x, y, text, scale) -> QPainterPath:
+    @staticmethod
+    @lru_cache()
+    def text_cache(x, y, text, scale) -> QPainterPath:
         path = QPainterPath()
         font = QFont(QApplication.instance().font())
         font.setPointSize(round(scale * 0.8))
@@ -445,14 +462,7 @@ class AuditoryViewWin(QMainWindow):
             path.addText(x, y + row * font.pixelSize() * 15, font, txt)
         return path
 
-    @lru_cache()
-    def text_cache(self, x, y, text) -> QPainterPath:
-        """
-        This indirection gets around issue with using lru_cache with non-static class instances
-        """
-        return self._text_cache(x, y, text, self.scale)
-
-    def draw_text(self, obj: SoundObject):
+    def draw_text(self, obj: SoundObject, painter: QPainter):
         text = ""
         cfg = deepcopy(config.device_cfg)
         if obj.kind == "Sound":
@@ -483,11 +493,11 @@ class AuditoryViewWin(QMainWindow):
             return
 
         color = QColorConstants.Black if obj.property.Status != "Fading" else QColorConstants.LightGray
-        self.painter.setPen(QPen(color, 1, Qt.PenStyle.SolidLine))
-        self.painter.setBrush(QBrush(color, Qt.BrushStyle.SolidPattern))
+        painter.setPen(QPen(color, 1, Qt.PenStyle.SolidLine))
+        painter.setBrush(QBrush(color, Qt.BrushStyle.SolidPattern))
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.text_cache(x, y, text.strip())
-        self.painter.drawPath(path)
+        path = self.text_cache(x, y, text.strip(), self.scale)
+        painter.drawPath(path)
 
     """
     Attempt to avoid drawing to closed windows

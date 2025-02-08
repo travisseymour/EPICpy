@@ -19,9 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os
-import platform
 import socket
-from io import open_code
 
 from itertools import chain
 from textwrap import dedent
@@ -31,7 +29,7 @@ from qtpy.QtGui import QHideEvent, QShowEvent
 from qtpy.QtCore import (
     Signal,
     QEvent,
-)  # in PyQt5 it's pyqtSignal in PySide6 it's Signal
+)
 import qdarktheme
 from epicpy.utils import fitness, config
 from epicpy.dialogs.aboutwindow import AboutWin
@@ -346,9 +344,9 @@ class MainWin(QMainWindow):
             self.setMenuBar(self.ui.menubar)
             self.ui.menubar.setNativeMenuBar(False)
 
-        Exists = Path(config.app_cfg.last_device_file).is_file()
-        Device = config.app_cfg.last_device_file if config.app_cfg.last_device_file else "None"
-        last_session_notice = f"Last Device Loaded: {Device} [{Exists=}]"
+        exists = Path(config.app_cfg.last_device_file).is_file()
+        device = config.app_cfg.last_device_file if config.app_cfg.last_device_file else "None"
+        last_session_notice = f"Last Device Loaded: {device} [{exists=}]"
         self.write(dedent(last_session_notice))
 
     def mouseDoubleClickEvent(self, event: QMouseEvent = None):
@@ -665,7 +663,7 @@ class MainWin(QMainWindow):
             caption="Choose EPICpy Device File",
             directory=str(start_dir),
             filter="CSV Files (*.csv);;Text Files (*.txt)",
-            # selectedFilter="CSV Files (*.csv)",
+            selectedFilter="CSV Files (*.csv)",
         )
 
         if not script_file:

@@ -54,22 +54,35 @@ from epicpy.utils import config
 from epicpy.epiclib.epiclib import geometric_utilities as GU
 
 
-WARNING_ACCUMULATOR = []
+WARNING_ACCUMULATOR = set()
 
 
 def cache_warn(msg: str):
     global WARNING_ACCUMULATOR
     if msg not in WARNING_ACCUMULATOR:
-        WARNING_ACCUMULATOR.append(msg)
+        WARNING_ACCUMULATOR.add(msg)
         log.warning(msg)
 
-@dataclass
+@dataclass(slots=True)
 class VisualObject:
     kind: str
     name: str
     location: Point
     size: Size
     property: Munch
+    _cached_rect: Optional[Rect] = None  # Cache for scaled rect
+    _last_scale: float = -1  # Store last used scale
+
+    def get_scaled_rect(self, scale: float, origin: Point) -> Rect:
+        """Compute and cache the scaled rectangle if the scale has changed."""
+        if self._cached_rect is None or self._last_scale != scale:
+            x, y = (v * scale for v in self.location)
+            w, h = (v * scale for v in self.size)
+            x, y = (x - w / 2) + origin.x, (y - h / 2) + origin.y
+            self._cached_rect = Rect(int(x), int(y), int(w), int(h))
+            self._last_scale = scale  # Update stored scale
+        return self._cached_rect
+
 
 
 class VisualViewWin(QMainWindow):
@@ -78,7 +91,11 @@ class VisualViewWin(QMainWindow):
 
         # these have to match the channels created on the EpicCLI/Device side,
         #  so we have to be strict
-        assert view_type in ("Visual Physical", "Visual Sensory", "Visual Perceptual")
+        assert view_type in (
+            "Visual Physical",
+            "Visual Sensory",
+            "Visual Perceptual"
+        )
 
         self.view_type = view_type
         self.view_title = view_title
@@ -91,8 +108,6 @@ class VisualViewWin(QMainWindow):
         self.enabled = True
         self.can_draw = True
         self.previously_enabled = self.enabled
-
-        # self.setObjectName("VisualViewWindow")
 
         # min_size = QSize(440, 340)
         min_size = QSize(390, 301)
@@ -108,7 +123,9 @@ class VisualViewWin(QMainWindow):
         self.para_size = Size(10.0, 10.0)
         self.eye_pos = Point(0, 0)
 
-        self.painter = None
+        self.default_pen = QPen(QColorConstants.LightGray, 2, Qt.PenStyle.SolidLine)
+        self.no_brush = Qt.BrushStyle.NoBrush
+
         self.painting = False
 
         self.setFont(QApplication.instance().font())
@@ -125,6 +142,8 @@ class VisualViewWin(QMainWindow):
         # self.destroyed.connect(self.cleanup)
 
         self.setWindowTitle(self.view_title.title())
+
+        self.cached_grid = self.grid_cache(self.width(), self.height(), self.scale)
 
         self.initialize()
 
@@ -256,82 +275,82 @@ class VisualViewWin(QMainWindow):
             return
 
         if self.painting:
-            return
-        else:
-            self.painting = True
+            return  # Prevent re-entry
 
-        if not self.painter:
-            self.painter = QPainter(self)
+        self.painting = True
+        painter = QPainter(self)  # No need to call begin(self)
 
         try:
-            self.painter.begin(self)
-
             self.scale = config.device_cfg.spatial_scale_degree
 
             # draw image underlay
             if config.device_cfg.allow_device_images and self.bg_image:
-                self.draw_background_image()
+                self.draw_background_image(painter)
 
             # draw grid
             if config.device_cfg.calibration_grid:
-                self.draw_grid()
+                self.draw_grid(painter)
 
             # draw objects
             for obj in self.objects.values():
-                self.draw_object(obj)
+                self.draw_object(obj, painter)
 
-            # draw eye and dot
-            self.dot_and_eye()
+            self.dot_and_eye(painter)
 
             # draw info overlay
-            self.draw_info_overlay()
+            self.draw_info_overlay(painter)
         finally:
-            self.painter.end()
+            painter.end()
 
         self.painting = False
         self.can_draw = False
 
     def resizeEvent(self, event: QResizeEvent):
-        QMainWindow.resizeEvent(self, event)
+        super().resizeEvent(event)
         self.origin = Point(self.width() // 2, self.height() // 2)
+
         if self.bg_image_file:
-            self.bg_image = QPixmap(f"{self.bg_image_file}")
+            self.bg_image = QPixmap(self.bg_image_file)
             if isinstance(self.bg_image, QPixmap) and self.bg_image_scaled:
-                self.bg_image = self.bg_image.scaled(self.width(), self.height())  # , Qt.KeepAspectRatio
+                self.bg_image = self.bg_image.scaled(self.width(), self.height())
+
+        # Cache the grid when the window resizes
+        self.cached_grid = self.grid_cache(self.width(), self.height(), self.scale)
+
         self.update()
 
-    def dot_and_eye(self):
+    def dot_and_eye(self, painter: QPainter):
         dm = config.app_cfg.dark_mode
         dot_color = QColor(255, 255, 255, 255) if dm else QColor(0, 0, 0, 255)
         fov_color = QColor.fromRgbF(0.75, 0.75, 0.75, 0.5) if dm else QColor.fromRgbF(0.5, 0.5, 0.5, 0.3)
         para_color = QColorConstants.LightGray if dm else QColorConstants.Gray
 
-        self.painter.setPen(fov_color)
-        self.painter.setBrush(fov_color)
+        painter.setPen(fov_color)
+        painter.setBrush(fov_color)
         x, y, w, h = self.center_and_scale(self.eye_pos, self.fov_size)
-        self.painter.drawEllipse(x, y, w, h)
+        painter.drawEllipse(x, y, w, h)
 
-        self.painter.setPen(para_color)
-        self.painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(para_color)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
         x, y, w, h = self.center_and_scale(self.eye_pos, self.para_size)
-        self.painter.drawEllipse(x, y, w, h)
+        painter.drawEllipse(x, y, w, h)
 
         if config.device_cfg.center_dot:
-            self.painter.setPen(dot_color)
-            self.painter.setBrush(dot_color)
-            self.painter.drawEllipse(self.origin.x - 1, self.origin.y - 1, 1, 1)
+            painter.setPen(dot_color)
+            painter.setBrush(dot_color)
+            painter.drawEllipse(self.origin.x - 1, self.origin.y - 1, 1, 1)
 
-    def draw_info_overlay(self):
+    def draw_info_overlay(self, painter: QPainter):
         # setup
-        self.painter.setPen(QColorConstants.White if config.app_cfg.dark_mode else QColorConstants.Black)
-        self.painter.setFont(self.overlay_font)
+        painter.setPen(QColorConstants.White if config.app_cfg.dark_mode else QColorConstants.Black)
+        painter.setFont(self.overlay_font)
 
         # draw time info
-        self.painter.drawText(10, self.y_min + 10, f"{int(self.current_time) / 1000:0.2f}")
+        painter.drawText(10, self.y_min + 10, f"{int(self.current_time) / 1000:0.2f}")
 
         # draw view info
         s = f"{self.width() / self.scale:0.2f} X {self.height() / self.scale:0.2f} " f"DVA, (0 , 0), {self.scale} p/DVA"
-        self.painter.drawText(5, self.height() - 20, s)
+        painter.drawText(5, self.height() - 20, s)
 
     @staticmethod
     @lru_cache()
@@ -341,27 +360,27 @@ class VisualViewWin(QMainWindow):
         """
         cx, cy = w // 2, h // 2
         path = QPainterPath()
-        Ys = chain(range(cy - scale // 2, 0, -scale), range(cy + scale // 2, h, scale))
-        Xs = chain(range(cx - scale // 2, 0, -scale), range(cx + scale // 2, w, scale))
-        for y in Ys:
+        y_s = chain(range(cy - scale // 2, 0, -scale), range(cy + scale // 2, h, scale))
+        x_s = chain(range(cx - scale // 2, 0, -scale), range(cx + scale // 2, w, scale))
+        for y in y_s:
             path.moveTo(0, y)
             path.lineTo(w, y)
-        for x in Xs:
+        for x in x_s:
             path.moveTo(x, 0)
             path.lineTo(x, h)
         return path
 
-    def draw_grid(self):
-        self.painter.setPen(QColor(0, 213, 255, 100))
-        self.painter.setBrush(QBrush(QColorConstants.Cyan))
-        self.painter.drawPath(self.grid_cache(self.width(), self.height(), self.scale))
+    def draw_grid(self, painter: QPainter):
+        painter.setPen(QColor(0, 213, 255, 100))
+        painter.setBrush(QBrush(QColorConstants.Cyan))
+        painter.drawPath(self.cached_grid)
 
-    def draw_background_image(self):
+    def draw_background_image(self, painter: QPainter):
         if self.bg_image is not None:
             w, h = self.width(), self.height()
             pw, ph = self.bg_image.width(), self.bg_image.height()
             try:
-                self.painter.drawPixmap(w // 2 - pw // 2, h // 2 - ph // 2, self.bg_image)
+                painter.drawPixmap(w // 2 - pw // 2, h // 2 - ph // 2, self.bg_image)
             except Exception as e:
                 log.error(f"Unable to draw background: {str(e)}")
 
@@ -390,15 +409,16 @@ class VisualViewWin(QMainWindow):
 
     # note: status can be Visible, Disappearing, Reappearing, Fading, Audible
 
-    def draw_object(self, obj: VisualObject):
+    def draw_object(self, obj: VisualObject, painter: QPainter):
+        rect = obj.get_scaled_rect(self.scale, self.origin)  # Precompute rect
+
         if not obj.property:
-            # just onset, no properties yet
-            self.shape_nil(obj)
+            self.shape_nil(obj, rect, painter)  # Pass rect to shape_nil
         else:
             if "Shape" in obj.property:
-                self.draw_shape(obj)
+                self.draw_shape(obj, rect, painter)
             if "Text" in obj.property:
-                self.draw_text(obj)
+                self.draw_text(obj, rect, painter)
 
     @staticmethod
     def obj_pen_brush(obj) -> tuple:
@@ -432,7 +452,7 @@ class VisualViewWin(QMainWindow):
             "Keyboard_Button": self.shape_keyboard_button,
             "Button": self.shape_button,
             "Diamond": self.shape_diamond,
-            "Cross_Hairs": self.shape_cross_hairs,
+            "Cross_Hairs": self.shape_cross_hairs,  # Ensure correct function signature
             "Cross": self.shape_cross,
             "Top_Semicircle": self.shape_arc,
             "Bar": self.shape_bar,
@@ -466,12 +486,12 @@ class VisualViewWin(QMainWindow):
             "House": self.shape_house,
         }
 
-    def draw_shape(self, obj: VisualObject):
+    def draw_shape(self, obj: VisualObject, rect: Rect, painter: QPainter):
         try:
-            self.shape_router[obj.property.Shape](obj=obj)
+            self.shape_router[obj.property.Shape](obj=obj, rect=rect, painter=painter)
         except KeyError:
             cache_warn(f"VisualObject received unhandled Shape value {obj.property.Shape}")
-            self.shape_nil(obj)
+            self.shape_nil(obj, rect, painter)
 
     # ------------- Shape Drawing Cache ---------------------------------
 
@@ -529,12 +549,12 @@ class VisualViewWin(QMainWindow):
             e = QPointF(d.x(), box.topRight().y() + qtr_h)
             f = QPointF(c.x(), e.y())
             g = QPointF(f.x(), box.topRight().y())
-            H = QPointF(a.x(), g.y())
+            _h = QPointF(a.x(), g.y())
             i = QPointF(a.x(), f.y())
             j = QPointF(box.topLeft().x(), i.y())
             k = QPointF(j.x(), c.y())
             l = QPointF(a.x(), c.y())
-            path.addPolygon(QPolygonF((a, b, c, d, e, f, g, H, i, j, k, l, a)))
+            path.addPolygon(QPolygonF((a, b, c, d, e, f, g, _h, i, j, k, l, a)))
         elif shape == "arc":
             box = QRect(x, y, w, h)
             path = QPainterPath()
@@ -691,249 +711,234 @@ class VisualViewWin(QMainWindow):
         else:
             return
 
-    def shape_nil(self, obj: VisualObject):
-        self.painter.setPen(QPen(QColorConstants.LightGray, 2, Qt.PenStyle.SolidLine))
-        self.painter.setBrush(Qt.BrushStyle.NoBrush)
+    def shape_nil(self, obj: VisualObject, rect: Rect, painter: QPainter):
+        painter.setPen(self.default_pen)
+        painter.setBrush(self.no_brush)
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        self.painter.drawEllipse(x, y, w, h)
+        painter.drawEllipse(x, y, w, h)
 
-    def shape_ellipse(self, obj):
+    def shape_ellipse(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("ellipse", x, y, w, h)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("ellipse", rect.x, rect.y, rect.w, rect.h)
         if obj.property.Leader:
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-        self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
+        painter.drawPath(path)
 
-    def shape_line(self, obj):
+    def shape_line(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("line", x, y, w, h)
-        self.painter.drawPath(path)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("line", rect.x, rect.y, rect.w, rect.h)
+        painter.drawPath(path)
 
-    def shape_rectangle(self, obj):
+    def shape_rectangle(self, obj, rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("rectangle", x, y, w, h)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("rectangle", rect.x, rect.y, rect.w, rect.h)
+
         if obj.property.Leader:
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-        self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
 
-    def shape_triangle(self, obj):
+        painter.drawPath(path)
+
+    def shape_triangle(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("triangle", x, y, w, h)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("triangle", rect.x, rect.y, rect.w, rect.h)
         if obj.property.Leader:
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-        self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
+        painter.drawPath(path)
 
-    def shape_diamond(self, obj):
+    def shape_diamond(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("diamond", x, y, w, h)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("diamond", rect.x, rect.y, rect.w, rect.h)
         if obj.property.Leader:
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-        self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
+        painter.drawPath(path)
 
-    def shape_cross(self, obj):
+    def shape_cross(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("cross", x, y, w, h)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("cross", rect.x, rect.y, rect.w, rect.h)  # Use rect.w and rect.h
         if obj.property.Leader:
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-        self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)  # Use rect.w and rect.h
+        painter.drawPath(path)
 
-    def shape_arc(self, obj):
+    def shape_arc(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("arc", x, y, w, h)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("arc", rect.x, rect.y, rect.w, rect.h)
         if obj.property.Leader:
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-        self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
+        painter.drawPath(path)
 
-    def shape_bar(self, obj):
+    def shape_bar(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("bar", x, y, w, h)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("bar", rect.x, rect.y, rect.w, rect.h)
         if obj.property.Leader:
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-        self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
+        painter.drawPath(path)
 
-    def shape_cross_hairs(self, obj):
+    def shape_cross_hairs(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("cross_hairs", x, y, w, h)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("cross_hairs", rect.x, rect.y, rect.w, rect.h)
         if obj.property.Leader:
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-        self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
+        painter.drawPath(path)
 
-    def shape_right_arrow(self, obj, rotation: int = 0):
+    def shape_right_arrow(self, obj: VisualObject, rect: Rect, painter: QPainter, rotation: int = 0):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("right_arrow", x, y, w, h)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("right_arrow", rect.x, rect.y, rect.w, rect.h)
+
         if rotation:
-            shape_center = QRect(x, y, w, h).center()
-            self.painter.translate(shape_center.x(), shape_center.y())
-            self.painter.rotate(rotation)
-            self.painter.translate(shape_center.x() * -1, shape_center.y() * -1)
+            shape_center = QRect(rect.x, rect.y, rect.w, rect.h).center()
+            painter.translate(shape_center.x(), shape_center.y())
+            painter.rotate(rotation)
+            painter.translate(-shape_center.x(), -shape_center.y())
 
-        self.painter.drawPath(path)
-        self.painter.resetTransform()
+        painter.drawPath(path)
+        painter.resetTransform()
 
         if obj.property.Leader:
             path = QPainterPath()
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-            self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
+            painter.drawPath(path)
 
-    def shape_button(self, obj):
+    def shape_button(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
         pen = QColorConstants.Black
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("button", x, y, w, h)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("button", rect.x, rect.y, rect.w, rect.h)
         if obj.property.Leader:
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-        self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
+        painter.drawPath(path)
 
-    def shape_keyboard_button(self, obj):
+    def shape_keyboard_button(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
         pen = QColorConstants.Black
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("keyboard_button", x, y, w, h)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("keyboard_button", rect.x, rect.y, rect.w, rect.h)
         if obj.property.Leader:
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-        self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
+        painter.drawPath(path)
 
-    def shape_t_object(self, obj):
+    def shape_t_object(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("t_object", x, y, w, h)
-        # rotation = int(obj.property.Shape[1:])
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("t_object", rect.x, rect.y, rect.w, rect.h)
         rotation = 45  # TEMP FIX
         if rotation:
-            shape_center = QRect(x, y, w, h).center()
-            self.painter.translate(shape_center.x(), shape_center.y())
-            self.painter.rotate(rotation)
-            self.painter.translate(shape_center.x() * -1, shape_center.y() * -1)
+            shape_center = QRect(rect.x, rect.y, rect.w, rect.h).center()
+            painter.translate(shape_center.x(), shape_center.y())
+            painter.rotate(rotation)
+            painter.translate(-shape_center.x(), -shape_center.y())
 
-        self.painter.drawPath(path)
-        self.painter.resetTransform()
+        painter.drawPath(path)
+        painter.resetTransform()
 
         if obj.property.Leader:
             path = QPainterPath()
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-            self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
+            painter.drawPath(path)
 
-    def shape_l_object(self, obj):
+    def shape_l_object(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("l_object", x, y, w, h)
-        # rotation = int(obj.property.Shape[1:])
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("l_object", rect.x, rect.y, rect.w, rect.h)
         rotation = 45  # TEMP FIX
         if rotation:
-            shape_center = QRect(x, y, w, h).center()
-            self.painter.translate(shape_center.x(), shape_center.y())
-            self.painter.rotate(rotation)
-            self.painter.translate(shape_center.x() * -1, shape_center.y() * -1)
+            shape_center = QRect(rect.x, rect.y, rect.w, rect.h).center()
+            painter.translate(shape_center.x(), shape_center.y())
+            painter.rotate(rotation)
+            painter.translate(-shape_center.x(), -shape_center.y())
 
-        self.painter.drawPath(path)
-        self.painter.resetTransform()
+        painter.drawPath(path)
+        painter.resetTransform()
 
         if obj.property.Leader:
             path = QPainterPath()
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-            self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
+            painter.drawPath(path)
 
-    def shape_hill(self, obj):
+    def shape_hill(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
         pen = QColorConstants.Black
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("hill", x, y, w, h)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("hill", rect.x, rect.y, rect.w, rect.h)
         if obj.property.Leader:
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-        self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
+        painter.drawPath(path)
 
-    def shape_inv_hill(self, obj):
+    def shape_inv_hill(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
         pen = QColorConstants.Black
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("inv_hill", x, y, w, h)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("inv_hill", rect.x, rect.y, rect.w, rect.h)
         if obj.property.Leader:
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-        self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
+        painter.drawPath(path)
 
-    def shape_clover(self, obj):
+    def shape_clover(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("clover", x, y, w, h)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("clover", rect.x, rect.y, rect.w, rect.h)
+
         rotation = 180 if "Inv" in obj.property.Shape else 0
         if rotation:
-            shape_center = QRect(x, y, w, h).center()
-            self.painter.translate(shape_center.x(), shape_center.y())
-            self.painter.rotate(rotation)
-            self.painter.translate(shape_center.x() * -1, shape_center.y() * -1)
+            shape_center = QRect(rect.x, rect.y, rect.w, rect.h).center()
+            painter.translate(shape_center.x(), shape_center.y())
+            painter.rotate(rotation)
+            painter.translate(-shape_center.x(), -shape_center.y())
 
-        self.painter.drawPath(path)
-        self.painter.resetTransform()
+        painter.drawPath(path)
+        painter.resetTransform()
 
         if obj.property.Leader:
             path = QPainterPath()
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-            self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
+            painter.drawPath(path)
 
-    def shape_house(self, obj):
+    def shape_house(self, obj: VisualObject, rect: Rect, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)
-        self.painter.setPen(pen)
-        self.painter.setBrush(brush)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.shape_cache("house", x, y, w, h)
+        painter.setPen(pen)
+        painter.setBrush(brush)
+        path = self.shape_cache("house", rect.x, rect.y, rect.w, rect.h)
+
         rotation = 180 if "Inv" in obj.property.Shape else 0
         if rotation:
-            shape_center = QRect(x, y, w, h).center()
-            self.painter.translate(shape_center.x(), shape_center.y())
-            self.painter.rotate(rotation)
-            self.painter.translate(shape_center.x() * -1, shape_center.y() * -1)
+            shape_center = QRect(rect.x, rect.y, rect.w, rect.h).center()
+            painter.translate(shape_center.x(), shape_center.y())
+            painter.rotate(rotation)
+            painter.translate(-shape_center.x(), -shape_center.y())
 
-        self.painter.drawPath(path)
-        self.painter.resetTransform()
+        painter.drawPath(path)
+        painter.resetTransform()
 
         if obj.property.Leader:
             path = QPainterPath()
-            self.add_leader(x, y, w, h, obj.property.Leader, path)
-            self.painter.drawPath(path)
+            self.add_leader(rect.x, rect.y, rect.w, rect.h, obj.property.Leader, path)
+            painter.drawPath(path)
 
     @staticmethod
     @lru_cache()
@@ -951,17 +956,16 @@ class VisualViewWin(QMainWindow):
         path.addText(x, y + font_height / 2, font, str(text))
         return path
 
-    def draw_text(self, obj: VisualObject):
-        # TODO: Need diff approach for text vs an object with some text.
-        #        The former should be sized to the object size. The latter should
-        #        probably be a standard size?
-        self.painter.setPen(
+    def draw_text(self, obj: VisualObject, rect: Rect, painter: QPainter):
+        """Draws text at the precomputed rectangle position."""
+        painter.setPen(
             QColorConstants.Black if obj.property.Status != "Disappearing" else QColorConstants.LightGray
         )
-        self.painter.setBrush(Qt.BrushStyle.SolidPattern)
-        x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.text_cache(x, y, obj.property.Text, self.scale)
-        self.painter.drawPath(path)
+        painter.setBrush(Qt.BrushStyle.SolidPattern)
+
+        # Use precomputed rect.x and rect.y for positioning the text
+        path = self.text_cache(rect.x, rect.y, obj.property.Text, self.scale)
+        painter.drawPath(path)
 
     """
     Attempt to avoid drawing to closed windows
