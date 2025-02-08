@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from collections import UserDict
+
 from itertools import chain
 from pathlib import Path
 from typing import Optional
@@ -292,6 +292,7 @@ class VisualViewWin(QMainWindow):
                 self.draw_object(obj, painter)
 
             self.dot_and_eye(painter)
+            # print('--------')
 
             # draw info overlay
             self.draw_info_overlay(painter)
@@ -316,6 +317,7 @@ class VisualViewWin(QMainWindow):
         self.update()
 
     def dot_and_eye(self, painter: QPainter):
+        # print(f"dot_and_eye called with eye_pos={self.eye_pos}")  # Debug output
         dm = config.app_cfg.dark_mode
         dot_color = QColor(255, 255, 255, 255) if dm else QColor(0, 0, 0, 255)
         fov_color = QColor.fromRgbF(0.75, 0.75, 0.75, 0.5) if dm else QColor.fromRgbF(0.5, 0.5, 0.5, 0.3)
