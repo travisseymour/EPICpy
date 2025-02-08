@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
+from collections import UserDict
 from itertools import chain
 from pathlib import Path
 from typing import Optional
@@ -136,7 +136,7 @@ class VisualViewWin(QMainWindow):
         self.debug_info = list()
 
         # objects
-        self.objects = {}
+        self.objects: dict = {}
         self.shape_router = self.make_shape_router()
 
         # self.destroyed.connect(self.cleanup)
@@ -252,15 +252,11 @@ class VisualViewWin(QMainWindow):
         #  all with string values!
         if object_name in self.objects:
             if prop_name == "Shape":
-                filled = True
-                shape_name = prop_value
-                if "Filled_" in shape_name:
-                    shape_name = shape_name.replace("Filled_", "")
-                elif "Empty_" in shape_name:
-                    filled = False
-                    shape_name = shape_name.replace("Empty_", "")
+                shape_name = prop_value.removeprefix("Filled_").removeprefix("Empty_")
+                filled = not prop_value.startswith("Empty_")
                 self.objects[object_name].property[prop_name] = shape_name
                 self.objects[object_name].property["Filled"] = filled
+
             else:
                 self.objects[object_name].property[prop_name] = prop_value
 

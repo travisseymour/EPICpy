@@ -69,7 +69,6 @@ class SoundObject:
     property: Munch
 
 
-
 class AuditoryViewWin(QMainWindow):
     def __init__(self, view_type: str, view_title: str):
         super(AuditoryViewWin, self).__init__()
@@ -94,7 +93,7 @@ class AuditoryViewWin(QMainWindow):
         self.can_draw = True
         self.previously_enabled = self.enabled
 
-        # min_size = QSize(440, 340)
+        # Precompute sizes
         min_size = QSize(390, 301)
         self.resize(min_size)
         self.setMinimumSize(min_size)
@@ -109,22 +108,23 @@ class AuditoryViewWin(QMainWindow):
         self.eye_pos = Point(0, 0)
         self.painting = False
 
-        self.setFont(QApplication.instance().font())
+        # Cache font early
+        base_font = QApplication.instance().font()
+        self.setFont(base_font)
+        self.overlay_font = QFont(base_font)
+        self.overlay_font.setPointSize(self.overlay_font.pointSize() - 2)
 
-        self.overlay_font = QFont(self.font())
-        self.overlay_font.setPointSize(self.overlay_font.pointSize()-2)
+        self.debug_info = []
+        self.objects: dict = {}
 
-        self.debug_info = list()
-
-        # objects
-        self.objects = {}
         self.shape_router = self.make_shape_router()
-
         self.setWindowTitle(self.view_title.title())
 
-        self.cached_grid = self.grid_cache(self.width(), self.height(), self.scale)
+        self.cached_grid_size = (self.width(), self.height(), self.scale)
+        self.cached_grid = self.grid_cache(*self.cached_grid_size)
 
         self.initialize()
+
 
     def reset_font(self):
         self.setFont(QApplication.instance().font())
