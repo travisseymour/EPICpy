@@ -350,3 +350,16 @@ def get_device_config(device: Optional[Path]):
         )
         current = device_cfg.current
         device_cfg = DeviceConfig(current=current)
+
+
+def get_start_dir() -> Path:
+    if hasattr(app_cfg, "last_script_file") and Path(app_cfg.last_script_file).is_file():
+        start_dir = Path(app_cfg.last_script_file)
+    elif Path(device_cfg.device_file).is_file():
+        start_dir = Path(device_cfg.device_file).parent
+    elif Path(app_cfg.last_device_file).is_file():
+        start_dir = Path(app_cfg.last_device_file).parent
+    else:
+        start_dir = Path.home()
+
+    return start_dir

@@ -38,6 +38,7 @@ from epicpy.epic.runinfo import RunInfo
 from epicpy.uifiles.mainui import Ui_MainWindow
 from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
 from epicpy.utils.apputils import loading_cursor, clear_font, run_without_waiting, has_epiccoder
+from epicpy.utils.config import get_start_dir
 from epicpy.utils.defaultfont import get_default_font
 from epicpy.widgets.largetextview import LargeTextView
 from epicpy.windows.statswindow import StatsWin
@@ -643,14 +644,7 @@ class MainWin(QMainWindow):
             #         config.device_cfg.auditory_encoder = ""
 
     def simulation_from_script(self):
-        if hasattr(config.app_cfg, "last_script_file") and Path(config.app_cfg.last_script_file).is_file():
-            start_dir = Path(config.app_cfg.last_script_file)
-        elif Path(config.device_cfg.device_file).is_file():
-            start_dir = Path(config.device_cfg.device_file).parent
-        elif Path(config.app_cfg.last_device_file).is_file():
-            start_dir = Path(config.app_cfg.last_device_file).parent
-        else:
-            start_dir = str(Path.home())
+        start_dir = get_start_dir()
 
         file_dialog = QFileDialog()
         if platform.system() == "Linux":
@@ -1572,6 +1566,12 @@ class MainWin(QMainWindow):
             ext = default_exts[str(name).title()]
         except (ValueError, NameError, IndexError):
             ext = ".txt"
+
+        # TODO: integrate this better
+        # For now, let StatsWindow handle it's own export
+        if name.title() == "Stats":
+            self.stats_win.export_contents(self)
+            return
 
         out_file = self.choose_log_file(name, ext)
         if not out_file:
