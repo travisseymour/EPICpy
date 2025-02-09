@@ -1,6 +1,9 @@
 
 # EPICpy Changelog
 
+## VERSION: 2025.2.6.4
+
+1. **FIXED**: Fixed several issues with text output skipping lines.
 
 ## VERSION: 2025.2.6.3
 
