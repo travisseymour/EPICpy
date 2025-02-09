@@ -3,6 +3,12 @@
 
 ---
 
+## VERSION: 2025.2.8.5
+
+1. **CHANGED**: In attempt to restore console output on Windows, I'm altering setup.py to start EPICpy as a console app on Windows only. This change will only take effect on install or re-install.
+
+---
+
 ## VERSION: 2025.2.8.4
 
 1. **CHANGED**: Changed stats window to be more content aware and provide context-specific actions text and figures via right-click menu.

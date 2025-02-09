@@ -93,6 +93,11 @@ else:
         f"ERROR: No epiclib library for OS={platform.system()}. Unable to continue EPICpy setup."
     )
 
+# Choose entry point type based on platform
+if platform.system() == "Windows":
+    entry_point_key = "console_scripts"
+else:
+    entry_point_key = "gui_scripts"
 
 def get_version():
     main_file = os.path.join(CURDIR, "epicpy", "constants", "version.py")
@@ -117,9 +122,15 @@ setup(
     package_data={"": [epiclib_file]},
     keywords=[],
     scripts=[],
+
+    # entry_points={
+    #     "gui_scripts": ["EPICpy=epicpy.main:main"],
+    #},
+
     entry_points={
-        "gui_scripts": ["EPICpy=epicpy.main:main"],
+        entry_point_key: ["EPICpy=epicpy.main:main", "epicpy=epicpy.main:main"],
     },
+
     zip_safe=False,
     install_requires=DEPENDENCIES,
     extras_require={
