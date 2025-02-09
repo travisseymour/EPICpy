@@ -45,7 +45,6 @@ from qtpy.QtWidgets import QMainWindow
 from loguru import logger as log
 
 from epicpy.utils.apputils import Point, Size, Rect, conditional_dataclass
-from dataclasses import dataclass
 from epicpy.utils import config
 
 from epicpy.epiclib.epiclib import Symbol, geometric_utilities as GU
@@ -61,8 +60,6 @@ def cache_warn(msg: str):
         WARNING_ACCUMULATOR.add(msg)
         log.warning(msg)
 
-
-#@dataclass(slots=True)
 
 @conditional_dataclass
 class SoundObject:
@@ -117,6 +114,9 @@ class AuditoryViewWin(QMainWindow):
         self.setFont(base_font)
         self.overlay_font = QFont(base_font)
         self.overlay_font.setPointSize(self.overlay_font.pointSize() - 2)
+        self.bold_font = QFont(base_font)
+        self.bold_font.setBold(True)
+
 
         self.debug_info = []
         self.objects: dict = {}
@@ -493,7 +493,10 @@ class AuditoryViewWin(QMainWindow):
             return
 
         text = text.strip()
-        # Choose color based on status
+        if not text:
+            return
+
+        # Choose color based on status.
         color = (QColorConstants.Black if obj.property.Status != "Fading"
                  else QColorConstants.LightGray)
         painter.setPen(QPen(color, 1, Qt.PenStyle.SolidLine))
@@ -501,23 +504,42 @@ class AuditoryViewWin(QMainWindow):
         # Compute the drawing position.
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
 
-        # Create and prepare a QStaticText.
-        static_text = QStaticText(text)
-        static_text.setTextFormat(Qt.TextFormat.PlainText)
-        font = QFont(self.font())
+        # Set up the font.
+        font = QFont(self.bold_font)
         # Use the same scaling as before.
         font.setPointSize(round(self.scale * 0.8))
         painter.setFont(font)
-        # Pass an identity transform along with the font.
-        static_text.prepare(QTransform(), font)
 
-        # Optionally, center the text around the (x, y) coordinate.
-        text_size = static_text.size()  # returns QSizeF
-        draw_x = x - text_size.width() / 2
-        draw_y = y - text_size.height() / 2
+        # Split the text into individual lines.
+        lines = text.splitlines()
 
-        painter.drawStaticText(draw_x, draw_y, static_text)
+        # Create a list for the QStaticText objects and record each line's height.
+        static_texts = []
+        line_heights = []
+        max_width = 0
+        for line in lines:
+            st = QStaticText(line)
+            st.setTextFormat(Qt.TextFormat.PlainText)
+            # Prepare the static text with an identity transform and the custom font.
+            st.prepare(QTransform(), font)
+            static_texts.append(st)
+            size = st.size()  # QSizeF
+            line_heights.append(size.height())
+            if size.width() > max_width:
+                max_width = size.width()
 
+        # Compute total height of the text block.
+        total_height = sum(line_heights)
+
+        # Compute the starting drawing position such that the text block is centered.
+        draw_x = x - max_width / 2
+        draw_y = y - total_height / 2
+
+        # Draw each line, incrementing the y position.
+        current_y = draw_y
+        for st in static_texts:
+            painter.drawStaticText(draw_x, current_y, st)
+            current_y += st.size().height()
 
     """
     Attempt to avoid drawing to closed windows

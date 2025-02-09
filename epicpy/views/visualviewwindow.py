@@ -953,19 +953,23 @@ class VisualViewWin(QMainWindow):
 
     def draw_text(self, obj: VisualObject, rect: Rect, painter: QPainter):
         text = str(obj.property.Text)
-        static_text = QStaticText(text)
-        static_text.setTextFormat(Qt.TextFormat.PlainText)
+        lines = text.splitlines()
 
-        # Create a font and adjust its size based on the current scale.
+        # Set up your font as needed.
         font = QFont(self.font())
-        font.setPointSize(round(self.scale * 0.8))  # Adjust scaling as needed.
+        font.setPointSize(round(self.scale * 0.8))
         painter.setFont(font)
 
-        # Prepare the static text using an identity transform and the custom font.
-        static_text.prepare(QTransform(), font)
+        # Starting position
+        x = rect.x
+        y = rect.y
 
-        # Draw the text at the specified coordinates.
-        painter.drawStaticText(rect.x, rect.y, static_text)
+        for line in lines:
+            static_line = QStaticText(line)
+            static_line.setTextFormat(Qt.TextFormat.PlainText)
+            static_line.prepare(QTransform(), font)
+            painter.drawStaticText(x, y, static_line)
+            y += static_line.size().height()  # Increment y for the next line
 
     """
     Attempt to avoid drawing to closed windows
