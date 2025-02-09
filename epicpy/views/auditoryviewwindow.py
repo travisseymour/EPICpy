@@ -43,7 +43,7 @@ from qtpy.QtCore import Qt, QRect, QSize
 from qtpy.QtWidgets import QMainWindow
 from loguru import logger as log
 
-from epicpy.utils.apputils import Point, Size, Rect
+from epicpy.utils.apputils import Point, Size, Rect, conditional_dataclass
 from dataclasses import dataclass
 from epicpy.utils import config
 
@@ -61,7 +61,9 @@ def cache_warn(msg: str):
         log.warning(msg)
 
 
-@dataclass(slots=True)
+#@dataclass(slots=True)
+
+@conditional_dataclass
 class SoundObject:
     kind: str
     name: str

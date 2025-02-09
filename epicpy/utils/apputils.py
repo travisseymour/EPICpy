@@ -46,7 +46,7 @@ import warnings
 from functools import wraps
 
 OS = platform.system()
-
+from dataclasses import dataclass as base_dataclass
 
 class Point:
     """
@@ -439,6 +439,14 @@ def clear_font(widget: QWidget):
     for child in widget.findChildren(QWidget):
         child.setFont(QApplication.instance().font())
 
+# Define a conditional dataclass decorator.
+if sys.version_info >= (3, 10) and platform.system() != "Windows":
+    def conditional_dataclass(cls):
+        return base_dataclass(cls, slots=True)
+else:
+    # Either Python version is below 3.10 or we are on Windows.
+    # In that case, just use the normal dataclass decorator.
+    conditional_dataclass = base_dataclass
 
 if __name__ == "__main__":
     print(f"{get_resource('fonts', 'Fira Mono', 'ATTRIBUTION.txt')=}")

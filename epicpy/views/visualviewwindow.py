@@ -43,7 +43,7 @@ from qtpy.QtCore import Qt, QPoint, QRect, QRectF, QSize, QPointF
 from qtpy.QtWidgets import QMainWindow, QGraphicsTextItem
 from loguru import logger as log
 
-from epicpy.utils.apputils import Point, Size, Rect
+from epicpy.utils.apputils import Point, Size, Rect, conditional_dataclass
 from dataclasses import dataclass
 from functools import partial, lru_cache
 
@@ -64,7 +64,9 @@ def cache_warn(msg: str):
         log.warning(msg)
 
 
-@dataclass(slots=True)
+#@dataclass(slots=True)
+
+@conditional_dataclass
 class VisualObject:
     kind: str
     name: str
