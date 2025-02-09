@@ -1938,7 +1938,9 @@ class MainWin(QMainWindow):
                 err_msg = f"ERROR: Opening device folder when OS=='{OS}' is not yet implemented!"
                 self.write(emoji_box(err_msg, line="thick"))
             if open_cmd:
-                subprocess.run([open_cmd, str(Path(device_file).resolve().parent)])
+                cmd = [open_cmd, str(Path(device_file).resolve().parent)]
+                self.write(f'{" ".join(cmd)}')
+                subprocess.run(cmd)
 
     def launchEditor(self, which_file: str = "NormalOut"):
         if which_file == "NormalOut":
