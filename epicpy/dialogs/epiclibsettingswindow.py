@@ -53,7 +53,6 @@ class EPICLibSettingsWin(QDialog):
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
 
-
         if "epiclibsettingswindow" in config.app_cfg.dialog_size:
             w, h = config.app_cfg.dialog_size["epiclibsettingswindow"]
             w = max(w, self.minimumWidth())

@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+
 import time
 import warnings
 from typing import Optional, List
@@ -54,10 +55,12 @@ from epicpy.epiclib.epiclib import set_visual_encoder_ptr, set_auditory_encoder_
 
 try:
     from epicpy.epiclib.epiclib import describe_parameters_u
+
     desc_param_loaded = True
 except:
     desc_param_loaded = False
     log.warning(f'Failed to load "describe_parameters_u" from epiclib. Will not be able to dump parameters.')
+
 
 class Simulation:
     def __init__(self, parent):
@@ -854,7 +857,7 @@ class Simulation:
             # TODO: Not clear on whether this is needed or even a good idea.
             self.device.stop_simulation()
         except Exception as e:
-            log.debug(f'While calling `self.device.stop_simulation()` got this error: {e}')
+            log.debug(f"While calling `self.device.stop_simulation()` got this error: {e}")
         self.model.stop()
         self.instance.stop()
 

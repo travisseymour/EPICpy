@@ -75,8 +75,8 @@ try:
             destination = source_path_resolved.parent / "epiclib.so"
 
             # Safely copy the resource to the destination
-            print(f'Copying {source_path_resolved}')
-            print(f'     to {destination}')
+            print(f"Copying {source_path_resolved}")
+            print(f"     to {destination}")
             copyfile(source_path_resolved, destination)
 
 except Exception as e:
@@ -184,21 +184,22 @@ def start_ui(app: QApplication):
 
     # prepare the default font
 
-    if not hasattr(config.app_cfg, "font_family") or \
-            not isinstance(config.app_cfg.font_family, str) or \
-            config.app_cfg.font_family not in ["sans-serif", "serif", "monospace"]:
+    if (
+        not hasattr(config.app_cfg, "font_family")
+        or not isinstance(config.app_cfg.font_family, str)
+        or config.app_cfg.font_family not in ["sans-serif", "serif", "monospace"]
+    ):
         config.app_cfg.font_family = "monospace"  # Apply fallback
 
-    if not hasattr(config.app_cfg, "font_size") or \
-            not isinstance(config.app_cfg.font_size, (str, int)) or \
-            not check_int(config.app_cfg.font_size) or \
-            not 12 < int(config.app_cfg.font_size) < 72:
+    if (
+        not hasattr(config.app_cfg, "font_size")
+        or not isinstance(config.app_cfg.font_size, (str, int))
+        or not check_int(config.app_cfg.font_size)
+        or not 12 < int(config.app_cfg.font_size) < 72
+    ):
         config.app_cfg.font_size = 14  # Apply fallback
 
-    default_font = get_default_font(
-        family=config.app_cfg.font_family,
-        size=config.app_cfg.font_size
-    )
+    default_font = get_default_font(family=config.app_cfg.font_family, size=config.app_cfg.font_size)
 
     # Set the font for the application
     QApplication.instance().setFont(default_font)
@@ -226,7 +227,7 @@ def main():
     import sys
     from pathlib import Path
 
-    print('Loading EPICpy, please wait...')
+    print("Loading EPICpy, please wait...")
 
     application = QApplication([])
 

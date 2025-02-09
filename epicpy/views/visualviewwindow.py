@@ -63,6 +63,7 @@ def cache_warn(msg: str):
         WARNING_ACCUMULATOR.add(msg)
         log.warning(msg)
 
+
 @dataclass(slots=True)
 class VisualObject:
     kind: str
@@ -84,18 +85,13 @@ class VisualObject:
         return self._cached_rect
 
 
-
 class VisualViewWin(QMainWindow):
     def __init__(self, view_type: str, view_title: str):
         super(VisualViewWin, self).__init__()
 
         # these have to match the channels created on the EpicCLI/Device side,
         #  so we have to be strict
-        assert view_type in (
-            "Visual Physical",
-            "Visual Sensory",
-            "Visual Perceptual"
-        )
+        assert view_type in ("Visual Physical", "Visual Sensory", "Visual Perceptual")
 
         self.view_type = view_type
         self.view_title = view_title
@@ -131,7 +127,7 @@ class VisualViewWin(QMainWindow):
         self.setFont(QApplication.instance().font())
 
         self.overlay_font = QFont(self.font())
-        self.overlay_font.setPointSize(self.overlay_font.pointSize()-2)
+        self.overlay_font.setPointSize(self.overlay_font.pointSize() - 2)
 
         self.debug_info = list()
 
@@ -151,7 +147,7 @@ class VisualViewWin(QMainWindow):
         self.setFont(QApplication.instance().font())
 
         self.overlay_font = QFont(self.font())
-        self.overlay_font.setPointSize(self.overlay_font.pointSize()-2)
+        self.overlay_font.setPointSize(self.overlay_font.pointSize() - 2)
 
     def closeEvent(self, event: QCloseEvent):
         if not self.can_close:
@@ -174,14 +170,12 @@ class VisualViewWin(QMainWindow):
     def initialize(self):
         self.clear()
 
-    def update_info(self):
-        ...
+    def update_info(self): ...
 
     def set_needs_display(self):
         self.update()
 
-    def draw_content(self):
-        ...
+    def draw_content(self): ...
 
     def set_origin(self, x: float, y: float):
         self.origin = Point(x, y)
@@ -956,9 +950,7 @@ class VisualViewWin(QMainWindow):
 
     def draw_text(self, obj: VisualObject, rect: Rect, painter: QPainter):
         """Draws text at the precomputed rectangle position."""
-        painter.setPen(
-            QColorConstants.Black if obj.property.Status != "Disappearing" else QColorConstants.LightGray
-        )
+        painter.setPen(QColorConstants.Black if obj.property.Status != "Disappearing" else QColorConstants.LightGray)
         painter.setBrush(Qt.BrushStyle.SolidPattern)
 
         # Use precomputed rect.x and rect.y for positioning the text

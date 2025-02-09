@@ -74,7 +74,9 @@ class Ui_DialogFontSize(object):
         self.pushButtonCancel.setFont(font)
         self.pushButtonCancel.setObjectName("pushButtonCancel")
         self.horizontalLayout_4.addWidget(self.pushButtonCancel)
-        spacerItem = QtWidgets.QSpacerItem(308, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(
+            308, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum
+        )
         self.horizontalLayout_4.addItem(spacerItem)
         self.pushButtonOK = QtWidgets.QPushButton(parent=self.layoutWidget)
         self.pushButtonOK.setMinimumSize(QtCore.QSize(100, 50))
@@ -93,17 +95,32 @@ class Ui_DialogFontSize(object):
     def retranslateUi(self, DialogFontSize):
         _translate = QtCore.QCoreApplication.translate
         DialogFontSize.setWindowTitle(_translate("DialogFontSize", "Font Size Dialog"))
-        self.label_3.setText(_translate("DialogFontSize", "<html><head/><body><p><span style=\" font-size:20pt; font-weight:600;\">Application Font Name: Fira Mono</span></p></body></html>"))
-        self.label_4.setText(_translate("DialogFontSize", "<html><head/><body><p><span style=\" font-size:20pt; font-weight:600;\">Application Font Size:</span></p></body></html>"))
-        self.plainTextEditFontSample.setPlainText(_translate("DialogFontSize", "ℹ loading device code from choice_device.py...\n"
-"ℹ found EpicDevice class, creating new device instance based on this class.\n"
-"\n"
-"☑ Choice_Device_v2021.10.24 device was created successfully.\n"
-"☑ Model successfully initialized.\n"
-"\n"
-"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-"┃ RULE FILE: choicetask_rules_VM.prs ┃\n"
-"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n"
-""))
+        self.label_3.setText(
+            _translate(
+                "DialogFontSize",
+                '<html><head/><body><p><span style=" font-size:20pt; font-weight:600;">Application Font Name: Fira Mono</span></p></body></html>',
+            )
+        )
+        self.label_4.setText(
+            _translate(
+                "DialogFontSize",
+                '<html><head/><body><p><span style=" font-size:20pt; font-weight:600;">Application Font Size:</span></p></body></html>',
+            )
+        )
+        self.plainTextEditFontSample.setPlainText(
+            _translate(
+                "DialogFontSize",
+                "ℹ loading device code from choice_device.py...\n"
+                "ℹ found EpicDevice class, creating new device instance based on this class.\n"
+                "\n"
+                "☑ Choice_Device_v2021.10.24 device was created successfully.\n"
+                "☑ Model successfully initialized.\n"
+                "\n"
+                "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
+                "┃ RULE FILE: choicetask_rules_VM.prs ┃\n"
+                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n"
+                "",
+            )
+        )
         self.pushButtonCancel.setText(_translate("DialogFontSize", "Cancel"))
         self.pushButtonOK.setText(_translate("DialogFontSize", "OK"))

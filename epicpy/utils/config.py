@@ -32,6 +32,7 @@ Global Configuration Variable
 
 VALID_FONTS_FAMILIES = {"sans-serif", "serif", "monospace"}
 
+
 @dataclass
 class AppConfig:
     """Class for keeping track of device-independent EpicPy config info"""
@@ -40,7 +41,7 @@ class AppConfig:
 
     last_device_file: str = ""  # for reloading last session
     last_script_file: str = ""
-    dark_mode: Literal['Light', 'Dark', 'Auto'] = "Light"
+    dark_mode: Literal["Light", "Dark", "Auto"] = "Light"
     epiclib_version: str = ""  # if not "", passes this value to DeviceConfig on app init
     font_family: Literal["sans-serif", "serif", "monospace"] = "monospace"
     font_size: int = 14

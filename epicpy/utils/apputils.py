@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+
 import os
 import subprocess
 import sys
@@ -204,6 +205,7 @@ class FancyTimer:
             print(f'Timer Ended at {datetime.datetime.now().strftime("%H:%M:%S")}')
         print(f"Duration: {self.duration:0.4f} sec ({self.duration * 1000:0.4f} msec)")
 
+
 def unpack_param_string(pattern: str, delimiter: str = "|", left: str = "[", right: str = "]") -> List[str]:
     """
     Expand the bracket-delimited possibilities in a string.
@@ -219,13 +221,11 @@ def unpack_param_string(pattern: str, delimiter: str = "|", left: str = "[", rig
     segments = re.split(rf"({left_escaped}.*?{right_escaped})", pattern)
 
     # Process each segment
-    seg_choices = [
-        seg.strip(left + right).split(delimiter) if seg.startswith(left) else [seg]
-        for seg in segments
-    ]
+    seg_choices = [seg.strip(left + right).split(delimiter) if seg.startswith(left) else [seg] for seg in segments]
 
     # Generate all possible combinations
     return ["".join(parts) for parts in itertools.product(*seg_choices)]
+
 
 def ignore_warnings(f):
     # https://stackoverflow.com/questions/879173
@@ -378,6 +378,7 @@ def has_epiccoder() -> str:
     except Exception:
         return ""
 
+
 def run_without_waiting(exe_path: str, filename: str):
     try:
         # Ensure the executable path and filename are properly formatted
@@ -386,12 +387,15 @@ def run_without_waiting(exe_path: str, filename: str):
         # Use different process spawning methods based on the OS
         if sys.platform == "win32":
             # Windows: Use `creationflags=subprocess.DETACHED_PROCESS` to detach
-            subprocess.Popen([exe_path, filename], creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
+            subprocess.Popen(
+                [exe_path, filename], creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+            )
         else:
             # macOS/Linux: Use `start_new_session=True` to detach
             subprocess.Popen([exe_path, filename], start_new_session=True)
     except Exception as e:
         print(f"Error starting process: {e}")
+
 
 def default_run(file_path: Union[str, Path]) -> bool:
     """
@@ -416,14 +420,10 @@ def default_run(file_path: Union[str, Path]) -> bool:
             os.startfile(file_path)
         elif system == "Darwin":
             # On macOS, use the 'open' command.
-            subprocess.Popen(["open", file_path],
-                             stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL)
+            subprocess.Popen(["open", file_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         elif system == "Linux":
             # On Linux, use 'xdg-open' which is desktop-environment agnostic.
-            subprocess.Popen(["xdg-open", file_path],
-                             stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL)
+            subprocess.Popen(["xdg-open", file_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         else:
             # Unsupported operating system.
             return False
@@ -432,11 +432,13 @@ def default_run(file_path: Union[str, Path]) -> bool:
     except Exception:
         return False
 
+
 def clear_font(widget: QWidget):
     """Recursively reset fonts for all child widgets."""
     widget.setFont(QApplication.instance().font())  # Set default app font
     for child in widget.findChildren(QWidget):
         child.setFont(QApplication.instance().font())
+
 
 if __name__ == "__main__":
     print(f"{get_resource('fonts', 'Fira Mono', 'ATTRIBUTION.txt')=}")
@@ -465,8 +467,10 @@ if __name__ == "__main__":
     except Exception as e:
         print("An error occurred:", e)
 
-    print(f'''{unpack_param_string("10 Easy Dash")=}\n\t➝ ['10 Easy Dash']''')
+    print(f"""{unpack_param_string("10 Easy Dash")=}\n\t➝ ['10 Easy Dash']""")
 
-    print(f'''{unpack_param_string("10 [Easy|Hard] Dash")=}\n\t➝ ['10 Easy Dash', '10 Hard Dash']''')
+    print(f"""{unpack_param_string("10 [Easy|Hard] Dash")=}\n\t➝ ['10 Easy Dash', '10 Hard Dash']""")
 
-    print(f'''{unpack_param_string("10 [Easy|Hard] [Dash|HUD]")=}\n\t➝ ['10 Easy Dash', '10 Easy HUD', '10 Hard Dash', '10 Hard HUD']''')
+    print(
+        f"""{unpack_param_string("10 [Easy|Hard] [Dash|HUD]")=}\n\t➝ ['10 Easy Dash', '10 Easy HUD', '10 Hard Dash', '10 Hard HUD']"""
+    )

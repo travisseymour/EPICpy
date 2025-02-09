@@ -29,9 +29,7 @@ class Ui_DialogDisplayControls(object):
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setContentsMargins(0, -1, -1, -1)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.checkBoxPPSMemoryContents = QtWidgets.QCheckBox(
-            parent=DialogDisplayControls
-        )
+        self.checkBoxPPSMemoryContents = QtWidgets.QCheckBox(parent=DialogDisplayControls)
         font = QtGui.QFont()
         font.setFamily("Fira Mono")
         font.setPointSize(14)
@@ -45,9 +43,7 @@ class Ui_DialogDisplayControls(object):
         self.checkBoxPPSRunMessages.setFont(font)
         self.checkBoxPPSRunMessages.setObjectName("checkBoxPPSRunMessages")
         self.verticalLayout.addWidget(self.checkBoxPPSRunMessages)
-        self.checkBoxPPSCompilerMessages = QtWidgets.QCheckBox(
-            parent=DialogDisplayControls
-        )
+        self.checkBoxPPSCompilerMessages = QtWidgets.QCheckBox(parent=DialogDisplayControls)
         font = QtGui.QFont()
         font.setFamily("Fira Mono")
         font.setPointSize(14)
@@ -137,18 +133,14 @@ class Ui_DialogDisplayControls(object):
         self.verticalLayout_2.addWidget(self.checkBoxDarkMode)
         self.horizontalLayout_3.addLayout(self.verticalLayout_2)
         self.verticalLayout_3.addLayout(self.horizontalLayout_3)
-        self.checkBoxShowModelParameters = QtWidgets.QCheckBox(
-            parent=DialogDisplayControls
-        )
+        self.checkBoxShowModelParameters = QtWidgets.QCheckBox(parent=DialogDisplayControls)
         font = QtGui.QFont()
         font.setFamily("Fira Mono")
         font.setPointSize(14)
         self.checkBoxShowModelParameters.setFont(font)
         self.checkBoxShowModelParameters.setObjectName("checkBoxShowModelParameters")
         self.verticalLayout_3.addWidget(self.checkBoxShowModelParameters)
-        self.checkBoxAllowDeviceImages = QtWidgets.QCheckBox(
-            parent=DialogDisplayControls
-        )
+        self.checkBoxAllowDeviceImages = QtWidgets.QCheckBox(parent=DialogDisplayControls)
         font = QtGui.QFont()
         font.setFamily("Fira Mono")
         font.setPointSize(14)
@@ -187,41 +179,21 @@ class Ui_DialogDisplayControls(object):
 
     def retranslateUi(self, DialogDisplayControls):
         _translate = QtCore.QCoreApplication.translate
-        DialogDisplayControls.setWindowTitle(
-            _translate("DialogDisplayControls", "Display Controls")
-        )
-        self.checkBoxPPSMemoryContents.setText(
-            _translate("DialogDisplayControls", "PPS Memory Contents")
-        )
-        self.checkBoxPPSRunMessages.setText(
-            _translate("DialogDisplayControls", "PPS Run Messages")
-        )
-        self.checkBoxPPSCompilerMessages.setText(
-            _translate("DialogDisplayControls", "PPS Compiler Messages")
-        )
-        self.label.setText(
-            _translate("DialogDisplayControls", "Spatial scale pixels/degree")
-        )
-        self.checkBoxCompilerDetails.setText(
-            _translate("DialogDisplayControls", "Compiler Details")
-        )
-        self.checkBoxRunDetails.setText(
-            _translate("DialogDisplayControls", "Run Details")
-        )
-        self.checkBoxCenterDot.setText(
-            _translate("DialogDisplayControls", "Center Dot")
-        )
-        self.checkBoxCalibrationGrid.setText(
-            _translate("DialogDisplayControls", "Calibration Grid")
-        )
+        DialogDisplayControls.setWindowTitle(_translate("DialogDisplayControls", "Display Controls"))
+        self.checkBoxPPSMemoryContents.setText(_translate("DialogDisplayControls", "PPS Memory Contents"))
+        self.checkBoxPPSRunMessages.setText(_translate("DialogDisplayControls", "PPS Run Messages"))
+        self.checkBoxPPSCompilerMessages.setText(_translate("DialogDisplayControls", "PPS Compiler Messages"))
+        self.label.setText(_translate("DialogDisplayControls", "Spatial scale pixels/degree"))
+        self.checkBoxCompilerDetails.setText(_translate("DialogDisplayControls", "Compiler Details"))
+        self.checkBoxRunDetails.setText(_translate("DialogDisplayControls", "Run Details"))
+        self.checkBoxCenterDot.setText(_translate("DialogDisplayControls", "Center Dot"))
+        self.checkBoxCalibrationGrid.setText(_translate("DialogDisplayControls", "Calibration Grid"))
         self.checkBoxDarkMode.setText(_translate("DialogDisplayControls", "Dark Mode"))
         self.checkBoxShowModelParameters.setText(
             _translate("DialogDisplayControls", "Show Model Parameters Before Each Run")
         )
         self.checkBoxAllowDeviceImages.setText(
-            _translate(
-                "DialogDisplayControls", "Allow device to draw view underlay images"
-            )
+            _translate("DialogDisplayControls", "Allow device to draw view underlay images")
         )
         self.pushButtonCancel.setText(_translate("DialogDisplayControls", "Cancel"))
         self.pushButtonOK.setText(_translate("DialogDisplayControls", "OK"))

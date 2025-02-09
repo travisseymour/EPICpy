@@ -43,9 +43,7 @@ class Ui_DialogRunSettings(object):
         self.radioButtonRunForSecs = QtWidgets.QRadioButton(parent=DialogRunSettings)
         self.radioButtonRunForSecs.setEnabled(True)
         self.radioButtonRunForSecs.setObjectName("radioButtonRunForSecs")
-        self.formLayout.setWidget(
-            0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.radioButtonRunForSecs
-        )
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.radioButtonRunForSecs)
         self.spinBoxRunRealSecs = QtWidgets.QSpinBox(parent=DialogRunSettings)
         self.spinBoxRunRealSecs.setEnabled(True)
         self.spinBoxRunRealSecs.setMinimumSize(QtCore.QSize(150, 0))
@@ -60,17 +58,13 @@ class Ui_DialogRunSettings(object):
         self.spinBoxRunRealSecs.setSingleStep(50)
         self.spinBoxRunRealSecs.setProperty("value", 5000)
         self.spinBoxRunRealSecs.setObjectName("spinBoxRunRealSecs")
-        self.formLayout.setWidget(
-            0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.spinBoxRunRealSecs
-        )
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.spinBoxRunRealSecs)
         self.verticalLayout.addLayout(self.formLayout)
         self.formLayout_2 = QtWidgets.QFormLayout()
         self.formLayout_2.setObjectName("formLayout_2")
         self.radioButtonRunUntilSim = QtWidgets.QRadioButton(parent=DialogRunSettings)
         self.radioButtonRunUntilSim.setObjectName("radioButtonRunUntilSim")
-        self.formLayout_2.setWidget(
-            0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.radioButtonRunUntilSim
-        )
+        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.radioButtonRunUntilSim)
         self.spinBoxRunSimMsecs = QtWidgets.QSpinBox(parent=DialogRunSettings)
         self.spinBoxRunSimMsecs.setMinimumSize(QtCore.QSize(150, 0))
         font = QtGui.QFont()
@@ -84,18 +78,14 @@ class Ui_DialogRunSettings(object):
         self.spinBoxRunSimMsecs.setSingleStep(50)
         self.spinBoxRunSimMsecs.setProperty("value", 600000)
         self.spinBoxRunSimMsecs.setObjectName("spinBoxRunSimMsecs")
-        self.formLayout_2.setWidget(
-            0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.spinBoxRunSimMsecs
-        )
+        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.spinBoxRunSimMsecs)
         self.verticalLayout.addLayout(self.formLayout_2)
         self.formLayout_3 = QtWidgets.QFormLayout()
         self.formLayout_3.setObjectName("formLayout_3")
         self.radioButtonRunForCycles = QtWidgets.QRadioButton(parent=DialogRunSettings)
         self.radioButtonRunForCycles.setChecked(False)
         self.radioButtonRunForCycles.setObjectName("radioButtonRunForCycles")
-        self.formLayout_3.setWidget(
-            0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.radioButtonRunForCycles
-        )
+        self.formLayout_3.setWidget(0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.radioButtonRunForCycles)
         self.spinBoxRunSimCycles = QtWidgets.QSpinBox(parent=DialogRunSettings)
         self.spinBoxRunSimCycles.setMinimumSize(QtCore.QSize(150, 0))
         font = QtGui.QFont()
@@ -107,9 +97,7 @@ class Ui_DialogRunSettings(object):
         self.spinBoxRunSimCycles.setMinimum(1)
         self.spinBoxRunSimCycles.setMaximum(10000)
         self.spinBoxRunSimCycles.setObjectName("spinBoxRunSimCycles")
-        self.formLayout_3.setWidget(
-            0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.spinBoxRunSimCycles
-        )
+        self.formLayout_3.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.spinBoxRunSimCycles)
         self.verticalLayout.addLayout(self.formLayout_3)
         self.radioButtonRunUntilDone = QtWidgets.QRadioButton(parent=DialogRunSettings)
         font = QtGui.QFont()
@@ -140,24 +128,18 @@ class Ui_DialogRunSettings(object):
         self.label_2.setFont(font)
         self.label_2.setObjectName("label_2")
         self.verticalLayout_2.addWidget(self.label_2)
-        self.radioButtonRefreshEachCycle = QtWidgets.QRadioButton(
-            parent=DialogRunSettings
-        )
+        self.radioButtonRefreshEachCycle = QtWidgets.QRadioButton(parent=DialogRunSettings)
         self.radioButtonRefreshEachCycle.setEnabled(True)
         self.radioButtonRefreshEachCycle.setChecked(False)
         self.radioButtonRefreshEachCycle.setObjectName("radioButtonRefreshEachCycle")
         self.verticalLayout_2.addWidget(self.radioButtonRefreshEachCycle)
         self.horizontalLayout_7 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_7.setObjectName("horizontalLayout_7")
-        self.radioButtonRefreshEachSecs = QtWidgets.QRadioButton(
-            parent=DialogRunSettings
-        )
+        self.radioButtonRefreshEachSecs = QtWidgets.QRadioButton(parent=DialogRunSettings)
         self.radioButtonRefreshEachSecs.setEnabled(False)
         self.radioButtonRefreshEachSecs.setObjectName("radioButtonRefreshEachSecs")
         self.horizontalLayout_7.addWidget(self.radioButtonRefreshEachSecs)
-        self.doubleSpinBoxRefreshSecs = QtWidgets.QDoubleSpinBox(
-            parent=DialogRunSettings
-        )
+        self.doubleSpinBoxRefreshSecs = QtWidgets.QDoubleSpinBox(parent=DialogRunSettings)
         self.doubleSpinBoxRefreshSecs.setEnabled(False)
         self.doubleSpinBoxRefreshSecs.setMinimumSize(QtCore.QSize(110, 0))
         font = QtGui.QFont()
@@ -197,24 +179,16 @@ class Ui_DialogRunSettings(object):
         self.label_5.setFont(font)
         self.label_5.setObjectName("label_5")
         self.verticalLayout_6.addWidget(self.label_5)
-        self.radioButtonRefreshContinuouslyText = QtWidgets.QRadioButton(
-            parent=DialogRunSettings
-        )
+        self.radioButtonRefreshContinuouslyText = QtWidgets.QRadioButton(parent=DialogRunSettings)
         self.radioButtonRefreshContinuouslyText.setChecked(False)
-        self.radioButtonRefreshContinuouslyText.setObjectName(
-            "radioButtonRefreshContinuouslyText"
-        )
+        self.radioButtonRefreshContinuouslyText.setObjectName("radioButtonRefreshContinuouslyText")
         self.verticalLayout_6.addWidget(self.radioButtonRefreshContinuouslyText)
         self.horizontalLayout_8 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_8.setObjectName("horizontalLayout_8")
-        self.radioButtonRefreshEachCycleText = QtWidgets.QRadioButton(
-            parent=DialogRunSettings
-        )
+        self.radioButtonRefreshEachCycleText = QtWidgets.QRadioButton(parent=DialogRunSettings)
         self.radioButtonRefreshEachCycleText.setEnabled(True)
         self.radioButtonRefreshEachCycleText.setChecked(False)
-        self.radioButtonRefreshEachCycleText.setObjectName(
-            "radioButtonRefreshEachCycleText"
-        )
+        self.radioButtonRefreshEachCycleText.setObjectName("radioButtonRefreshEachCycleText")
         self.horizontalLayout_8.addWidget(self.radioButtonRefreshEachCycleText)
         self.spinBoxTextRefreshSteps = QtWidgets.QSpinBox(parent=DialogRunSettings)
         self.spinBoxTextRefreshSteps.setMinimumSize(QtCore.QSize(110, 0))
@@ -231,9 +205,7 @@ class Ui_DialogRunSettings(object):
         self.spinBoxTextRefreshSteps.setObjectName("spinBoxTextRefreshSteps")
         self.horizontalLayout_8.addWidget(self.spinBoxTextRefreshSteps)
         self.verticalLayout_6.addLayout(self.horizontalLayout_8)
-        self.radioButtonRefreshNoneText = QtWidgets.QRadioButton(
-            parent=DialogRunSettings
-        )
+        self.radioButtonRefreshNoneText = QtWidgets.QRadioButton(parent=DialogRunSettings)
         self.radioButtonRefreshNoneText.setCheckable(True)
         self.radioButtonRefreshNoneText.setChecked(False)
         self.radioButtonRefreshNoneText.setObjectName("radioButtonRefreshNoneText")
@@ -400,41 +372,21 @@ class Ui_DialogRunSettings(object):
         self.label.setText(_translate("DialogRunSettings", "Run Command Duration"))
         self.radioButtonRunForSecs.setText(_translate("DialogRunSettings", "Run For"))
         self.spinBoxRunRealSecs.setSuffix(_translate("DialogRunSettings", " sim. msec"))
-        self.radioButtonRunUntilSim.setText(
-            _translate("DialogRunSettings", "Run Until")
-        )
+        self.radioButtonRunUntilSim.setText(_translate("DialogRunSettings", "Run Until"))
         self.spinBoxRunSimMsecs.setSuffix(_translate("DialogRunSettings", " sim. msec"))
         self.radioButtonRunForCycles.setText(_translate("DialogRunSettings", "Run For"))
         self.spinBoxRunSimCycles.setSuffix(_translate("DialogRunSettings", " step(s)"))
-        self.radioButtonRunUntilDone.setText(
-            _translate("DialogRunSettings", "Run Until Done")
-        )
+        self.radioButtonRunUntilDone.setText(_translate("DialogRunSettings", "Run Until Done"))
         self.label_2.setText(_translate("DialogRunSettings", "Display Refresh"))
-        self.radioButtonRefreshEachCycle.setText(
-            _translate("DialogRunSettings", "After Each Step")
-        )
-        self.radioButtonRefreshEachSecs.setText(
-            _translate("DialogRunSettings", "After Every")
-        )
-        self.doubleSpinBoxRefreshSecs.setSuffix(
-            _translate("DialogRunSettings", " sec(s)")
-        )
-        self.radioButtonRefreshNone.setText(
-            _translate("DialogRunSettings", "None During Run")
-        )
+        self.radioButtonRefreshEachCycle.setText(_translate("DialogRunSettings", "After Each Step"))
+        self.radioButtonRefreshEachSecs.setText(_translate("DialogRunSettings", "After Every"))
+        self.doubleSpinBoxRefreshSecs.setSuffix(_translate("DialogRunSettings", " sec(s)"))
+        self.radioButtonRefreshNone.setText(_translate("DialogRunSettings", "None During Run"))
         self.label_5.setText(_translate("DialogRunSettings", "Text Refresh"))
-        self.radioButtonRefreshContinuouslyText.setText(
-            _translate("DialogRunSettings", "Continuously (slow)")
-        )
-        self.radioButtonRefreshEachCycleText.setText(
-            _translate("DialogRunSettings", "After Every")
-        )
-        self.spinBoxTextRefreshSteps.setSuffix(
-            _translate("DialogRunSettings", " step(s)")
-        )
-        self.radioButtonRefreshNoneText.setText(
-            _translate("DialogRunSettings", "None During Run")
-        )
+        self.radioButtonRefreshContinuouslyText.setText(_translate("DialogRunSettings", "Continuously (slow)"))
+        self.radioButtonRefreshEachCycleText.setText(_translate("DialogRunSettings", "After Every"))
+        self.spinBoxTextRefreshSteps.setSuffix(_translate("DialogRunSettings", " step(s)"))
+        self.radioButtonRefreshNoneText.setText(_translate("DialogRunSettings", "None During Run"))
         self.label_4.setText(_translate("DialogRunSettings", "Real Time Per Step "))
         self.spinBoxTimeDelay.setSuffix(_translate("DialogRunSettings", " msec(s)"))
         self.pushButtonRunContinuously.setText(
@@ -457,9 +409,7 @@ class Ui_DialogRunSettings(object):
                 '<html><head/><body><p><span style=" font-size:12pt;">If the current device exposes a method called </span><span style=" font-size:12pt; font-weight:600;">delete_data_file()</span><span style=" font-size:12pt;">, this button will trigger it. Otherwise, this button will not be shown.</span></p></body></html>',
             )
         )
-        self.pushButtonDeleteData.setText(
-            _translate("DialogRunSettings", "Delete Datafile")
-        )
+        self.pushButtonDeleteData.setText(_translate("DialogRunSettings", "Delete Datafile"))
         self.dataInfoLabel.setText(_translate("DialogRunSettings", "Data Info: ???"))
         self.pushButtonCancel.setText(_translate("DialogRunSettings", "Cancel"))
         self.pushButtonOK.setText(_translate("DialogRunSettings", "OK"))

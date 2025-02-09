@@ -315,9 +315,9 @@ def run_model_test(
                             print(".", end="")
                             QCoreApplication.processEvents()
                         if text:
-                            print(f'\n\nGot access to stats window text after {time.time()-start:0.4f} sec:\n{text}\n')
+                            print(f"\n\nGot access to stats window text after {time.time()-start:0.4f} sec:\n{text}\n")
                         else:
-                            print(f'\n\nFAILED to retrieve text from stats window after test!!\n\n')
+                            print(f"\n\nFAILED to retrieve text from stats window after test!!\n\n")
 
                         correct_N = "N=10" in text  # 10 trials for 4 runs
                         correct_ACCURACY = "ACCURACY=100.00" in text

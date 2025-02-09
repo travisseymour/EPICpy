@@ -187,10 +187,8 @@ class MainWin(QMainWindow):
         self.context_items = {}
         self.create_context_menu_items()
 
-
         # add central widget and setup
         self.ui.plainTextEditOutput = LargeTextView(enable_context_menu=False)
-
 
         self.ui.plainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.ui.plainTextEditOutput.setObjectName("MainWindow")  # "plainTextEditOutput"
@@ -1537,7 +1535,9 @@ class MainWin(QMainWindow):
                 start_dir = Path(config.device_cfg.device_file).parent
             else:
                 start_dir = Path().home().expanduser()
-            start_file = f"{start_dir.stem}_{kind}_output.html" if kind == "Stats" else f"{start_dir.stem}_{kind}_output.txt"
+            start_file = (
+                f"{start_dir.stem}_{kind}_output.html" if kind == "Stats" else f"{start_dir.stem}_{kind}_output.txt"
+            )
             start_file = str(Path(start_dir, start_file).with_suffix(ext).resolve())
 
         if kind == "Stats":
@@ -1618,7 +1618,7 @@ class MainWin(QMainWindow):
             return
 
         try:
-            Path(out_file).write_text(source.get_text(), encoding='utf-8')
+            Path(out_file).write_text(source.get_text(), encoding="utf-8")
             success = True
             error = ""
         except Exception as e:
@@ -1896,12 +1896,12 @@ class MainWin(QMainWindow):
 
             self.context_items["Quit"].setEnabled(True)
 
-        if hasattr(self.context_menu, 'exec'):
+        if hasattr(self.context_menu, "exec"):
             action = self.context_menu.exec(self.mapToGlobal(event))
-        elif hasattr(self.context_menu, 'exec_'):
+        elif hasattr(self.context_menu, "exec_"):
             action = self.context_menu.exec_(self.mapToGlobal(event))
         else:
-            self.write(f'Error bringing up context-menu (contact maintainer about exec/exe_ bug)')
+            self.write(f"Error bringing up context-menu (contact maintainer about exec/exe_ bug)")
             action = None
             return
 
@@ -1995,10 +1995,20 @@ class MainWin(QMainWindow):
                 # user has specified the system default editor
                 ec_path = has_epiccoder()
                 OS = platform.system()
-                if which_file != "DataFile" and hasattr(config.app_cfg, "text_editor") and (config.app_cfg.text_editor.lower() not in ("", "default")) and (Path(config.app_cfg.text_editor).resolve().is_file()):
+                if (
+                    which_file != "DataFile"
+                    and hasattr(config.app_cfg, "text_editor")
+                    and (config.app_cfg.text_editor.lower() not in ("", "default"))
+                    and (Path(config.app_cfg.text_editor).resolve().is_file())
+                ):
                     open_cmd = config.app_cfg.text_editor
-                elif which_file != "DataFile" and hasattr(config.app_cfg, "text_editor") and (config.app_cfg.text_editor.lower() in ("", "default")) and ec_path:
-                    open_cmd = "epiccoder" # ec_path
+                elif (
+                    which_file != "DataFile"
+                    and hasattr(config.app_cfg, "text_editor")
+                    and (config.app_cfg.text_editor.lower() in ("", "default"))
+                    and ec_path
+                ):
+                    open_cmd = "epiccoder"  # ec_path
                 elif OS == "Linux":
                     open_cmd = "xdg-open"
                 elif OS == "Darwin":

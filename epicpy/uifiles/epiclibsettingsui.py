@@ -12,9 +12,7 @@ from qtpy import QtCore, QtGui, QtWidgets
 class Ui_DialogEPICLibSettings(object):
     def setupUi(self, DialogEPICLibSettings):
         DialogEPICLibSettings.setObjectName("DialogEPICLibSettings")
-        DialogEPICLibSettings.setWindowModality(
-            QtCore.Qt.WindowModality.ApplicationModal
-        )
+        DialogEPICLibSettings.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
         DialogEPICLibSettings.resize(482, 352)
         DialogEPICLibSettings.setMinimumSize(QtCore.QSize(482, 352))
         DialogEPICLibSettings.setMaximumSize(QtCore.QSize(3001, 3001))
@@ -81,9 +79,7 @@ class Ui_DialogEPICLibSettings(object):
 
     def retranslateUi(self, DialogEPICLibSettings):
         _translate = QtCore.QCoreApplication.translate
-        DialogEPICLibSettings.setWindowTitle(
-            _translate("DialogEPICLibSettings", "EPICLib Settings")
-        )
+        DialogEPICLibSettings.setWindowTitle(_translate("DialogEPICLibSettings", "EPICLib Settings"))
         self.labelInfo.setText(
             _translate(
                 "DialogEPICLibSettings",

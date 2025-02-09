@@ -43,9 +43,7 @@ for ui in ui_files:
         found_anything = True
         print(f"Converting {ui.name} to {py.name}" | cyan)
         try:
-            local["pyuic6" if qt_type == "pyqt6" else "pyside6-uic"](
-                [str(ui.resolve()), "-o", str(py.resolve())]
-            )
+            local["pyuic6" if qt_type == "pyqt6" else "pyside6-uic"]([str(ui.resolve()), "-o", str(py.resolve())])
             print(f"\tSuccess!" | green)
         except Exception as e:
             print(f"\tERROR: {e}" | red & bold)

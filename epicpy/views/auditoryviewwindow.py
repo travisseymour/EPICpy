@@ -60,6 +60,7 @@ def cache_warn(msg: str):
         WARNING_ACCUMULATOR.add(msg)
         log.warning(msg)
 
+
 @dataclass(slots=True)
 class SoundObject:
     kind: str
@@ -125,12 +126,11 @@ class AuditoryViewWin(QMainWindow):
 
         self.initialize()
 
-
     def reset_font(self):
         self.setFont(QApplication.instance().font())
 
         self.overlay_font = QFont(self.font())
-        self.overlay_font.setPointSize(self.overlay_font.pointSize()-2)
+        self.overlay_font.setPointSize(self.overlay_font.pointSize() - 2)
 
     def closeEvent(self, event: QCloseEvent):
         if not self.can_close:
@@ -153,14 +153,12 @@ class AuditoryViewWin(QMainWindow):
     def initialize(self):
         self.clear()
 
-    def update_info(self):
-        ...
+    def update_info(self): ...
 
     def set_needs_display(self):
         self.update()
 
-    def draw_content(self):
-        ...
+    def draw_content(self): ...
 
     def set_origin(self, x: float, y: float):
         self.origin = Point(x, y)
@@ -305,7 +303,7 @@ class AuditoryViewWin(QMainWindow):
 
         # Cache the grid when the window resizes
         self.cached_grid = self.grid_cache(self.width(), self.height(), self.scale)
-        
+
         self.update()
 
     def dot(self, painter: QPainter):
@@ -425,7 +423,6 @@ class AuditoryViewWin(QMainWindow):
         else:
             cache_warn(f'shape_cache has no handler for "{shape}"')
         return path
-
 
     def shape_ellipse(self, obj, painter: QPainter):
         pen, brush = self.obj_pen_brush(obj)

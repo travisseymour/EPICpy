@@ -1,4 +1,3 @@
-
 import sys
 import timeit
 
@@ -375,7 +374,6 @@ if __name__ == "__main__":
                 self.viewer.append_text("\n".join(buffer))
 
             print(f"populate_text added {n} lines in {timeit.default_timer() - start} sec.")
-
 
     app = QApplication(sys.argv)
     window = LTTTestMainWindow()

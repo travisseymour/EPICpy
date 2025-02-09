@@ -3,7 +3,6 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import cpu_count
 
 
-
 # **************************************************************
 # SERIAL VERSION (fast enough, but slower than parallel version)
 # **************************************************************

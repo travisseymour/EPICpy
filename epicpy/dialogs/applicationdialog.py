@@ -123,7 +123,7 @@ class EPICpyDialog(QDialog):
         self.button_text_default.setToolTip("Clear the text field")
 
         # For the EPICcoder button, use epiccoder.png.
-        self.button_epiccoder.setIcon(QIcon(str(get_resource('images', 'epiccoder.png'))))
+        self.button_epiccoder.setIcon(QIcon(str(get_resource("images", "epiccoder.png"))))
         self.button_epiccoder.setText("EPICcoder")
         self.button_epiccoder.setToolTip("Launch EPICcoder")
 
@@ -265,27 +265,27 @@ class EPICpyDialog(QDialog):
             self,  # Parent widget (or None if not inside a class)
             "Select Executable",  # Dialog title (caption)
             home_dir,  # Default directory
-            filter_str  # File filter
+            filter_str,  # File filter
         )
 
         if file_path:
             system = platform.system()
             if system == "Windows":
                 # On Windows, ensure the file ends with ".exe"
-                if not file_path.lower().endswith('.exe'):
+                if not file_path.lower().endswith(".exe"):
 
                     QMessageBox.information(
                         self,  # Parent widget (if inside a class, otherwise use None)
                         "Invalid Executable",  # Title
                         "The selected file is not an executable application.",  # Message text
-                        QMessageBox.StandardButton.Ok  # Buttons
+                        QMessageBox.StandardButton.Ok,  # Buttons
                     )
 
                     return
             else:
                 # On macOS and Linux, check for executable permission.
                 # Allow ".app" bundles on macOS without checking permissions.
-                if system == "Darwin" and file_path.lower().endswith('.app'):
+                if system == "Darwin" and file_path.lower().endswith(".app"):
                     pass
                 else:
                     if not os.access(file_path, os.X_OK):
@@ -294,7 +294,7 @@ class EPICpyDialog(QDialog):
                             self,  # Parent widget (use None if not inside a class)
                             "Invalid Executable",  # Title
                             "The selected file is not an executable application.",  # Message text
-                            QMessageBox.StandardButton.Ok  # Buttons
+                            QMessageBox.StandardButton.Ok,  # Buttons
                         )
 
                         return

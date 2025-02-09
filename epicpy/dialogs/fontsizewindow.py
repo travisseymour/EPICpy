@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+
 from PySide6.QtGui import QFont
 from qdarktheme.qtpy.QtWidgets import QApplication
 from qtpy.QtCore import QSize
@@ -41,16 +42,16 @@ class FontSizeDialog(QDialog):
 
         font = QFont(QApplication.instance().font())
         self.ui.label_3.setText(
-            f'<html>'
-            f'<head/>'
-            f'<body>'
-            f'<p>'
+            f"<html>"
+            f"<head/>"
+            f"<body>"
+            f"<p>"
             f'<span style=" font-size:20pt; font-weight:600;">'
-            f'Application Font Name: {font.styleName()}'
-            f'</span>'
-            f'</p>'
-            f'</body>'
-            f'</html>'
+            f"Application Font Name: {font.styleName()}"
+            f"</span>"
+            f"</p>"
+            f"</body>"
+            f"</html>"
         )
 
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
