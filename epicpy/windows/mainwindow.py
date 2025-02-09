@@ -1932,7 +1932,7 @@ class MainWin(QMainWindow):
             elif OS == "Darwin":
                 open_cmd = "open"
             elif OS == "Windows":
-                open_cmd = "start"
+                open_cmd = "explorer"
             else:
                 open_cmd = ""
                 err_msg = f"ERROR: Opening device folder when OS=='{OS}' is not yet implemented!"

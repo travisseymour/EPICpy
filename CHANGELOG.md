@@ -3,7 +3,7 @@
 
 ---
 
-## VERSION: 2025.2.8.3
+## VERSION: 2025.2.8.4
 
 1. **CHANGED**: Changed stats window to be more content aware and provide context-specific actions text and figures via right-click menu.
 2. **FIXED**: Updated dataclass behavior to skip specifying slots=True on Windows because EPICpy must use Python 3.9 on Windows, which does not support this parameter in dataclass initialization.
