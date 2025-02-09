@@ -24,6 +24,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Optional
 
+from PySide6.QtGui import QStaticText, QTransform
 from qtpy.QtWidgets import QApplication
 from qtpy.QtGui import (
     QPainter,
@@ -463,7 +464,7 @@ class AuditoryViewWin(QMainWindow):
 
     def draw_text(self, obj: SoundObject, painter: QPainter):
         text = ""
-        cfg = deepcopy(config.device_cfg)
+        cfg = config.device_cfg
         if obj.kind == "Sound":
             if cfg.sound_text_kind:
                 text += f"Kind: {obj.kind}\n"
@@ -491,12 +492,32 @@ class AuditoryViewWin(QMainWindow):
         else:
             return
 
-        color = QColorConstants.Black if obj.property.Status != "Fading" else QColorConstants.LightGray
+        text = text.strip()
+        # Choose color based on status
+        color = (QColorConstants.Black if obj.property.Status != "Fading"
+                 else QColorConstants.LightGray)
         painter.setPen(QPen(color, 1, Qt.PenStyle.SolidLine))
-        painter.setBrush(QBrush(color, Qt.BrushStyle.SolidPattern))
+
+        # Compute the drawing position.
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
-        path = self.text_cache(x, y, text.strip(), self.scale)
-        painter.drawPath(path)
+
+        # Create and prepare a QStaticText.
+        static_text = QStaticText(text)
+        static_text.setTextFormat(Qt.TextFormat.PlainText)
+        font = QFont(self.font())
+        # Use the same scaling as before.
+        font.setPointSize(round(self.scale * 0.8))
+        painter.setFont(font)
+        # Pass an identity transform along with the font.
+        static_text.prepare(QTransform(), font)
+
+        # Optionally, center the text around the (x, y) coordinate.
+        text_size = static_text.size()  # returns QSizeF
+        draw_x = x - text_size.width() / 2
+        draw_y = y - text_size.height() / 2
+
+        painter.drawStaticText(draw_x, draw_y, static_text)
+
 
     """
     Attempt to avoid drawing to closed windows

@@ -22,6 +22,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Optional
 
+from PySide6.QtGui import QStaticText, QTransform
 from fastnumbers import fast_int
 from qdarktheme.qtpy.QtWidgets import QApplication
 from qtpy.QtGui import (
@@ -951,13 +952,20 @@ class VisualViewWin(QMainWindow):
         return path
 
     def draw_text(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        """Draws text at the precomputed rectangle position."""
-        painter.setPen(QColorConstants.Black if obj.property.Status != "Disappearing" else QColorConstants.LightGray)
-        painter.setBrush(Qt.BrushStyle.SolidPattern)
+        text = str(obj.property.Text)
+        static_text = QStaticText(text)
+        static_text.setTextFormat(Qt.TextFormat.PlainText)
 
-        # Use precomputed rect.x and rect.y for positioning the text
-        path = self.text_cache(rect.x, rect.y, obj.property.Text, self.scale)
-        painter.drawPath(path)
+        # Create a font and adjust its size based on the current scale.
+        font = QFont(self.font())
+        font.setPointSize(round(self.scale * 0.8))  # Adjust scaling as needed.
+        painter.setFont(font)
+
+        # Prepare the static text using an identity transform and the custom font.
+        static_text.prepare(QTransform(), font)
+
+        # Draw the text at the specified coordinates.
+        painter.drawStaticText(rect.x, rect.y, static_text)
 
     """
     Attempt to avoid drawing to closed windows
