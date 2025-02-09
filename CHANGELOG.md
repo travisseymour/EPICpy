@@ -1,9 +1,19 @@
 
 # EPICpy Changelog
 
+---
+
+## VERSION: 2025.2.8.1
+
+1. **CHANGED**: Changed stats window to be more content aware and provide context-specific actions text and figures via right-click menu.
+
+---
+
 ## VERSION: 2025.2.6.4
 
 1. **FIXED**: Fixed several issues with text output skipping lines.
+
+---
 
 ## VERSION: 2025.2.6.3
 
