@@ -337,7 +337,7 @@ class VisualViewWin(QMainWindow):
 
     def draw_info_overlay(self, painter: QPainter):
         # setup
-        painter.setPen(QColorConstants.White if config.app_cfg.dark_mode else QColorConstants.Black)
+        painter.setPen(QColorConstants.DarkYellow)
         painter.setFont(self.overlay_font)
 
         # draw time info

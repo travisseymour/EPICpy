@@ -18,7 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from copy import deepcopy
 from functools import lru_cache
 from itertools import chain
 from pathlib import Path
@@ -318,7 +317,7 @@ class AuditoryViewWin(QMainWindow):
 
     def draw_info_overlay(self, painter: QPainter):
         # setup
-        painter.setPen(QColorConstants.White if config.app_cfg.dark_mode else QColorConstants.Black)
+        painter.setPen(QColorConstants.DarkYellow)
         painter.setFont(self.overlay_font)
 
         # draw time info
