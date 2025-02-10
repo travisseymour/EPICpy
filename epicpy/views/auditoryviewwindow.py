@@ -116,7 +116,6 @@ class AuditoryViewWin(QMainWindow):
         self.bold_font = QFont(base_font)
         self.bold_font.setBold(True)
 
-
         self.debug_info = []
         self.objects: dict = {}
 
@@ -496,8 +495,7 @@ class AuditoryViewWin(QMainWindow):
             return
 
         # Choose color based on status.
-        color = (QColorConstants.Black if obj.property.Status != "Fading"
-                 else QColorConstants.LightGray)
+        color = QColorConstants.Black if obj.property.Status != "Fading" else QColorConstants.LightGray
         painter.setPen(QPen(color, 1, Qt.PenStyle.SolidLine))
 
         # Compute the drawing position.

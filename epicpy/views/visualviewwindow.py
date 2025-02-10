@@ -65,7 +65,8 @@ def cache_warn(msg: str):
         log.warning(msg)
 
 
-#@dataclass(slots=True)
+# @dataclass(slots=True)
+
 
 @conditional_dataclass
 class VisualObject:

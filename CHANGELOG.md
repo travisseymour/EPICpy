@@ -1,6 +1,13 @@
 
 # EPICpy Changelog
 
+
+---
+
+## VERSION: 2025.2.9.1
+
+1. **FIXED**: Fixed some issues with view drawing strategy. Slightly faster, overlap now in one color for light and dark modes.
+
 ---
 
 ## VERSION: 2025.2.8.5
