@@ -957,14 +957,14 @@ class VisualViewWin(QMainWindow):
         text = str(obj.property.Text)
         lines = text.splitlines()
 
+        # Set pen and brush
+        painter.setPen(QColorConstants.Black) # if obj.property.Status != "Disappearing" else QColorConstants.LightGray)
+        painter.setBrush(Qt.BrushStyle.SolidPattern)
+
         # Set up your font as needed.
         font = QFont(self.font())
         font.setPointSize(round(self.scale * 0.8))
         painter.setFont(font)
-
-        # Set pen and brush
-        painter.setPen(QColorConstants.Black if obj.property.Status != "Disappearing" else QColorConstants.LightGray)
-        painter.setBrush(Qt.BrushStyle.SolidPattern)
 
         # Starting position
         x = rect.x
