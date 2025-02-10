@@ -963,6 +963,12 @@ class VisualViewWin(QMainWindow):
         font.setPointSize(round(self.scale * 0.8))
         painter.setFont(font)
 
+        # Set pen and brush
+        painter.setPen(
+            QColorConstants.Black if obj.property.Status != "Disappearing" else QColorConstants.LightGray
+        )
+        painter.setBrush(Qt.BrushStyle.SolidPattern)
+
         # Starting position
         x = rect.x
         y = rect.y
