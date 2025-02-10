@@ -416,10 +416,9 @@ class VisualViewWin(QMainWindow):
             if "Text" in obj.property:
                 self.draw_text(obj, rect, painter)
 
-
     @staticmethod
     @lru_cache()
-    def obj_pen_brush(filled:bool, status:str, color:str) -> tuple:
+    def obj_pen_brush(filled: bool, status: str, color: str) -> tuple:
         """
         Consult object and properties to determine appropriate pen and brush to use
         """
@@ -964,9 +963,7 @@ class VisualViewWin(QMainWindow):
         painter.setFont(font)
 
         # Set pen and brush
-        painter.setPen(
-            QColorConstants.Black if obj.property.Status != "Disappearing" else QColorConstants.LightGray
-        )
+        painter.setPen(QColorConstants.Black if obj.property.Status != "Disappearing" else QColorConstants.LightGray)
         painter.setBrush(Qt.BrushStyle.SolidPattern)
 
         # Starting position

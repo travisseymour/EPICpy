@@ -4,9 +4,10 @@
 
 ---
 
-## VERSION: 2025.2.9.1
+## VERSION: 2025.2.10.1
 
 1. **FIXED**: Fixed some issues with view drawing strategy. Slightly faster, overlap now in one color for light and dark modes.
+2. **FIXED**: Restored broken text printing on visual view windows.
 
 ---
 

@@ -479,8 +479,7 @@ class AuditoryViewWin(QMainWindow):
     @staticmethod
     @lru_cache()
     def get_speech_lines(
-            kind: str, stream: str, pitch: float, loudness: float,
-            content: str, speaker: int, gender: str
+        kind: str, stream: str, pitch: float, loudness: float, content: str, speaker: int, gender: str
     ) -> set[str]:
         lines: set[str] = set()
         cfg = config.device_cfg
@@ -506,7 +505,7 @@ class AuditoryViewWin(QMainWindow):
                 kind=obj.kind,
                 stream_name=obj.property.stream_name,
                 timbre=obj.property.timbre,
-                loudness=obj.property.loudness
+                loudness=obj.property.loudness,
             )
         elif obj.kind == "Speech":
             lines: set[str] = self.get_speech_lines(
@@ -516,7 +515,7 @@ class AuditoryViewWin(QMainWindow):
                 loudness=obj.property.loudness,
                 content=obj.property.content,
                 speaker=obj.property.speaker_id,
-                gender=obj.property.speaker_gender
+                gender=obj.property.speaker_gender,
             )
 
         else:
