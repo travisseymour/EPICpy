@@ -416,20 +416,22 @@ class VisualViewWin(QMainWindow):
             if "Text" in obj.property:
                 self.draw_text(obj, rect, painter)
 
+
     @staticmethod
-    def obj_pen_brush(obj) -> tuple:
+    @lru_cache()
+    def obj_pen_brush(filled:bool, status:str, color:str) -> tuple:
         """
         Consult object and properties to determine appropriate pen and brush to use
         """
-        if not obj.property.Filled:
+        if not filled:
             brush_style = Qt.BrushStyle.NoBrush
         else:
-            if f"{obj.property.Status}" == "Disappearing":
+            if f"{status}" == "Disappearing":
                 brush_style = Qt.BrushStyle.Dense4Pattern
             else:
                 brush_style = Qt.BrushStyle.SolidPattern
 
-        color = colors[obj.property.Color] if obj.property.Color in colors else QColorConstants.LightGray
+        color = colors[color] if color in colors else QColorConstants.LightGray
         pen = QPen(color, 2, Qt.PenStyle.SolidLine)
         brush = QBrush(color, brush_style)
         return pen, brush
@@ -714,7 +716,7 @@ class VisualViewWin(QMainWindow):
         painter.drawEllipse(x, y, w, h)
 
     def shape_ellipse(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         painter.setPen(pen)
         painter.setBrush(brush)
         path = self.shape_cache("ellipse", rect.x, rect.y, rect.w, rect.h)
@@ -723,14 +725,14 @@ class VisualViewWin(QMainWindow):
         painter.drawPath(path)
 
     def shape_line(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         painter.setPen(pen)
         painter.setBrush(brush)
         path = self.shape_cache("line", rect.x, rect.y, rect.w, rect.h)
         painter.drawPath(path)
 
     def shape_rectangle(self, obj, rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         painter.setPen(pen)
         painter.setBrush(brush)
         path = self.shape_cache("rectangle", rect.x, rect.y, rect.w, rect.h)
@@ -741,7 +743,7 @@ class VisualViewWin(QMainWindow):
         painter.drawPath(path)
 
     def shape_triangle(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         painter.setPen(pen)
         painter.setBrush(brush)
         path = self.shape_cache("triangle", rect.x, rect.y, rect.w, rect.h)
@@ -750,7 +752,7 @@ class VisualViewWin(QMainWindow):
         painter.drawPath(path)
 
     def shape_diamond(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         painter.setPen(pen)
         painter.setBrush(brush)
         path = self.shape_cache("diamond", rect.x, rect.y, rect.w, rect.h)
@@ -759,7 +761,7 @@ class VisualViewWin(QMainWindow):
         painter.drawPath(path)
 
     def shape_cross(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         painter.setPen(pen)
         painter.setBrush(brush)
         path = self.shape_cache("cross", rect.x, rect.y, rect.w, rect.h)  # Use rect.w and rect.h
@@ -768,7 +770,7 @@ class VisualViewWin(QMainWindow):
         painter.drawPath(path)
 
     def shape_arc(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         painter.setPen(pen)
         painter.setBrush(brush)
         path = self.shape_cache("arc", rect.x, rect.y, rect.w, rect.h)
@@ -777,7 +779,7 @@ class VisualViewWin(QMainWindow):
         painter.drawPath(path)
 
     def shape_bar(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         painter.setPen(pen)
         painter.setBrush(brush)
         path = self.shape_cache("bar", rect.x, rect.y, rect.w, rect.h)
@@ -786,7 +788,7 @@ class VisualViewWin(QMainWindow):
         painter.drawPath(path)
 
     def shape_cross_hairs(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         painter.setPen(pen)
         painter.setBrush(brush)
         path = self.shape_cache("cross_hairs", rect.x, rect.y, rect.w, rect.h)
@@ -795,7 +797,7 @@ class VisualViewWin(QMainWindow):
         painter.drawPath(path)
 
     def shape_right_arrow(self, obj: VisualObject, rect: Rect, painter: QPainter, rotation: int = 0):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         painter.setPen(pen)
         painter.setBrush(brush)
         path = self.shape_cache("right_arrow", rect.x, rect.y, rect.w, rect.h)
@@ -815,7 +817,7 @@ class VisualViewWin(QMainWindow):
             painter.drawPath(path)
 
     def shape_button(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         pen = QColorConstants.Black
         painter.setPen(pen)
         painter.setBrush(brush)
@@ -825,7 +827,7 @@ class VisualViewWin(QMainWindow):
         painter.drawPath(path)
 
     def shape_keyboard_button(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         pen = QColorConstants.Black
         painter.setPen(pen)
         painter.setBrush(brush)
@@ -835,7 +837,7 @@ class VisualViewWin(QMainWindow):
         painter.drawPath(path)
 
     def shape_t_object(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         painter.setPen(pen)
         painter.setBrush(brush)
         path = self.shape_cache("t_object", rect.x, rect.y, rect.w, rect.h)
@@ -855,7 +857,7 @@ class VisualViewWin(QMainWindow):
             painter.drawPath(path)
 
     def shape_l_object(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         painter.setPen(pen)
         painter.setBrush(brush)
         path = self.shape_cache("l_object", rect.x, rect.y, rect.w, rect.h)
@@ -875,7 +877,7 @@ class VisualViewWin(QMainWindow):
             painter.drawPath(path)
 
     def shape_hill(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         pen = QColorConstants.Black
         painter.setPen(pen)
         painter.setBrush(brush)
@@ -885,7 +887,7 @@ class VisualViewWin(QMainWindow):
         painter.drawPath(path)
 
     def shape_inv_hill(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         pen = QColorConstants.Black
         painter.setPen(pen)
         painter.setBrush(brush)
@@ -895,7 +897,7 @@ class VisualViewWin(QMainWindow):
         painter.drawPath(path)
 
     def shape_clover(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         painter.setPen(pen)
         painter.setBrush(brush)
         path = self.shape_cache("clover", rect.x, rect.y, rect.w, rect.h)
@@ -916,7 +918,7 @@ class VisualViewWin(QMainWindow):
             painter.drawPath(path)
 
     def shape_house(self, obj: VisualObject, rect: Rect, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Filled, obj.property.Status, obj.property.Color)
         painter.setPen(pen)
         painter.setBrush(brush)
         path = self.shape_cache("house", rect.x, rect.y, rect.w, rect.h)

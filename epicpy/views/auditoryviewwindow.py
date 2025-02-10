@@ -396,9 +396,10 @@ class AuditoryViewWin(QMainWindow):
         self.draw_text(obj, painter)
 
     @staticmethod
-    def obj_pen_brush(obj) -> tuple:
+    @lru_cache()
+    def obj_pen_brush(obj_color: str) -> tuple:
         brush_style = Qt.BrushStyle.NoBrush
-        color = obj.property.Color if obj.property.Color else QColorConstants.LightGray
+        color = QColor(obj_color) if obj_color else QColorConstants.LightGray
         pen = QPen(color, 2, Qt.PenStyle.SolidLine)
         brush = QBrush(color, brush_style)
         return pen, brush
@@ -426,7 +427,7 @@ class AuditoryViewWin(QMainWindow):
         return path
 
     def shape_ellipse(self, obj, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Color.name())
         painter.setPen(pen)
         painter.setBrush(brush)
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
@@ -434,7 +435,7 @@ class AuditoryViewWin(QMainWindow):
         painter.drawPath(path)
 
     def shape_line(self, obj, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Color.name())
         painter.setPen(pen)
         painter.setBrush(brush)
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
@@ -442,7 +443,7 @@ class AuditoryViewWin(QMainWindow):
         painter.drawPath(path)
 
     def shape_rectangle(self, obj, painter: QPainter):
-        pen, brush = self.obj_pen_brush(obj)
+        pen, brush = self.obj_pen_brush(obj.property.Color.name())
         painter.setPen(pen)
         painter.setBrush(brush)
         x, y, w, h = self.center_and_scale(obj.location, obj.size)
@@ -460,38 +461,68 @@ class AuditoryViewWin(QMainWindow):
             path.addText(x, y + row * font.pixelSize() * 15, font, txt)
         return path
 
-    def draw_text(self, obj: SoundObject, painter: QPainter):
-        text = ""
+    @staticmethod
+    @lru_cache()
+    def get_sound_lines(kind: str, stream_name: str, timbre: str, loudness: float) -> set[str]:
+        lines: set[str] = set()
         cfg = config.device_cfg
+        if cfg.sound_text_kind:
+            lines.add(f"Kind: {kind}")
+        if cfg.sound_text_stream:
+            lines.add(f"Stream: {stream_name}")
+        if cfg.sound_text_timbre:
+            lines.add(f"Timbre: {timbre}")
+        if cfg.sound_text_loudness:
+            lines.add(f"Loudness: {loudness} db")
+        return lines
+
+    @staticmethod
+    @lru_cache()
+    def get_speech_lines(
+            kind: str, stream: str, pitch: float, loudness: float,
+            content: str, speaker: int, gender: str
+    ) -> set[str]:
+        lines: set[str] = set()
+        cfg = config.device_cfg
+        if cfg.speech_text_kind:
+            lines.add(f"Kind: {kind}")
+        if cfg.speech_text_stream:
+            lines.add(f"Stream: {stream}")
+        if cfg.speech_text_pitch:
+            lines.add(f"Pitch: {pitch} st")
+        if cfg.speech_text_loudness:
+            lines.add(f"Loudness: {loudness} db")
+        if cfg.speech_text_content:
+            lines.add(f"Content: {content}")
+        if cfg.speech_text_speaker:
+            lines.add(f"Speaker: {speaker}")
+        if cfg.speech_text_gender:
+            lines.add(f"Gender: {gender}")
+        return lines
+
+    def draw_text(self, obj: SoundObject, painter: QPainter):
         if obj.kind == "Sound":
-            if cfg.sound_text_kind:
-                text += f"Kind: {obj.kind}\n"
-            if cfg.sound_text_stream:
-                text += f"Stream: {obj.property.stream_name}\n"
-            if cfg.sound_text_timbre:
-                text += f"Timbre: {obj.property.timbre}\n"
-            if cfg.sound_text_loudness:
-                text += f"Loudness: {obj.property.loudness} db\n"
+            lines: set[str] = self.get_sound_lines(
+                kind=obj.kind,
+                stream_name=obj.property.stream_name,
+                timbre=obj.property.timbre,
+                loudness=obj.property.loudness
+            )
         elif obj.kind == "Speech":
-            if cfg.speech_text_kind:
-                text += f"Kind: {obj.kind}\n"
-            if cfg.speech_text_stream:
-                text += f"Stream: {obj.property.stream_name}\n"
-            if cfg.speech_text_pitch:
-                text += f"Pitch: {obj.property.pitch} st\n"
-            if cfg.speech_text_loudness:
-                text += f"Loudness: {obj.property.loudness} db\n"
-            if cfg.speech_text_content:
-                text += f"Content: {obj.property.content}\n"
-            if cfg.speech_text_speaker:
-                text += f"Speaker: {obj.property.speaker_id}\n"
-            if cfg.speech_text_gender:
-                text += f"Gender: {obj.property.speaker_gender}\n"
+            lines: set[str] = self.get_speech_lines(
+                kind=obj.kind,
+                stream=obj.property.stream_name,
+                pitch=obj.property.pitch,
+                loudness=obj.property.loudness,
+                content=obj.property.content,
+                speaker=obj.property.speaker_id,
+                gender=obj.property.speaker_gender
+            )
+
         else:
             return
 
-        text = text.strip()
-        if not text:
+        if not lines:
             return
 
         # Choose color based on status.
@@ -506,9 +537,6 @@ class AuditoryViewWin(QMainWindow):
         # Use the same scaling as before.
         font.setPointSize(round(self.scale * 0.8))
         painter.setFont(font)
-
-        # Split the text into individual lines.
-        lines = text.splitlines()
 
         # Create a list for the QStaticText objects and record each line's height.
         static_texts = []
