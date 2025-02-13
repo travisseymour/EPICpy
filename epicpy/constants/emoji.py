@@ -1,6 +1,6 @@
 """
-This file is part of the EPICpy source code. EPICpy is a tool for simulating 
-human performance tasks using the EPIC computational cognitive architecture 
+This file is part of the EPICpy source code. EPICpy is a tool for simulating
+human performance tasks using the EPIC computational cognitive architecture
 (David Kieras and David Meyer 1997a) using the Python programming language.
 Copyright (C) 2022 Travis L. Seymour, PhD
 
@@ -58,17 +58,17 @@ else:
     e_light_bang = "\u2755"
     e_light_check = "\u2705"
     e_dark_check = "\u2714"
-    e_boxed_x = "\u274E"
+    e_boxed_x = "\u274e"
     e_boxed_check = "\u2611"
     e_heavy_check = "\u2714"
     e_heavy_x = "\u2716"
-    e_bangbang = "\u203C"
+    e_bangbang = "\u203c"
     e_graph = "\U0001f4ca"
-    e_hourglass = "\u23F3"
+    e_hourglass = "\u23f3"
     e_230 = "\U0001f55d"
     e_info = "\u2139"
     e_boxed_ok = "\U0001f197"
-    e_warning = "\u26A0"
+    e_warning = "\u26a0"
     e_huge_x = "╳"
     e_huge_left_bracket = "〱"
     e_left_arrow = "⟶"

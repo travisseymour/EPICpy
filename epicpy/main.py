@@ -1,6 +1,6 @@
 """
-This file is part of the EPICpy source code. EPICpy is a tool for simulating 
-human performance tasks using the EPIC computational cognitive architecture 
+This file is part of the EPICpy source code. EPICpy is a tool for simulating
+human performance tasks using the EPIC computational cognitive architecture
 (David Kieras and David Meyer 1997a) using the Python programming language.
 Copyright (C) 2022 Travis L. Seymour, PhD
 
@@ -25,6 +25,7 @@ from importlib.resources import files, as_file
 from fastnumbers import check_int
 
 from epicpy.utils.defaultfont import get_default_font
+from epicpy.utils.splashscreen import SplashScreen
 
 os.environ["OUTDATED_IGNORE"] = "1"
 if platform.platform().split("-")[1].startswith("10."):
@@ -53,6 +54,7 @@ from epicpy.utils import config
 # epiclib name (epiclib.so) is same on mac and linux.
 # just in case we were recently running on a different os,
 # let's copy the right one for this system
+
 
 try:
     # Determine the source file based on the platform
@@ -108,8 +110,10 @@ OS = platform.system()
 # Define the C signal handler function
 def segfault_handler(signal, frame):
     log.warning("Segmentation fault occurred")
-    os._exit(1)
-    sys.exit(1)
+    try:
+        os._exit(1)
+    except AttributeError:
+        sys.exit(1)
 
 
 if OS in ("Linux", "Darwin"):
@@ -172,10 +176,6 @@ else:
 # ==================================================
 # ==================================================
 
-# init config
-config.app_cfg = config.AppConfig()
-config.device_cfg = config.DeviceConfig()
-
 
 def start_ui(app: QApplication):
     # load in any stored config data
@@ -224,12 +224,17 @@ def shut_it_down():
 
 
 def main():
-    import sys
-    from pathlib import Path
+    application = QApplication([])
 
     print("Loading EPICpy, please wait...")
 
-    application = QApplication([])
+    # Create splash screen that will close itself when main window appears
+    splash = SplashScreen()
+    splash.show()
+
+    # init config
+    config.app_cfg = config.AppConfig()
+    config.device_cfg = config.DeviceConfig()
 
     # ------------------------------------------------------
     # if frozen, send log messages to file in config folder

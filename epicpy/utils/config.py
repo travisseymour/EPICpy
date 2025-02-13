@@ -21,16 +21,28 @@ from dataclasses import dataclass, field, fields
 
 from loguru import logger as log
 
-SAVE_CONFIG_ON_UPDATE: bool = True
 
-device_cfg: Optional["DeviceConfig"] = None
-app_cfg: Optional["AppConfig"] = None
+"""
+Global Constants
+"""
+
+VALID_FONTS_FAMILIES = {"sans-serif", "serif", "monospace"}
+
 
 """
 Global Configuration Variable
 """
 
-VALID_FONTS_FAMILIES = {"sans-serif", "serif", "monospace"}
+SAVE_CONFIG_ON_UPDATE: bool = True
+APP_READY: bool = False  # will be True once main app window is visible
+
+device_cfg: Optional["DeviceConfig"] = None
+app_cfg: Optional["AppConfig"] = None
+
+
+def set_ready(flag: bool):
+    global APP_READY
+    APP_READY = flag
 
 
 @dataclass

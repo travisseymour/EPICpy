@@ -1,6 +1,6 @@
 """
-This file is part of the EPICpy source code. EPICpy is a tool for simulating 
-human performance tasks using the EPIC computational cognitive architecture 
+This file is part of the EPICpy source code. EPICpy is a tool for simulating
+human performance tasks using the EPIC computational cognitive architecture
 (David Kieras and David Meyer 1997a) using the Python programming language.
 Copyright (C) 2022 Travis L. Seymour, PhD
 

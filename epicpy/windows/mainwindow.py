@@ -947,6 +947,7 @@ class MainWin(QMainWindow):
         QMainWindow.hideEvent(self, event)
 
     def showEvent(self, event: QShowEvent) -> None:
+        config.set_ready(True)
         self.ui.plainTextEditOutput.set_updating(True)
         QMainWindow.showEvent(self, event)
 
