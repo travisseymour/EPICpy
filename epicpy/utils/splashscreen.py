@@ -21,7 +21,7 @@ class SplashScreen(QSplashScreen):
     """Custom splash screen that auto-closes when the main window is visible."""
 
     def __init__(self, main_window: Optional[QMainWindow] = None):
-        original_pixmap = QPixmap(get_resource("images", "splash.png"))
+        original_pixmap = QPixmap(str(get_resource("images", "splash.png")))
 
         # Scale to 3/4 (75%) of original size
         scaled_pixmap = original_pixmap.scaled(
