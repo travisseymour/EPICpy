@@ -3,9 +3,10 @@
 
 ---
 
-## VERSION: 2025.2.13.1
+## VERSION: 2025.2.13.2
 
 1. **ADDED**: Due to slow startup on mac and windows, adding splash screen so they at least know the startup worked. If splash doesn't start early enough on those systems, this feature may be removed.
+2. **FIXED**: Fixed misc references to pyqt directly, instead of using qtpy
 
 ---
 
