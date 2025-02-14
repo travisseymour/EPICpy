@@ -22,7 +22,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtGui import QStaticText, QTransform
+from qtpy.QtGui import QStaticText, QTransform
 from fastnumbers import fast_int
 from qdarktheme.qtpy.QtWidgets import QApplication
 from qtpy.QtGui import (

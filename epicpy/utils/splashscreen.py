@@ -2,9 +2,9 @@ import sys
 import time
 from typing import Optional
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QSplashScreen
-from PySide6.QtGui import QPixmap
-from PySide6.QtCore import Qt, QThread, QTimer
+from qtpy.QtWidgets import QApplication, QMainWindow, QSplashScreen
+from qtpy.QtGui import QPixmap
+from qtpy.QtCore import Qt, QThread, QTimer
 
 from epicpy.utils import config
 from epicpy.utils.apputils import get_resource

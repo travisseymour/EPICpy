@@ -259,8 +259,6 @@ class EPICpyDialog(QDialog):
         home_dir = str(Path.home())
         filter_str = self.get_executable_filter()
 
-        from PySide6.QtWidgets import QFileDialog
-
         file_path, _ = QFileDialog.getOpenFileName(
             self,  # Parent widget (or None if not inside a class)
             "Select Executable",  # Dialog title (caption)
