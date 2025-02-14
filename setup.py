@@ -16,7 +16,7 @@ NOTES:
   sudo apt install libxcb-cursor0
 '''
 
-if platform.system() == 'Darwin' and platform.platform().split('-')[1].startswith('10.'):
+if platform.system() == 'Darwin' and platform.mac_ver()[0] < '12.0.0':
     qt_package = 'PySide2'
 else:
     qt_package =  'PySide6==6.8.1.1'  # requires MacOS version 11 or higher

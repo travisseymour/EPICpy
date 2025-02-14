@@ -3,11 +3,11 @@
 
 ---
 
-## VERSION: 2025.2.13.2
+## VERSION: 2025.2.13.4
 
 1. **ADDED**: Due to slow startup on mac and windows, adding splash screen so they at least know the startup worked. If splash doesn't start early enough on those systems, this feature may be removed.
 2. **FIXED**: Fixed misc references to pyqt directly, instead of using qtpy
-
+3. **FIXED**: Updated old mac check to better decide between pyside2 and pyside6
 ---
 
 ## VERSION: 2025.2.10.1
