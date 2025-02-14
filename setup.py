@@ -17,7 +17,7 @@ NOTES:
 '''
 
 if platform.system() == 'Darwin' and platform.mac_ver()[0] < '12.0.0':
-    qt_package = 'PySide2'
+    qt_package = 'PySide2==5.15.2.1'
 else:
     qt_package =  'PySide6==6.8.1.1'  # requires MacOS version 11 or higher
 
@@ -28,14 +28,14 @@ DEPENDENCIES = [
     "python-dateutil==2.9.0.post0",
     "ulid==1.1",
     "ulid2==0.3.0",
-    "numpy",
-    "scipy",
+    "numpy==2.0.1",
+    "scipy==1.13.1",
     "pingouin==0.5.5",
     "plum-dispatch==2.0.1",
     "ascii_frame==0.0.1",
     "pandas==2.2.3",
     "pyqtdarktheme==2.1.0",
-    "fastnumbers"
+    "fastnumbers==5.1.1"
 ]
 # install these with `pip install .[dev]`
 DEVELOPMENT_DEPENDENCIES = [
