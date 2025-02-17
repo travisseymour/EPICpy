@@ -31,17 +31,48 @@ Project Sources
 * [EPICpy Source Repository](https://github.com/travisseymour/EPICpy) (this repository)
 * [EPICpy Documentation Repository](https://github.com/travisseymour/EPICpyDocs)
 
-**<font color="Green"><b>⭐ What's New - Big Changes to EPICpy in the 2023.5.28 Version</b></font>**
+--
 
-The 2023.5.8 version of EPICpy represents some large changes to the repository and codebase:
+### EPCpy Installation
 
-1. We are no longer creating executables with the [FMan-Build System](https://build-system.fman.io/). The primary reason is the mismatch of using a paid/proprietary system as a major component in an open-source project. In addition, it became cumbersome to create executables for every OS after ever version bump.
-2. We are now using [PipX](https://pypa.github.io/pipx/) for distribution and installation. This offers both easier distribution and installation, but the ability for users to upgrade EPICpy in-place.
-3. We are no longer using https://cppyy.readthedocs.io/en/latest/ for realtime automatic Python bindings of the C++ EPICLib codebase. Instead, we are compiling Python C-modules for each operating system using [PyBind11](https://pybind11.readthedocs.io/en/stable/index.html). One benefit of this approach is the removal of any need for device and encoder writers to read or write any C++. Now all imports will come from the devicebase support files as standard Python imports.
-4. The EPICpy demo models and device-creation support files have been re-written to remove last vestiges of C++ and cppyy references.
-5. As a result of the above 3 changes, we are now able to support more operating systems including Linux, MacOS (Intel & M1), and Windows.
-6. We've added a built-in editor based on [EPICCoder](https://github.com/travisseymour/epiccoder) that supports syntax-highlighting for EPIC Production Rule files. A right-click menu on the **Normal Output** window allows viewing or editing of the current model's data, production rule file, or Normal Output window contents. When EPICCoder is disabled in settings, EPICpy will instead use to related system defaults.
-7. The main menu is now in the same place (atop the Normal Output window) across all versions of EPICpy (previously, the MacOS version was an outlier).
-8. It is now possible to *Unload* Visual and Auditory Encoders after they have been loaded.
-9. It is no longer possible to switch EPICLib versions, EPICpy now always uses the 2016 version.
+#### System Requirements for EPICpy
+
+- [git](https://git-scm.com/): Git is a distributed version control system. 
+  - **Linux**: You almost certainly have this. Otherwise run `sudo apt install git`.
+  - **Windows**: Use the installer at https://git-scm.com/
+  - **MacOS**: Use the installer at https://git-scm.com/, or run `xcode-select --install`, or install [Homebrew](https://brew.sh/) and then run `brew install git`.
+
+- [uv](https://docs.astral.sh/uv/): uv is a Python package and project manager.
+- [xcb](https://xcb.freedesktop.org/): Library implementing the client-side of the X11 display server protocol. 
+  - **Linux Only**: `sudo apt install libxcb-cursor0`
+
+#### Python Requirements for EPICpy
+
+- EPICpy requires Python 3.10 (Linux and MacOS) or Python 3.9 (Windows). You will need the path to the appropriate version of Python. 
+  - run `uv python list` and copy the path to the Python version you need, e.g., on my Linux install, I can use `/usr/bin/python3.10`.
+  - If you don't see an entry for Python 3.10 (Linux & MacOS) or Python 3.9, you can install the version you need:
+    - `uv python install 3.10` (Linux & MacOS) or `uv python install 3.9` (Windows), and then run `uv python list` to jot down the path to Python.
+
+#### Install EPICpy
+
+On Linux & MacOS:
+
+```bash
+uv tool install git+https://www.github.com/travisseymour/EPICpy.git --python [PATH_TO_YOUR_PYTHON_310]
+```
+   
+On Windows:
+
+```bash
+uv tool install git+https://www.github.com/travisseymour/EPICpy.git --python [PATH_TO_YOUR_PYTHON_39]
+```
+ 
+For example,
+
+```bash
+# Linux or MacOS
+uv tool install git+https://www.github.com/travisseymour/EPICpy.git --python /usr/bin/python3.10
+# Windows
+uv tool install git+https://www.github.com/travisseymour/EPICpy.git --python AppData\Local\Programs\Python\Python310\python.exe
+```
 
