@@ -142,7 +142,6 @@ class LargeTextView(QWidget):
             if self.wait_label.isVisible():
                 self.wait_label.setVisible(False)
 
-        self.update()  # Trigger UI repaint
 
         if self.pending_lines:
             # Process in controlled batches
@@ -162,7 +161,10 @@ class LargeTextView(QWidget):
 
             # If there are still pending lines, schedule another round
             if self.pending_lines:
-                QTimer.singleShot(0, self.process_pending_lines)
+                QTimer.singleShot(25, self.process_pending_lines)
+
+        self.update()  # Trigger UI repaint
+
 
     def lines_in_view(self):
         visible_lines = self.height() // self.line_height
@@ -312,7 +314,7 @@ class LargeTextView(QWidget):
 
         self.search_dialog.ok = False
         self.search_dialog.ui.checkBoxRegEx.setChecked(
-            self.last_search_spec["use_regex"] if hasattr(self.last_search_spec, "use_regex") else False
+            self.last_search_spec.get("use_regex", False)
         )
         self.search_dialog.ui.checkBoxIgnoreCase.setChecked(
             self.last_search_spec["ignore_case"] if hasattr(self.last_search_spec, "ignore_case") else False
