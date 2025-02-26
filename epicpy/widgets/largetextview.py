@@ -1,7 +1,7 @@
 import sys
 import timeit
 
-from qtpy.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QScrollBar, QLabel, QMessageBox, QMenu
+from qtpy.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QScrollBar, QMessageBox, QMenu
 from qtpy.QtCore import Qt, QTimer
 from qtpy.QtGui import QPainter, QFontMetrics, QWheelEvent, QFont, QContextMenuEvent
 
@@ -22,26 +22,27 @@ class LargeTextView(QWidget):
         self.lines: list[str] = []
         self.pending_lines: list[str] = []
 
+        self.enable_updates: bool = True
+
         self.enable_context_menu = enable_context_menu
         self.current_line_location = 0
         self.default_pen = None
         self.update_frequency_ms = update_frequency_ms
         self.wait_msg_limit = wait_msg_limit
 
-        # create context menu
+
+        # Create context menu if enabled
         if self.enable_context_menu:
             self.context_menu = QMenu(self)
             self.search_action = self.context_menu.addAction("Search")
             self.context_menu.addSeparator()
             self.copy_action = self.context_menu.addAction("Copy")
-            self.copy_action.setText(f"Copy All")
+            self.copy_action.setText("Copy All")
             self.context_menu.addSeparator()
             self.clear_action = self.context_menu.addAction("Clear")
             self.contextMenuEvent = self.context_menu_event_handler
         else:
             self.context_menu = None
-            self.clear_action = None
-            self.search_action = None
 
         # Create the scrollbar and set it to the right
         self.scroll_bar = QScrollBar(Qt.Orientation.Vertical, self)
@@ -55,41 +56,27 @@ class LargeTextView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # search dialog setup
+        # Search dialog setup
         self.search_dialog = SearchWin()
         self.search_dialog.setModal(True)
         self.last_search_spec = {}
 
         # Create a QLabel for the "Please Wait" message
-        wait_font = QFont(QApplication.instance().font())
-        wait_font.setPointSize(48)  # was 54
-        self.wait_label = QLabel("Please Wait")
-        self.wait_label.setFont(wait_font)
-        self.wait_label.setStyleSheet("color: rgba(106, 121, 240, 50);")
-        self.wait_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.wait_label.setVisible(False)
-        self.wait_threshold = self.wait_msg_limit
+        # wait_font = QFont(QApplication.instance().font())
+        # wait_font.setPointSize(48)  # was 54
+        # self.wait_label = QLabel("Please Wait")
+        # self.wait_label.setFont(wait_font)
+        # self.wait_label.setStyleSheet("color: rgba(106, 121, 240, 50);")
+        # self.wait_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # self.wait_label.setVisible(False)
+        # self.wait_threshold = self.wait_msg_limit
 
-        # Timer to periodically update the view
-        self.update_timer = QTimer(self)
-        self.update_timer.timeout.connect(self.process_pending_lines)
-        self.set_updating(True)
+        # Start the self-rescheduling timer
+        QTimer.singleShot(self.update_frequency_ms, self.process_pending_lines)
 
     @property
     def line_height(self):
         return QFontMetrics(self.font()).lineSpacing()
-
-    @property
-    def is_updating(self) -> bool:
-        return self.update_timer.isActive()
-
-    def set_updating(self, flag: bool):
-        if flag:
-            if not self.is_updating:
-                self.update_timer.start(self.update_frequency_ms)
-        else:
-            if self.is_updating:
-                self.update_timer.stop()
 
     def setPlainText(self, text: str):
         self.clear()
@@ -100,21 +87,20 @@ class LargeTextView(QWidget):
 
     def write(self, text):
         if "\n" in text:
-            self.pending_lines.extend(line for line in text.splitlines(False) if "TLSDEBUG" not in line)
+            self.pending_lines.extend(
+                line for line in text.splitlines(False) if "TLSDEBUG" not in line
+            )
         elif "TLSDEBUG" not in text:
             self.pending_lines.append(text)
-
-        if not self.is_updating:
-            self.set_updating(True)
+        # No need to start a timer—our self-rescheduling timer is always running
 
     def clear(self):
-        self.update_timer.stop()
         self.lines = []
         self.pending_lines = []
         self.current_line_location = 0
         self.scroll_bar.setValue(0)
         self.scroll_bar.setMaximum(0)
-        self.update_timer.start(self.update_frequency_ms)
+        self.update()  # Force immediate repaint
 
     def is_idle(self):
         return not self.pending_lines
@@ -123,48 +109,31 @@ class LargeTextView(QWidget):
         self.clear()
 
     def get_text(self) -> str:
-        """
-        This is kind of a bad idea if self.lines contains, e.g., 10 million lines of text.
-        It is much wiser to just read through self.lines and either save them to disk, display
-        them somewhere, etc.
-        """
         return "\n".join(self.lines)
 
     def process_pending_lines(self):
-        if not self.update_timer.isActive():
-            return
+        delay = self.update_frequency_ms
 
-        # Show/hide "Please Wait" label based on pending line count
-        if len(self.pending_lines) > self.wait_threshold:
-            if not self.wait_label.isVisible():
-                self.wait_label.setVisible(True)
-        else:
-            if self.wait_label.isVisible():
-                self.wait_label.setVisible(False)
-
-
-        if self.pending_lines:
-            # Process in controlled batches
-            batch_size = min(5000, len(self.pending_lines))  # Adjust batch size if needed
-            self.lines.extend(self.pending_lines[:batch_size])
-            del self.pending_lines[:batch_size]  # Remove processed lines
-
-            # Adjust scrollbar max value
-            self.scroll_bar.setMaximum(len(self.lines) - 1)
-
-            # Calculate how many lines fit in the visible area
-            visible_lines = self.height() // self.line_height
-
-            # Ensure last line stays at the bottom
-            new_scroll_value = max(0, len(self.lines) - visible_lines)
-            self.scroll_bar.setValue(new_scroll_value)
-
-            # If there are still pending lines, schedule another round
+        if self.enable_updates:
+            # Process pending lines if any
             if self.pending_lines:
-                QTimer.singleShot(25, self.process_pending_lines)
+                # Process in controlled batches
+                batch_size = min(5000, len(self.pending_lines))
+                self.lines.extend(self.pending_lines[:batch_size])
+                del self.pending_lines[:batch_size]
+
+                # Adjust scrollbar maximum and auto-scroll to the bottom
+                self.scroll_bar.setMaximum(len(self.lines) - 1)
+                visible_lines = self.height() // self.line_height
+                new_scroll_value = max(0, len(self.lines) - visible_lines)
+                self.scroll_bar.setValue(new_scroll_value)
+                # Use a short delay when there’s a backlog
+                delay = self.update_frequency_ms / 2
 
         self.update()  # Trigger UI repaint
 
+        # Reschedule the next update
+        QTimer.singleShot(delay, self.process_pending_lines)
 
     def lines_in_view(self):
         visible_lines = self.height() // self.line_height
@@ -173,7 +142,6 @@ class LargeTextView(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-
         if self.default_pen is None:
             self.default_pen = painter.pen()
 
@@ -187,6 +155,7 @@ class LargeTextView(QWidget):
         for i in range(visible_lines):
             line_number = start_line + i
 
+            # Highlight the current line location
             highlighted_line_number = self.current_line_location - self.scroll_bar.value()
             if 0 <= highlighted_line_number < visible_lines:
                 painter.drawRect(0, highlighted_line_number * line_height, text_area_width, line_height)
@@ -195,7 +164,7 @@ class LargeTextView(QWidget):
                 line_text = self.lines[line_number]
                 painter.drawText(
                     0,
-                    (i + 0) * line_height,
+                    i * line_height,
                     text_area_width,
                     line_height,
                     Qt.AlignmentFlag.AlignLeft,
@@ -205,7 +174,6 @@ class LargeTextView(QWidget):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.scroll_bar.setSingleStep(self.height() // self.line_height)
-        self.update_wait_label_position()
 
     def wheelEvent(self, event: QWheelEvent):
         scroll_amount = event.angleDelta().y()
@@ -213,17 +181,37 @@ class LargeTextView(QWidget):
         self.scroll_bar.setValue(new_value)
         event.accept()
 
-    def update_wait_label_position(self):
-        self.wait_label.setGeometry(0, 0, self.width(), self.height())
+    def context_menu_event_handler(self, event: QContextMenuEvent):
+        action = self.context_menu.exec(event.globalPos())
+        if action == self.clear_action:
+            self.clear()
+        elif action == self.search_action:
+            self.query_search()
+        elif action == self.copy_action:
+            self.copy_to_clipboard()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            line_height = self.line_height
+            click_pos = event.position() - self.rect().topLeft()
+            clicked_row = (click_pos.y() + self.scroll_bar.value() * line_height) // line_height
+            if 0 <= clicked_row < len(self.lines):
+                self.current_line_location = int(clicked_row)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_F3:
+            self.continue_find_text()
+        else:
+            super().keyPressEvent(event)
 
     def continue_find_text(self) -> bool:
-        if not self.last_search_spec or not len(self.lines):
+        if not self.last_search_spec or not self.lines:
             return False
 
-        if self.last_search_spec["backwards"] is True:
-            if self.current_line_location - 1 < 0:
+        if self.last_search_spec["backwards"]:
+            if self.current_line_location - 1 >= 0:
                 self.current_line_location -= 1
-        if self.last_search_spec["backwards"] is False:
+        else:
             if self.current_line_location + 1 < len(self.lines):
                 self.current_line_location += 1
 
@@ -233,7 +221,6 @@ class LargeTextView(QWidget):
             ignore_case=self.last_search_spec["ignore_case"],
             backwards=self.last_search_spec["backwards"],
         )
-
         return True
 
     def find_text(
@@ -253,15 +240,16 @@ class LargeTextView(QWidget):
         if self.current_line_location > len(self.lines) - 1:
             self.current_line_location = len(self.lines) - 1
 
-        if len(self.lines) > 500_000:
-            find_func = find_next_index_with_target_parallel_concurrent
-        else:
-            find_func = find_next_index_with_target_serial
+        find_func = (
+            find_next_index_with_target_parallel_concurrent
+            if len(self.lines) > 500_000
+            else find_next_index_with_target_serial
+        )
 
         result = find_func(
             lines=self.lines,
             target=pattern,
-            start_line=self.current_line_location,  # self.scroll_bar.value(),
+            start_line=self.current_line_location,
             direction="backward" if backwards else "forward",
             is_regex=use_regex,
             ignore_case=ignore_case,
@@ -275,50 +263,23 @@ class LargeTextView(QWidget):
             QMessageBox.critical(
                 self,
                 "Search Error",
-                f"{'BACKWARD' if backwards else 'FORWARD'}SEARCH ERROR: Unable to locate '{pattern}' "
-                f"in text starting from the current search start location "
-                f"(Line {self.current_line_location}).",
+                f"{'BACKWARD' if backwards else 'FORWARD'} SEARCH ERROR: Unable to locate '{pattern}' "
+                f"in text starting from line {self.current_line_location}.",
+                QMessageBox.StandardButton.Ok,
             )
 
-    def context_menu_event_handler(self, event: QContextMenuEvent):
-        action = self.context_menu.exec(event.globalPos())
-        if action == self.clear_action:
-            self.clear()
-        elif action == self.search_action:
-            self.query_search()
-        elif action == self.copy_action:
-            self.copy_to_clipboard()
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton:
-            # Calculate the clicked row based on the click position and line height
-            line_height = self.line_height
-            click_pos = event.position() - self.rect().topLeft()
-            clicked_row = (click_pos.y() + self.scroll_bar.value() * line_height) // line_height
-
-            # Ensure clicked_row is within the range of lines
-            if 0 <= clicked_row < len(self.lines):
-                self.current_line_location = int(clicked_row)  # was clicked_row - 1
-                # print("Clicked row:", self.current_line_location)
-                # print("Text:", self.lines[self.current_line_location])
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_F3:
-            self.continue_find_text()
-        else:
-            super().keyPressEvent(event)
-
     def query_search(self):
-        if not len(self.lines):
-            QMessageBox.warning(self, "Warning", "There is currently no text to search.", QMessageBox.StandardButton.Ok)
+        if not self.lines:
+            QMessageBox.warning(
+                self,
+                "Warning",
+                "There is currently no text to search.", QMessageBox.StandardButton.Ok
+            )
+            return
 
         self.search_dialog.ok = False
-        self.search_dialog.ui.checkBoxRegEx.setChecked(
-            self.last_search_spec.get("use_regex", False)
-        )
-        self.search_dialog.ui.checkBoxIgnoreCase.setChecked(
-            self.last_search_spec["ignore_case"] if hasattr(self.last_search_spec, "ignore_case") else False
-        )
+        self.search_dialog.ui.checkBoxRegEx.setChecked(self.last_search_spec.get("use_regex", False))
+        self.search_dialog.ui.checkBoxIgnoreCase.setChecked(self.last_search_spec.get("ignore_case", False))
         self.search_dialog.exec()
 
         if self.search_dialog.ok:
@@ -335,7 +296,7 @@ class LargeTextView(QWidget):
         QMessageBox.information(
             self,
             "Text Copied To Clipboard",
-            f"Copied contexts of this window to the clipboard",
+            "Copied contents of this window to the clipboard",
         )
 
 
@@ -350,7 +311,7 @@ if __name__ == "__main__":
             self.viewer.setFixedSize(800, 600)
             self.setCentralWidget(self.viewer)
 
-            # Use QTimer.singleShot to delay the call to populate_text
+            # Delay the call to populate_text so the UI is ready.
             QTimer.singleShot(0, self.populate_text)
 
         def populate_text(self):
@@ -360,19 +321,17 @@ if __name__ == "__main__":
             # n = 100_000
             # n = 1000
             start = timeit.default_timer()
-
-            batch_size = 5000  # Number of lines to add before processing events
+            batch_size = 5000  # Number of lines per batch
             buffer = []
 
             for i in range(n):
                 buffer.append(f"Line {i}")
-
                 if len(buffer) >= batch_size:
                     self.viewer.append_text("\n".join(buffer))
                     buffer.clear()
-                    QApplication.processEvents()  # Process events without blocking updates
+                    QApplication.processEvents()
 
-            if buffer:  # Add any remaining lines
+            if buffer:
                 self.viewer.append_text("\n".join(buffer))
 
             print(f"populate_text added {n} lines in {timeit.default_timer() - start} sec.")

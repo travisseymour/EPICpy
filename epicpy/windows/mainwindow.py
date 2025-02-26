@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import socket
+import timeit
 
 from itertools import chain
 from textwrap import dedent
@@ -519,7 +520,15 @@ class MainWin(QMainWindow):
                 else self.simulation.device.get_parameter_string()
             )
 
-        self.simulation.run_all()
+        _ = self.simulation.run_all()
+        if config.device_cfg.text_refresh == 'none_during_run':
+            self.ui.plainTextEditOutput.enable_updates = True
+            old_update_ms = self.ui.plainTextEditOutput.update_frequency_ms
+            self.ui.plainTextEditOutput.update_frequency_ms = 0
+            while self.ui.plainTextEditOutput.pending_lines:
+                QApplication.processEvents()
+            self.ui.plainTextEditOutput.enable_updates = False
+            self.ui.plainTextEditOutput.update_frequency_ms = old_update_ms
 
     def run_next_cycle(self):
         self.simulation.run_next_cycle()
@@ -943,12 +952,12 @@ class MainWin(QMainWindow):
         event.accept()
 
     def hideEvent(self, event: QHideEvent) -> None:
-        self.ui.plainTextEditOutput.set_updating(False)
+        self.ui.plainTextEditOutput.enable_updates = False
         QMainWindow.hideEvent(self, event)
 
     def showEvent(self, event: QShowEvent) -> None:
         config.set_ready(True)
-        self.ui.plainTextEditOutput.set_updating(True)
+        self.ui.plainTextEditOutput.enable_updates = True
         QMainWindow.showEvent(self, event)
 
     def position_windows(self):
@@ -1001,8 +1010,8 @@ class MainWin(QMainWindow):
         #       for max speed. (March 2022 -- is this still the case?)
 
     def enable_text_updates(self, enable: bool = True):
-        self.ui.plainTextEditOutput.set_updating(enable)
-        self.trace_win.ui.plainTextEditOutput.set_updating(enable)
+        self.ui.plainTextEditOutput.enable_updates = enable
+        self.trace_win.ui.plainTextEditOutput.enable_updates = enable
 
     def clear_ui(
         self,
