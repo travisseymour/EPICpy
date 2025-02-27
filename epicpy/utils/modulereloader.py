@@ -175,9 +175,9 @@ def _reset_item_recursively(item, item_subtree, new_item):
 
     # FIXME: WHY IS THIS STILL HERE? vvv
 
-    # ==============================================================================
-    # This is another approach, but it's not working on realoading different devices
-    # ==============================================================================
+    # ================================================================================
+    # This is another approach, but it's not working when trying to re-load the module
+    # ================================================================================
 
     # def reload_package(self, root_module):
     #     package_name = root_module.__name__
