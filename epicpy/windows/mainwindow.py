@@ -520,15 +520,7 @@ class MainWin(QMainWindow):
                 else self.simulation.device.get_parameter_string()
             )
 
-        _ = self.simulation.run_all()
-        if config.device_cfg.text_refresh == 'none_during_run':
-            self.ui.plainTextEditOutput.enable_updates = True
-            old_update_ms = self.ui.plainTextEditOutput.update_frequency_ms
-            self.ui.plainTextEditOutput.update_frequency_ms = 0
-            while self.ui.plainTextEditOutput.pending_lines:
-                QApplication.processEvents()
-            self.ui.plainTextEditOutput.enable_updates = False
-            self.ui.plainTextEditOutput.update_frequency_ms = old_update_ms
+        self.simulation.run_all()
 
     def run_next_cycle(self):
         self.simulation.run_next_cycle()

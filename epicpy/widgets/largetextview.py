@@ -30,7 +30,6 @@ class LargeTextView(QWidget):
         self.update_frequency_ms = update_frequency_ms
         self.wait_msg_limit = wait_msg_limit
 
-
         # Create context menu if enabled
         if self.enable_context_menu:
             self.context_menu = QMenu(self)
@@ -87,9 +86,7 @@ class LargeTextView(QWidget):
 
     def write(self, text):
         if "\n" in text:
-            self.pending_lines.extend(
-                line for line in text.splitlines(False) if "TLSDEBUG" not in line
-            )
+            self.pending_lines.extend(line for line in text.splitlines(False) if "TLSDEBUG" not in line)
         elif "TLSDEBUG" not in text:
             self.pending_lines.append(text)
         # No need to start a timer—our self-rescheduling timer is always running
@@ -270,11 +267,7 @@ class LargeTextView(QWidget):
 
     def query_search(self):
         if not self.lines:
-            QMessageBox.warning(
-                self,
-                "Warning",
-                "There is currently no text to search.", QMessageBox.StandardButton.Ok
-            )
+            QMessageBox.warning(self, "Warning", "There is currently no text to search.", QMessageBox.StandardButton.Ok)
             return
 
         self.search_dialog.ok = False
