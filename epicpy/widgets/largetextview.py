@@ -26,7 +26,7 @@ class LargeTextView(QWidget):
         self.pending_lines = deque()
 
         self.enable_updates: bool = True
-        self.is_dark_mode: bool = config.app_cfg.dark_mode.lower() == 'dark' or is_dark_mode()
+        self.is_dark_mode: bool = config.app_cfg.dark_mode.lower() == "dark" or is_dark_mode()
         self.enable_context_menu = enable_context_menu
         self.current_line_location = 0
         self.default_pen = None
@@ -81,9 +81,7 @@ class LargeTextView(QWidget):
 
     def write(self, text):
         if "\n" in text:
-            self.pending_lines.extend(
-                line for line in text.splitlines(False) if "TLSDEBUG" not in line
-            )
+            self.pending_lines.extend(line for line in text.splitlines(False) if "TLSDEBUG" not in line)
         elif "TLSDEBUG" not in text:
             self.pending_lines.append(text)
         # No need to start a timer—our self-rescheduling timer is always running
@@ -153,15 +151,15 @@ class LargeTextView(QWidget):
         # Determine the relative position of the highlighted line
         highlighted_line = self.current_line_location - start_line
         if 0 <= highlighted_line < visible_lines:
-            painter.fillRect(0, highlighted_line * line_height, text_area_width, line_height,
-                             highlight_color)
+            painter.fillRect(0, highlighted_line * line_height, text_area_width, line_height, highlight_color)
 
         for i in range(visible_lines):
             line_number = start_line + i
             if line_number < len(self.lines):
                 line_text = self.lines[line_number]
-                painter.drawText(0, i * line_height, text_area_width, line_height,
-                                 Qt.AlignmentFlag.AlignLeft, line_text)
+                painter.drawText(
+                    0, i * line_height, text_area_width, line_height, Qt.AlignmentFlag.AlignLeft, line_text
+                )
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -280,7 +278,7 @@ class LargeTextView(QWidget):
             }
             self.find_text(**self.last_search_spec)
 
-    def has_selection(self)->bool:
+    def has_selection(self) -> bool:
         return 0 <= self.current_line_location < len(self.lines)
 
     def copy_all_to_clipboard(self):
@@ -293,9 +291,10 @@ class LargeTextView(QWidget):
         if self.has_selection():
             line_text = self.lines[self.current_line_location]
             QApplication.instance().clipboard().setText(line_text)
-            self.write( "Copied the selected line to the clipboard.")
+            self.write("Copied the selected line to the clipboard.")
         else:
-            self.write( "No valid line is selected to copy." )
+            self.write("No valid line is selected to copy.")
+
 
 if __name__ == "__main__":
 
