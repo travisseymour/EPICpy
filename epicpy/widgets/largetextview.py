@@ -189,6 +189,7 @@ class LargeTextView(QWidget):
             clicked_row = (click_pos.y() + self.scroll_bar.value() * line_height) // line_height
             if 0 <= clicked_row < len(self.lines):
                 self.current_line_location = int(clicked_row)
+                self.update()  # Force a repaint to show the highlight
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_F3:
