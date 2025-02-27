@@ -125,7 +125,7 @@ class LargeTextView(QWidget):
                 new_scroll_value = max(0, len(self.lines) - visible_lines)
                 self.scroll_bar.setValue(new_scroll_value)
                 # Use a short delay when there’s a backlog
-                delay = self.update_frequency_ms / 2
+                delay = 25
 
         self.update()  # Trigger UI repaint
 
