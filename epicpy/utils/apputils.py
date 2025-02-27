@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
+import math
 import os
 import subprocess
 import sys
@@ -29,6 +29,7 @@ from pathlib import Path
 from threading import Lock
 from weakref import WeakKeyDictionary
 
+from PySide6.QtGui import QPalette
 from qtpy.QtWidgets import QWidget
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
@@ -451,6 +452,17 @@ else:
     # Either Python version is below 3.10 or we are on Windows.
     # In that case, just use the normal dataclass decorator.
     conditional_dataclass = base_dataclass
+
+def is_dark_mode():
+    palette = QApplication.palette()
+    # Get the window background color from the palette.
+    bg = palette.color(QPalette.ColorRole.Window)
+    # Compute brightness using a standard luminance formula.
+    brightness = math.sqrt(0.299 * bg.red()**2 +
+                           0.587 * bg.green()**2 +
+                           0.114 * bg.blue()**2)
+    # Return True if brightness is below a threshold (e.g. 128)
+    return brightness < 128
 
 if __name__ == "__main__":
     print(f"{get_resource('fonts', 'Fira Mono', 'ATTRIBUTION.txt')=}")

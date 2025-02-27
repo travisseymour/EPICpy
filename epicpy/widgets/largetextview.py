@@ -2,11 +2,13 @@ import sys
 import timeit
 from collections import deque
 
+from epicpy.utils import config
 from qtpy.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QScrollBar, QMessageBox, QMenu
 from qtpy.QtCore import Qt, QTimer
 from qtpy.QtGui import QPainter, QFontMetrics, QWheelEvent, QFont, QContextMenuEvent
 
 from epicpy.dialogs.searchwindow import SearchWin
+from epicpy.utils.apputils import is_dark_mode
 from epicpy.utils.viewsearch import find_next_index_with_target_parallel_concurrent, find_next_index_with_target_serial
 
 
@@ -24,7 +26,7 @@ class LargeTextView(QWidget):
         self.pending_lines = deque()
 
         self.enable_updates: bool = True
-
+        self.is_dark_mode: bool = config.app_cfg.dark_mode.lower() == 'dark' or is_dark_mode()
         self.enable_context_menu = enable_context_menu
         self.current_line_location = 0
         self.default_pen = None
@@ -140,28 +142,26 @@ class LargeTextView(QWidget):
         line_height = self.line_height
         visible_lines = self.height() // line_height
         start_line = self.scroll_bar.value()
-
-        # Adjust the painting area to avoid drawing behind the scrollbar
         text_area_width = self.width() - self.scroll_bar.width()
+
+        # Determine a suitable highlight color
+        if self.is_dark_mode:
+            highlight_color = self.palette().highlight().color().lighter(120)
+        else:
+            highlight_color = self.palette().highlight().color().darker(120)
+
+        # Determine the relative position of the highlighted line
+        highlighted_line = self.current_line_location - start_line
+        if 0 <= highlighted_line < visible_lines:
+            painter.fillRect(0, highlighted_line * line_height, text_area_width, line_height,
+                             highlight_color)
 
         for i in range(visible_lines):
             line_number = start_line + i
-
-            # Highlight the current line location
-            highlighted_line_number = self.current_line_location - self.scroll_bar.value()
-            if 0 <= highlighted_line_number < visible_lines:
-                painter.drawRect(0, highlighted_line_number * line_height, text_area_width, line_height)
-
             if line_number < len(self.lines):
                 line_text = self.lines[line_number]
-                painter.drawText(
-                    0,
-                    i * line_height,
-                    text_area_width,
-                    line_height,
-                    Qt.AlignmentFlag.AlignLeft,
-                    line_text,
-                )
+                painter.drawText(0, i * line_height, text_area_width, line_height,
+                                 Qt.AlignmentFlag.AlignLeft, line_text)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
