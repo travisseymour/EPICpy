@@ -229,18 +229,22 @@ class Simulation:
                 # despite appearances, BOTH of the following lines are required if we
                 # want a device reload to pull any changes that have occurred since
                 # starting EPICpy!
+                module_name = device_file_p.stem  # Get module name without .py
+                module = importlib.import_module(module_name)  # Import dynamically
+                reset_module(module)  # Use your custom reset function
 
-                exec(f"import {device_file_p.stem}")
-                from epicpy.utils.modulereloader import reset_module
-
-                exec(f"reset_module({device_file_p.stem})")
+                # Inject the module into the global namespace so it behaves like an `import` statement
+                globals()[module_name] = module
 
                 if not quiet:
-                    self.write(f"{e_info} loading device code from {device_file_p.name}...")
+                    self.write(f"\n{e_info} loading device code from {device_file_p.name}...\n")
 
-                exec(
-                    f"self.device = {device_file_p.stem}.EpicDevice(ot=Normal_out, parent=self.parent, device_folder=device_file_p.parent)"
-                )
+                # Dynamically retrieve the class and instantiate the object
+                EpicDeviceClass = getattr(module, "EpicDevice", None)
+                if EpicDeviceClass is None:
+                    raise ImportError(f"Class 'EpicDevice' not found in module '{module_name}'.")
+
+                self.device = EpicDeviceClass(ot=Normal_out, parent=self.parent, device_folder=device_file_p.parent)
 
                 if not quiet:
                     self.write(f"\n{e_info} found EpicDevice class, created new device instance based on this class.\n")
