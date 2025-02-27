@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+
 import importlib
 import time
 import warnings
@@ -228,22 +229,18 @@ class Simulation:
                 # despite appearances, BOTH of the following lines are required if we
                 # want a device reload to pull any changes that have occurred since
                 # starting EPICpy!
-                module_name = device_file_p.stem  # Get module name without .py
-                module = importlib.import_module(module_name)  # Import dynamically
-                reset_module(module)  # Use your custom reset function
 
-                # Inject the module into the global namespace so it behaves like an `import` statement
-                globals()[module_name] = module
+                exec(f"import {device_file_p.stem}")
+                from epicpy.utils.modulereloader import reset_module
+
+                exec(f"reset_module({device_file_p.stem})")
 
                 if not quiet:
-                    self.write(f"\n{e_info} loading device code from {device_file_p.name}...\n")
+                    self.write(f"{e_info} loading device code from {device_file_p.name}...")
 
-                # Dynamically retrieve the class and instantiate the object
-                EpicDeviceClass = getattr(module, "EpicDevice", None)
-                if EpicDeviceClass is None:
-                    raise ImportError(f"Class 'EpicDevice' not found in module '{module_name}'.")
-
-                self.device = EpicDeviceClass(ot=Normal_out, parent=self.parent, device_folder=device_file_p.parent)
+                exec(
+                    f"self.device = {device_file_p.stem}.EpicDevice(ot=Normal_out, parent=self.parent, device_folder=device_file_p.parent)"
+                )
 
                 if not quiet:
                     self.write(f"\n{e_info} found EpicDevice class, created new device instance based on this class.\n")
@@ -445,7 +442,7 @@ class Simulation:
                     )
                 self.write(f"\n{e_boxed_check} {kind}encoder was created successfully.\n")
             except Exception as e:
-                self.write( f"\nERROR: Failed to create new {kind}Encoder from\n{encoder_file_p.name}: {e}\n" )
+                self.write(f"\nERROR: Failed to create new {kind}Encoder from\n{encoder_file_p.name}: {e}\n")
                 if kind == "Visual":
                     self.visual_encoder = None
                     config.device_cfg.visual_encoder = ""
@@ -456,9 +453,7 @@ class Simulation:
                 return
 
             try:
-                assert self.model, (
-                    f"{e_bangbang} Model doesn't appear to be initialized...has a device been loaded??!!"
-                )
+                assert self.model, f"{e_bangbang} Model doesn't appear to be initialized...has a device been loaded??!!"
                 if kind == "Visual":
                     # self.model.get_human_ptr().set_visual_encoder_ptr( self.visual_encoder )
                     set_visual_encoder_ptr(self.model, self.visual_encoder)
@@ -466,9 +461,7 @@ class Simulation:
                     # self.model.get_human_ptr().set_auditory_encoder_ptr( self.auditory_encoder )
                     set_auditory_encoder_ptr(self.model, self.auditory_encoder)
             except Exception as e:
-                self.write(
-                    f"\nERROR: Created new {kind} encoder, but connection to\nHuman_processor failed:\n{e}\n"
-                )
+                self.write(f"\nERROR: Created new {kind} encoder, but connection to\nHuman_processor failed:\n{e}\n")
                 if kind == "Visual":
                     self.visual_encoder = None
                     config.device_cfg.visual_encoder = ""
@@ -607,9 +600,7 @@ class Simulation:
             if calm:
                 self.write(f"\nWARNING: Unable to (re)compile ruleset file\n{rule_path.name}\n")
             else:
-                self.write(
-                    f"\nERROR: Unable to (re)compile ruleset file\n" f"{rule_path.name}!\n"
-                )
+                self.write(f"\nERROR: Unable to (re)compile ruleset file\n" f"{rule_path.name}!\n")
             rule_compiled = False
 
         # make sure run state reflects result of rule compile attempt
@@ -681,7 +672,7 @@ class Simulation:
 
             if config.device_cfg.describe_parameters:
                 if desc_param_loaded:
-                    self.write(f'\n{describe_parameters_u(self.model)}\n')
+                    self.write(f"\n{describe_parameters_u(self.model)}\n")
 
             self.write("\nSIMULATION STARTING\n")
 
@@ -890,9 +881,7 @@ class Simulation:
                 else:
                     self.current_rule_index += 1
                     if self.current_rule_index < len(self.rule_files):
-                        self.write(
-                            f"\n{e_boxed_x} Compile Failed for {rule_name}, moving to next rule in list....\n"
-                        )
+                        self.write(f"\n{e_boxed_x} Compile Failed for {rule_name}, moving to next rule in list....\n")
                         if self.compile_rule(self.rule_files[self.current_rule_index].rule_file):
                             self.run_all()
                     else:

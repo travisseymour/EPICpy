@@ -3,11 +3,11 @@
 
 ---
 
-## VERSION: 2025.2.26.2
+## VERSION: 2025.2.26.3
 
 1. **ADDED**: Ability to copy current line of output window.
 2. **FIXED**: Fixed bugs in custom textedit used in output windows.
-3. **UPDATE**: Updated device loader to a more secure method. 
+3. ~~**UPDATE**: Updated device loader to a more secure method.~~
 4. **FIXED**: Started moving broken text boxes. 
 5. **FIXED**: Remove redundant timer calls.
 
