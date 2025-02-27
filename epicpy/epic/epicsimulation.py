@@ -214,10 +214,8 @@ class Simulation:
 
             # remove any old device path additions
             for path in self.device_path_additions:
-                try:
+                if path in sys.path:
                     sys.path.remove(path)
-                except ValueError:
-                    ...
 
             # Must add parents folder to system path
             for parent_path in (
@@ -701,14 +699,14 @@ class Simulation:
                 current_param = self.param_set.pop()
                 self.device.set_parameter_string(current_param)
 
-            if config.device_cfg.run_command == "run_for":
-                self.run_time_limit = self.run_time + int(config.device_cfg.run_command_value)
-            elif config.device_cfg.run_command == "run_until":
-                self.run_time_limit = int(config.device_cfg.run_command_value)
-            elif config.device_cfg.run_command == "run_for_cycles":
-                self.run_time_limit = self.run_time + int(config.device_cfg.run_command_value) * 50
-            elif config.device_cfg.run_command == "run_until_done":
-                self.run_time_limit = sys.maxsize
+            run_commands = {
+                "run_for": self.run_time + int(config.device_cfg.run_command_value),
+                "run_until": int(config.device_cfg.run_command_value),
+                "run_for_cycles": self.run_time + int(config.device_cfg.run_command_value) * 50,
+                "run_until_done": sys.maxsize,
+            }
+            if config.device_cfg.run_command in run_commands:
+                self.run_time_limit = run_commands.get(config.device_cfg.run_command, sys.maxsize)
             else:
                 self.write(
                     f"\n{e_info} WARNING: unexpected run command found in config file "
