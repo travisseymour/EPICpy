@@ -122,7 +122,7 @@ class LargeTextView(QWidget):
                 # Use a shorter delay when there’s a backlog
                 delay = self.update_frequency_ms // 2
 
-        self.update()  # Trigger UI repaint
+                self.update()  # Trigger UI repaint only if a change is made
 
         # Reschedule the next update
         QTimer.singleShot(delay, self.process_pending_lines)
