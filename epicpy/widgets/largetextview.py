@@ -1,5 +1,6 @@
 import sys
 import timeit
+from collections import deque
 
 from qtpy.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QScrollBar, QMessageBox, QMenu
 from qtpy.QtCore import Qt, QTimer
@@ -20,7 +21,7 @@ class LargeTextView(QWidget):
     ):
         super().__init__(parent)
         self.lines: list[str] = []
-        self.pending_lines: list[str] = []
+        self.pending_lines = deque()
 
         self.enable_updates: bool = True
 
@@ -60,15 +61,7 @@ class LargeTextView(QWidget):
         self.search_dialog.setModal(True)
         self.last_search_spec = {}
 
-        # Create a QLabel for the "Please Wait" message
-        # wait_font = QFont(QApplication.instance().font())
-        # wait_font.setPointSize(48)  # was 54
-        # self.wait_label = QLabel("Please Wait")
-        # self.wait_label.setFont(wait_font)
-        # self.wait_label.setStyleSheet("color: rgba(106, 121, 240, 50);")
-        # self.wait_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # self.wait_label.setVisible(False)
-        # self.wait_threshold = self.wait_msg_limit
+        # (The "Please Wait" label has been removed)
 
         # Start the self-rescheduling timer
         QTimer.singleShot(self.update_frequency_ms, self.process_pending_lines)
@@ -86,14 +79,16 @@ class LargeTextView(QWidget):
 
     def write(self, text):
         if "\n" in text:
-            self.pending_lines.extend(line for line in text.splitlines(False) if "TLSDEBUG" not in line)
+            self.pending_lines.extend(
+                line for line in text.splitlines(False) if "TLSDEBUG" not in line
+            )
         elif "TLSDEBUG" not in text:
             self.pending_lines.append(text)
         # No need to start a timer—our self-rescheduling timer is always running
 
     def clear(self):
         self.lines = []
-        self.pending_lines = []
+        self.pending_lines.clear()
         self.current_line_location = 0
         self.scroll_bar.setValue(0)
         self.scroll_bar.setMaximum(0)
@@ -116,15 +111,15 @@ class LargeTextView(QWidget):
             if self.pending_lines:
                 # Process in controlled batches
                 batch_size = min(5000, len(self.pending_lines))
-                self.lines.extend(self.pending_lines[:batch_size])
-                del self.pending_lines[:batch_size]
+                for _ in range(batch_size):
+                    self.lines.append(self.pending_lines.popleft())
 
                 # Adjust scrollbar maximum and auto-scroll to the bottom
                 self.scroll_bar.setMaximum(len(self.lines) - 1)
                 visible_lines = self.height() // self.line_height
                 new_scroll_value = max(0, len(self.lines) - visible_lines)
                 self.scroll_bar.setValue(new_scroll_value)
-                # Use a short delay when there’s a backlog
+                # Use a shorter delay when there’s a backlog
                 delay = self.update_frequency_ms // 2
 
         self.update()  # Trigger UI repaint
