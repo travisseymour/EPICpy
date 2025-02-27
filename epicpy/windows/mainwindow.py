@@ -1858,6 +1858,8 @@ class MainWin(QMainWindow):
         self.context_menu.addSeparator()
         self.context_items["Copy"] = self.context_menu.addAction("Copy")
         self.context_items["Copy"].setText(f"Copy All Lines")
+        self.context_items["CopyLine"] = self.context_menu.addAction("Copy")
+        self.context_items["CopyLine"].setText(f"Copy Selected Line")
         self.context_items["Clear"] = self.context_menu.addAction("Clear")
         self.context_menu.addSeparator()
         self.context_items["OpenOutput"] = self.context_menu.addAction("Open Normal Output In Text Editor")
@@ -1883,9 +1885,9 @@ class MainWin(QMainWindow):
             self.disable_all_context_items()
 
             self.context_items["Search"].setEnabled(True)
-            # self.context_items["SelectAll"].setEnabled(True)
 
             self.context_items["Copy"].setEnabled(True)
+            self.context_items["CopyLine"].setEnabled(self.ui.plainTextEditOutput.has_selection())
             self.context_items["Clear"].setEnabled(True)
 
             self.context_items["OpenOutput"].setEnabled(True)
@@ -1924,6 +1926,8 @@ class MainWin(QMainWindow):
         #     self.ui.plainTextEditOutput.selectAll()
         elif action == self.context_items["Copy"]:
             self.ui.plainTextEditOutput.copy_all_to_clipboard()
+        elif action == self.context_items["CopyLine"]:
+            self.ui.plainTextEditOutput.copy_line_to_clipboard()
         elif action == self.context_items["OpenOutput"]:
             self.launchEditor(which_file="NormalOut")
         elif action == self.context_items["EditRules"]:
