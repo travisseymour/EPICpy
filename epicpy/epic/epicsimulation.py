@@ -107,9 +107,11 @@ class Simulation:
         if config.device_cfg.display_refresh in ("after_each_step", "continuously"):
             self.parent.update_views(current_time)
         elif config.device_cfg.display_refresh == "after_every_sec":
-            if timeit.default_timer() - self.last_update_time >= float(config.device_cfg.run_command_value):
+            current_timeit = timeit.default_timer()  # Cache timer result
+            if current_timeit - self.last_update_time >= float(config.device_cfg.run_command_value):
                 self.parent.update_views(current_time)
-                self.last_update_time = timeit.default_timer()
+                self.last_update_time = current_timeit  # Reuse cached value
+
         # ** if 'never_during_run' then this function does nothing
 
     def update_model_output_settings(self):
