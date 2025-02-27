@@ -114,7 +114,7 @@ class TraceWin(QMainWindow):
         # elif action == selectAllAction:
         #     self.ui.plainTextEditOutput.selectAll()
         elif action == copyAction:
-            self.ui.plainTextEditOutput.copy_to_clipboard()
+            self.ui.plainTextEditOutput.copy_all_to_clipboard()
 
     # ----------------------------------------
 

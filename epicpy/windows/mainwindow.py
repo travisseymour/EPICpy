@@ -1875,7 +1875,10 @@ class MainWin(QMainWindow):
         if self.run_state == RUNNING:
             self.disable_all_context_items()
             for item in ["Stop", "EditPRS", "OpenOutput", "Quit"]:
-                self.context_items[item].setEnabled(True)
+                try:
+                    self.context_items[item].setEnabled(True)
+                except KeyError:
+                    ...
         else:
             self.disable_all_context_items()
 
@@ -1920,7 +1923,7 @@ class MainWin(QMainWindow):
         # elif action == self.context_items['SelectAll']:
         #     self.ui.plainTextEditOutput.selectAll()
         elif action == self.context_items["Copy"]:
-            self.ui.plainTextEditOutput.copy_to_clipboard()
+            self.ui.plainTextEditOutput.copy_all_to_clipboard()
         elif action == self.context_items["OpenOutput"]:
             self.launchEditor(which_file="NormalOut")
         elif action == self.context_items["EditRules"]:

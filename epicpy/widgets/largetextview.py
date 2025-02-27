@@ -180,7 +180,7 @@ class LargeTextView(QWidget):
         elif action == self.search_action:
             self.query_search()
         elif action == self.copy_action:
-            self.copy_to_clipboard()
+            self.copy_all_to_clipboard()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -280,7 +280,7 @@ class LargeTextView(QWidget):
             }
             self.find_text(**self.last_search_spec)
 
-    def copy_to_clipboard(self):
+    def copy_all_to_clipboard(self):
         QApplication.instance().clipboard().setText(self.get_text())
         QMessageBox.information(
             self,
@@ -288,6 +288,21 @@ class LargeTextView(QWidget):
             "Copied contents of this window to the clipboard",
         )
 
+    def copy_line_to_clipboard(self):
+        if 0 <= self.current_line_location < len(self.lines):
+            line_text = self.lines[self.current_line_location]
+            QApplication.instance().clipboard().setText(line_text)
+            QMessageBox.information(
+                self,
+                "Line Copied",
+                "Copied the selected line to the clipboard",
+            )
+        else:
+            QMessageBox.warning(
+                self,
+                "Copy Error",
+                "No valid line is selected to copy."
+            )
 
 if __name__ == "__main__":
 
