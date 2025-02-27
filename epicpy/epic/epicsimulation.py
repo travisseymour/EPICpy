@@ -46,7 +46,6 @@ from epicpy.utils.modulereloader import reset_module
 
 warnings.filterwarnings("ignore", module="matplotlib\..*")
 warnings.filterwarnings("ignore", module="pingouin\..*")
-# warnings.filterwarnings("ignore")  # NOTE: Is this required, or are the above 2 lines sufficient?
 
 # KEEP HERE, USED IN EXEC STATEMENT!
 
@@ -99,9 +98,6 @@ class Simulation:
         self.visual_encoder_path_additions = []
         self.auditory_encoder_path_additions = []
 
-    # def __del__(self):
-    #     self.reset_path()
-
     def call_for_display_refresh(self):
         current_time = self.instance.get_time()
         if config.device_cfg.display_refresh in ("after_each_step", "continuously"):
@@ -132,7 +128,7 @@ class Simulation:
             self.model.set_trace_temporal(config.device_cfg.trace_temporal)
             self.model.set_trace_device(config.device_cfg.trace_device)
         except Exception as e:
-            self.write(f"\nERROR: Failed to update EPIC output or trace settings:\n{e}\n")
+            self.write(f"\n❌ ERROR: Failed to update EPIC output or trace settings:\n{e}\n")
 
     def on_load_device(self, file: str = "", quiet: bool = False):
         if not file:
