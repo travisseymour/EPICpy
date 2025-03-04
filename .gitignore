@@ -172,9 +172,11 @@ do_pseudo_release.py
 freeze_and_run.sh
 freeze_and_run_macos.sh
 update_version.py
+devices/
 
 # stuff put in by pipx, both already in default python .gitignore
 # build/
 # *.egg-info/
 
 # Pycharm config files
+

@@ -119,10 +119,14 @@ class TraceWin(QMainWindow):
     # ----------------------------------------
 
     def enable_output_updating(self):
-        self.ui.plainTextEditOutput.set_updating(True)
+        # FIXME: check what these were for and see if we need to add some functionality back somewhere??
+        #        Mar 4 2025 - tls
+        # self.ui.plainTextEditOutput.set_updating(True)
+        return
 
     def disable_output_updating(self):
-        self.ui.plainTextEditOutput.set_updating(False)
+        # self.ui.plainTextEditOutput.set_updating(False)
+        return
 
     def write(self, text: str):
         self.ui.plainTextEditOutput.write(text)
@@ -131,11 +135,11 @@ class TraceWin(QMainWindow):
         self.ui.plainTextEditOutput.flush()
 
     def hideEvent(self, event: QHideEvent) -> None:
-        self.ui.plainTextEditOutput.set_updating(False)
+        # self.ui.plainTextEditOutput.set_updating(False)
         QMainWindow.hideEvent(self, event)
 
     def showEvent(self, event: QShowEvent) -> None:
-        self.ui.plainTextEditOutput.set_updating(True)
+        # self.ui.plainTextEditOutput.set_updating(True)
         QMainWindow.showEvent(self, event)
 
     def closeEvent(self, event: QCloseEvent) -> None:
