@@ -283,18 +283,21 @@ class LargeTextView(QWidget):
 
     def copy_all_to_clipboard(self):
         QApplication.instance().clipboard().setText(self.get_text())
-        self.write(
-            "Copied contents of this window to the clipboard.",
-        )
+        # TODO: move this to a dialog box?
+        # self.write(
+        #     "Copied contents of this window to the clipboard.",
+        # )
 
     def copy_line_to_clipboard(self):
         if self.has_selection():
             line_text = self.lines[self.current_line_location]
             QApplication.instance().clipboard().setText(line_text)
-            self.write("Copied the selected line to the clipboard.")
+            # TODO: Move this to a dialog box?
+            # self.write("Copied the selected line to the clipboard.")
         else:
-            self.write("No valid line is selected to copy.")
-
+            # FIXME: Move This To A Dialog Box!!
+            # self.write("No valid line is selected to copy.")
+            ...
 
 if __name__ == "__main__":
 
