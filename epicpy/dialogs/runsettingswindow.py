@@ -18,11 +18,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from epicpy.uifiles.runsettingsui import Ui_DialogRunSettings
 from qtpy.QtWidgets import QDialog, QButtonGroup, QMessageBox
-from epicpy.utils import config
+from qtpy.QtGui import QShowEvent
+
 from typing import Callable
 
+from epicpy.uifiles.runsettingsui import Ui_DialogRunSettings
+from epicpy.utils import config
 from epicpy.utils.apputils import clear_font
 
 
@@ -32,11 +34,13 @@ class RunSettingsWin(QDialog):
         default_device_params: str,
         data_delete_func: Callable = None,
         data_info_func: Callable = None,
+        simulation=None,
     ):
         super(RunSettingsWin, self).__init__()
         self.data_delete_func = data_delete_func
         self.data_info_func = data_info_func
         self.default_device_params = default_device_params
+        self.simulation = simulation
         self.ok = False
         self.ui = Ui_DialogRunSettings()
         self.ui.setupUi(self)
@@ -89,6 +93,12 @@ class RunSettingsWin(QDialog):
             self.resize(w, h)
 
         # self.setLayout(self.ui.verticalLayout_5)
+
+    def showEvent(self, event: QShowEvent):
+        try:
+            self.ui.lineEditDeviceParameters.setToolTip(self.simulation.device.condition_hint)
+        except Exception:
+            ...
 
     def resizeEvent(self, event):
         # self.resized.emit()  # in case you want to send this signal somewhere else

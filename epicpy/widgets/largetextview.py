@@ -299,6 +299,7 @@ class LargeTextView(QWidget):
             # self.write("No valid line is selected to copy.")
             ...
 
+
 if __name__ == "__main__":
 
     class LTTTestMainWindow(QMainWindow):

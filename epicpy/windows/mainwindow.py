@@ -1245,9 +1245,7 @@ class MainWin(QMainWindow):
             delete_data_func, data_info_func = None, None
 
         self.run_settings_dialog = RunSettingsWin(
-            self.simulation.default_device_parameters,
-            delete_data_func,
-            data_info_func,
+            self.simulation.default_device_parameters, delete_data_func, data_info_func, self.simulation
         )
         self.run_settings_dialog.ui.pushButtonDeleteData.setEnabled(delete_data_func is not None)
 

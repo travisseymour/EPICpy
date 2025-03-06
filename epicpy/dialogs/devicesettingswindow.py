@@ -19,10 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from qtpy.QtWidgets import QApplication
+from qtpy.QtWidgets import QDialog, QCheckBox, QListWidgetItem
 
 from epicpy.utils import config
 from epicpy.uifiles.devicesettingsui import Ui_DialogDeviceOptions
-from qtpy.QtWidgets import QDialog, QCheckBox, QListWidgetItem
 
 from epicpy.utils.apputils import clear_font
 

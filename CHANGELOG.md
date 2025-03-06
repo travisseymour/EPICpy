@@ -3,6 +3,14 @@
 
 ---
 
+## VERSION: 2025.3.5.1
+
+1. **FIXED**: Problem with view background images was fixed.
+2. **ADDED**: added ParameterString tool-tip in run-settings dialog.
+
+
+---
+
 ## VERSION: 2025.2.26.4
 
 1. **ADDED**: Ability to copy current line of output window.
