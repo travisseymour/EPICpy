@@ -3,6 +3,13 @@
 
 ---
 
+## VERSION: 2025.3.11.1
+
+1. **CHANGED**: Preferring Sans-Serif system font default after issues with monospace rendering on some systems.
+
+
+---
+
 ## VERSION: 2025.3.5.1
 
 1. **FIXED**: Problem with view background images was fixed.
