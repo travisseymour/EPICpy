@@ -93,5 +93,5 @@ class BreakSettingsWin(QDialog):
         ]
         rule_states = list(zip(self.all_rules, states))
         for rule_name, state in rule_states:
-            self.model.set_rule_break_state(Symbol(rule_name), bool(state))
+            self.model.set_rule_break_state(Symbol(rule_name), bool(state.value))
         self.close()

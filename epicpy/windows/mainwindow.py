@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import socket
-import timeit
 
 from itertools import chain
 from textwrap import dedent
@@ -264,10 +263,10 @@ class MainWin(QMainWindow):
 
         self.simulation = Simulation(self)
 
-        # self.ui.actionFind.triggered.connect(self.ui.plainTextEditOutput.query_search)
-        # self.ui.actionFind.setShortcut("Ctrl+F")
-        # self.ui.actionFindNext.triggered.connect(self.do_search)
-        # self.ui.actionFindNext.setShortcut("F3")
+        self.ui.actionFind.triggered.connect(self.ui.plainTextEditOutput.query_search)
+        self.ui.actionFind.setShortcut("Ctrl+F")
+        self.ui.actionFindNext.triggered.connect(self.ui.plainTextEditOutput.continue_find_text)
+        self.ui.actionFindNext.setShortcut("F3")
         # self.ui.actionFindPrevious.triggered.connect(
         #     partial(self.do_search, backwards=True)
         # )

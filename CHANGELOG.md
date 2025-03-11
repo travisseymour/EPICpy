@@ -3,9 +3,10 @@
 
 ---
 
-## VERSION: 2025.3.11.1
+## VERSION: 2025.3.11.2
 
 1. **CHANGED**: Preferring Sans-Serif system font default after issues with monospace rendering on some systems.
+2. **FIXED**: Problem with menu access to output window text search functionality (keyboard was already working).
 
 
 ---
