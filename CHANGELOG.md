@@ -3,6 +3,13 @@
 
 ---
 
+## VERSION: 2025.3.14.1
+
+1. **FIXED**: Window geometry settings were being ignored on Fedora under GNOME 47.
+
+---
+
+
 ## VERSION: 2025.3.11.2
 
 1. **CHANGED**: Preferring Sans-Serif system font default after issues with monospace rendering on some systems.

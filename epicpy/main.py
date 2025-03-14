@@ -18,21 +18,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import os
 import platform
 from importlib.resources import files, as_file
 
 from fastnumbers import check_int
-
-from epicpy.utils.defaultfont import get_default_font
-from epicpy.utils.splashscreen import SplashScreen
-
-os.environ["OUTDATED_IGNORE"] = "1"
-if platform.platform().split("-")[1].startswith("10."):
-    os.environ["QT_MAC_WANTS_LAYER"] = "1"
-
-# os.environ["QT_DEBUG_PLUGINS"] = "1" # for more info when there are plugin load errors
-
 
 import datetime
 import ctypes.wintypes
@@ -44,6 +33,18 @@ import subprocess
 from pathlib import Path
 from shutil import copyfile
 from loguru import logger as log
+
+from epicpy.utils.defaultfont import get_default_font
+from epicpy.utils.splashscreen import SplashScreen
+
+os.environ["OUTDATED_IGNORE"] = "1"
+if platform.platform().split("-")[1].startswith("10."):
+    os.environ["QT_MAC_WANTS_LAYER"] = "1"
+
+# os.environ["QT_DEBUG_PLUGINS"] = "1" # for more info when there are plugin load errors
+if sys.platform.startswith("linux"):
+    os.environ["QT_QPA_PLATFORM"] = "xcb"  # This has to be set BEFORE importing QApplication
+
 
 from qtpy.QtWidgets import QApplication
 from qtpy.QtCore import qInstallMessageHandler, QCoreApplication
