@@ -134,26 +134,44 @@ class StateChangeWatcher(QObject):
         return False
 
 
+import socket
+from PySide6.QtCore import QThread, Signal
+
 class UdpThread(QThread):
     messageReceived = Signal(str)
 
     def __init__(self, parent, udp_ip: str, udp_port: int):
-        super(UdpThread, self).__init__(parent)
+        super().__init__(parent)
         self.udp_ip = udp_ip  # e.g., "127.0.0.1"
         self.udp_port = udp_port  # e.g., 13047
         self.is_running = True
+        self.sock = None
 
     def run(self):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind((self.udp_ip, self.udp_port))
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind((self.udp_ip, self.udp_port))
+        self.sock.settimeout(0.5)  # Timeout to check the loop condition regularly
 
-        while self.is_running:
-            data, addr = sock.recvfrom(4096)
-            message = data.decode("utf-8")
-            self.messageReceived.emit(message)
+        try:
+            while self.is_running:
+                try:
+                    data, addr = self.sock.recvfrom(4096)
+                    message = data.decode("utf-8")
+                    self.messageReceived.emit(message)
+                except socket.timeout:
+                    continue  # Allows periodic checking of self.is_running
+                except OSError:
+                    # This is raised when the socket is closed during recvfrom()
+                    break
+        finally:
+            if self.sock:
+                self.sock.close()
 
     def stop(self):
         self.is_running = False
+        if self.sock:
+            self.sock.close()  # Force unblock recvfrom()
+
 
 
 class Ui_MainWindowCustom(Ui_MainWindow):
@@ -892,13 +910,19 @@ class MainWin(QMainWindow):
             self.halt_simulation()
 
         self.normal_out_view_thread.stop()
+        self.normal_out_view_thread.wait()
+
         self.trace_out_view_thread.stop()
+        self.trace_out_view_thread.wait()
+
         try:
             self.debug_out_view_thread.stop()
+            self.debug_out_view_thread.wait()
         except AttributeError:
             ...
         try:
             self.pps_out_view_thread.stop()
+            self.pps_out_view_thread.wait()
         except AttributeError:
             ...
 
