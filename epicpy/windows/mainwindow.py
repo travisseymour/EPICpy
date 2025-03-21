@@ -137,6 +137,7 @@ class StateChangeWatcher(QObject):
 import socket
 from PySide6.QtCore import QThread, Signal
 
+
 class UdpThread(QThread):
     messageReceived = Signal(str)
 
@@ -171,7 +172,6 @@ class UdpThread(QThread):
         self.is_running = False
         if self.sock:
             self.sock.close()  # Force unblock recvfrom()
-
 
 
 class Ui_MainWindowCustom(Ui_MainWindow):
@@ -456,7 +456,9 @@ class MainWin(QMainWindow):
         self.ui.actionAuto.triggered.connect(partial(self.change_darkmode, "auto"))
         self.ui.actionDelete_Datafile.triggered.connect(self.delete_datafile)
 
-        self.ui.actionRun_Simulation_Script.triggered.connect(self.simulation_from_script)
+        # NOTE: We no longer need this facility
+        # self.ui.actionRun_Simulation_Script.triggered.connect(self.simulation_from_script)
+        self.ui.actionRun_Simulation_Script.setVisible(False)
 
     def window_focus_changed(self, win: QMainWindow):
         if not win or not self.manage_z_order:
@@ -480,18 +482,48 @@ class MainWin(QMainWindow):
         self.layout_save()
 
         try:
-            self.remove_views_from_model()
+            self.simulation.remove_views_from_model(
+                self.visual_physical_view,
+                self.visual_sensory_view,
+                self.visual_perceptual_view,
+                self.auditory_physical_view,
+                self.auditory_sensory_view,
+                self.auditory_perceptual_view,
+            )
         except:  # broad on purpose!
             ...
 
         for target in (self, self.trace_win, self.stats_win):
             target.clear()
 
-        self.simulation.on_load_device(file, quiet)
+        if not file:
+            if Path(config.device_cfg.device_file).is_file():
+                start_dir = Path(config.device_cfg.device_file).parent
+            elif Path(config.app_cfg.last_device_file).is_file():
+                start_dir = Path(config.app_cfg.last_device_file).parent
+            else:
+                start_dir = str(Path.home())
+            device_file, _ = QFileDialog.getOpenFileName(
+                self,
+                "Choose EPICpy Device File",
+                str(start_dir),
+                "Python Files (*.py)",
+            )
+        else:
+            device_file = file
+
+        self.simulation.on_load_device(device_file, quiet)
 
         # Model was reset, so we have to reconnect views and such
         if self.simulation and self.simulation.device and self.simulation.model:
-            self.add_views_to_model()
+            self.simulation.add_views_to_model(
+                self.visual_physical_view,
+                self.visual_sensory_view,
+                self.visual_perceptual_view,
+                self.auditory_physical_view,
+                self.auditory_sensory_view,
+                self.auditory_perceptual_view,
+            )
             self.simulation.update_model_output_settings()
             self.update_output_logging()
             self.clear_ui(
@@ -661,109 +693,110 @@ class MainWin(QMainWindow):
             #         config.device_cfg.visual_encoder = ""
             #         config.device_cfg.auditory_encoder = ""
 
-    def simulation_from_script(self):
-        start_dir = get_start_dir()
-
-        file_dialog = QFileDialog()
-        if platform.system() == "Linux":
-            file_dialog.setOption(QFileDialog.Option.DontUseNativeDialog, True)
-
-        script_file, _ = QFileDialog.getOpenFileName(
-            parent=None,
-            caption="Choose EPICpy Device File",
-            directory=str(start_dir),
-            filter="CSV Files (*.csv);;Text Files (*.txt)",
-            selectedFilter="CSV Files (*.csv)",
-        )
-
-        if not script_file:
-            self.write(f"{e_boxed_x} The run-script loading operation was cancelled.")
-            return
-
-        if Path(script_file).is_file():
-            config.app_cfg.last_script_file = script_file
-
-        try:
-            commands = pd.read_csv(
-                script_file,
-                names=[
-                    "device_file",
-                    "rule_file",
-                    "parameter_string",
-                    "clear_data",
-                    "reload_device",
-                ],
-                skip_blank_lines=True,
-                comment="#",
-                on_bad_lines="skip",
-                dtype={
-                    "device_file": str,
-                    "rule_file": str,
-                    "parameter_string": str,
-                    "clear_data": bool,
-                    "reload_device": bool,
-                },
-            )
-
-            err_msg = (
-                f"{e_heavy_x} Unable to construct proper command matrix from '{script_file}'.\n"
-                f"Make sure each line contains device_file,rule_file,parameter_string,clear_data,reload_device "
-                f"on each line separated by commas and without spaces between elements "
-                f"(like a standard csv file)"
-            )
-
-            assert isinstance(commands, pd.DataFrame), err_msg
-
-        except Exception as e:
-            self.write(f'{e_boxed_x} Error loading script from file\n"{script_file}":\n{str(e)}.')
-            return
-
-        # def shorten_paths(row):
-        #     row.device_file = Path(row.device_file).name
-        #     row.rule_file = Path(row.rule_file).name
-        #     return row
-
-        run_info = []
-
-        for i, cmd in commands.iterrows():
-            run_info.append(
-                RunInfo(
-                    from_script=True,
-                    device_file=cmd.device_file.strip(),
-                    rule_file=cmd.rule_file.strip(),
-                    parameter_string=cmd.parameter_string.strip(),
-                    clear_data=cmd.clear_data,
-                    reload_device=cmd.reload_device,
-                )
-            )
-
-        sf_title = f'\nRUNS LOADED FROM SCRIPT FILE "{Path(script_file).name}":'
-        self.write(sf_title)
-        self.write("-" * len(sf_title))
-        self.write(" ")
-        pretty = [
-            RunInfo(
-                ri.from_script,
-                Path(ri.device_file).name if ri.device_file else ri.device_file,
-                Path(ri.rule_file).name if ri.rule_file else ri.rule_file,
-                ri.parameter_string,
-                ri.clear_data,
-                ri.reload_device,
-            )
-            for ri in run_info
-        ]
-        self.ui.plainTextEditOutput.write(pd.DataFrame(pretty).to_string(index=False))
-
-        if self.on_load_device(run_info[0].device_file, auto_load_rules=False) and self.choose_rules(run_info):
-            if run_info[0].clear_data:
-                self.delete_datafile()
-
-            if run_info[0].parameter_string:
-                self.simulation.device.set_parameter_string(run_info[0].parameter_string)
-
-            self.write(f"\n{e_boxed_check} Scripted Run Ready! Press Run|Run_All In The Menu To Start!\n")
-        else:
-            self.write(f"\n{e_boxed_x} Scripted Run NOT SETUP PROPERLY! Attempting to run may fail.\n")
+    # NOTE: I don't think we need this anymore
+    # def simulation_from_script(self):
+    #     start_dir = get_start_dir()
+    #
+    #     file_dialog = QFileDialog()
+    #     if platform.system() == "Linux":
+    #         file_dialog.setOption(QFileDialog.Option.DontUseNativeDialog, True)
+    #
+    #     script_file, _ = QFileDialog.getOpenFileName(
+    #         parent=None,
+    #         caption="Choose EPICpy Device File",
+    #         directory=str(start_dir),
+    #         filter="CSV Files (*.csv);;Text Files (*.txt)",
+    #         selectedFilter="CSV Files (*.csv)",
+    #     )
+    #
+    #     if not script_file:
+    #         self.write(f"{e_boxed_x} The run-script loading operation was cancelled.")
+    #         return
+    #
+    #     if Path(script_file).is_file():
+    #         config.app_cfg.last_script_file = script_file
+    #
+    #     try:
+    #         commands = pd.read_csv(
+    #             script_file,
+    #             names=[
+    #                 "device_file",
+    #                 "rule_file",
+    #                 "parameter_string",
+    #                 "clear_data",
+    #                 "reload_device",
+    #             ],
+    #             skip_blank_lines=True,
+    #             comment="#",
+    #             on_bad_lines="skip",
+    #             dtype={
+    #                 "device_file": str,
+    #                 "rule_file": str,
+    #                 "parameter_string": str,
+    #                 "clear_data": bool,
+    #                 "reload_device": bool,
+    #             },
+    #         )
+    #
+    #         err_msg = (
+    #             f"{e_heavy_x} Unable to construct proper command matrix from '{script_file}'.\n"
+    #             f"Make sure each line contains device_file,rule_file,parameter_string,clear_data,reload_device "
+    #             f"on each line separated by commas and without spaces between elements "
+    #             f"(like a standard csv file)"
+    #         )
+    #
+    #         assert isinstance(commands, pd.DataFrame), err_msg
+    #
+    #     except Exception as e:
+    #         self.write(f'{e_boxed_x} Error loading script from file\n"{script_file}":\n{str(e)}.')
+    #         return
+    #
+    #     # def shorten_paths(row):
+    #     #     row.device_file = Path(row.device_file).name
+    #     #     row.rule_file = Path(row.rule_file).name
+    #     #     return row
+    #
+    #     run_info = []
+    #
+    #     for i, cmd in commands.iterrows():
+    #         run_info.append(
+    #             RunInfo(
+    #                 from_script=True,
+    #                 device_file=cmd.device_file.strip(),
+    #                 rule_file=cmd.rule_file.strip(),
+    #                 parameter_string=cmd.parameter_string.strip(),
+    #                 clear_data=cmd.clear_data,
+    #                 reload_device=cmd.reload_device,
+    #             )
+    #         )
+    #
+    #     sf_title = f'\nRUNS LOADED FROM SCRIPT FILE "{Path(script_file).name}":'
+    #     self.write(sf_title)
+    #     self.write("-" * len(sf_title))
+    #     self.write(" ")
+    #     pretty = [
+    #         RunInfo(
+    #             ri.from_script,
+    #             Path(ri.device_file).name if ri.device_file else ri.device_file,
+    #             Path(ri.rule_file).name if ri.rule_file else ri.rule_file,
+    #             ri.parameter_string,
+    #             ri.clear_data,
+    #             ri.reload_device,
+    #         )
+    #         for ri in run_info
+    #     ]
+    #     self.ui.plainTextEditOutput.write(pd.DataFrame(pretty).to_string(index=False))
+    #
+    #     if self.on_load_device(run_info[0].device_file, auto_load_rules=False) and self.choose_rules(run_info):
+    #         if run_info[0].clear_data:
+    #             self.delete_datafile()
+    #
+    #         if run_info[0].parameter_string:
+    #             self.simulation.device.set_parameter_string(run_info[0].parameter_string)
+    #
+    #         self.write(f"\n{e_boxed_check} Scripted Run Ready! Press Run|Run_All In The Menu To Start!\n")
+    #     else:
+    #         self.write(f"\n{e_boxed_x} Scripted Run NOT SETUP PROPERLY! Attempting to run may fail.\n")
 
     def remove_file_loggers(self):
         if self.normal_out_view.file_writer.enabled:
@@ -811,22 +844,6 @@ class MainWin(QMainWindow):
                         line="thick",
                     )
                 )
-
-    def add_views_to_model(self):
-        self.simulation.model.add_visual_physical_view(self.visual_physical_view)
-        self.simulation.model.add_visual_sensory_view(self.visual_sensory_view)
-        self.simulation.model.add_visual_perceptual_view(self.visual_perceptual_view)
-        self.simulation.model.add_auditory_physical_view(self.auditory_physical_view)
-        self.simulation.model.add_auditory_sensory_view(self.auditory_sensory_view)
-        self.simulation.model.add_auditory_perceptual_view(self.auditory_perceptual_view)
-
-    def remove_views_from_model(self):
-        self.simulation.model.get_human_ptr().remove_visual_physical_view(self.visual_physical_view)
-        self.simulation.model.get_human_ptr().remove_visual_sensory_view(self.visual_sensory_view)
-        self.simulation.model.get_human_ptr().remove_visual_perceptual_view(self.visual_perceptual_view)
-        self.simulation.model.get_human_ptr().remove_auditory_physical_view(self.auditory_physical_view)
-        self.simulation.model.get_human_ptr().remove_auditory_sensory_view(self.auditory_sensory_view)
-        self.simulation.model.get_human_ptr().remove_auditory_perceptual_view(self.auditory_perceptual_view)
 
     def setup_views(self):
         self.visual_views = {
@@ -943,7 +960,14 @@ class MainWin(QMainWindow):
         self.close_output_files()
 
         try:
-            self.remove_views_from_model()
+            self.remove_views_from_model(
+                self.visual_physical_view,
+                self.visual_sensory_view,
+                self.visual_perceptual_view,
+                self.auditory_physical_view,
+                self.auditory_sensory_view,
+                self.auditory_perceptual_view,
+            )
         except:
             pass
 
@@ -1100,7 +1124,7 @@ class MainWin(QMainWindow):
         # self.ui.actionEPICLib_Settings.setEnabled(False)
         self.ui.actionDelete_Datafile.setEnabled(False)
 
-        self.ui.actionRun_Simulation_Script.setEnabled(False)
+        # self.ui.actionRun_Simulation_Script.setEnabled(False)
 
     def set_ui_paused(self):
         has_rules = (
@@ -1153,7 +1177,7 @@ class MainWin(QMainWindow):
 
         self.ui.actionDelete_Datafile.setEnabled(False)
 
-        self.ui.actionRun_Simulation_Script.setEnabled(True)
+        # self.ui.actionRun_Simulation_Script.setEnabled(True)
 
     def set_ui_not_running(self):
         runnable = self.run_state == RUNNABLE
@@ -1206,7 +1230,7 @@ class MainWin(QMainWindow):
         # self.ui.actionEPICLib_Settings.setEnabled(has_device)
         self.ui.actionDelete_Datafile.setEnabled(has_device)
 
-        self.ui.actionRun_Simulation_Script.setEnabled(True)
+        # self.ui.actionRun_Simulation_Script.setEnabled(True)
 
     def update_title(self):
         if self.simulation and self.simulation.device and self.simulation.model:

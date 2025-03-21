@@ -44,9 +44,11 @@ from epicpy.utils import config
 from loguru import logger as log
 
 from epicpy.utils.modulereloader import reset_module
+from epicpy.views.epicpy_visualview import EPICVisualView
 
 warnings.filterwarnings("ignore", module="matplotlib\..*")
 warnings.filterwarnings("ignore", module="pingouin\..*")
+warnings.filterwarnings("ignore", module="pandas\..*")
 
 # KEEP HERE, USED IN EXEC STATEMENT!
 
@@ -131,190 +133,174 @@ class Simulation:
         except Exception as e:
             self.write(f"\n❌ ERROR: Failed to update EPIC output or trace settings:\n{e}\n")
 
-    def on_load_device(self, file: str = "", quiet: bool = False):
-        if not file:
-            if Path(config.device_cfg.device_file).is_file():
-                start_dir = Path(config.device_cfg.device_file).parent
-            elif Path(config.app_cfg.last_device_file).is_file():
-                start_dir = Path(config.app_cfg.last_device_file).parent
+    def on_load_device(self, device_file: str = "", quiet: bool = False):
+
+        # load config for this device, or create new device on if none exists already
+        dark_mode = config.app_cfg.dark_mode
+        current = config.device_cfg.current
+
+        config.get_device_config(Path(device_file))
+        config.device_cfg.device_file = device_file
+
+        config.app_cfg.dark_mode = dark_mode
+        config.device_cfg.current = current
+
+        # save global app config in case we need last_device_file
+        config.app_cfg.last_device_file = device_file
+
+        if not config.device_cfg.normal_out_file:
+            config.device_cfg.normal_out_file = LoggingSettingsWin.default_log_filename("normal")
+        if not config.device_cfg.trace_out_file:
+            config.device_cfg.trace_out_file = LoggingSettingsWin.default_log_filename("trace")
+        if not config.device_cfg.stats_out_file:
+            config.device_cfg.stats_out_file = LoggingSettingsWin.default_log_filename("stats")
+
+        if self.device:
+            # make sure device data output gets flushed and saved no matter how
+            # device object is deleted, includes normal exit/quit as well as
+            # exceptions! Because the target method, or even the data file handle
+            # are not part of Device_base, we have to condition this feature on
+            # whether the expected attributes are present.
+            if hasattr(self.device, "finalize_data_output"):
+                weakref.finalize(self.device, self.device.finalize_data_output)
+            elif hasattr(self.device, "data_file"):
+                weakref.finalize(self.device, self.device.data_file.close)
             else:
-                start_dir = str(Path.home())
-            device_file, _ = QFileDialog.getOpenFileName(
-                self.parent,
-                "Choose EPICpy Device File",
-                str(start_dir),
-                "Python Files (*.py)",
+                # data file will not be guaranteed to automatically closed in every
+                # case. However, on normal exit (an often on abnormal ones), Python
+                # is pretty good about open file handles. I'm just not sure if
+                # *all* available data will be preserved.
+                pass
+
+        self.current_rule_index = 0
+        self.device = None
+
+        # these will be handy
+        device_file_p = Path(device_file)
+        device_file_root = device_file_p.parent
+
+        # make sure __init__.py exists in device folder
+        if not Path(device_file_root, "../__init__.py").is_file():
+            self.write(
+                f'\n{e_info} Unable to find "__init__.py" in device folder '
+                f"({str(device_file_root)}). Will attempt to create one.\n"
             )
-        else:
-            device_file = file
-
-        if device_file:
-            # load config for this device, or create new device on if none exists already
-            dark_mode = config.app_cfg.dark_mode
-            current = config.device_cfg.current
-
-            config.get_device_config(Path(device_file))
-            config.device_cfg.device_file = device_file
-
-            config.app_cfg.dark_mode = dark_mode
-            config.device_cfg.current = current
-
-            # save global app config in case we need last_device_file
-            config.app_cfg.last_device_file = device_file
-
-            if not config.device_cfg.normal_out_file:
-                config.device_cfg.normal_out_file = LoggingSettingsWin.default_log_filename("normal")
-            if not config.device_cfg.trace_out_file:
-                config.device_cfg.trace_out_file = LoggingSettingsWin.default_log_filename("trace")
-            if not config.device_cfg.stats_out_file:
-                config.device_cfg.stats_out_file = LoggingSettingsWin.default_log_filename("stats")
-
-            if self.device:
-                # make sure device data output gets flushed and saved no matter how
-                # device object is deleted, includes normal exit/quit as well as
-                # exceptions! Because the target method, or even the data file handle
-                # are not part of Device_base, we have to condition this feature on
-                # whether the expected attributes are present.
-                if hasattr(self.device, "finalize_data_output"):
-                    weakref.finalize(self.device, self.device.finalize_data_output)
-                elif hasattr(self.device, "data_file"):
-                    weakref.finalize(self.device, self.device.data_file.close)
-                else:
-                    # data file will not be guaranteed to automatically closed in every
-                    # case. However, on normal exit (an often on abnormal ones), Python
-                    # is pretty good about open file handles. I'm just not sure if
-                    # *all* available data will be preserved.
-                    pass
-
-            self.current_rule_index = 0
-            self.device = None
-
-            # these will be handy
-            device_file_p = Path(device_file)
-            device_file_root = device_file_p.parent
-
-            # make sure __init__.py exists in device folder
-            if not Path(device_file_root, "../__init__.py").is_file():
+            try:
+                Path(device_file_root, "../__init__.py").write_text("")
+            except IOError:
                 self.write(
-                    f'\n{e_info} Unable to find "__init__.py" in device folder '
-                    f"({str(device_file_root)}). Will attempt to create one.\n"
+                    f"\nERROR: Unable to create needed file \n"
+                    f'"{str(Path(device_file_root, "../__init__.py"))}".\n'
+                    f"If your device does not load correctly, you may need to\n"
+                    f"obtain write access to the device folder.\n",
                 )
-                try:
-                    Path(device_file_root, "../__init__.py").write_text("")
-                except IOError:
-                    self.write(
-                        f"\nERROR: Unable to create needed file \n"
-                        f'"{str(Path(device_file_root, "../__init__.py"))}".\n'
-                        f"If your device does not load correctly, you may need to\n"
-                        f"obtain write access to the device folder.\n",
-                    )
 
-            # remove any old device path additions
-            for path in self.device_path_additions:
-                if path in sys.path:
-                    sys.path.remove(path)
+        # remove any old device path additions
+        for path in self.device_path_additions:
+            if path in sys.path:
+                sys.path.remove(path)
 
-            # Must add parents folder to system path
-            for parent_path in (
-                device_file_p.parent,
-                device_file_p.parent.parent,
-                device_file_p.parent.parent.parent,
-            ):
-                if parent_path.is_dir():
-                    sys.path.append(str(parent_path))
-                    self.device_path_additions.append(str(parent_path))
+        # Must add parents folder to system path
+        for parent_path in (
+            device_file_p.parent,
+            device_file_p.parent.parent,
+            device_file_p.parent.parent.parent,
+        ):
+            if parent_path.is_dir():
+                sys.path.append(str(parent_path))
+                self.device_path_additions.append(str(parent_path))
 
-            # - now we can attempt to import the EpicDevice class from this module
-            try:
-                # despite appearances, BOTH of the following lines are required if we
-                # want a device reload to pull any changes that have occurred since
-                # starting EPICpy!
-                module_name = device_file_p.stem  # Get module name without .py
-                module = importlib.import_module(module_name)  # Import dynamically
-                reset_module(module)  # Use your custom reset function
+        # - now we can attempt to import the EpicDevice class from this module
+        try:
+            # despite appearances, BOTH of the following lines are required if we
+            # want a device reload to pull any changes that have occurred since
+            # starting EPICpy!
+            module_name = device_file_p.stem  # Get module name without .py
+            module = importlib.import_module(module_name)  # Import dynamically
+            reset_module(module)  # Use your custom reset function
 
-                # Inject the module into the global namespace so it behaves like an `import` statement
-                globals()[module_name] = module
+            # Inject the module into the global namespace so it behaves like an `import` statement
+            globals()[module_name] = module
 
-                if not quiet:
-                    self.write(f"\n{e_info} loading device code from {device_file_p.name}...\n")
-
-                # Dynamically retrieve the class and instantiate the object
-                EpicDeviceClass = getattr(module, "EpicDevice", None)
-                if EpicDeviceClass is None:
-                    raise ImportError(f"Class 'EpicDevice' not found in module '{module_name}'.")
-
-                self.device = EpicDeviceClass(ot=Normal_out, parent=self.parent, device_folder=device_file_p.parent)
-
-                if not quiet:
-                    self.write(f"\n{e_info} found EpicDevice class, created new device instance based on this class.\n")
-                self.write(f"\n{e_boxed_check} {self.device.device_name} device was created successfully.\n")
-
-                # must store default device params before we reload one from settings
-                if hasattr(self.device, "condition_string"):
-                    self.default_device_parameters = str(self.device.condition_string)
-                else:
-                    self.default_device_parameters = ""
-
-                # restore layout for device
-                device_layout_file = Path(device_file_p.parent, "layout.json")
-                if device_layout_file.is_file():
-                    self.parent.manage_z_order = False
-                    self.parent.layout_load(str(device_layout_file))
-                    self.parent.manage_z_order = True
-
-                # restore params for device
-                if config.device_cfg.device_params:
-                    self.device.set_parameter_string(config.device_cfg.device_params)
-
-            except Exception as e:
-                self.write(f"\nERROR: Failed to create new EpicDevice from\n{device_file_p.name}!\n{e}\n")
-                self.device = None
-                return
-
-            try:
-                assert self.device.processor_info()
-            except AssertionError:
-                self.write(f"\nERROR: Created new device, but access to device_processor_pointer failed!\n")
-                self.device = None
-                return
-
-            # create new model and connect it to the new device
-            try:
-                self.model = Model(self.device)
-                if isinstance(self.model, Model):
-                    self.write(f"\n{e_boxed_check} New Model() was successfully created with device.\n")
-                else:
-                    raise EPICpyException(f"\n{e_boxed_x} Error creating new Model() with device.\n")
-
-                # now connect everything up
-
-                self.model.interconnect_device_and_human()
-
-                # if self.model.compile() and self.model.initialize():
-                #     self.write(f"{e_boxed_check} Model() was successfully initialized.")
-                # else:
-                #     raise EPICpyException(f"{e_boxed_x} Error compiling and initializing Model().")
-
-                self.update_model_output_settings()
-
-            except Exception as e:
-                self.write(f"\nERROR: Simulation unable to properly connect new Device and Model:\n{e}\n")
-                self.device = None
-                return
-
-            self.parent.update_title()
             if not quiet:
-                self.write(f"\n{e_boxed_check} Successfully initialized device: {device_file}.\n")
+                self.write(f"\n{e_info} loading device code from {device_file_p.name}...\n")
 
-            if self.device and self.model.get_compiled():
-                self.parent.run_state = RUNNABLE
-                if hasattr(self.device, "rule_filename"):
-                    self.device.rule_filename = Path(self.model.get_prs_filename()).name
+            # Dynamically retrieve the class and instantiate the object
+            EpicDeviceClass = getattr(module, "EpicDevice", None)
+            if EpicDeviceClass is None:
+                raise ImportError(f"Class 'EpicDevice' not found in module '{module_name}'.")
+
+            self.device = EpicDeviceClass(ot=Normal_out, parent=self.parent, device_folder=device_file_p.parent)
+
+            if not quiet:
+                self.write(f"\n{e_info} found EpicDevice class, created new device instance based on this class.\n")
+            self.write(f"\n{e_boxed_check} {self.device.device_name} device was created successfully.\n")
+
+            # must store default device params before we reload one from settings
+            if hasattr(self.device, "condition_string"):
+                self.default_device_parameters = str(self.device.condition_string)
             else:
-                self.parent.run_state = UNREADY
+                self.default_device_parameters = ""
 
-            self.parent.update_views(self.instance.get_time())
+            # restore layout for device
+            device_layout_file = Path(device_file_p.parent, "layout.json")
+            if device_layout_file.is_file():
+                self.parent.manage_z_order = False
+                self.parent.layout_load(str(device_layout_file))
+                self.parent.manage_z_order = True
+
+            # restore params for device
+            if config.device_cfg.device_params:
+                self.device.set_parameter_string(config.device_cfg.device_params)
+
+        except Exception as e:
+            self.write(f"\nERROR: Failed to create new EpicDevice from\n{device_file_p.name}!\n{e}\n")
+            self.device = None
+            return
+
+        try:
+            assert self.device.processor_info()
+        except AssertionError:
+            self.write(f"\nERROR: Created new device, but access to device_processor_pointer failed!\n")
+            self.device = None
+            return
+
+        # create new model and connect it to the new device
+        try:
+            self.model = Model(self.device)
+            if isinstance(self.model, Model):
+                self.write(f"\n{e_boxed_check} New Model() was successfully created with device.\n")
+            else:
+                raise EPICpyException(f"\n{e_boxed_x} Error creating new Model() with device.\n")
+
+            # now connect everything up
+
+            self.model.interconnect_device_and_human()
+
+            # if self.model.compile() and self.model.initialize():
+            #     self.write(f"{e_boxed_check} Model() was successfully initialized.")
+            # else:
+            #     raise EPICpyException(f"{e_boxed_x} Error compiling and initializing Model().")
+
+            self.update_model_output_settings()
+
+        except Exception as e:
+            self.write(f"\nERROR: Simulation unable to properly connect new Device and Model:\n{e}\n")
+            self.device = None
+            return
+
+        self.parent.update_title()
+        if not quiet:
+            self.write(f"\n{e_boxed_check} Successfully initialized device: {device_file}.\n")
+
+        if self.device and self.model.get_compiled():
+            self.parent.run_state = RUNNABLE
+            if hasattr(self.device, "rule_filename"):
+                self.device.rule_filename = Path(self.model.get_prs_filename()).name
+        else:
+            self.parent.run_state = UNREADY
+
+        self.parent.update_views(self.instance.get_time())
 
     def get_encoder_file(self, kind: str) -> str:
         assert kind in ("Visual", "Auditory")
@@ -617,6 +603,38 @@ class Simulation:
             self.parent.run_state = UNREADY
 
         return rule_compiled
+
+    def add_views_to_model(
+        self,
+        visual_physical: EPICVisualView,
+        visual_sensory: EPICVisualView,
+        visual_perceptual: EPICVisualView,
+        auditory_physical: EPICVisualView,
+        auditory_sensory: EPICVisualView,
+        auditory_perceptual: EPICVisualView,
+    ):
+        self.model.add_visual_physical_view(visual_physical)
+        self.model.add_visual_sensory_view(visual_sensory)
+        self.model.add_visual_perceptual_view(visual_perceptual)
+        self.model.add_auditory_physical_view(auditory_physical)
+        self.model.add_auditory_sensory_view(auditory_sensory)
+        self.model.add_auditory_perceptual_view(auditory_perceptual)
+
+    def remove_views_from_model(
+        self,
+        visual_physical: EPICVisualView,
+        visual_sensory: EPICVisualView,
+        visual_perceptual: EPICVisualView,
+        auditory_physical: EPICVisualView,
+        auditory_sensory: EPICVisualView,
+        auditory_perceptual: EPICVisualView,
+    ):
+        self.model.get_human_ptr().remove_visual_physical_view(visual_physical)
+        self.model.get_human_ptr().remove_visual_sensory_view(visual_sensory)
+        self.model.get_human_ptr().remove_visual_perceptual_view(visual_perceptual)
+        self.model.get_human_ptr().remove_auditory_physical_view(auditory_physical)
+        self.model.get_human_ptr().remove_auditory_sensory_view(auditory_sensory)
+        self.model.get_human_ptr().remove_auditory_perceptual_view(auditory_perceptual)
 
     def run_one_step(self):
         # just in case output settings were changed between runs
