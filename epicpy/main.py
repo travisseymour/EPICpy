@@ -260,7 +260,7 @@ def main():
     # -------------------------------------------------------------------------
     QCoreApplication.setOrganizationName("TravisSeymour")
     QCoreApplication.setOrganizationDomain("travisseymour.com")
-    QCoreApplication.setApplicationName("EPICpy")
+    QCoreApplication.setApplicationName("EPICpy2")
 
     # ==============================
     # =====      Run App       =====

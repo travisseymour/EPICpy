@@ -156,8 +156,9 @@ class VisualViewWin(QMainWindow):
     def closeEvent(self, event: QCloseEvent):
         if not self.can_close:
             self.hide()
+            event.ignore()
         else:
-            QMainWindow.closeEvent(self, event)
+            event.accept()
 
     @staticmethod
     def set_dot_on(enabled: bool):
@@ -302,6 +303,7 @@ class VisualViewWin(QMainWindow):
 
     def resizeEvent(self, event: QResizeEvent):
         super().resizeEvent(event)
+
         self.origin = Point(self.width() // 2, self.height() // 2)
 
         if self.bg_image_file:

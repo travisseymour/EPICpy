@@ -35,7 +35,8 @@ DEPENDENCIES = [
     "ascii_frame==0.0.1",
     "pandas==2.2.3",
     "pyqtdarktheme==2.1.0",
-    "fastnumbers==5.1.1"
+    "fastnumbers==5.1.1",
+    "qdarkstyle==3.2.3"
 ]
 # install these with `pip install .[dev]`
 DEVELOPMENT_DEPENDENCIES = [

@@ -254,17 +254,17 @@ def setup_menu_connections(window):
     window.actionSet_Application_Font.triggered.connect(window.set_application_font)
 
     # Dark mode submenu
-    window.actionLight.triggered.connect(partial(window.change_darkmode, "light"))
-    window.actionDark.triggered.connect(partial(window.change_darkmode, "dark"))
-    window.actionAuto.triggered.connect(partial(window.change_darkmode, "auto"))
+    # window.actionLight.triggered.connect(partial(window.change_darkmode, "light"))
+    # window.actionDark.triggered.connect(partial(window.change_darkmode, "dark"))
+    # window.actionAuto.triggered.connect(partial(window.change_darkmode, "auto"))
 
     # Windows menu actions
-    window.actionShow_Trace_Window.triggered.connect(partial(window.reveal_windows, window="trace"))
-    window.actionShow_Stats_Window.triggered.connect(partial(window.reveal_windows, window="stats"))
-    window.actionShow_Visual_Views.triggered.connect(partial(window.reveal_windows, window="visual"))
-    window.actionShow_Auditory_Views.triggered.connect(partial(window.reveal_windows, window="auditory"))
-    window.actionShow_All.triggered.connect(partial(window.reveal_windows, window="all"))
-    window.actionMinimize_All.triggered.connect(window.minimize_windows)
+    # window.actionShow_Trace_Window.triggered.connect(partial(window.reveal_windows, window="trace"))
+    # window.actionShow_Stats_Window.triggered.connect(partial(window.reveal_windows, window="stats"))
+    # window.actionShow_Visual_Views.triggered.connect(partial(window.reveal_windows, window="visual"))
+    # window.actionShow_Auditory_Views.triggered.connect(partial(window.reveal_windows, window="auditory"))
+    # window.actionShow_All.triggered.connect(partial(window.reveal_windows, window="all"))
+    # window.actionMinimize_All.triggered.connect(window.minimize_windows)
     window.actionClear_Output_Windows.triggered.connect(window.clear_output_windows)
     window.actionReset_Layout.triggered.connect(window.layout_reset)
     window.actionReload_Session.triggered.connect(partial(window.session_reload, quiet=False))

@@ -4,6 +4,7 @@ human performance tasks using the EPIC computational cognitive architecture
 (David Kieras and David Meyer 1997a) using the Python programming language.
 Copyright (C) 2022 Travis L. Seymour, PhD
 
+
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -23,9 +24,10 @@ import os
 from itertools import chain
 from textwrap import dedent
 
-import qdarktheme
-from PySide6.QtCore import QThread, Signal
+from PySide6.QtCore import QThread, Signal, QRect, QEvent
 from PySide6.QtGui import QHideEvent, QShowEvent
+from PySide6.QtTest import QTest
+from PySide6.QtWidgets import QDockWidget, QWidget, QLabel, QSizePolicy
 
 from epicpy.utils import fitness, config
 from epicpy.dialogs.aboutwindow import AboutWin
@@ -36,13 +38,14 @@ from epicpy.utils.apputils import loading_cursor, clear_font, run_without_waitin
 from epicpy.utils.defaultfont import get_default_font
 from epicpy.widgets.largetextview import LargeTextView
 from epicpy.windows import mainwindow_menu
+from epicpy.windows.appstyle import set_dark_style, set_light_style
 from epicpy.windows.statswindow import StatsWin
 from epicpy.windows.tracewindow import TraceWin
 from qtpy.QtGui import (
     QTextDocumentWriter,
     QCloseEvent,
-    QMouseEvent,
-    QGuiApplication, QAction,
+    QGuiApplication,
+    QAction,
 )
 
 from qtpy.QtCore import (
@@ -71,21 +74,17 @@ from epicpy.dialogs.devicesettingswindow import DeviceOptionsWin
 from epicpy.dialogs.loggingwindow import LoggingSettingsWin
 from epicpy.views.visualviewwindow import VisualViewWin
 from epicpy.views.auditoryviewwindow import AuditoryViewWin
-from epicpy.dialogs.epiclibsettingswindow import EPICLibSettingsWin
 from epicpy.epic.encoderpassthru import NullVisualEncoder, NullAuditoryEncoder
 import datetime
-import time
 import subprocess
-from functools import partial
 from epicpy.constants.version import __version__
-import re
 import tempfile
 import webbrowser
 from loguru import logger as log
 from epicpy.epic.epicsimulation import Simulation
 from epicpy.constants.stateconstants import *
 from epicpy.constants.emoji import *
-from typing import Optional
+from typing import Optional, Union
 
 from epicpy.views.epicpy_textview import EPICTextViewCachedWrite
 from epicpy.views.epicpy_visualview import EPICVisualView
@@ -139,10 +138,78 @@ class UdpThread(QThread):
 #     have PyCharm do proper lookups where it understands that
 #     self.plainTextEditOutput is a LargeTextView object
 #     """
-# 
+#
 #     def __init__(self, *args, **kwargs):
 #         super().__init__(*args, **kwargs)
 #         self.plainTextEditOutput: LargeTextView = LargeTextView()
+
+
+class HorizontalDockArea(QMainWindow):
+    """
+    A QMainWindow subclass that acts as a container for three dock widgets
+    arranged horizontally. Each dock contains a label displaying a placeholder text.
+    Each label has a minimum size of 392x342, an expanding size policy, and a visible border.
+    Each dock is individually closable, movable, and floatable.
+    """
+
+    def __init__(
+        self, widgets: dict[str, Union[VisualViewWin, AuditoryViewWin]], minimum_view_size: QSize, parent=None
+    ):
+        super().__init__(parent)
+        self.setWindowTitle("Horizontal Dock Area")
+        self.setDockNestingEnabled(True)
+
+        docks = []
+        for i, widget_name in enumerate(widgets):
+            # Each label is wrapped in its own QDockWidget.
+            dock = QDockWidget(widget_name, self)
+            dock.setObjectName(f"HorizontalDock_{widget_name}_{i}")
+            dock.setFloating(False)
+            dock.setFeatures(
+                QDockWidget.DockWidgetFeature.DockWidgetClosable
+                | QDockWidget.DockWidgetFeature.DockWidgetMovable
+                | QDockWidget.DockWidgetFeature.DockWidgetFloatable
+            )
+            # Remove custom title bar styling; use default.
+            widget = widgets[widget_name]
+            widget.setMinimumSize(minimum_view_size)
+            widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            widget.setStyleSheet("border: 1px solid #B9B8B6;")
+            dock.setWidget(widget)
+            docks.append(dock)
+
+        # Arrange the three docks horizontally.
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, docks[0])
+        self.splitDockWidget(docks[0], docks[1], Qt.Orientation.Horizontal)
+        self.splitDockWidget(docks[1], docks[2], Qt.Orientation.Horizontal)
+        self.resizeDocks([docks[0], docks[1], docks[2]], [1, 1, 1], Qt.Orientation.Horizontal)
+
+        for d in docks:
+            d.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
+
+    def get_custom_settings(self):
+        settings = {}
+        docks = self.findChildren(QDockWidget)
+        for dock in docks:
+            objname = dock.objectName()
+            if objname:
+                settings[objname] = {"width": dock.width(), "visible": dock.isVisible()}
+        return settings
+
+    def apply_custom_settings(self, settings):
+        group = []
+        sizes = []
+        for objname, info in settings.items():
+            dock = self.findChild(QDockWidget, objname)
+            if dock:
+                if not info.get("visible", True):
+                    dock.hide()
+                else:
+                    dock.show()
+                group.append(dock)
+                sizes.append(info.get("width", dock.width()))
+        if group:
+            self.resizeDocks(group, sizes, Qt.Horizontal)
 
 
 class MainWin(QMainWindow):
@@ -154,7 +221,22 @@ class MainWin(QMainWindow):
         self.ok = False
         self.tmp_folder = tempfile.TemporaryDirectory()
         self.closing = False
+        self._size_adjusted: bool = False
 
+        # setup window dimensions
+        self.usable_desktop_size: QSize = self.get_desktop_usable_geometry()
+        log.debug(f"{self.usable_desktop_size=}")
+        if self.size_fits(QSize(1980, 1188), self.usable_desktop_size):
+            self.default_window_size = QSize(1980, 1188)
+        elif self.size_fits(QSize(1870, 970), self.usable_desktop_size):
+            self.default_window_size = QSize(1870, 970)
+        else:
+            self.default_window_size = self.usable_desktop_size
+        log.debug(f"{self.default_window_size=}")
+
+        # self.minimum_view_size = QSize(300, 232)   # KEEP THIS HERE
+        self.minimum_view_size = QSize(240, 186)
+        self.setGeometry(QRect(QPoint(0, 0), self.default_window_size))
 
         # add central widget and setup
         self.plainTextEditOutput = LargeTextView(enable_context_menu=False)
@@ -162,33 +244,18 @@ class MainWin(QMainWindow):
         self.plainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.plainTextEditOutput.setObjectName("MainWindow")  # "plainTextEditOutput"
         self.plainTextEditOutput.setPlainText(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
-        self.setCentralWidget(self.plainTextEditOutput)
         self.normal_out_view = EPICTextViewCachedWrite(text_widget=self.plainTextEditOutput)
 
         self.setUnifiedTitleAndToolBarOnMac(True)  # doesn't appear to make a difference
 
-        self.window_settings = QSettings("epicpy", "WindowSettings")
+        self.window_settings = QSettings("epicpy2", "WindowSettings")
 
         self.statusBar().showMessage("Run Status: UNREADY")
-
-        self.manage_z_order = False
-        self.z_order: dict = {
-            "Visual Physical": 0.0,
-            "Visual Perceptual": 0.0,
-            "Visual Sensory": 0.0,
-            "Auditory Physical": 0.0,
-            "Auditory Perceptual": 0.0,
-            "Auditory Sensory": 0.0,
-            "MainWindow": 0.0,
-            "StatsWindow": 0.0,
-            "TraceWindow": 0.0,
-        }
 
         self.run_state = UNREADY
         self.last_search_spec = None
 
         # attach Normal_out and PPS_out output to this window
-        self.normal_out_view.text_widget.dark_mode = config.app_cfg.dark_mode
         self.normal_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13050)
         self.normal_out_view_thread.messageReceived.connect(self.normal_out_view.write)
         self.normal_out_view_thread.start()
@@ -197,22 +264,20 @@ class MainWin(QMainWindow):
         # connect Trace_out now
         self.trace_win = TraceWin(parent=self)
         self.trace_win.trace_out_view = EPICTextViewCachedWrite(text_widget=self.trace_win.ui.plainTextEditOutput)
-        self.trace_win.trace_out_view.text_widget.dark_mode = config.app_cfg.dark_mode
         self.trace_win.ui.plainTextEditOutput.mouseDoubleClickEvent = self.mouseDoubleClickEvent
         self.trace_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13048)
         self.trace_out_view_thread.messageReceived.connect(self.trace_win.trace_out_view.write)
         self.trace_out_view_thread.start()
 
+        # NOTE: Keep these comments!
         # self.debug_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13049)
         # self.debug_out_view_thread.messageReceived.connect(self.trace_win.trace_out_view.write)
         # self.debug_out_view_thread.start()
-
         # self.pps_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13053)
         # self.pps_out_view_thread.messageReceived.connect(self.trace_win.trace_out_view.write)
         # self.pps_out_view_thread.start()
 
         # in order to link epiclib Output_tees to Python, we need to set up py_streamers
-
         initialize_py_streamers(
             enable_normal=True,
             enable_trace=True,
@@ -221,11 +286,11 @@ class MainWin(QMainWindow):
         )
 
         # init output logging
-
         self.normal_file_output_never_updated = True
         self.trace_file_output_never_updated = True
         self.update_output_logging()
 
+        # init window properties
         self.stats_win = StatsWin(parent=self)
 
         self.simulation = Simulation(self)
@@ -242,6 +307,7 @@ class MainWin(QMainWindow):
         self.text_editor_dialog = None
 
         self.visual_views: Optional[dict[str, VisualViewWin]] = None
+
         self.visual_physical_view: Optional[EPICVisualView] = None
         self.visual_sensory_view: Optional[EPICVisualView] = None
         self.visual_perceptual_view: Optional[EPICVisualView] = None
@@ -249,12 +315,15 @@ class MainWin(QMainWindow):
         self.auditory_physical_view: Optional[EPICAuditoryView] = None
         self.auditory_sensory_view: Optional[EPICAuditoryView] = None
         self.auditory_perceptual_view: Optional[EPICAuditoryView] = None
+
         self.setup_views()
+        self.setup_base_ui()
 
         self.view_updater = QTimer()  # to singleshot view updates that won't slow down main thread
         self.ui_timer = QTimer()  # for updating status bar and other stuff every second or so
 
-        # setup menus
+        # Setup Menus
+        # ===========
 
         # File Menu Actions
         self.actionLoad_Device: Optional[QAction] = None
@@ -281,11 +350,6 @@ class MainWin(QMainWindow):
         self.actionEPICLib_Settings: Optional[QAction] = None
         self.actionSound_Text_Settings: Optional[QAction] = None
         self.actionSet_Application_Font: Optional[QAction] = None
-
-        # Dark Mode Submenu Actions
-        self.actionLight: Optional[QAction] = None
-        self.actionDark: Optional[QAction] = None
-        self.actionAuto: Optional[QAction] = None
 
         # Run Menu Actions
         self.actionRun_Settings: Optional[QAction] = None
@@ -319,7 +383,7 @@ class MainWin(QMainWindow):
 
         mainwindow_menu.setup_menu(self)
         mainwindow_menu.setup_menu_connections(self)
-        
+
         self.context_menu = QMenu(self)
         self.context_items = {}
         self.create_context_menu_items()
@@ -332,7 +396,7 @@ class MainWin(QMainWindow):
         self.plainTextEditOutput.write(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
 
         self.default_palette = self.app.palette()
-        self.change_darkmode(config.app_cfg.dark_mode)
+        self.update_theme()
 
         # setup some ui timers
         self.ui_timer.timeout.connect(self.update_ui_status)
@@ -340,52 +404,105 @@ class MainWin(QMainWindow):
 
         self.show()
 
-        # need to position views, but their geometry can't be properly computed until
-        # after we show them
-        for i, view in enumerate(self.visual_views.values()):
-            view.show()
-        # similarly, need to make this window is shown, so do the positioning after a 250ms
-        # delay (long enough for show?)
-        one_off_timer = QTimer()
-        one_off_timer.singleShot(250, self.position_windows)
+        self.update_title()
+        self.actionReload_Session.setEnabled(Path(config.device_cfg.device_file).is_file())
 
-        if config.app_cfg.auto_load_last_device:
-            # this gets run when user tries to change epiclib version
-            config.app_cfg.auto_load_last_device = False
-            two_off_timer = QTimer()
-            two_off_timer.singleShot(500, partial(self.session_reload, quiet=True))
+        self.context = "Default"
 
+        # Capture default arrangement.
+        self.default_geometry = self.saveGeometry()
+        self.default_state = self.saveState()
+        self.default_top_custom_settings = self.topAreaInner.get_custom_settings()
+        self.default_middle_custom_settings = self.middleAreaInner.get_custom_settings()
+
+        # Load saved settings for "Default" session.
+        self.layout_load()  # regular and custom
+
+        # notify user if there is a previous session that can be loaded with reload_session?
         exists = Path(config.app_cfg.last_device_file).is_file()
         device = config.app_cfg.last_device_file if config.app_cfg.last_device_file else "None"
         last_session_notice = f"Last Device Loaded: {device} [{exists=}]"
         self.write(dedent(last_session_notice))
 
-    def mouseDoubleClickEvent(self, event: QMouseEvent = None):
-        try:
-            self.manage_z_order = False
-            for win in chain(
-                [self, self.trace_win, self.stats_win],
-                self.visual_views.values(),
-                self.auditory_views.values(),
-            ):
-                if win.isVisible():
-                    #     or win.windowState() == Qt.WindowMinimized:
-                    # win.setWindowState(Qt.WindowNoState)
-                    # win.showNormal()
-                    win.raise_()
-        finally:
-            self.manage_z_order = True
+    def setup_base_ui(self):
+        # Use an empty central widget that occupies no horizontal space.
+        central = QWidget(self)
+        central.setMaximumWidth(0)
+        self.setCentralWidget(central)
 
-    def window_focus_changed(self, win: QMainWindow):
-        if not win or not self.manage_z_order:
-            return
-        win_name = win.objectName()
-        if win_name.startswith("menu"):
-            return
-        win_name = re.sub(r"(.+)Window", r"\1", win_name)
+        # ----- Left Column Dock Widgets -----
+        # Top Dock Area: Contains three inner docks.
+        self.topAreaInner = HorizontalDockArea(self.visual_views, self.minimum_view_size, self)
+        dockTop = QDockWidget("Visual Views", self)
+        dockTop.setObjectName("dockTop")
+        dockTop.setWidget(self.topAreaInner)
+        dockTop.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
+        dockTop.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetClosable
+            | QDockWidget.DockWidgetFeature.DockWidgetMovable
+            | QDockWidget.DockWidgetFeature.DockWidgetFloatable
+        )
 
-        if win_name in self.z_order:
-            self.z_order[win_name] = time.time()
+        # Middle Dock Area: Contains three inner docks.
+        self.middleAreaInner = HorizontalDockArea(self.auditory_views, self.minimum_view_size, self)
+        dockMiddle = QDockWidget("Auditory Views", self)
+        dockMiddle.setObjectName("dockMiddle")
+        dockMiddle.setWidget(self.middleAreaInner)
+        dockMiddle.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
+        dockMiddle.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetClosable
+            | QDockWidget.DockWidgetFeature.DockWidgetMovable
+            | QDockWidget.DockWidgetFeature.DockWidgetFloatable
+        )
+
+        # Bottom Dock Area: A plain text edit for Normal Output.
+        dockBottom = QDockWidget("Normal Output", self)
+        dockBottom.setObjectName("dockBottom")
+        plainTextEditBottom = QPlainTextEdit("Ready")
+        plainTextEditBottom.setStyleSheet("border: 2px solid #B9B8B6;")
+        dockBottom.setWidget(plainTextEditBottom)
+        dockBottom.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
+        dockBottom.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetClosable
+            | QDockWidget.DockWidgetFeature.DockWidgetMovable
+            | QDockWidget.DockWidgetFeature.DockWidgetFloatable
+        )
+
+        # New: Trace Output dock.
+        dockTrace = QDockWidget("Trace Output", self)
+        dockTrace.setObjectName("dockTrace")
+        tracePlainText = QPlainTextEdit("Trace Output")
+        tracePlainText.setStyleSheet("border: 2px solid #B9B8B6;")
+        dockTrace.setWidget(tracePlainText)
+        dockTrace.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
+        dockTrace.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetClosable
+            | QDockWidget.DockWidgetFeature.DockWidgetMovable
+            | QDockWidget.DockWidgetFeature.DockWidgetFloatable
+        )
+
+        # Stack the left column docks vertically.
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dockTop)
+        self.splitDockWidget(dockTop, dockMiddle, Qt.Orientation.Vertical)
+        self.splitDockWidget(dockMiddle, dockBottom, Qt.Orientation.Vertical)
+        # Tabify Normal Output and Trace Output so they share the same area.
+        self.tabifyDockWidget(dockBottom, dockTrace)
+        # Ensure Normal Output is the active tab.
+        dockBottom.raise_()
+
+        # ----- Right Dock Widget (Side Dock Area) -----
+        dockSide = QDockWidget("Statistics Output", self)
+        dockSide.setObjectName("dockSide")
+        plainTextEditSide = QPlainTextEdit("sample stats output")
+        plainTextEditSide.setStyleSheet("border: 2px solid #B9B8B6;")
+        dockSide.setWidget(plainTextEditSide)
+        dockSide.setAllowedAreas(Qt.DockWidgetArea.RightDockWidgetArea)
+        dockSide.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetClosable
+            | QDockWidget.DockWidgetFeature.DockWidgetMovable
+            | QDockWidget.DockWidgetFeature.DockWidgetFloatable
+        )
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dockSide)
 
     # ==============================================================================
     # Delegates for methods of self.simulation. This is required because we may delete
@@ -448,9 +565,9 @@ class MainWin(QMainWindow):
                 normal_output=False,
                 trace_output=True,
             )
-            self.manage_z_order = False
-            self.layout_load(y_adjust=26)
-            self.manage_z_order = True
+
+            self.context = "".join([c for c in self.simulation.device.device_name if c.isalnum()]).title()
+            self.layout_load()
 
             if auto_load_rules and config.device_cfg.rule_files:
                 self.simulation.choose_rules(config.device_cfg.rule_files)
@@ -458,6 +575,20 @@ class MainWin(QMainWindow):
             return True
         else:
             return False
+
+    @staticmethod
+    def size_fits(small: QSize, big: QSize) -> bool:
+        return small.width() <= big.width() and small.height() <= big.height()
+
+    @staticmethod
+    def get_desktop_usable_geometry() -> QSize:
+        primary_screen = QGuiApplication.primaryScreen()
+        available_geometry = primary_screen.availableGeometry()
+
+        usable_width = available_geometry.width()
+        usable_height = available_geometry.height()
+
+        return QSize(usable_width, usable_height)
 
     def choose_rules(self, rules: Optional[list] = None) -> bool:
         return self.simulation.choose_rules(rules)
@@ -577,143 +708,6 @@ class MainWin(QMainWindow):
                     quiet=False,
                 )
 
-            # NOTE: Keep this here...I need more user feedback on this...I think it's disruptive to
-            #       be asked in this when reinstating a session, right?
-            #       ===============================================================================
-            # if aud_encoder or vis_encoder:
-            #     alle = config.device_cfg.auto_load_last_encoders
-            #     if alle == "yes" or (
-            #         alle == "ask"
-            #         and QMessageBox.question(
-            #             self,
-            #             "Previous Perceptual Encoder(s) Found",
-            #             "Load encoder(s) previously used with this device?",
-            #             QMessageBox.Yes | QMessageBox.No,
-            #         )
-            #         == QMessageBox.Yes
-            #     ):
-            #         if vis_encoder:
-            #             self.simulation.on_load_encoder(
-            #                 kind="Visual",
-            #                 file=config.device_cfg.visual_encoder,
-            #                 quiet=False,
-            #             )
-            #
-            #         if aud_encoder:
-            #             self.simulation.on_load_encoder(
-            #                 kind="Auditory",
-            #                 file=config.device_cfg.auditory_encoder,
-            #                 quiet=False,
-            #             )
-            #     else:
-            #         config.device_cfg.visual_encoder = ""
-            #         config.device_cfg.auditory_encoder = ""
-
-    # NOTE: I don't think we need this anymore
-    # def simulation_from_script(self):
-    #     start_dir = get_start_dir()
-    #
-    #     file_dialog = QFileDialog()
-    #     if platform.system() == "Linux":
-    #         file_dialog.setOption(QFileDialog.Option.DontUseNativeDialog, True)
-    #
-    #     script_file, _ = QFileDialog.getOpenFileName(
-    #         parent=None,
-    #         caption="Choose EPICpy Device File",
-    #         directory=str(start_dir),
-    #         filter="CSV Files (*.csv);;Text Files (*.txt)",
-    #         selectedFilter="CSV Files (*.csv)",
-    #     )
-    #
-    #     if not script_file:
-    #         self.write(f"{e_boxed_x} The run-script loading operation was cancelled.")
-    #         return
-    #
-    #     if Path(script_file).is_file():
-    #         config.app_cfg.last_script_file = script_file
-    #
-    #     try:
-    #         commands = pd.read_csv(
-    #             script_file,
-    #             names=[
-    #                 "device_file",
-    #                 "rule_file",
-    #                 "parameter_string",
-    #                 "clear_data",
-    #                 "reload_device",
-    #             ],
-    #             skip_blank_lines=True,
-    #             comment="#",
-    #             on_bad_lines="skip",
-    #             dtype={
-    #                 "device_file": str,
-    #                 "rule_file": str,
-    #                 "parameter_string": str,
-    #                 "clear_data": bool,
-    #                 "reload_device": bool,
-    #             },
-    #         )
-    #
-    #         err_msg = (
-    #             f"{e_heavy_x} Unable to construct proper command matrix from '{script_file}'.\n"
-    #             f"Make sure each line contains device_file,rule_file,parameter_string,clear_data,reload_device "
-    #             f"on each line separated by commas and without spaces between elements "
-    #             f"(like a standard csv file)"
-    #         )
-    #
-    #         assert isinstance(commands, pd.DataFrame), err_msg
-    #
-    #     except Exception as e:
-    #         self.write(f'{e_boxed_x} Error loading script from file\n"{script_file}":\n{str(e)}.')
-    #         return
-    #
-    #     # def shorten_paths(row):
-    #     #     row.device_file = Path(row.device_file).name
-    #     #     row.rule_file = Path(row.rule_file).name
-    #     #     return row
-    #
-    #     run_info = []
-    #
-    #     for i, cmd in commands.iterrows():
-    #         run_info.append(
-    #             RunInfo(
-    #                 from_script=True,
-    #                 device_file=cmd.device_file.strip(),
-    #                 rule_file=cmd.rule_file.strip(),
-    #                 parameter_string=cmd.parameter_string.strip(),
-    #                 clear_data=cmd.clear_data,
-    #                 reload_device=cmd.reload_device,
-    #             )
-    #         )
-    #
-    #     sf_title = f'\nRUNS LOADED FROM SCRIPT FILE "{Path(script_file).name}":'
-    #     self.write(sf_title)
-    #     self.write("-" * len(sf_title))
-    #     self.write(" ")
-    #     pretty = [
-    #         RunInfo(
-    #             ri.from_script,
-    #             Path(ri.device_file).name if ri.device_file else ri.device_file,
-    #             Path(ri.rule_file).name if ri.rule_file else ri.rule_file,
-    #             ri.parameter_string,
-    #             ri.clear_data,
-    #             ri.reload_device,
-    #         )
-    #         for ri in run_info
-    #     ]
-    #     self.plainTextEditOutput.write(pd.DataFrame(pretty).to_string(index=False))
-    #
-    #     if self.on_load_device(run_info[0].device_file, auto_load_rules=False) and self.choose_rules(run_info):
-    #         if run_info[0].clear_data:
-    #             self.delete_datafile()
-    #
-    #         if run_info[0].parameter_string:
-    #             self.simulation.device.set_parameter_string(run_info[0].parameter_string)
-    #
-    #         self.write(f"\n{e_boxed_check} Scripted Run Ready! Press Run|Run_All In The Menu To Start!\n")
-    #     else:
-    #         self.write(f"\n{e_boxed_x} Scripted Run NOT SETUP PROPERLY! Attempting to run may fail.\n")
-
     def remove_file_loggers(self):
         if self.normal_out_view.file_writer.enabled:
             self.normal_out_view.file_writer.close()
@@ -832,7 +826,6 @@ class MainWin(QMainWindow):
             event.ignore()
             return
 
-        self.manage_z_order = False
         self.closing = True
 
         if self.run_state == RUNNING:
@@ -857,7 +850,7 @@ class MainWin(QMainWindow):
 
         self.remove_file_loggers()
 
-        _ = self.layout_save()
+        _ = self.layout_save()  # regular and custom
 
         self.trace_win.can_close = True
         self.trace_win.close()  # destroy()
@@ -900,28 +893,38 @@ class MainWin(QMainWindow):
         except Exception as e:
             log.error(f"got this error in the closeEvent: {e}")
 
-        event.accept()
+        super().closeEvent(event)
+
+    def update_theme(self):
+        scheme = QGuiApplication.styleHints().colorScheme()
+        if scheme == Qt.ColorScheme.Dark:
+            set_dark_style(QApplication.instance())
+        else:
+            set_light_style(QApplication.instance())
+
+    def changeEvent(self, event):
+        if event.type() == QEvent.Type.ThemeChange:
+            self.update_theme()
+        super().changeEvent(event)
 
     def hideEvent(self, event: QHideEvent) -> None:
         self.plainTextEditOutput.enable_updates = False
         QMainWindow.hideEvent(self, event)
 
     def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+
         config.set_ready(True)
         self.plainTextEditOutput.enable_updates = True
-        QMainWindow.showEvent(self, event)
 
-    def position_windows(self):
-        try:
-            self.manage_z_order = False
-            self.update_title()
-
-            self.actionReload_Session.setEnabled(Path(config.device_cfg.device_file).is_file())
-
-            if not self.layout_load(y_adjust=26):
-                self.layout_reset()
-        finally:
-            self.manage_z_order = True
+        # Only adjust once
+        if not self._size_adjusted:
+            QTest.qWait(50)
+            frame_diff = self.frameGeometry().size() - self.size()
+            # target_size = QSize(1700, 1000) + frame_diff
+            target_size = self.default_window_size - frame_diff
+            self.resize(target_size)
+            self._size_adjusted = True
 
     def set_view_background_image(self, view_type: str, img_filename: str, scaled: bool = True):
         if not config.device_cfg.allow_device_images:
@@ -1320,18 +1323,6 @@ class MainWin(QMainWindow):
         )
         return
 
-        # old_epiclib = config.device_cfg.epiclib_version
-        # self.epiclib_settings_dialog = EPICLibSettingsWin(self.epiclib_files, self.epiclib_name)
-        # self.epiclib_settings_dialog.setup_options()
-        # self.epiclib_settings_dialog.setModal(True)
-        # self.epiclib_settings_dialog.exec()  # needed to make it modal?!
-        #
-        # new_epiclib = config.device_cfg.epiclib_version
-        # if new_epiclib != old_epiclib:
-        #     # temporarily save new version in app config
-        #     config.app_cfg.epiclib_version = new_epiclib
-        #     config.app_cfg.auto_load_last_device = True
-
     def set_application_font(self):
         # keeping the unused code from below just in case someone complains that they
         #  can't change the font family
@@ -1360,80 +1351,6 @@ class MainWin(QMainWindow):
         else:
             self.write(f"{e_info} No changes made to application font size.")
             config.app_cfg.rollback()
-
-    def change_darkmode(self, dark_mode: str):
-        dm = str(dark_mode).lower()
-        if dark_mode in ("dark", "light", "auto"):
-            config.app_cfg.dark_mode = dm.title()
-        else:
-            config.app_cfg.dark_mode = "Auto"
-
-        self.set_stylesheet(dm)
-        # self.menuDarkMode.setTitle(f"DarkMode: {dm.title()}")
-
-    def reveal_windows(self, window: str):
-        try:
-            self.manage_z_order = False
-            if window == "trace" and self.trace_win:
-                self.trace_win.setHidden(False)
-                self.trace_win.raise_()
-            if window == "stats" and self.trace_win:
-                self.stats_win.setHidden(False)
-                self.stats_win.raise_()
-            elif window == "visual":
-                for view in self.visual_views.values():
-                    if view:
-                        view.setHidden(False)
-                        view.raise_()
-            elif window == "auditory":
-                for view in self.auditory_views.values():
-                    if view:
-                        view.setHidden(False)
-                        view.raise_()
-            elif window == "all":
-                self.reveal_windows("trace")
-                self.reveal_windows("visual")
-                self.reveal_windows("auditory")
-                self.reveal_windows("stats")
-
-            self.raise_()
-        finally:
-            self.manage_z_order = True
-
-    def un_minimize_windows(self):
-        try:
-            self.manage_z_order = False
-            for win in chain(
-                [self, self.trace_win, self.stats_win],
-                (self.visual_views.values()),
-                self.auditory_views.values(),
-            ):
-                if not win.isVisible():
-                    continue
-                if win.windowState() & Qt.WindowState.WindowNoState:
-                    pass
-                else:
-                    win.setWindowState(Qt.WindowState.WindowActive)
-
-        finally:
-            self.manage_z_order = True
-
-    def minimize_windows(self):
-        try:
-            self.manage_z_order = False
-            for win in chain(
-                [self, self.trace_win, self.stats_win],
-                self.visual_views.values(),
-                self.auditory_views.values(),
-            ):
-                if not win.isVisible():
-                    continue
-                if win.windowState() & Qt.WindowState.WindowMinimized:
-                    pass
-                else:
-                    win.showMinimized()
-        finally:
-            self.manage_z_order = True
 
     def clear_output_windows(self):
         self.plainTextEditOutput.clear()
@@ -1599,203 +1516,87 @@ class MainWin(QMainWindow):
             if hasattr(self.simulation.device, "delete_data_file"):
                 self.simulation.device.delete_data_file()
 
-    # ============================================
-    # Dark Mode Theme Switching
-    # ============================================
-
-    def set_stylesheet(self, dark_mode: str):
-        self.app.setStyle("Fusion")
-
-        dm = str(dark_mode).lower()
-        if dm in ("dark", "light"):
-            qdarktheme.setup_theme(dm)
-        else:
-            qdarktheme.setup_theme("auto")
-
     # =============================================
     # Layout Save/Restore
     # =============================================
 
-    def layout_save(self) -> bool:
-        self.manage_z_order = False
+    def layout_save(self):
+        # save settings
+        self.window_settings.setValue(f"{self.context}Geometry", self.saveGeometry())
+        self.window_settings.setValue(f"{self.context}WindowState", self.saveState())
 
-        # figure out which config subsection to use
-        if self.simulation.device and self.simulation.device.device_name:
-            section = "".join([c for c in self.simulation.device.device_name if c.isalpha()]).title()
-        else:
-            section = "NoDevice"
-
-        # save window states
-        for win in chain(
-            [self, self.trace_win, self.stats_win],
-            self.visual_views.values(),
-            self.auditory_views.values(),
-        ):
-            obj_name = win.objectName().replace(" ", "")
-
-            self.window_settings.setValue(f"{section}/{obj_name}/Size", win.size())
-            self.window_settings.setValue(f"{section}/{obj_name}/Pos", win.pos())
-            self.window_settings.setValue(f"{section}/{obj_name}/Visible", win.isVisible())
-            self.window_settings.setValue(f"{section}/{obj_name}/ZOrder", self.z_order[win.objectName()])
-
-        self.manage_z_order = True
+        # save custom settings
+        custom = {}
+        outer = {}
+        for name in ["dockTop", "dockMiddle", "dockBottom", "dockSide", "dockTrace"]:
+            dock = self.findChild(QDockWidget, name)
+            if dock:
+                outer[name] = {"width": dock.width(), "visible": dock.isVisible()}
+        custom["outer"] = outer
+        custom["topAreaInner"] = self.topAreaInner.get_custom_settings()
+        custom["middleAreaInner"] = self.middleAreaInner.get_custom_settings()
+        self.window_settings.setValue(self.context, custom)
 
         self.window_settings.sync()
 
-        return True
+    def layout_exists(self) -> bool:
+        geometry = self.window_settings.value(f"{self.context}Geometry")
+        window_state = self.window_settings.value(f"{self.context}WindowState")
+        return geometry or window_state
 
-    def layout_load(self, y_adjust: int = 0) -> bool:
-        # figure out which config subsection to use
-        if self.simulation.device and self.simulation.device.device_name:
-            section = "".join([c for c in self.simulation.device.device_name if c.isalpha()]).title()
-        else:
-            section = "NoDevice"
+    def layout_load(self):
+        geometry = self.window_settings.value(f"{self.context}Geometry")
+        if geometry:
+            self.restoreGeometry(geometry)
+        window_state = self.window_settings.value(f"{self.context}WindowState")
+        if window_state:
+            self.restoreState(window_state)
 
-        # if that section works, great, otherwise just use default
-        try:
-            _ = self.window_settings.value(f"{section}/MainWindow/Pos")
-            _ = self.window_settings.value(f"{section}/MainWindow/Size")
-        except Exception as e:
-            log.warning(
-                f"Failed to locate existing window layout for NoDevice state ({e}), "
-                f"loading default layout instead..."
-            )
-            self.layout_reset()
-
-        try:
-            # reposition/size windows according to saved values
-            for win in chain(
-                [self, self.trace_win, self.stats_win],
-                self.visual_views.values(),
-                self.auditory_views.values(),
-            ):
-                obj_name = win.objectName().replace(" ", "")
-
-                win.resize(self.window_settings.value(f"{section}/{obj_name}/Size"))
-                win.move(self.window_settings.value(f"{section}/{obj_name}/Pos"))
-                try:
-                    # not every config will have this new z scheme
-                    z_order = self.window_settings.value(f"{section}/{obj_name}/ZOrder", type=float)
-                    self.z_order[win.objectName()] = z_order
-                except Exception as e:
-                    log.warning(f"Unable to find window Z value for {obj_name}: {e}")
-
-                visible = self.window_settings.value(f"{section}/{obj_name}/Visible", type=bool)
-                if win.objectName() != "MainWindow":
-                    if visible:
-                        win.show()
+        custom = self.window_settings.value(self.context)
+        if not custom:
+            return
+        if "outer" in custom:
+            for name, info in custom["outer"].items():
+                dock = self.findChild(QDockWidget, name)
+                if dock:
+                    if not info.get("visible", True):
+                        dock.hide()
                     else:
-                        win.hide()
-
-            result = True
-        except Exception as e:
-            if "NoneType" not in str(e):
-                log.warning(f"Unable to restore window geometry: {e}")
-            else:
-                log.warning(f"Unable to restore window geometry.")
-            result = False
-            return result  # go ahead and fail now, no point in bothering with z-order
-
-        try:
-            # restore z-order
-            sorted_windows = dict(sorted(self.z_order.items(), key=lambda x: x[1]))
-
-            topLevelWindows = QApplication.topLevelWindows()
-            for objName, Z in sorted_windows.items():
-                if not Z:
-                    # if Z is 0.0, then it was never focused -- nothing to do
-                    continue
-                for win in topLevelWindows:
-                    win_name = win.objectName()
-                    win_name = re.sub(r"(.+)Window", r"\1", win_name)
-                    if win_name == objName:
-                        win.raise_()
-
-            result = True
-
-        except Exception as e:
-            log.warning(f"Unable to restore window Z arrangement: {e}")
-            result = True  # just Z, not the end of the world...so no fail
-
-        return result
+                        dock.show()
+                    self.resizeDocks([dock], [info.get("width", dock.width())], Qt.Orientation.Horizontal)
+        if "topAreaInner" in custom:
+            self.topAreaInner.apply_custom_settings(custom["topAreaInner"])
+        if "middleAreaInner" in custom:
+            self.middleAreaInner.apply_custom_settings(custom["middleAreaInner"])
 
     def layout_reset(self):
-        # - Figure out the available screen geometry and starting point
+        settings = QSettings()
+        settings.remove(f"{self.context}Geometry")
+        settings.remove(f"{self.context}WindowState")
+        settings.remove(self.context)
 
-        screen_info = QGuiApplication.primaryScreen().availableGeometry()
+        self.restoreGeometry(self.default_geometry)
+        self.restoreState(self.default_state)
+        self.update()
+        self.showMaximized()
+        QTest.qWait(100)
+        self.showNormal()
 
-        sx, sy, sw, sh = (
-            screen_info.x(),
-            screen_info.y(),
-            screen_info.width(),
-            screen_info.height(),
-        )
+        for name in ["dockTop", "dockMiddle", "dockBottom", "dockSide", "dockTrace"]:
+            dock = self.findChild(QDockWidget, name)
+            if dock:
+                dock.show()
 
-        title_height = self.heightMM() // 2
+        def force_visible(custom_dict):
+            new_dict = {}
+            for key, info in custom_dict.items():
+                new_info = info.copy()
+                new_info["visible"] = True
+                new_dict[key] = new_info
+            return new_dict
 
-        # wide
-        if sw >= 390 * 3 + 638:
-            w_mode = "Physical Sensory Perceptual Stats"
-        elif sw >= 390 * 3:
-            w_mode = "Physical Sensory Perceptual"
-        elif sw >= 390 * 2 + 638:
-            w_mode = "Physical Sensory Stats"
-        elif sw >= 390 + 638:
-            w_mode = "Physical Stats"
-        else:  # 390
-            w_mode = "Physical"
-
-        # tall
-        if sh >= 338 * 2 + 382:
-            h_mode = "Visual Auditory Main_Tall"
-        elif sh >= 338 * 2 + 250:
-            h_mode = "Visual Auditory Main_Short"
-        elif sh >= 338 + 382:
-            h_mode = "Visual Main_Tall"
-        elif sh >= 338 + 250:
-            h_mode = "Visual Main_Short"
-        elif sh >= 382:
-            h_mode = "Main_Tall"
-        else:  # 250
-            h_mode = "Main_Short"
-
-        if "Visual" in h_mode:
-            for i, kind in enumerate(["Physical", "Sensory", "Perceptual"]):
-                if kind in w_mode:
-                    self.visual_views[f"Visual {kind}"].move(QPoint(391 * i, 0))
-                    self.visual_views[f"Visual {kind}"].show()
-                else:
-                    self.visual_views[f"Visual {kind}"].hide()
-
-        if "Auditory" in h_mode:
-            for i, kind in enumerate(["Physical", "Sensory", "Perceptual"]):
-                if kind in w_mode:
-                    if platform.system() == "Windows":
-                        self.auditory_views[f"Auditory {kind}"].move(QPoint(391 * i, 338))
-                    else:
-                        self.auditory_views[f"Auditory {kind}"].move(QPoint(391 * i, 338 + (title_height // 2)))
-                    self.auditory_views[f"Auditory {kind}"].show()
-                else:
-                    self.auditory_views[f"Auditory {kind}"].hide()
-
-        w_mode_set = set(w_mode.split(" "))
-        h_mode_set = set(h_mode.split(" "))
-        cols = len({"Physical", "Sensory", "Perceptual"} & w_mode_set)
-        rows = len({"Visual", "Auditory"} & h_mode_set)
-
-        if platform.system() == "Windows":
-            self.move(QPoint(0, rows * 338))
-        else:
-            self.move(QPoint(0, rows * 338 + title_height // 2 + 1))
-        self.resize(QSize(cols * 390 + 1, 382 if "Main_Tall" in h_mode else 250))
-        self.show()
-
-        if "Stats" in w_mode:
-            self.stats_win.move(QPoint(cols * 390 + cols, 0))
-            self.stats_win.resize(QSize(638, rows * 338 + self.height() + rows))
-            self.stats_win.show()
-        else:
-            self.stats_win.hide()
+        self.topAreaInner.apply_custom_settings(force_visible(self.default_top_custom_settings))
+        self.middleAreaInner.apply_custom_settings(force_visible(self.default_middle_custom_settings))
 
     # =============================================
     # Context Menu Behavior
