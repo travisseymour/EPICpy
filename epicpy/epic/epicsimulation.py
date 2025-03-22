@@ -478,7 +478,7 @@ class Simulation:
             self.write(
                 f"\nERROR: Rule recompile failed because former rule file no longer\nexists or is not readable.\n"
             )
-            self.parent.ui.actionRecompile_Rules.setEnabled(False)
+            self.parent.actionRecompile_Rules.setEnabled(False)
 
     def choose_rules(self, files: Optional[list] = None) -> bool:
         """
@@ -813,7 +813,7 @@ class Simulation:
         start = time.time()
         while time.time() - start < 3.0:
             QCoreApplication.processEvents(QEventLoop.AllEvents, 1000)
-            if self.parent.ui.plainTextEditOutput.is_idle or self.parent.trace_win.ui.plainTextEditOutput.is_idle:
+            if self.parent.plainTextEditOutput.is_idle or self.parent.trace_win.plainTextEditOutput.is_idle:
                 break
         return True
 

@@ -19,36 +19,30 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os
-import socket
 
 from itertools import chain
 from textwrap import dedent
 
-import pandas as pd
-from qtpy.QtGui import QHideEvent, QShowEvent
-from qtpy.QtCore import (
-    Signal,
-    QEvent,
-)
 import qdarktheme
+from PySide6.QtCore import QThread, Signal
+from PySide6.QtGui import QHideEvent, QShowEvent
+
 from epicpy.utils import fitness, config
 from epicpy.dialogs.aboutwindow import AboutWin
 from epicpy.dialogs.fontsizewindow import FontSizeDialog
 from epicpy.epic.runinfo import RunInfo
-from epicpy.uifiles.mainui import Ui_MainWindow
 from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
 from epicpy.utils.apputils import loading_cursor, clear_font, run_without_waiting, has_epiccoder
-from epicpy.utils.config import get_start_dir
 from epicpy.utils.defaultfont import get_default_font
 from epicpy.widgets.largetextview import LargeTextView
+from epicpy.windows import mainwindow_menu
 from epicpy.windows.statswindow import StatsWin
 from epicpy.windows.tracewindow import TraceWin
 from qtpy.QtGui import (
     QTextDocumentWriter,
     QCloseEvent,
     QMouseEvent,
-    QFont,
-    QGuiApplication,
+    QGuiApplication, QAction,
 )
 
 from qtpy.QtCore import (
@@ -56,10 +50,8 @@ from qtpy.QtCore import (
     QByteArray,
     Qt,
     QSettings,
-    QObject,
     QPoint,
     QSize,
-    QThread,
 )
 from qtpy.QtWidgets import (
     QFileDialog,
@@ -93,7 +85,7 @@ from loguru import logger as log
 from epicpy.epic.epicsimulation import Simulation
 from epicpy.constants.stateconstants import *
 from epicpy.constants.emoji import *
-from typing import Callable, Optional
+from typing import Optional
 
 from epicpy.views.epicpy_textview import EPICTextViewCachedWrite
 from epicpy.views.epicpy_visualview import EPICVisualView
@@ -102,40 +94,7 @@ from epicpy.views.epicpy_auditoryview import EPICAuditoryView
 from epicpy.epiclib.epiclib import initialize_py_streamers, uninitialize_py_streamers
 
 
-class StateChangeWatcher(QObject):
-    """
-    In order to make it so that thd SDI window arrangement we're using
-    minimizes and/or restored as a unit, we're creating this state changer.
-    This approach is easier to deal with than putting a separate state change
-    handler in every window we add to the app.
-
-    You have to specify a function to call when a window is minimized or
-    restored if you actually want anything to happen on these events.
-    """
-
-    def __init__(self, parent=None, minimize_func: Callable = None, restore_func: Callable = None):
-        super(StateChangeWatcher, self).__init__(parent)
-        self.minimize_func = minimize_func
-        self.restore_func = restore_func
-
-    def eventFilter(self, obj, event):
-        if obj.isWidgetType() and event.type() == QEvent.Type.Show:
-            if obj.windowState() & Qt.WindowState.WindowMinimized:
-                if self.minimize_func is not None:
-                    self.minimize_func()
-            elif obj.windowState() & Qt.WindowState.WindowMaximized:
-                pass
-            elif obj.windowState() & Qt.WindowState.WindowNoState:
-                pass
-            else:
-                if self.restore_func is not None:
-                    self.restore_func()
-
-        return False
-
-
 import socket
-from PySide6.QtCore import QThread, Signal
 
 
 class UdpThread(QThread):
@@ -174,16 +133,16 @@ class UdpThread(QThread):
             self.sock.close()  # Force unblock recvfrom()
 
 
-class Ui_MainWindowCustom(Ui_MainWindow):
-    """
-    This is so that we can add the LargeTextView and still
-    have PyCharm do proper lookups where it understands that
-    self.ui.plainTextEditOutput is a LargeTextView object
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.plainTextEditOutput: LargeTextView = LargeTextView()
+# class Ui_MainWindowCustom(Ui_MainWindow):
+#     """
+#     This is so that we can add the LargeTextView and still
+#     have PyCharm do proper lookups where it understands that
+#     self.plainTextEditOutput is a LargeTextView object
+#     """
+# 
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.plainTextEditOutput: LargeTextView = LargeTextView()
 
 
 class MainWin(QMainWindow):
@@ -196,24 +155,15 @@ class MainWin(QMainWindow):
         self.tmp_folder = tempfile.TemporaryDirectory()
         self.closing = False
 
-        self.ui = Ui_MainWindowCustom()
-        self.ui.setupUi(self)
-
-        # replace designed font with application-wide font
-        clear_font(self)
-
-        self.context_menu = QMenu(self)
-        self.context_items = {}
-        self.create_context_menu_items()
 
         # add central widget and setup
-        self.ui.plainTextEditOutput = LargeTextView(enable_context_menu=False)
+        self.plainTextEditOutput = LargeTextView(enable_context_menu=False)
 
-        self.ui.plainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.ui.plainTextEditOutput.setObjectName("MainWindow")  # "plainTextEditOutput"
-        self.ui.plainTextEditOutput.setPlainText(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
-        self.setCentralWidget(self.ui.plainTextEditOutput)
-        self.normal_out_view = EPICTextViewCachedWrite(text_widget=self.ui.plainTextEditOutput)
+        self.plainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.plainTextEditOutput.setObjectName("MainWindow")  # "plainTextEditOutput"
+        self.plainTextEditOutput.setPlainText(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
+        self.setCentralWidget(self.plainTextEditOutput)
+        self.normal_out_view = EPICTextViewCachedWrite(text_widget=self.plainTextEditOutput)
 
         self.setUnifiedTitleAndToolBarOnMac(True)  # doesn't appear to make a difference
 
@@ -233,7 +183,6 @@ class MainWin(QMainWindow):
             "StatsWindow": 0.0,
             "TraceWindow": 0.0,
         }
-        QApplication.instance().focusWindowChanged.connect(self.window_focus_changed)
 
         self.run_state = UNREADY
         self.last_search_spec = None
@@ -281,15 +230,6 @@ class MainWin(QMainWindow):
 
         self.simulation = Simulation(self)
 
-        self.ui.actionFind.triggered.connect(self.ui.plainTextEditOutput.query_search)
-        self.ui.actionFind.setShortcut("Ctrl+F")
-        self.ui.actionFindNext.triggered.connect(self.ui.plainTextEditOutput.continue_find_text)
-        self.ui.actionFindNext.setShortcut("F3")
-        # self.ui.actionFindPrevious.triggered.connect(
-        #     partial(self.do_search, backwards=True)
-        # )
-        # self.ui.actionFindPrevious.setShortcut("Shift+F3")
-
         self.run_settings_dialog = None
         self.display_settings_dialog = None
         self.trace_settings_dialog = None
@@ -300,16 +240,6 @@ class MainWin(QMainWindow):
         self.sound_text_settings_dialog = None
         self.font_size_dialog = None
         self.text_editor_dialog = None
-
-        # setup state change watcher so all min or max together
-        # note: this has to go before self.setup_view()
-        self.state_watcher = StateChangeWatcher(
-            self,
-            minimize_func=self.minimize_windows,
-            restore_func=self.un_minimize_windows,
-        )
-        self.installEventFilter(self.state_watcher)
-        self.trace_win.installEventFilter(self.state_watcher)
 
         self.visual_views: Optional[dict[str, VisualViewWin]] = None
         self.visual_physical_view: Optional[EPICVisualView] = None
@@ -324,14 +254,82 @@ class MainWin(QMainWindow):
         self.view_updater = QTimer()  # to singleshot view updates that won't slow down main thread
         self.ui_timer = QTimer()  # for updating status bar and other stuff every second or so
 
-        self.connect_menu_signals()
+        # setup menus
+
+        # File Menu Actions
+        self.actionLoad_Device: Optional[QAction] = None
+        self.actionCompile_Rules: Optional[QAction] = None
+        self.actionRecompile_Rules: Optional[QAction] = None
+        self.actionLoad_Visual_Encoder: Optional[QAction] = None
+        self.actionLoad_Auditory_Encoder: Optional[QAction] = None
+        self.actionUnload_Visual_Encoder: Optional[QAction] = None
+        self.actionUnload_Auditory_Encoder: Optional[QAction] = None
+        self.actionReload_Session: Optional[QAction] = None
+        self.actionRun_Simulation_Script: Optional[QAction] = None
+        self.actionExport_Normal_Output: Optional[QAction] = None
+        self.actionExport_Trace_Output: Optional[QAction] = None
+        self.actionExport_Stats_Output: Optional[QAction] = None
+        self.actionQuit: Optional[QAction] = None
+
+        # Settings Menu Actions
+        self.actionTrace_Settings: Optional[QAction] = None
+        self.actionDisplay_Controls: Optional[QAction] = None
+        self.actionRule_Break_Settings: Optional[QAction] = None
+        self.actionLogging: Optional[QAction] = None
+        self.actionAudio_Settings: Optional[QAction] = None
+        self.actionDevice_Options: Optional[QAction] = None
+        self.actionEPICLib_Settings: Optional[QAction] = None
+        self.actionSound_Text_Settings: Optional[QAction] = None
+        self.actionSet_Application_Font: Optional[QAction] = None
+
+        # Dark Mode Submenu Actions
+        self.actionLight: Optional[QAction] = None
+        self.actionDark: Optional[QAction] = None
+        self.actionAuto: Optional[QAction] = None
+
+        # Run Menu Actions
+        self.actionRun_Settings: Optional[QAction] = None
+        self.actionRunAll: Optional[QAction] = None
+        self.actionRun_One_Step: Optional[QAction] = None
+        self.actionPause: Optional[QAction] = None
+        self.actionStop: Optional[QAction] = None
+        self.actionDelete_Datafile: Optional[QAction] = None
+
+        # Help Menu Actions
+        self.actionAbout: Optional[QAction] = None
+        self.actionHelp: Optional[QAction] = None
+        self.actionStandardRun: Optional[QAction] = None
+        self.actionEncoderRun: Optional[QAction] = None
+        self.actionAllRuns: Optional[QAction] = None
+
+        # Windows Menu Actions
+        self.actionShow_All: Optional[QAction] = None
+        self.actionMinimize_All: Optional[QAction] = None
+        self.actionShow_Trace_Window: Optional[QAction] = None
+        self.actionShow_Stats_Window: Optional[QAction] = None
+        self.actionShow_Visual_Views: Optional[QAction] = None
+        self.actionShow_Auditory_Views: Optional[QAction] = None
+        self.actionClear_Output_Windows: Optional[QAction] = None
+        self.actionReset_Layout: Optional[QAction] = None
+
+        # Find Menu Actions
+        self.actionFind: Optional[QAction] = None
+        self.actionFindNext: Optional[QAction] = None
+        self.actionFindPrevious: Optional[QAction] = None
+
+        mainwindow_menu.setup_menu(self)
+        mainwindow_menu.setup_menu_connections(self)
+        
+        self.context_menu = QMenu(self)
+        self.context_items = {}
+        self.create_context_menu_items()
 
         # connect other ui signals
-        self.ui.plainTextEditOutput.customContextMenuRequested.connect(self.search_context_menu)
-        self.ui.plainTextEditOutput.mouseDoubleClickEvent = self.mouseDoubleClickEvent
+        self.plainTextEditOutput.customContextMenuRequested.connect(self.search_context_menu)
+        self.plainTextEditOutput.mouseDoubleClickEvent = self.mouseDoubleClickEvent
 
-        self.ui.plainTextEditOutput.clear()
-        self.ui.plainTextEditOutput.write(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
+        self.plainTextEditOutput.clear()
+        self.plainTextEditOutput.write(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
 
         self.default_palette = self.app.palette()
         self.change_darkmode(config.app_cfg.dark_mode)
@@ -357,10 +355,6 @@ class MainWin(QMainWindow):
             two_off_timer = QTimer()
             two_off_timer.singleShot(500, partial(self.session_reload, quiet=True))
 
-        if platform.system().lower() == "darwin":
-            self.setMenuBar(self.ui.menubar)
-            self.ui.menubar.setNativeMenuBar(False)
-
         exists = Path(config.app_cfg.last_device_file).is_file()
         device = config.app_cfg.last_device_file if config.app_cfg.last_device_file else "None"
         last_session_notice = f"Last Device Loaded: {device} [{exists=}]"
@@ -381,84 +375,6 @@ class MainWin(QMainWindow):
                     win.raise_()
         finally:
             self.manage_z_order = True
-
-    def connect_menu_signals(self):
-        self.ui.actionQuit.triggered.connect(self.close)
-        self.ui.actionQuit.setShortcut("Ctrl+Q")
-        self.ui.actionLoad_Device.triggered.connect(self.on_load_device)
-        self.ui.actionLoad_Visual_Encoder.triggered.connect(partial(self.simulation.on_load_encoder, kind="Visual"))
-        self.ui.actionLoad_Auditory_Encoder.triggered.connect(partial(self.simulation.on_load_encoder, kind="Auditory"))
-        self.ui.actionUnload_Visual_Encoder.triggered.connect(partial(self.simulation.on_unload_encoder, kind="Visual"))
-        self.ui.actionUnload_Auditory_Encoder.triggered.connect(
-            partial(self.simulation.on_unload_encoder, kind="Auditory")
-        )
-        self.ui.actionLoad_Device.setShortcut("Ctrl+L")
-        self.ui.actionCompile_Rules.triggered.connect(self.choose_rules)
-        self.ui.actionCompile_Rules.setShortcut("Ctrl+K")
-        self.ui.actionRecompile_Rules.triggered.connect(self.recompile_rules)
-        self.ui.actionRecompile_Rules.setShortcut("Ctrl+Alt+K")
-        self.ui.actionRun_Settings.triggered.connect(self.show_run_settings)
-        self.ui.actionRunAll.triggered.connect(self.run_all)
-        self.ui.actionRunAll.setShortcut("Ctrl+R")
-        self.ui.actionRun_One_Step.triggered.connect(self.run_one_step)
-        self.ui.actionRun_One_Step.setShortcut("Ctrl+O")
-        self.ui.actionStop.triggered.connect(self.halt_simulation)
-        self.ui.actionStop.setShortcut("Ctrl+.")
-        self.ui.actionPause.triggered.connect(self.pause_simulation)
-        self.ui.actionPause.setShortcut("Ctrl+Alt+P")
-        self.ui.actionAbout.triggered.connect(self.about_dialog)
-        self.ui.actionHelp.triggered.connect(self.open_help_file)
-        self.ui.actionStandardRun.triggered.connect(partial(self.run_tests, kind="StandardRun"))
-        self.ui.actionEncoderRun.triggered.connect(partial(self.run_tests, kind="EncoderRun"))
-        self.ui.actionAllRuns.triggered.connect(partial(self.run_tests, kind="AllRuns"))
-        self.ui.actionDisplay_Controls.triggered.connect(self.show_display_settings_dialogs)
-        self.ui.actionTrace_Settings.triggered.connect(self.show_trace_settings_dialogs)
-        self.ui.actionLogging.triggered.connect(self.show_log_settings_dialogs)
-        self.ui.actionRule_Break_Settings.triggered.connect(self.show_rule_break_settings_dialog)
-        self.ui.actionDevice_Options.triggered.connect(self.show_device_options_dialog)
-
-        # NOTE: this is disabled until we have another pybind11-based version of EPIClib to offer
-        self.ui.actionEPICLib_Settings.setEnabled(False)
-        # self.ui.actionEPICLib_Settings.triggered.connect(
-        #     self.show_epiclib_settings_dialog
-        # )
-
-        self.ui.actionSound_Text_Settings.triggered.connect(self.show_sound_text_settings_dialog)
-        self.ui.actionExport_Normal_Output.triggered.connect(
-            partial(self.export_output_txt, source=self.ui.plainTextEditOutput, name="Normal")
-        )
-        self.ui.actionExport_Trace_Output.triggered.connect(
-            partial(
-                self.export_output_txt,
-                source=self.trace_win.ui.plainTextEditOutput,
-                name="Trace",
-            )
-        )
-        self.ui.actionExport_Stats_Output.triggered.connect(
-            partial(
-                self.export_output,
-                source=self.stats_win.ui.statsTextBrowser,
-                name="Stats",
-            )
-        )
-        self.ui.actionReset_Layout.triggered.connect(self.layout_reset)
-        self.ui.actionReload_Session.triggered.connect(partial(self.session_reload, quiet=False))
-        self.ui.actionShow_Trace_Window.triggered.connect(partial(self.reveal_windows, window="trace"))
-        self.ui.actionShow_Stats_Window.triggered.connect(partial(self.reveal_windows, window="stats"))
-        self.ui.actionShow_Visual_Views.triggered.connect(partial(self.reveal_windows, window="visual"))
-        self.ui.actionShow_Auditory_Views.triggered.connect(partial(self.reveal_windows, window="auditory"))
-        self.ui.actionShow_All.triggered.connect(partial(self.reveal_windows, window="all"))
-        self.ui.actionMinimize_All.triggered.connect(self.minimize_windows)
-        self.ui.actionClear_Output_Windows.triggered.connect(self.clear_output_windows)
-        self.ui.actionSet_Application_Font.triggered.connect(self.set_application_font)
-        self.ui.actionLight.triggered.connect(partial(self.change_darkmode, "light"))
-        self.ui.actionDark.triggered.connect(partial(self.change_darkmode, "dark"))
-        self.ui.actionAuto.triggered.connect(partial(self.change_darkmode, "auto"))
-        self.ui.actionDelete_Datafile.triggered.connect(self.delete_datafile)
-
-        # NOTE: We no longer need this facility
-        # self.ui.actionRun_Simulation_Script.triggered.connect(self.simulation_from_script)
-        self.ui.actionRun_Simulation_Script.setVisible(False)
 
     def window_focus_changed(self, win: QMainWindow):
         if not win or not self.manage_z_order:
@@ -785,7 +701,7 @@ class MainWin(QMainWindow):
     #         )
     #         for ri in run_info
     #     ]
-    #     self.ui.plainTextEditOutput.write(pd.DataFrame(pretty).to_string(index=False))
+    #     self.plainTextEditOutput.write(pd.DataFrame(pretty).to_string(index=False))
     #
     #     if self.on_load_device(run_info[0].device_file, auto_load_rules=False) and self.choose_rules(run_info):
     #         if run_info[0].clear_data:
@@ -892,10 +808,6 @@ class MainWin(QMainWindow):
         ):
             win.set_changed()
 
-        # when one window is minimized, everything gets minimized!
-        for view in chain(self.visual_views.values(), self.auditory_views.values()):
-            view.installEventFilter(self.state_watcher)
-
     def close_output_files(self):
         # FIXME: Revisit this when we figure out how to re=do text output
         # if Normal_out.is_present(self.normal_out_fs):
@@ -960,7 +872,7 @@ class MainWin(QMainWindow):
         self.close_output_files()
 
         try:
-            self.remove_views_from_model(
+            self.simulation.remove_views_from_model(
                 self.visual_physical_view,
                 self.visual_sensory_view,
                 self.visual_perceptual_view,
@@ -991,12 +903,12 @@ class MainWin(QMainWindow):
         event.accept()
 
     def hideEvent(self, event: QHideEvent) -> None:
-        self.ui.plainTextEditOutput.enable_updates = False
+        self.plainTextEditOutput.enable_updates = False
         QMainWindow.hideEvent(self, event)
 
     def showEvent(self, event: QShowEvent) -> None:
         config.set_ready(True)
-        self.ui.plainTextEditOutput.enable_updates = True
+        self.plainTextEditOutput.enable_updates = True
         QMainWindow.showEvent(self, event)
 
     def position_windows(self):
@@ -1004,7 +916,7 @@ class MainWin(QMainWindow):
             self.manage_z_order = False
             self.update_title()
 
-            self.ui.actionReload_Session.setEnabled(Path(config.device_cfg.device_file).is_file())
+            self.actionReload_Session.setEnabled(Path(config.device_cfg.device_file).is_file())
 
             if not self.layout_load(y_adjust=26):
                 self.layout_reset()
@@ -1049,7 +961,7 @@ class MainWin(QMainWindow):
         #       for max speed. (March 2022 -- is this still the case?)
 
     def enable_text_updates(self, enable: bool = True):
-        self.ui.plainTextEditOutput.enable_updates = enable
+        self.plainTextEditOutput.enable_updates = enable
         self.trace_win.ui.plainTextEditOutput.enable_updates = enable
 
     def clear_ui(
@@ -1085,46 +997,46 @@ class MainWin(QMainWindow):
 
     def write(self, text: str, copy_to_trace: bool = False):
         if text:
-            self.ui.plainTextEditOutput.write(text)
+            self.plainTextEditOutput.write(text)
             if copy_to_trace:
                 self.trace_win.ui.plainTextEditOutput.write(text)
 
     def clear(self):
-        self.ui.plainTextEditOutput.clear()
+        self.plainTextEditOutput.clear()
 
     def set_ui_running(self):
-        self.ui.actionStop.setEnabled(True)
-        self.ui.actionPause.setEnabled(True)
+        self.actionStop.setEnabled(True)
+        self.actionPause.setEnabled(True)
 
-        self.ui.actionRunAll.setEnabled(False)
-        self.ui.actionRun_One_Step.setEnabled(False)
+        self.actionRunAll.setEnabled(False)
+        self.actionRun_One_Step.setEnabled(False)
 
-        self.ui.actionLoad_Device.setEnabled(False)
-        self.ui.actionLoad_Visual_Encoder.setEnabled(False)
-        self.ui.actionLoad_Auditory_Encoder.setEnabled(False)
-        self.ui.actionUnload_Visual_Encoder.setEnabled(False)
-        self.ui.actionUnload_Auditory_Encoder.setEnabled(False)
-        self.ui.actionCompile_Rules.setEnabled(False)
-        self.ui.actionRecompile_Rules.setEnabled(False)
+        self.actionLoad_Device.setEnabled(False)
+        self.actionLoad_Visual_Encoder.setEnabled(False)
+        self.actionLoad_Auditory_Encoder.setEnabled(False)
+        self.actionUnload_Visual_Encoder.setEnabled(False)
+        self.actionUnload_Auditory_Encoder.setEnabled(False)
+        self.actionCompile_Rules.setEnabled(False)
+        self.actionRecompile_Rules.setEnabled(False)
 
-        self.ui.actionRun_Settings.setEnabled(False)
-        self.ui.actionRule_Break_Settings.setEnabled(False)
-        self.ui.actionDevice_Options.setEnabled(False)
-        self.ui.actionSound_Text_Settings.setEnabled(False)
+        self.actionRun_Settings.setEnabled(False)
+        self.actionRule_Break_Settings.setEnabled(False)
+        self.actionDevice_Options.setEnabled(False)
+        self.actionSound_Text_Settings.setEnabled(False)
 
-        self.ui.actionDisplay_Controls.setEnabled(True)
-        self.ui.actionTrace_Settings.setEnabled(True)
+        self.actionDisplay_Controls.setEnabled(True)
+        self.actionTrace_Settings.setEnabled(True)
 
-        self.ui.actionLogging.setEnabled(False)
-        self.ui.actionExport_Normal_Output.setEnabled(False)
-        self.ui.actionExport_Trace_Output.setEnabled(False)
-        self.ui.actionExport_Stats_Output.setEnabled(False)
-        self.ui.actionReload_Session.setEnabled(False)
+        self.actionLogging.setEnabled(False)
+        self.actionExport_Normal_Output.setEnabled(False)
+        self.actionExport_Trace_Output.setEnabled(False)
+        self.actionExport_Stats_Output.setEnabled(False)
+        self.actionReload_Session.setEnabled(False)
 
-        # self.ui.actionEPICLib_Settings.setEnabled(False)
-        self.ui.actionDelete_Datafile.setEnabled(False)
+        # self.actionEPICLib_Settings.setEnabled(False)
+        self.actionDelete_Datafile.setEnabled(False)
 
-        # self.ui.actionRun_Simulation_Script.setEnabled(False)
+        # self.actionRun_Simulation_Script.setEnabled(False)
 
     def set_ui_paused(self):
         has_rules = (
@@ -1145,39 +1057,39 @@ class MainWin(QMainWindow):
             and (not hasattr(self.simulation.auditory_encoder, "is_null_encoder"))
         )
 
-        self.ui.actionStop.setEnabled(True)
-        self.ui.actionPause.setEnabled(False)
+        self.actionStop.setEnabled(True)
+        self.actionPause.setEnabled(False)
 
-        self.ui.actionRunAll.setEnabled(True)
-        self.ui.actionRun_One_Step.setEnabled(True)
+        self.actionRunAll.setEnabled(True)
+        self.actionRun_One_Step.setEnabled(True)
 
-        self.ui.actionLoad_Device.setEnabled(True)
-        self.ui.actionCompile_Rules.setEnabled(True)
-        self.ui.actionRecompile_Rules.setEnabled(has_rules)
-        self.ui.actionLoad_Visual_Encoder.setEnabled(has_device)
-        self.ui.actionLoad_Auditory_Encoder.setEnabled(has_device)
-        self.ui.actionUnload_Visual_Encoder.setEnabled(has_visual_encoder)
-        self.ui.actionUnload_Auditory_Encoder.setEnabled(has_auditory_encoder)
+        self.actionLoad_Device.setEnabled(True)
+        self.actionCompile_Rules.setEnabled(True)
+        self.actionRecompile_Rules.setEnabled(has_rules)
+        self.actionLoad_Visual_Encoder.setEnabled(has_device)
+        self.actionLoad_Auditory_Encoder.setEnabled(has_device)
+        self.actionUnload_Visual_Encoder.setEnabled(has_visual_encoder)
+        self.actionUnload_Auditory_Encoder.setEnabled(has_auditory_encoder)
 
-        self.ui.actionRun_Settings.setEnabled(has_device)
-        self.ui.actionDevice_Options.setEnabled(has_device)
-        self.ui.actionRule_Break_Settings.setEnabled(has_device and has_rules)
-        self.ui.actionSound_Text_Settings.setEnabled(False)
+        self.actionRun_Settings.setEnabled(has_device)
+        self.actionDevice_Options.setEnabled(has_device)
+        self.actionRule_Break_Settings.setEnabled(has_device and has_rules)
+        self.actionSound_Text_Settings.setEnabled(False)
 
-        self.ui.actionDisplay_Controls.setEnabled(True)
-        self.ui.actionTrace_Settings.setEnabled(True)
-        self.ui.actionLogging.setEnabled(True)
+        self.actionDisplay_Controls.setEnabled(True)
+        self.actionTrace_Settings.setEnabled(True)
+        self.actionLogging.setEnabled(True)
 
-        self.ui.actionExport_Normal_Output.setEnabled(True)
-        self.ui.actionExport_Trace_Output.setEnabled(True)
-        self.ui.actionExport_Stats_Output.setEnabled(True)
-        self.ui.actionReload_Session.setEnabled(True)
+        self.actionExport_Normal_Output.setEnabled(True)
+        self.actionExport_Trace_Output.setEnabled(True)
+        self.actionExport_Stats_Output.setEnabled(True)
+        self.actionReload_Session.setEnabled(True)
 
-        # self.ui.actionEPICLib_Settings.setEnabled(False)
+        # self.actionEPICLib_Settings.setEnabled(False)
 
-        self.ui.actionDelete_Datafile.setEnabled(False)
+        self.actionDelete_Datafile.setEnabled(False)
 
-        # self.ui.actionRun_Simulation_Script.setEnabled(True)
+        # self.actionRun_Simulation_Script.setEnabled(True)
 
     def set_ui_not_running(self):
         runnable = self.run_state == RUNNABLE
@@ -1199,38 +1111,38 @@ class MainWin(QMainWindow):
             and (not hasattr(self.simulation.auditory_encoder, "is_null_encoder"))
         )
 
-        self.ui.actionStop.setEnabled(False)
-        self.ui.actionPause.setEnabled(False)
+        self.actionStop.setEnabled(False)
+        self.actionPause.setEnabled(False)
 
-        self.ui.actionRunAll.setEnabled(runnable)
-        self.ui.actionRun_One_Step.setEnabled(runnable)
+        self.actionRunAll.setEnabled(runnable)
+        self.actionRun_One_Step.setEnabled(runnable)
 
-        self.ui.actionLoad_Device.setEnabled(True)
-        self.ui.actionCompile_Rules.setEnabled(True)
-        self.ui.actionRecompile_Rules.setEnabled(has_rules)
-        self.ui.actionLoad_Visual_Encoder.setEnabled(has_device)
-        self.ui.actionLoad_Auditory_Encoder.setEnabled(has_device)
-        self.ui.actionUnload_Visual_Encoder.setEnabled(has_visual_encoder)
-        self.ui.actionUnload_Auditory_Encoder.setEnabled(has_auditory_encoder)
+        self.actionLoad_Device.setEnabled(True)
+        self.actionCompile_Rules.setEnabled(True)
+        self.actionRecompile_Rules.setEnabled(has_rules)
+        self.actionLoad_Visual_Encoder.setEnabled(has_device)
+        self.actionLoad_Auditory_Encoder.setEnabled(has_device)
+        self.actionUnload_Visual_Encoder.setEnabled(has_visual_encoder)
+        self.actionUnload_Auditory_Encoder.setEnabled(has_auditory_encoder)
 
-        self.ui.actionRun_Settings.setEnabled(has_device)
-        self.ui.actionDevice_Options.setEnabled(has_device)
-        self.ui.actionRule_Break_Settings.setEnabled(has_device and has_rules)
-        self.ui.actionSound_Text_Settings.setEnabled(has_device)
+        self.actionRun_Settings.setEnabled(has_device)
+        self.actionDevice_Options.setEnabled(has_device)
+        self.actionRule_Break_Settings.setEnabled(has_device and has_rules)
+        self.actionSound_Text_Settings.setEnabled(has_device)
 
-        self.ui.actionDisplay_Controls.setEnabled(has_device)
-        self.ui.actionTrace_Settings.setEnabled(has_device)
-        self.ui.actionLogging.setEnabled(has_device)
+        self.actionDisplay_Controls.setEnabled(has_device)
+        self.actionTrace_Settings.setEnabled(has_device)
+        self.actionLogging.setEnabled(has_device)
 
-        self.ui.actionExport_Normal_Output.setEnabled(has_device)
-        self.ui.actionExport_Trace_Output.setEnabled(has_device)
-        self.ui.actionExport_Stats_Output.setEnabled(has_device)
-        self.ui.actionReload_Session.setEnabled(True)
+        self.actionExport_Normal_Output.setEnabled(has_device)
+        self.actionExport_Trace_Output.setEnabled(has_device)
+        self.actionExport_Stats_Output.setEnabled(has_device)
+        self.actionReload_Session.setEnabled(True)
 
-        # self.ui.actionEPICLib_Settings.setEnabled(has_device)
-        self.ui.actionDelete_Datafile.setEnabled(has_device)
+        # self.actionEPICLib_Settings.setEnabled(has_device)
+        self.actionDelete_Datafile.setEnabled(has_device)
 
-        # self.ui.actionRun_Simulation_Script.setEnabled(True)
+        # self.actionRun_Simulation_Script.setEnabled(True)
 
     def update_title(self):
         if self.simulation and self.simulation.device and self.simulation.model:
@@ -1400,7 +1312,7 @@ class MainWin(QMainWindow):
 
     def show_epiclib_settings_dialog(self):
         _ = QMessageBox(
-            QMessageBox.Information,
+            QMessageBox.Icon.Information,
             "This Function Has Been Disabled",
             "At the moment, the ability to switch EPIClib versions has been disabled. It is currently"
             "hard-coded to the version published in 2016 by David Kieras at https://github.com/dekieras/EPIC",
@@ -1408,17 +1320,17 @@ class MainWin(QMainWindow):
         )
         return
 
-        old_epiclib = config.device_cfg.epiclib_version
-        self.epiclib_settings_dialog = EPICLibSettingsWin(self.epiclib_files, self.epiclib_name)
-        self.epiclib_settings_dialog.setup_options()
-        self.epiclib_settings_dialog.setModal(True)
-        self.epiclib_settings_dialog.exec()  # needed to make it modal?!
-
-        new_epiclib = config.device_cfg.epiclib_version
-        if new_epiclib != old_epiclib:
-            # temporarily save new version in app config
-            config.app_cfg.epiclib_version = new_epiclib
-            config.app_cfg.auto_load_last_device = True
+        # old_epiclib = config.device_cfg.epiclib_version
+        # self.epiclib_settings_dialog = EPICLibSettingsWin(self.epiclib_files, self.epiclib_name)
+        # self.epiclib_settings_dialog.setup_options()
+        # self.epiclib_settings_dialog.setModal(True)
+        # self.epiclib_settings_dialog.exec()  # needed to make it modal?!
+        #
+        # new_epiclib = config.device_cfg.epiclib_version
+        # if new_epiclib != old_epiclib:
+        #     # temporarily save new version in app config
+        #     config.app_cfg.epiclib_version = new_epiclib
+        #     config.app_cfg.auto_load_last_device = True
 
     def set_application_font(self):
         # keeping the unused code from below just in case someone complains that they
@@ -1452,12 +1364,12 @@ class MainWin(QMainWindow):
     def change_darkmode(self, dark_mode: str):
         dm = str(dark_mode).lower()
         if dark_mode in ("dark", "light", "auto"):
-            config.app_cfg.dark_mode = dm
+            config.app_cfg.dark_mode = dm.title()
         else:
-            config.app_cfg.dark_mode = "auto"
+            config.app_cfg.dark_mode = "Auto"
 
         self.set_stylesheet(dm)
-        self.ui.menuDarkMode.setTitle(f"DarkMode: {dm.title()}")
+        # self.menuDarkMode.setTitle(f"DarkMode: {dm.title()}")
 
     def reveal_windows(self, window: str):
         try:
@@ -1524,7 +1436,7 @@ class MainWin(QMainWindow):
             self.manage_z_order = True
 
     def clear_output_windows(self):
-        self.ui.plainTextEditOutput.clear()
+        self.plainTextEditOutput.clear()
         if self.trace_win:
             self.trace_win.ui.plainTextEditOutput.clear()
         if self.stats_win:
@@ -1932,7 +1844,7 @@ class MainWin(QMainWindow):
             self.context_items["Search"].setEnabled(True)
 
             self.context_items["Copy"].setEnabled(True)
-            self.context_items["CopyLine"].setEnabled(self.ui.plainTextEditOutput.has_selection())
+            self.context_items["CopyLine"].setEnabled(self.plainTextEditOutput.has_selection())
             self.context_items["Clear"].setEnabled(True)
 
             self.context_items["OpenOutput"].setEnabled(True)
@@ -1962,17 +1874,17 @@ class MainWin(QMainWindow):
         elif action == self.context_items["Clear"]:
             self.clear()
         elif action == self.context_items["Search"]:
-            self.ui.plainTextEditOutput.query_search()
+            self.plainTextEditOutput.query_search()
         elif action == self.context_items["Quit"]:
             self.close()
         elif action == self.context_items["Stop"]:
             self.halt_simulation()
         # elif action == self.context_items['SelectAll']:
-        #     self.ui.plainTextEditOutput.selectAll()
+        #     self.plainTextEditOutput.selectAll()
         elif action == self.context_items["Copy"]:
-            self.ui.plainTextEditOutput.copy_all_to_clipboard()
+            self.plainTextEditOutput.copy_all_to_clipboard()
         elif action == self.context_items["CopyLine"]:
-            self.ui.plainTextEditOutput.copy_line_to_clipboard()
+            self.plainTextEditOutput.copy_line_to_clipboard()
         elif action == self.context_items["OpenOutput"]:
             self.launchEditor(which_file="NormalOut")
         elif action == self.context_items["EditRules"]:
@@ -2000,7 +1912,7 @@ class MainWin(QMainWindow):
         if which_file == "NormalOut":
             file_id = datetime.datetime.now().strftime("%m%d%y_%H%M%S")
             file_path = Path(self.tmp_folder.name, f"TEMP_EPICPY_NORMALOUT_{file_id}.txt")
-            file_path.write_text(self.ui.plainTextEditOutput.get_text())
+            file_path.write_text(self.plainTextEditOutput.get_text())
         elif which_file == "RuleFile":
             if self.simulation.rule_files:
                 if self.simulation.current_rule_index < len(self.simulation.rule_files):
@@ -2101,12 +2013,12 @@ class MainWin(QMainWindow):
         if event.key() == Qt.Key.Key_Escape:
             self.close()
         elif event.key() == Qt.Key.Key_F3:
-            if not self.ui.plainTextEditOutput.continue_find_text():
-                self.ui.plainTextEditOutput.query_search()
+            if not self.plainTextEditOutput.continue_find_text():
+                self.plainTextEditOutput.query_search()
             else:
                 super().keyPressEvent(event)
         elif event.key() == Qt.Key.Key_F and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
-            self.ui.plainTextEditOutput.query_search()
+            self.plainTextEditOutput.query_search()
         else:
             super().keyPressEvent(event)
 
