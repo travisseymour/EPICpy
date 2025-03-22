@@ -23,10 +23,12 @@ from typing import List, Optional
 
 import _io  # for type hinting only
 
+from PySide6.QtWidgets import QWidget
+
 from epicpy.widgets.largetextview import LargeTextView
 
 
-class EPICTextViewCachedWrite:
+class EPICTextViewCachedWrite(QWidget):
     """
     Version of EPICTextView that is passed an instance of CachedPlainTextEdit
     to which it posts text output.

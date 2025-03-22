@@ -223,6 +223,16 @@ class MainWin(QMainWindow):
         self.closing = False
         self._size_adjusted: bool = False
 
+        self.setUnifiedTitleAndToolBarOnMac(True)  # doesn't appear to make a difference
+
+        self.window_settings = QSettings("epicpy2", "WindowSettings")
+
+        self.statusBar().showMessage("Run Status: UNREADY")
+
+        self.run_state = UNREADY
+
+        self.last_search_spec = None
+
         # setup window dimensions
         self.usable_desktop_size: QSize = self.get_desktop_usable_geometry()
         log.debug(f"{self.usable_desktop_size=}")
@@ -239,21 +249,12 @@ class MainWin(QMainWindow):
         self.setGeometry(QRect(QPoint(0, 0), self.default_window_size))
 
         # add central widget and setup
-        self.plainTextEditOutput = LargeTextView(enable_context_menu=False)
-
-        self.plainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.plainTextEditOutput.setObjectName("MainWindow")  # "plainTextEditOutput"
-        self.plainTextEditOutput.setPlainText(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
-        self.normal_out_view = EPICTextViewCachedWrite(text_widget=self.plainTextEditOutput)
-
-        self.setUnifiedTitleAndToolBarOnMac(True)  # doesn't appear to make a difference
-
-        self.window_settings = QSettings("epicpy2", "WindowSettings")
-
-        self.statusBar().showMessage("Run Status: UNREADY")
-
-        self.run_state = UNREADY
-        self.last_search_spec = None
+        self.normalPlainTextEditOutput = LargeTextView(enable_context_menu=False)
+        self.normalPlainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.normalPlainTextEditOutput.setObjectName("MainWindow")  # "plainTextEditOutput"
+        self.normalPlainTextEditOutput.setPlainText(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
+        self.normalPlainTextEditOutput.customContextMenuRequested.connect(self.normal_search_context_menu)
+        self.normal_out_view = EPICTextViewCachedWrite(text_widget=self.normalPlainTextEditOutput)
 
         # attach Normal_out and PPS_out output to this window
         self.normal_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13050)
@@ -262,19 +263,24 @@ class MainWin(QMainWindow):
 
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
         # connect Trace_out now
-        self.trace_win = TraceWin(parent=self)
-        self.trace_win.trace_out_view = EPICTextViewCachedWrite(text_widget=self.trace_win.ui.plainTextEditOutput)
-        self.trace_win.ui.plainTextEditOutput.mouseDoubleClickEvent = self.mouseDoubleClickEvent
+        self.tracePlainTextEditOutput = LargeTextView(enable_context_menu=False)
+        self.tracePlainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tracePlainTextEditOutput.setObjectName("TraceWindow")
+        self.tracePlainTextEditOutput.setPlainText(f'Trace Out! ({datetime.datetime.now().strftime("%r")})\n')
+        self.normalPlainTextEditOutput.customContextMenuRequested.connect(self.trace_search_context_menu)
+        self.trace_out_view = EPICTextViewCachedWrite(text_widget=self.tracePlainTextEditOutput)
+
+        # attach TRACE_out output to this window
         self.trace_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13048)
-        self.trace_out_view_thread.messageReceived.connect(self.trace_win.trace_out_view.write)
+        self.trace_out_view_thread.messageReceived.connect(self.trace_out_view.write)
         self.trace_out_view_thread.start()
 
         # NOTE: Keep these comments!
         # self.debug_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13049)
-        # self.debug_out_view_thread.messageReceived.connect(self.trace_win.trace_out_view.write)
+        # self.debug_out_view_thread.messageReceived.connect(self.trace_out_view.write)
         # self.debug_out_view_thread.start()
         # self.pps_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13053)
-        # self.pps_out_view_thread.messageReceived.connect(self.trace_win.trace_out_view.write)
+        # self.pps_out_view_thread.messageReceived.connect(self.trace_out_view.write)
         # self.pps_out_view_thread.start()
 
         # in order to link epiclib Output_tees to Python, we need to set up py_streamers
@@ -291,10 +297,19 @@ class MainWin(QMainWindow):
         self.update_output_logging()
 
         # init window properties
-        self.stats_win = StatsWin(parent=self)
+        self.stats_win = StatsWin(self)
+        self.visual_views: Optional[dict[str, VisualViewWin]] = None
+        self.visual_physical_view: Optional[EPICVisualView] = None
+        self.visual_sensory_view: Optional[EPICVisualView] = None
+        self.visual_perceptual_view: Optional[EPICVisualView] = None
+        self.auditory_views: Optional[dict[str, AuditoryViewWin]] = None
+        self.auditory_physical_view: Optional[EPICAuditoryView] = None
+        self.auditory_sensory_view: Optional[EPICAuditoryView] = None
+        self.auditory_perceptual_view: Optional[EPICAuditoryView] = None
 
         self.simulation = Simulation(self)
 
+        # init settings dialog properties
         self.run_settings_dialog = None
         self.display_settings_dialog = None
         self.trace_settings_dialog = None
@@ -306,16 +321,7 @@ class MainWin(QMainWindow):
         self.font_size_dialog = None
         self.text_editor_dialog = None
 
-        self.visual_views: Optional[dict[str, VisualViewWin]] = None
-
-        self.visual_physical_view: Optional[EPICVisualView] = None
-        self.visual_sensory_view: Optional[EPICVisualView] = None
-        self.visual_perceptual_view: Optional[EPICVisualView] = None
-        self.auditory_views: Optional[dict[str, AuditoryViewWin]] = None
-        self.auditory_physical_view: Optional[EPICAuditoryView] = None
-        self.auditory_sensory_view: Optional[EPICAuditoryView] = None
-        self.auditory_perceptual_view: Optional[EPICAuditoryView] = None
-
+        # finally setup ui
         self.setup_views()
         self.setup_base_ui()
 
@@ -389,11 +395,10 @@ class MainWin(QMainWindow):
         self.create_context_menu_items()
 
         # connect other ui signals
-        self.plainTextEditOutput.customContextMenuRequested.connect(self.search_context_menu)
-        self.plainTextEditOutput.mouseDoubleClickEvent = self.mouseDoubleClickEvent
+        # self.normalPlainTextEditOutput.customContextMenuRequested.connect(self.normal_search_context_menu)
 
-        self.plainTextEditOutput.clear()
-        self.plainTextEditOutput.write(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
+        # self.normalPlainTextEditOutput.clear()
+        # self.normalPlainTextEditOutput.write(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
 
         self.default_palette = self.app.palette()
         self.update_theme()
@@ -458,9 +463,9 @@ class MainWin(QMainWindow):
         # Bottom Dock Area: A plain text edit for Normal Output.
         dockBottom = QDockWidget("Normal Output", self)
         dockBottom.setObjectName("dockBottom")
-        plainTextEditBottom = QPlainTextEdit("Ready")
-        plainTextEditBottom.setStyleSheet("border: 2px solid #B9B8B6;")
-        dockBottom.setWidget(plainTextEditBottom)
+        normalPlainText = self.normalPlainTextEditOutput
+        normalPlainText.setStyleSheet("border: 2px solid #B9B8B6;")
+        dockBottom.setWidget(normalPlainText)
         dockBottom.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
         dockBottom.setFeatures(
             QDockWidget.DockWidgetFeature.DockWidgetClosable
@@ -471,7 +476,7 @@ class MainWin(QMainWindow):
         # New: Trace Output dock.
         dockTrace = QDockWidget("Trace Output", self)
         dockTrace.setObjectName("dockTrace")
-        tracePlainText = QPlainTextEdit("Trace Output")
+        tracePlainText = self.tracePlainTextEditOutput
         tracePlainText.setStyleSheet("border: 2px solid #B9B8B6;")
         dockTrace.setWidget(tracePlainText)
         dockTrace.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
@@ -526,8 +531,7 @@ class MainWin(QMainWindow):
         except:  # broad on purpose!
             ...
 
-        for target in (self, self.trace_win, self.stats_win):
-            target.clear()
+        self.clear_output_windows()
 
         if not file:
             if Path(config.device_cfg.device_file).is_file():
@@ -711,8 +715,8 @@ class MainWin(QMainWindow):
     def remove_file_loggers(self):
         if self.normal_out_view.file_writer.enabled:
             self.normal_out_view.file_writer.close()
-        if self.trace_win.trace_out_view.file_writer.enabled:
-            self.trace_win.trace_out_view.file_writer.close()
+        if self.trace_out_view.file_writer.enabled:
+            self.trace_out_view.file_writer.close()
 
     def update_output_logging(self):
         self.remove_file_loggers()
@@ -743,7 +747,7 @@ class MainWin(QMainWindow):
                 self.trace_file_output_never_updated = False
 
             try:
-                self.trace_win.trace_out_view.file_writer.open(Path(config.device_cfg.trace_out_file))
+                self.trace_out_view.file_writer.open(Path(config.device_cfg.trace_out_file))
                 self.write(f"{e_boxed_check} Trace Output logging set to " f"{config.device_cfg.trace_out_file}")
             except Exception as e:
                 self.write(
@@ -852,9 +856,6 @@ class MainWin(QMainWindow):
 
         _ = self.layout_save()  # regular and custom
 
-        self.trace_win.can_close = True
-        self.trace_win.close()  # destroy()
-
         self.stats_win.can_close = True
         self.stats_win.close()  # destroy()
 
@@ -908,14 +909,14 @@ class MainWin(QMainWindow):
         super().changeEvent(event)
 
     def hideEvent(self, event: QHideEvent) -> None:
-        self.plainTextEditOutput.enable_updates = False
+        self.normalPlainTextEditOutput.enable_updates = False
         QMainWindow.hideEvent(self, event)
 
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
 
         config.set_ready(True)
-        self.plainTextEditOutput.enable_updates = True
+        self.normalPlainTextEditOutput.enable_updates = True
 
         # Only adjust once
         if not self._size_adjusted:
@@ -964,8 +965,8 @@ class MainWin(QMainWindow):
         #       for max speed. (March 2022 -- is this still the case?)
 
     def enable_text_updates(self, enable: bool = True):
-        self.plainTextEditOutput.enable_updates = enable
-        self.trace_win.ui.plainTextEditOutput.enable_updates = enable
+        self.normalPlainTextEditOutput.enable_updates = enable
+        self.tracePlainTextEditOutput.enable_updates = enable
 
     def clear_ui(
         self,
@@ -982,9 +983,9 @@ class MainWin(QMainWindow):
             for view in self.auditory_views.values():
                 view.clear()
         if normal_output:
-            self.clear()
+            self.normalPlainTextEditOutput.clear()
         if trace_output:
-            self.trace_win.clear()
+            self.tracePlainTextEditOutput.clear()
         if stats_output:
             self.stats_win.clear()
 
@@ -1000,12 +1001,12 @@ class MainWin(QMainWindow):
 
     def write(self, text: str, copy_to_trace: bool = False):
         if text:
-            self.plainTextEditOutput.write(text)
+            self.normalPlainTextEditOutput.write(text)
             if copy_to_trace:
-                self.trace_win.ui.plainTextEditOutput.write(text)
+                self.tracePlainTextEditOutput.write(text)
 
     def clear(self):
-        self.plainTextEditOutput.clear()
+        self.normalPlainTextEditOutput.clear()
 
     def set_ui_running(self):
         self.actionStop.setEnabled(True)
@@ -1353,11 +1354,11 @@ class MainWin(QMainWindow):
             config.app_cfg.rollback()
 
     def clear_output_windows(self):
-        self.plainTextEditOutput.clear()
-        if self.trace_win:
-            self.trace_win.ui.plainTextEditOutput.clear()
-        if self.stats_win:
-            self.stats_win.ui.statsTextBrowser.clear()
+        self.normalPlainTextEditOutput.clear()
+        self.tracePlainTextEditOutput.clear()
+        # FIXME: why not working
+        # if self.stats_win:
+        #     self.stats_win.ui.statsTextBrowser.clear()
 
     def about_dialog(self):
         about_window = AboutWin(self)
@@ -1628,7 +1629,7 @@ class MainWin(QMainWindow):
         self.context_menu.addSeparator()
         self.context_items["Quit"] = self.context_menu.addAction("Quit")
 
-    def search_context_menu(self, event):
+    def normal_search_context_menu(self, event):
         device_file = config.device_cfg.device_file
         rules_file = config.device_cfg.rule_files[0] if config.device_cfg.rule_files else ""
 
@@ -1645,7 +1646,7 @@ class MainWin(QMainWindow):
             self.context_items["Search"].setEnabled(True)
 
             self.context_items["Copy"].setEnabled(True)
-            self.context_items["CopyLine"].setEnabled(self.plainTextEditOutput.has_selection())
+            self.context_items["CopyLine"].setEnabled(self.normalPlainTextEditOutput.has_selection())
             self.context_items["Clear"].setEnabled(True)
 
             self.context_items["OpenOutput"].setEnabled(True)
@@ -1675,7 +1676,7 @@ class MainWin(QMainWindow):
         elif action == self.context_items["Clear"]:
             self.clear()
         elif action == self.context_items["Search"]:
-            self.plainTextEditOutput.query_search()
+            self.normalPlainTextEditOutput.query_search()
         elif action == self.context_items["Quit"]:
             self.close()
         elif action == self.context_items["Stop"]:
@@ -1683,9 +1684,9 @@ class MainWin(QMainWindow):
         # elif action == self.context_items['SelectAll']:
         #     self.plainTextEditOutput.selectAll()
         elif action == self.context_items["Copy"]:
-            self.plainTextEditOutput.copy_all_to_clipboard()
+            self.normalPlainTextEditOutput.copy_all_to_clipboard()
         elif action == self.context_items["CopyLine"]:
-            self.plainTextEditOutput.copy_line_to_clipboard()
+            self.normalPlainTextEditOutput.copy_line_to_clipboard()
         elif action == self.context_items["OpenOutput"]:
             self.launchEditor(which_file="NormalOut")
         elif action == self.context_items["EditRules"]:
@@ -1709,11 +1710,38 @@ class MainWin(QMainWindow):
                 self.write(f'{" ".join(cmd)}')
                 subprocess.run(cmd)
 
+    def trace_search_context_menu(self, event):
+        contextMenu = QMenu(self)
+
+        if hasattr(self, "simulation") and self.run_state == RUNNING:
+            return
+
+        searchAction = contextMenu.addAction("Search")
+        clearAction = contextMenu.addAction("Clear")
+        # contextMenu.addSeparator()
+        # selectAllAction = contextMenu.addAction("Select All")
+        copyAction = contextMenu.addAction("Copy")
+        copyAction.setText(f"Copy All Lines)")
+        # contextMenu.addSeparator()
+
+        action = contextMenu.exec(self.mapToGlobal(event))
+
+        if action is None:
+            ...
+        elif action == clearAction:
+            self.tracePlainTextEditOutput.flush()
+        elif action == searchAction:
+            self.tracePlainTextEditOutput.query_search()
+        # elif action == selectAllAction:
+        #     self.tracePlainTextEditOutput.selectAll()
+        elif action == copyAction:
+            self.tracePlainTextEditOutput.copy_all_to_clipboard()
+
     def launchEditor(self, which_file: str = "NormalOut"):
         if which_file == "NormalOut":
             file_id = datetime.datetime.now().strftime("%m%d%y_%H%M%S")
             file_path = Path(self.tmp_folder.name, f"TEMP_EPICPY_NORMALOUT_{file_id}.txt")
-            file_path.write_text(self.plainTextEditOutput.get_text())
+            file_path.write_text(self.normalPlainTextEditOutput.get_text())
         elif which_file == "RuleFile":
             if self.simulation.rule_files:
                 if self.simulation.current_rule_index < len(self.simulation.rule_files):
@@ -1814,12 +1842,12 @@ class MainWin(QMainWindow):
         if event.key() == Qt.Key.Key_Escape:
             self.close()
         elif event.key() == Qt.Key.Key_F3:
-            if not self.plainTextEditOutput.continue_find_text():
-                self.plainTextEditOutput.query_search()
+            if not self.normalPlainTextEditOutput.continue_find_text():
+                self.normalPlainTextEditOutput.query_search()
             else:
                 super().keyPressEvent(event)
         elif event.key() == Qt.Key.Key_F and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
-            self.plainTextEditOutput.query_search()
+            self.normalPlainTextEditOutput.query_search()
         else:
             super().keyPressEvent(event)
 

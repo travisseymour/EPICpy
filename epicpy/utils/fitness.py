@@ -429,7 +429,7 @@ def test_load_device(window: QMainWindow) -> Tuple[bool, str]:
 
     return wait_for_output(
         window=window,
-        text_edit=window.ui.plainTextEditOutput,
+        text_edit=window.normalPlainTextEditOutput,
         target="Successfully initialized device",
         sigil="Failed to create new EpicDevice",
         timeout_secs=5.0,
@@ -442,7 +442,7 @@ def test_compile_rules(window: QMainWindow) -> Tuple[bool, str]:
 
     return wait_for_output(
         window=window,
-        text_edit=window.ui.plainTextEditOutput,
+        text_edit=window.normalPlainTextEditOutput,
         target=r"Rule file .+[ \n]+compiled successfully!",
         sigil="Unable to (re)compile ruleset",
         timeout_secs=5.0,
@@ -455,7 +455,7 @@ def test_load_encoder(window: QMainWindow) -> Tuple[bool, str]:
 
     return wait_for_output(
         window=window,
-        text_edit=window.ui.plainTextEditOutput,
+        text_edit=window.normalPlainTextEditOutput,
         target="Visualencoder was created successfully",
         sigil="Failed to create new Visual encoder",
         timeout_secs=5.0,
@@ -467,7 +467,7 @@ def test_run_model(window: QMainWindow) -> Tuple[bool, str]:
 
     return wait_for_output(
         window=window,
-        text_edit=window.ui.plainTextEditOutput,
+        text_edit=window.normalPlainTextEditOutput,
         target=r"Run of .+\.prs Finished.",
         sigil="Stopped With Error",
         timeout_secs=15.0,

@@ -245,9 +245,8 @@ class Simulation:
             # restore layout for device
             device_layout_file = Path(device_file_p.parent, "layout.json")
             if device_layout_file.is_file():
-                self.parent.manage_z_order = False
+                self.parent.context = "".join([c for c in self.device.device_name if c.isalnum()]).title()
                 self.parent.layout_load(str(device_layout_file))
-                self.parent.manage_z_order = True
 
             # restore params for device
             if config.device_cfg.device_params:
@@ -256,6 +255,7 @@ class Simulation:
         except Exception as e:
             self.write(f"\nERROR: Failed to create new EpicDevice from\n{device_file_p.name}!\n{e}\n")
             self.device = None
+            self.parent.context = "UnKnown"
             return
 
         try:
@@ -263,6 +263,7 @@ class Simulation:
         except AssertionError:
             self.write(f"\nERROR: Created new device, but access to device_processor_pointer failed!\n")
             self.device = None
+            self.parent.context = "UnKnown"
             return
 
         # create new model and connect it to the new device
@@ -287,6 +288,7 @@ class Simulation:
         except Exception as e:
             self.write(f"\nERROR: Simulation unable to properly connect new Device and Model:\n{e}\n")
             self.device = None
+            self.parent.context = "UnKnown"
             return
 
         self.parent.update_title()
@@ -813,7 +815,7 @@ class Simulation:
         start = time.time()
         while time.time() - start < 3.0:
             QCoreApplication.processEvents(QEventLoop.AllEvents, 1000)
-            if self.parent.plainTextEditOutput.is_idle or self.parent.trace_win.plainTextEditOutput.is_idle:
+            if self.parent.normalPlainTextEditOutput.is_idle or self.parent.tracePlainTextEditOutput.is_idle:
                 break
         return True
 
