@@ -68,6 +68,17 @@ def setup_menu(window):
     window.actionQuit = QAction("Quit", window)
     file_menu.addAction(window.actionQuit)
 
+    # --- Find Menu ---
+    find_menu = menubar.addMenu("Find")
+    window.actionFind = QAction("Find", window)
+    find_menu.addAction(window.actionFind)
+
+    window.actionFindNext = QAction("Find Next", window)
+    find_menu.addAction(window.actionFindNext)
+
+    window.actionFindPrevious = QAction("Find Previous", window)
+    find_menu.addAction(window.actionFindPrevious)
+
     # --- Settings Menu ---
     settings_menu = menubar.addMenu("Settings")
     window.actionTrace_Settings = QAction("Trace Settings", window)
@@ -94,25 +105,12 @@ def setup_menu(window):
     window.actionDevice_Options = QAction("Device Options", window)
     settings_menu.addAction(window.actionDevice_Options)
 
-    # Example: CLI and Device Debug Messages
-    window.actionEPICLib_Settings = QAction("CLI and Device Debug Messages", window)
-    settings_menu.addAction(window.actionEPICLib_Settings)
-
     settings_menu.addSeparator()
     window.actionSound_Text_Settings = QAction("Sound Text Settings", window)
     settings_menu.addAction(window.actionSound_Text_Settings)
 
     window.actionSet_Application_Font = QAction("Set Application Font", window)
     settings_menu.addAction(window.actionSet_Application_Font)
-
-    # --- Dark Mode Submenu ---
-    dark_mode_menu = settings_menu.addMenu("Dark Mode: Light")
-    window.actionLight = QAction("Light", window)
-    dark_mode_menu.addAction(window.actionLight)
-    window.actionDark = QAction("Dark", window)
-    dark_mode_menu.addAction(window.actionDark)
-    window.actionAuto = QAction("Auto", window)
-    dark_mode_menu.addAction(window.actionAuto)
 
     # --- Run Menu ---
     run_menu = menubar.addMenu("Run")
@@ -140,23 +138,7 @@ def setup_menu(window):
     window.actionDelete_Datafile = QAction("Delete Datafile", window)
     run_menu.addAction(window.actionDelete_Datafile)
 
-    # --- Help Menu ---
-    help_menu = menubar.addMenu("Help")
-    window.actionAbout = QAction("About", window)
-    help_menu.addAction(window.actionAbout)
 
-    window.actionHelp = QAction("Help", window)
-    help_menu.addAction(window.actionHelp)
-    help_menu.addSeparator()
-
-    # Tests submenu under Help
-    tests_menu = help_menu.addMenu("Tests")
-    window.actionStandardRun = QAction("Standard Run", window)
-    tests_menu.addAction(window.actionStandardRun)
-    window.actionEncoderRun = QAction("Encoder Run", window)
-    tests_menu.addAction(window.actionEncoderRun)
-    window.actionAllRuns = QAction("All Runs", window)
-    tests_menu.addAction(window.actionAllRuns)
 
     # --- Windows Menu ---
     windows_menu = menubar.addMenu("Windows")
@@ -186,17 +168,25 @@ def setup_menu(window):
     window.actionReset_Layout = QAction("Restore Default Layout", window)
     windows_menu.addAction(window.actionReset_Layout)
 
-    # --- Find Menu ---
-    find_menu = menubar.addMenu("Find")
-    window.actionFind = QAction("Find", window)
-    find_menu.addAction(window.actionFind)
 
-    window.actionFindNext = QAction("Find Next", window)
-    find_menu.addAction(window.actionFindNext)
 
-    window.actionFindPrevious = QAction("Find Previous", window)
-    find_menu.addAction(window.actionFindPrevious)
+    # --- Help Menu ---
+    help_menu = menubar.addMenu("Help")
+    window.actionAbout = QAction("About", window)
+    help_menu.addAction(window.actionAbout)
 
+    window.actionHelp = QAction("Help", window)
+    help_menu.addAction(window.actionHelp)
+    help_menu.addSeparator()
+
+    # Tests submenu under Help
+    tests_menu = help_menu.addMenu("Tests")
+    window.actionStandardRun = QAction("Standard Run", window)
+    tests_menu.addAction(window.actionStandardRun)
+    window.actionEncoderRun = QAction("Encoder Run", window)
+    tests_menu.addAction(window.actionEncoderRun)
+    window.actionAllRuns = QAction("All Runs", window)
+    tests_menu.addAction(window.actionAllRuns)
 
 def setup_menu_connections(window):
     # Connect menu actions to slots and set shortcuts
@@ -252,11 +242,6 @@ def setup_menu_connections(window):
     window.actionDevice_Options.triggered.connect(window.show_device_options_dialog)
     window.actionSound_Text_Settings.triggered.connect(window.show_sound_text_settings_dialog)
     window.actionSet_Application_Font.triggered.connect(window.set_application_font)
-
-    # Dark mode submenu
-    # window.actionLight.triggered.connect(partial(window.change_darkmode, "light"))
-    # window.actionDark.triggered.connect(partial(window.change_darkmode, "dark"))
-    # window.actionAuto.triggered.connect(partial(window.change_darkmode, "auto"))
 
     # Windows menu actions
     # window.actionShow_Trace_Window.triggered.connect(partial(window.reveal_windows, window="trace"))

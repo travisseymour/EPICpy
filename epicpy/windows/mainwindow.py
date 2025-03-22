@@ -355,7 +355,6 @@ class MainWin(QMainWindow):
         self.actionLogging: Optional[QAction] = None
         self.actionAudio_Settings: Optional[QAction] = None
         self.actionDevice_Options: Optional[QAction] = None
-        self.actionEPICLib_Settings: Optional[QAction] = None
         self.actionSound_Text_Settings: Optional[QAction] = None
         self.actionSet_Application_Font: Optional[QAction] = None
 
@@ -1039,7 +1038,6 @@ class MainWin(QMainWindow):
         self.actionExport_Stats_Output.setEnabled(False)
         self.actionReload_Session.setEnabled(False)
 
-        # self.actionEPICLib_Settings.setEnabled(False)
         self.actionDelete_Datafile.setEnabled(False)
 
         # self.actionRun_Simulation_Script.setEnabled(False)
@@ -1090,8 +1088,6 @@ class MainWin(QMainWindow):
         self.actionExport_Trace_Output.setEnabled(True)
         self.actionExport_Stats_Output.setEnabled(True)
         self.actionReload_Session.setEnabled(True)
-
-        # self.actionEPICLib_Settings.setEnabled(False)
 
         self.actionDelete_Datafile.setEnabled(False)
 
@@ -1145,7 +1141,6 @@ class MainWin(QMainWindow):
         self.actionExport_Stats_Output.setEnabled(has_device)
         self.actionReload_Session.setEnabled(True)
 
-        # self.actionEPICLib_Settings.setEnabled(has_device)
         self.actionDelete_Datafile.setEnabled(has_device)
 
         # self.actionRun_Simulation_Script.setEnabled(True)
