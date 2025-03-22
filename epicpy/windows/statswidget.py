@@ -23,6 +23,7 @@ from datetime import datetime
 import base64
 from pathlib import Path
 
+from PySide6.QtCore import Qt
 from qtpy.QtCore import (
     QMargins,
 )
@@ -153,50 +154,38 @@ class CustomStatsTextBrowser(QTextBrowser):
         return super().loadResource(resource_type, url)
 
 
-class StatsWin(QMainWindow):
+class StatsWidget(QWidget):
     def __init__(self, parent):
-        super(StatsWin, self).__init__()
+        super(StatsWidget, self).__init__()
 
         self.view_type = b"StatsOut"
         self.setObjectName("StatsWindow")
-        self.ui = Ui_StatsWindow()
-        self.ui.setupUi(self)
 
         # Create a scrollable area to host our custom text browsers.
         scroll_area = QScrollArea(self)
         scroll_area.setWidgetResizable(True)
-        self.setCentralWidget(scroll_area)
-
-        self.can_close = False
-
-        # # Container widget with a vertical layout.
-        # self.container = QWidget()
-        # self.vlayout = QVBoxLayout(self.container)
-        # self.container.setLayout(self.vlayout)
-        # scroll_area.setWidget(self.container)
 
         # Container widget with a vertical layout.
         self.container = QWidget()
         self.vlayout = QVBoxLayout(self.container)
+        self.vlayout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.vlayout.setSpacing(0)  # Remove any spacing between widgets.
         self.vlayout.setContentsMargins(QMargins(0, 0, 0, 0))  # Remove any margins (ltrb).
         self.container.setLayout(self.vlayout)
         scroll_area.setWidget(self.container)
 
-        # replace designed font with application-wide font
-        clear_font(self)
+        # Create a main layout for this widget and add the scroll area.
+        main_layout = QVBoxLayout(self)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        main_layout.setSpacing(0)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(scroll_area)
+        self.setLayout(main_layout)
 
-        now = datetime.now().strftime("%r")
-        self.ui.statsTextBrowser.append(f"{f'Stats Out! ({now})'}")
-
-        self.trace_out_view = None
-
-        try:
-            self.container.mouseDoubleClickEvent = parent.mouseDoubleClickEvent
-        except AttributeError:
-            ...
-
+        self.can_close = False
         self.clearing: bool = False
+
+        self.write(f"""{f'Stats Out! ({datetime.now().strftime("%r")})'}""")
 
     def _write(self, text: str):
         """
@@ -304,7 +293,7 @@ if __name__ == "__main__":
     import sys
 
     app = QApplication(sys.argv)
-    win = StatsWin(parent=None)
+    win = StatsWidget(parent=None)
     win.show()
 
     # Example usage:

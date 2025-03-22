@@ -39,8 +39,8 @@ from epicpy.utils.defaultfont import get_default_font
 from epicpy.widgets.largetextview import LargeTextView
 from epicpy.windows import mainwindow_menu
 from epicpy.windows.appstyle import set_dark_style, set_light_style
-from epicpy.windows.statswindow import StatsWin
-from epicpy.windows.tracewindow import TraceWin
+from epicpy.windows.statswidget import StatsWidget
+
 from qtpy.QtGui import (
     QTextDocumentWriter,
     QCloseEvent,
@@ -275,6 +275,9 @@ class MainWin(QMainWindow):
         self.trace_out_view_thread.messageReceived.connect(self.trace_out_view.write)
         self.trace_out_view_thread.start()
 
+        # stats widget
+        self.stats_win = StatsWidget(self)
+
         # NOTE: Keep these comments!
         # self.debug_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13049)
         # self.debug_out_view_thread.messageReceived.connect(self.trace_out_view.write)
@@ -297,7 +300,6 @@ class MainWin(QMainWindow):
         self.update_output_logging()
 
         # init window properties
-        self.stats_win = StatsWin(self)
         self.visual_views: Optional[dict[str, VisualViewWin]] = None
         self.visual_physical_view: Optional[EPICVisualView] = None
         self.visual_sensory_view: Optional[EPICVisualView] = None
@@ -498,7 +500,7 @@ class MainWin(QMainWindow):
         # ----- Right Dock Widget (Side Dock Area) -----
         dockSide = QDockWidget("Statistics Output", self)
         dockSide.setObjectName("dockSide")
-        plainTextEditSide = QPlainTextEdit("sample stats output")
+        plainTextEditSide = self.stats_win
         plainTextEditSide.setStyleSheet("border: 2px solid #B9B8B6;")
         dockSide.setWidget(plainTextEditSide)
         dockSide.setAllowedAreas(Qt.DockWidgetArea.RightDockWidgetArea)
