@@ -250,6 +250,29 @@ class StatsWidget(QWidget):
             except Exception as e:
                 writer(f"\n**** Error exporting: {str(e)} ****\n")
 
+    def plain_text(self) -> str:
+        """
+        Return the combined plain text contents of all text-only QTextBrowser widgets
+        in the vertical layout as a single string. Skip widgets that contain tables,
+        images, or other non-text elements.
+        """
+        export_text = ""
+
+        for i in range(self.vlayout.count()):
+            widget = self.vlayout.itemAt(i).widget()
+            if widget is not None:
+                html = widget.toHtml().lower()
+
+                # Skip widgets that contain complex structures
+                if any(tag in html for tag in ("<table", "<img", "<svg", "<canvas", "<iframe")):
+                    continue
+
+                plain_text = widget.toPlainText().strip()
+                if plain_text:
+                    export_text += plain_text + "\n\n"
+
+        return export_text.strip()
+
     def clear_layout(self, layout):
         """
         Recursively remove all items (widgets and nested layouts) from the given layout.

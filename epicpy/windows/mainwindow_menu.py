@@ -138,8 +138,6 @@ def setup_menu(window):
     window.actionDelete_Datafile = QAction("Delete Datafile", window)
     run_menu.addAction(window.actionDelete_Datafile)
 
-
-
     # --- Windows Menu ---
     windows_menu = menubar.addMenu("Windows")
 
@@ -149,8 +147,6 @@ def setup_menu(window):
 
     window.actionReset_Layout = QAction("Restore Default Layout", window)
     windows_menu.addAction(window.actionReset_Layout)
-
-
 
     # --- Help Menu ---
     help_menu = menubar.addMenu("Help")
@@ -169,6 +165,7 @@ def setup_menu(window):
     tests_menu.addAction(window.actionEncoderRun)
     window.actionAllRuns = QAction("All Runs", window)
     tests_menu.addAction(window.actionAllRuns)
+
 
 def setup_menu_connections(window):
     # Connect menu actions to slots and set shortcuts

@@ -24,6 +24,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import zipfile
 from collections import OrderedDict
 from importlib.resources import files, as_file
 from pathlib import Path
@@ -463,6 +464,49 @@ def is_dark_mode():
     brightness = math.sqrt(0.299 * bg.red() ** 2 + 0.587 * bg.green() ** 2 + 0.114 * bg.blue() ** 2)
     # Return True if brightness is below a threshold (e.g. 128)
     return brightness < 128
+
+
+def print_tree(path: Path, prefix: str = ""):
+    """Print a tree structure starting from a given Path."""
+    contents = sorted(path.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower()))
+    pointers = ["├── "] * (len(contents) - 1) + ["└── "]
+    for pointer, item in zip(pointers, contents):
+        print(prefix + pointer + item.name)
+        if item.is_dir():
+            extension = "│   " if pointer == "├── " else "    "
+            print_tree(item, prefix + extension)
+
+
+def extract_from_zip(zip_path: Path, target_path: Path, start_path: str | None = None):
+    """
+    Extract files from a zip archive.
+
+    - If start_path is None, acts like extractall().
+    - Otherwise, extracts only the contents from start_path (and below),
+      stripping start_path from the extracted paths.
+    """
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        for member in zf.namelist():
+            # If start_path is None, extract everything normally
+            if start_path is None:
+                zf.extract(member, path=target_path)
+                continue
+
+            # If member path starts with the start_path, we want to extract it
+            if member.startswith(start_path.rstrip("/") + "/"):
+                # Strip off the start_path part
+                relative_path = member[len(start_path.rstrip("/") + "/") :]
+
+                # If it's a directory entry, just ensure the directory exists
+                if member.endswith("/"):
+                    (target_path / relative_path).mkdir(parents=True, exist_ok=True)
+                    continue
+
+                # Otherwise, extract the file manually
+                dest_file = target_path / relative_path
+                dest_file.parent.mkdir(parents=True, exist_ok=True)
+                with zf.open(member) as source, open(dest_file, "wb") as target_file:
+                    target_file.write(source.read())
 
 
 if __name__ == "__main__":

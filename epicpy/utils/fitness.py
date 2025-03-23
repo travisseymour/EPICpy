@@ -1,21 +1,20 @@
 import platform
 import re
-import tempfile
 import time
 import timeit
-import zipfile
 from copy import deepcopy
 from pathlib import Path
 from typing import Tuple, Optional
 import webbrowser
 
 import pandas as pd
+from platformdirs import user_documents_path
 from qtpy.QtCore import QCoreApplication
 from qtpy.QtGui import QAction
 from qtpy.QtWidgets import QMainWindow
 
 import epicpy.utils.config as config
-from epicpy.utils.apputils import get_resource
+from epicpy.utils.apputils import get_resource, extract_from_zip
 from epicpy.widgets.largetextview import LargeTextView
 
 """
@@ -23,9 +22,9 @@ Code for testing various EPICpy functionality
 """
 
 TEST_RESULTS = []
-TEMP_DIR = tempfile.mkdtemp()
 BUSY = False
-TEST_DEVICE_FOLDER = ""
+DEVICE_BASE_FOLDER: Optional[Path] = None
+TEST_DEVICE_FOLDER: Optional[Path] = None
 
 """
 helper functions
@@ -80,16 +79,17 @@ def setup_test_device_config():
 
 
 def setup_test_device_folder(window: QMainWindow):
-    global TEST_DEVICE_FOLDER, TEMP_DIR
+    global TEST_DEVICE_FOLDER, DEVICE_BASE_FOLDER
     window.write("Initializing EPICpy Testing...")
-    if TEST_DEVICE_FOLDER and Path(TEST_DEVICE_FOLDER).is_dir():
-        window.write("  Testing already initialized.")
+    if TEST_DEVICE_FOLDER and TEST_DEVICE_FOLDER.is_dir():
+        window.write("  Test files already created.")
         return True
 
     try:
-        assert Path(TEMP_DIR).is_dir()
-    except AssertionError:
-        TEMP_DIR = tempfile.mkdtemp()
+        assert DEVICE_BASE_FOLDER.is_dir()
+    except (AttributeError, AssertionError):
+        DEVICE_BASE_FOLDER = Path(user_documents_path(), "EPICpy")
+        DEVICE_BASE_FOLDER.mkdir(exist_ok=True)
 
     try:
         devices = get_resource("other", "devices.zip")
@@ -101,19 +101,26 @@ def setup_test_device_folder(window: QMainWindow):
 
     window.write("  Unzipping test device package...")
     try:
-        with zipfile.ZipFile(devices, "r") as infile:
-            infile.extractall(Path(TEMP_DIR))
+        extract_from_zip(
+            zip_path=Path(devices),
+            target_path=DEVICE_BASE_FOLDER,
+            start_path="devices",  # Start extraction at this folder inside the archive
+        )
+
         assert Path(
-            TEMP_DIR, "devices"
-        ).is_dir(), "Uncompressed folder devices could not be located in temporary folder."
+            DEVICE_BASE_FOLDER, "devices"
+        ).is_dir(), "Uncompressed folder devices could not be located in Documents folder."
     except Exception as e:
         window.write(f"ERROR: {e}")
         return False
 
-    TEST_DEVICE_FOLDER = str(Path(TEMP_DIR, "devices").resolve())
-
-    window.write("  Completed Successfully!")
-    return True
+    TEST_DEVICE_FOLDER = Path(DEVICE_BASE_FOLDER, "devices")
+    if not TEST_DEVICE_FOLDER.is_dir():
+        window.write(f"  Failed to setup test device in {DEVICE_BASE_FOLDER}.")
+        return False
+    else:
+        window.write(f"  Successfully setup test device in {DEVICE_BASE_FOLDER}.")
+        return True
 
 
 def show_results():
@@ -177,7 +184,7 @@ def show_results():
 
     html = html.replace("[[TABLE_ROWS]]", table)
 
-    html_file = Path(TEMP_DIR, "results.html")
+    html_file = Path(DEVICE_BASE_FOLDER, "results.html")
     html_file.write_text(html)
 
     if platform.system() == "Darwin":
@@ -210,8 +217,10 @@ def add_result(name: str, worked: bool, outcome: str):
     )
 
 
-def wait(window: QMainWindow, duration: float):
+def wait(window: QMainWindow, duration: float, msg: str = ""):
     start = timeit.default_timer()
+    if msg:
+        window.write(msg)
     while True:
         QCoreApplication.processEvents()
         if timeit.default_timer() - start > duration:
@@ -229,15 +238,16 @@ def wait_for_output(
     start = timeit.default_timer()
     while True:
         QCoreApplication.processEvents()
+        text = text_edit.get_text()
         if timeit.default_timer() - start > _timeout:
             result = False
             outcome = "Operation Timed Out."
             break
-        elif all([re.findall(pattern, text_edit.get_text()) for pattern in target.split("||")]):
+        elif all([re.findall(pattern, text) for pattern in target.split("||")]):
             result = True
             outcome = "Success"
             break
-        elif all([re.findall(pattern, text_edit.get_text()) for pattern in sigil.split("||")]):
+        elif all([re.findall(pattern, text) for pattern in sigil.split("||")]):
             result = False
             outcome = "Fail"
             break
@@ -263,7 +273,7 @@ def run_model_test(
     device_loaded, rules_compiled, model_run = None, None, None
 
     # clear out old data
-    data_file = Path(TEST_DEVICE_FOLDER, "choice/data_output.csv")
+    data_file = Path(TEST_DEVICE_FOLDER, "choice", "data_output.csv")
     data_file.unlink(missing_ok=True)
 
     # save app_settings last device, so we can put it back
@@ -305,27 +315,26 @@ def run_model_test(
                         # Check Stats output
                         # "N=10, CORRECT=5 INCORRECT=0 MEAN_RT=573 ACCURACY=100.00%"
 
-                        print("\nWaiting for stats window to populate...", end="")
+                        print("\nWaiting for stats window to populate...")
                         text = ""
                         start = time.time()
                         while time.time() - start < 10.0:
-                            text = window.stats_win.ui.statsTextBrowser.toPlainText()
+                            text = window.stats_win.plain_text()
                             if text:
                                 break
-                            print(".", end="")
                             QCoreApplication.processEvents()
                         if text:
                             print(f"\n\nGot access to stats window text after {time.time()-start:0.4f} sec:\n{text}\n")
                         else:
                             print(f"\n\nFAILED to retrieve text from stats window after test!!\n\n")
 
-                        correct_N = "N=10" in text  # 10 trials for 4 runs
+                        correct_N = "N=40" in text  # 10 trials for 4 runs
                         correct_ACCURACY = "ACCURACY=100.00" in text
                         if load_encoders:
                             correct_ACCURACY = not correct_ACCURACY
 
                         add_result(
-                            "StatsWindow: N == 10",
+                            "StatsWindow: N == 40",
                             correct_N,
                             "Success" if correct_N else "Failed",
                         )
@@ -336,7 +345,7 @@ def run_model_test(
                         )
 
                         # Saved Data
-                        data_file_exists = data_file.is_file()
+                        # data_file_exists = data_file.is_file()
                         try:
                             data = pd.read_csv(data_file)
                             can_read_data = True
@@ -392,11 +401,12 @@ def run_model_test(
                 config.device_cfg = device_run_settings
 
     if see_results:
-        wait(window, 2)
+        wait(window, 2, "\nCreating Results Output, Please wait...")
         show_results()
+        window.write("Test Complete.")
 
     if close_on_finish:
-        window.findChild(QAction, "actionQuit").trigger()
+        window.close()
 
     return model_run
 
@@ -406,12 +416,13 @@ def run_all_model_tests(window: QMainWindow, close_on_finish: bool = True, see_r
     _ = run_model_test(window, load_encoders=False, close_on_finish=False, see_results=False)
 
     wait(window, 2)
-    add_string("RUNNING MODEL WITH VISUAL ENCODER (Expecting <100% Accuracy)")
+    add_string("RUNNING MODEL WITH VISUAL ENCODER (Expecting < 100% Accuracy)")
     _ = run_model_test(window, load_encoders=True, close_on_finish=False, see_results=False)
 
     if see_results:
-        wait(window, 2)
+        wait(window, 2, "\nCreating Results Output, Please wait...")
         show_results()
+        window.write("Test Finished.")
 
     wait(window, 2)
     if close_on_finish:
@@ -424,8 +435,8 @@ Component Tests
 
 
 def test_load_device(window: QMainWindow) -> Tuple[bool, str]:
-    dev_path = str(Path(TEST_DEVICE_FOLDER, "choice/choice_device.py").resolve())
-    window.on_load_device(file=dev_path)
+    dev_path = Path(TEST_DEVICE_FOLDER, "choice", "choice_device.py")
+    window.on_load_device(file=str(dev_path.resolve()))
 
     return wait_for_output(
         window=window,
@@ -437,8 +448,8 @@ def test_load_device(window: QMainWindow) -> Tuple[bool, str]:
 
 
 def test_compile_rules(window: QMainWindow) -> Tuple[bool, str]:
-    rule_path = str(Path(TEST_DEVICE_FOLDER, "choice/rules/choicetask_rules_VM.prs").resolve())
-    window.simulation.choose_rules(files=[rule_path])
+    rule_path = Path(TEST_DEVICE_FOLDER, "choice", "rules", "choicetask_rules_VM.prs")
+    window.simulation.choose_rules(files=[str(rule_path.resolve())])
 
     return wait_for_output(
         window=window,
@@ -450,8 +461,8 @@ def test_compile_rules(window: QMainWindow) -> Tuple[bool, str]:
 
 
 def test_load_encoder(window: QMainWindow) -> Tuple[bool, str]:
-    encoder_path = str(Path(TEST_DEVICE_FOLDER, "choice/encoders/donders_visual_encoder.py").resolve())
-    window.simulation.on_load_encoder(kind="Visual", file=encoder_path)
+    encoder_path = Path(TEST_DEVICE_FOLDER, "choice", "encoders", "donders_visual_encoder.py")
+    window.simulation.on_load_encoder(kind="Visual", file=str(encoder_path.resolve()))
 
     return wait_for_output(
         window=window,
@@ -463,7 +474,7 @@ def test_load_encoder(window: QMainWindow) -> Tuple[bool, str]:
 
 
 def test_run_model(window: QMainWindow) -> Tuple[bool, str]:
-    window.findChild(QAction, "actionRunAll").trigger()
+    window.run_all()
 
     return wait_for_output(
         window=window,

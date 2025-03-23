@@ -422,11 +422,6 @@ class MainWin(QMainWindow):
 
         self.show()
 
-
-
-
-
-
     def setup_base_ui(self):
         # Use an empty central widget that occupies no horizontal space.
         central = QWidget(self)
@@ -927,7 +922,7 @@ class MainWin(QMainWindow):
 
             # Capture default arrangement.
             if not self.layout_exists():
-                self.setGeometry(QRect(QPoint(0, 0), QSize(1980,970))) #self.default_window_size))
+                self.setGeometry(QRect(QPoint(0, 0), QSize(1980, 970)))  # self.default_window_size))
                 self.update()
                 self.default_geometry = self.saveGeometry()
                 self.default_state = self.saveState()
