@@ -36,7 +36,8 @@ DEPENDENCIES = [
     "pandas==2.2.3",
     "pyqtdarktheme==2.1.0",
     "fastnumbers==5.1.1",
-    "qdarkstyle==3.2.3"
+    "qdarkstyle==3.2.3",
+    "platformdirs"
 ]
 # install these with `pip install .[dev]`
 DEVELOPMENT_DEPENDENCIES = [

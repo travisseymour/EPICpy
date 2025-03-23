@@ -257,7 +257,7 @@ def run_model_test(
     see_results: bool = True,
 ):
     # Clear Output Windows
-    window.findChild(QAction, "actionClear_Output_Windows").trigger()
+    # window.findChild(QAction, "actionClear_Output_Windows").trigger()
 
     # init
     device_loaded, rules_compiled, model_run = None, None, None

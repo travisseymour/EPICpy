@@ -142,24 +142,6 @@ def setup_menu(window):
 
     # --- Windows Menu ---
     windows_menu = menubar.addMenu("Windows")
-    window.actionShow_All = QAction("Show All", window)
-    windows_menu.addAction(window.actionShow_All)
-
-    window.actionMinimize_All = QAction("Minimize All", window)
-    windows_menu.addAction(window.actionMinimize_All)
-
-    window.actionShow_Trace_Window = QAction("Show Trace Window", window)
-    windows_menu.addAction(window.actionShow_Trace_Window)
-
-    window.actionShow_Stats_Window = QAction("Show Stats Window", window)
-    windows_menu.addAction(window.actionShow_Stats_Window)
-
-    window.actionShow_Visual_Views = QAction("Show Visual Views", window)
-    windows_menu.addAction(window.actionShow_Visual_Views)
-
-    window.actionShow_Auditory_Views = QAction("Show Auditory Views", window)
-    windows_menu.addAction(window.actionShow_Auditory_Views)
-    windows_menu.addSeparator()
 
     window.actionClear_Output_Windows = QAction("Clear Output Windows", window)
     windows_menu.addAction(window.actionClear_Output_Windows)
@@ -224,7 +206,6 @@ def setup_menu_connections(window):
     window.actionPause.triggered.connect(window.pause_simulation)
     window.actionPause.setShortcut("Ctrl+Alt+P")
     window.actionDelete_Datafile.triggered.connect(window.delete_datafile)
-    # window.actionRun_Simulation_Script.triggered.connect(window.simulation_from_script)
     window.actionRun_Simulation_Script.setVisible(False)
 
     # Help menu actions
@@ -244,12 +225,6 @@ def setup_menu_connections(window):
     window.actionSet_Application_Font.triggered.connect(window.set_application_font)
 
     # Windows menu actions
-    # window.actionShow_Trace_Window.triggered.connect(partial(window.reveal_windows, window="trace"))
-    # window.actionShow_Stats_Window.triggered.connect(partial(window.reveal_windows, window="stats"))
-    # window.actionShow_Visual_Views.triggered.connect(partial(window.reveal_windows, window="visual"))
-    # window.actionShow_Auditory_Views.triggered.connect(partial(window.reveal_windows, window="auditory"))
-    # window.actionShow_All.triggered.connect(partial(window.reveal_windows, window="all"))
-    # window.actionMinimize_All.triggered.connect(window.minimize_windows)
     window.actionClear_Output_Windows.triggered.connect(window.clear_output_windows)
     window.actionReset_Layout.triggered.connect(window.layout_reset)
     window.actionReload_Session.triggered.connect(partial(window.session_reload, quiet=False))

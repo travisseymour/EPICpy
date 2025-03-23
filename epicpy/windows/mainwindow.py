@@ -229,6 +229,8 @@ class MainWin(QMainWindow):
 
         self.statusBar().showMessage("Run Status: UNREADY")
 
+        self.context = "Default"
+
         self.run_state = UNREADY
 
         self.last_search_spec = None
@@ -324,6 +326,7 @@ class MainWin(QMainWindow):
         self.text_editor_dialog = None
 
         # finally setup ui
+
         self.setup_views()
         self.setup_base_ui()
 
@@ -404,31 +407,25 @@ class MainWin(QMainWindow):
         self.default_palette = self.app.palette()
         self.update_theme()
 
+        # notify user if there is a previous session that can be loaded with reload_session?
+        exists = Path(config.app_cfg.last_device_file).is_file()
+        device = config.app_cfg.last_device_file if config.app_cfg.last_device_file else "None"
+        last_session_notice = f"Last Device Loaded: {device} [{exists=}]"
+        self.write(dedent(last_session_notice))
+
+        self.update_title()
+        self.actionReload_Session.setEnabled(Path(config.device_cfg.device_file).is_file())
+
         # setup some ui timers
         self.ui_timer.timeout.connect(self.update_ui_status)
         self.ui_timer.start(1000)
 
         self.show()
 
-        self.update_title()
-        self.actionReload_Session.setEnabled(Path(config.device_cfg.device_file).is_file())
 
-        self.context = "Default"
 
-        # Capture default arrangement.
-        self.default_geometry = self.saveGeometry()
-        self.default_state = self.saveState()
-        self.default_top_custom_settings = self.topAreaInner.get_custom_settings()
-        self.default_middle_custom_settings = self.middleAreaInner.get_custom_settings()
 
-        # Load saved settings for "Default" session.
-        self.layout_load()  # regular and custom
 
-        # notify user if there is a previous session that can be loaded with reload_session?
-        exists = Path(config.app_cfg.last_device_file).is_file()
-        device = config.app_cfg.last_device_file if config.app_cfg.last_device_file else "None"
-        last_session_notice = f"Last Device Loaded: {device} [{exists=}]"
-        self.write(dedent(last_session_notice))
 
     def setup_base_ui(self):
         # Use an empty central widget that occupies no horizontal space.
@@ -928,6 +925,18 @@ class MainWin(QMainWindow):
             self.resize(target_size)
             self._size_adjusted = True
 
+            # Capture default arrangement.
+            if not self.layout_exists():
+                self.setGeometry(QRect(QPoint(0, 0), QSize(1980,970))) #self.default_window_size))
+                self.update()
+                self.default_geometry = self.saveGeometry()
+                self.default_state = self.saveState()
+                self.default_top_custom_settings = self.topAreaInner.get_custom_settings()
+                self.default_middle_custom_settings = self.middleAreaInner.get_custom_settings()
+            else:
+                # Load saved settings for "Default" session.
+                self.layout_load()  # regular and custom
+
     def set_view_background_image(self, view_type: str, img_filename: str, scaled: bool = True):
         if not config.device_cfg.allow_device_images:
             return
@@ -1353,27 +1362,29 @@ class MainWin(QMainWindow):
     def clear_output_windows(self):
         self.normalPlainTextEditOutput.clear()
         self.tracePlainTextEditOutput.clear()
-        # FIXME: why not working
-        # if self.stats_win:
-        #     self.stats_win.ui.statsTextBrowser.clear()
+        self.stats_win.clear()
 
     def about_dialog(self):
         about_window = AboutWin(self)
         about_window.show()
 
     def run_tests(self, kind: str):
-        if kind == "StandardRun":
-            if fitness.setup_test_device_folder(self):
-                fitness.clear_results()
-                fitness.run_model_test(self, load_encoders=False, close_on_finish=False)
-        elif kind == "EncoderRun":
-            if fitness.setup_test_device_folder(self):
-                fitness.clear_results()
-                fitness.run_model_test(self, load_encoders=True, close_on_finish=False)
-        elif kind == "AllRuns":
-            if fitness.setup_test_device_folder(self):
-                fitness.clear_results()
-                fitness.run_all_model_tests(self, close_on_finish=False)
+        try:
+            config.SAVE_CONFIG_ON_UPDATE = False
+            if kind == "StandardRun":
+                if fitness.setup_test_device_folder(self):
+                    fitness.clear_results()
+                    fitness.run_model_test(self, load_encoders=False, close_on_finish=False)
+            elif kind == "EncoderRun":
+                if fitness.setup_test_device_folder(self):
+                    fitness.clear_results()
+                    fitness.run_model_test(self, load_encoders=True, close_on_finish=False)
+            elif kind == "AllRuns":
+                if fitness.setup_test_device_folder(self):
+                    fitness.clear_results()
+                    fitness.run_all_model_tests(self, close_on_finish=False)
+        finally:
+            config.SAVE_CONFIG_ON_UPDATE = True
 
     def open_help_file(self):
         url = "https://travisseymour.github.io/EPICpyDocs/"
