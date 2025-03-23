@@ -27,7 +27,7 @@ from textwrap import dedent
 from PySide6.QtCore import QThread, Signal, QRect, QEvent
 from PySide6.QtGui import QHideEvent, QShowEvent
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QDockWidget, QWidget, QLabel, QSizePolicy
+from PySide6.QtWidgets import QDockWidget, QWidget, QSizePolicy
 
 from epicpy.utils import fitness, config
 from epicpy.dialogs.aboutwindow import AboutWin
@@ -130,18 +130,6 @@ class UdpThread(QThread):
         self.is_running = False
         if self.sock:
             self.sock.close()  # Force unblock recvfrom()
-
-
-# class Ui_MainWindowCustom(Ui_MainWindow):
-#     """
-#     This is so that we can add the LargeTextView and still
-#     have PyCharm do proper lookups where it understands that
-#     self.plainTextEditOutput is a LargeTextView object
-#     """
-#
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.plainTextEditOutput: LargeTextView = LargeTextView()
 
 
 class HorizontalDockArea(QMainWindow):

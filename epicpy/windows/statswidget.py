@@ -40,9 +40,6 @@ from qtpy.QtWidgets import (
 )
 from qtpy.QtGui import QCloseEvent
 
-from epicpy.uifiles.statsui import Ui_StatsWindow
-from epicpy.utils.apputils import clear_font
-
 
 from qtpy.QtGui import QImage, QTextDocument
 

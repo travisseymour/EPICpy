@@ -1,5 +1,6 @@
 import qdarkstyle
-from PySide6.QtGui import QPalette, QColor
+
+# from PySide6.QtGui import QPalette, QColor
 
 
 def set_light_style(app_instance):
