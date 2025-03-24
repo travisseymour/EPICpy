@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os
+import sys
 
 from itertools import chain
 from textwrap import dedent
@@ -39,6 +40,7 @@ from epicpy.utils.defaultfont import get_default_font
 from epicpy.widgets.largetextview import LargeTextView
 from epicpy.windows import mainwindow_menu
 from epicpy.windows.appstyle import set_dark_style, set_light_style
+from epicpy.windows.mainwindow_utils import get_desktop_usable_geometry, usable_size_at_least, get_desktop_geometry
 from epicpy.windows.statswidget import StatsWidget
 
 from qtpy.QtGui import (
@@ -217,26 +219,55 @@ class MainWin(QMainWindow):
 
         self.statusBar().showMessage("Run Status: UNREADY")
 
-        self.context = "Default"
+        self.context = "Main"
 
         self.run_state = UNREADY
 
         self.last_search_spec = None
 
+        screen = QGuiApplication.primaryScreen()
+        self.scaling_factor: float = screen.devicePixelRatio()
+
         # setup window dimensions
-        self.usable_desktop_size: QSize = self.get_desktop_usable_geometry()
-        log.debug(f"{self.usable_desktop_size=}")
-        if self.size_fits(QSize(1980, 1188), self.usable_desktop_size):
-            self.default_window_size = QSize(1980, 1188)
-        elif self.size_fits(QSize(1870, 970), self.usable_desktop_size):
-            self.default_window_size = QSize(1870, 970)
+        self.desktop_size: QSize = get_desktop_geometry()
+        self.raw_desktop_size: QSize = QSize(
+            int(round(self.desktop_size.height() * self.scaling_factor)),
+            int(round(self.desktop_size.width() * self.scaling_factor)),
+        )
+        self.usable_desktop_size: QSize = get_desktop_usable_geometry()
+
+        if self.usable_desktop_size.height() >= 1280:
+            """
+            1440p
+            usable_desktop_size: QSize(2560, 1440)
+            default_window_size: QSize(2065, 1145)
+            QSize(2272, 1260)
+            """
+            self.default_window_size = QSize(int(round(2271 / 1.1)), int(round(1260 / 1.1)))
+        elif self.usable_desktop_size.height() >= 960:
+            """
+            FHD
+            self.usable_desktop_size=PySide6.QtCore.QSize(1920, 1080)
+            self.default_window_size=PySide6.QtCore.QSize(1557, 909)
+            PySide6.QtCore.QSize(1713, 1000)
+            """
+            self.default_window_size = QSize(int(round(1713 / 1.1)), int(round(1000 / 1.1)))
         else:
             self.default_window_size = self.usable_desktop_size
-        log.debug(f"{self.default_window_size=}")
+            # NOTE: if max usable height less than 776, should close auditory row
 
-        # self.minimum_view_size = QSize(300, 232)   # KEEP THIS HERE
+        # print(f'\n\ndesktop_height = {self.desktop_size.height()} scaled desktop_height = {int(round(self.desktop_size.height() * self.scaling_factor))} saling_factor={self.scaling_factor}\n\n')
+
         self.minimum_view_size = QSize(240, 186)
+
         self.setGeometry(QRect(QPoint(0, 0), self.default_window_size))
+        QApplication.processEvents()
+
+        # inits for layout save info
+        self.default_geometry: Optional[QByteArray] = None
+        self.default_state: Optional[QByteArray] = None
+        self.default_top_custom_settings: dict = {}
+        self.default_middle_custom_settings: dict = {}
 
         # add central widget and setup
         self.normalPlainTextEditOutput = LargeTextView(enable_context_menu=False)
@@ -268,7 +299,7 @@ class MainWin(QMainWindow):
         # stats widget
         self.stats_win = StatsWidget(self)
 
-        # NOTE: Keep these comments!
+        # NOTE: Keep these commented out lines!
         # self.debug_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13049)
         # self.debug_out_view_thread.messageReceived.connect(self.trace_out_view.write)
         # self.debug_out_view_thread.start()
@@ -389,9 +420,6 @@ class MainWin(QMainWindow):
         # connect other ui signals
         # self.normalPlainTextEditOutput.customContextMenuRequested.connect(self.normal_search_context_menu)
 
-        # self.normalPlainTextEditOutput.clear()
-        # self.normalPlainTextEditOutput.write(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
-
         self.default_palette = self.app.palette()
         self.update_theme()
 
@@ -490,6 +518,26 @@ class MainWin(QMainWindow):
         )
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dockSide)
 
+        self.setGeometry(QRect(QPoint(0, 0), self.default_window_size))
+
+        if self.usable_desktop_size.height() < 776:
+            dockMiddle.close()
+
+            # Assume 'self' is your MainWindow instance and you have references to the dock widgets:
+            min_top = dockTop.widget().minimumSizeHint().height()
+            min_middle = dockMiddle.widget().minimumSizeHint().height()
+            # Compute the available height in the main window minus what’s needed for the two upper docks.
+            available_for_bottom = self.height() - (min_top + min_middle)
+
+            # Now call resizeDocks with the vertical orientation.
+            self.resizeDocks(
+                [dockTop, dockMiddle, dockBottom],
+                [min_top, min_middle, max(available_for_bottom, dockBottom.widget().minimumSizeHint().height())],
+                Qt.Orientation.Vertical,
+            )
+
+        self.update()
+
     # ==============================================================================
     # Delegates for methods of self.simulation. This is required because we may delete
     # and re-init self.simulation and we don't want various menu items to then point
@@ -560,20 +608,6 @@ class MainWin(QMainWindow):
             return True
         else:
             return False
-
-    @staticmethod
-    def size_fits(small: QSize, big: QSize) -> bool:
-        return small.width() <= big.width() and small.height() <= big.height()
-
-    @staticmethod
-    def get_desktop_usable_geometry() -> QSize:
-        primary_screen = QGuiApplication.primaryScreen()
-        available_geometry = primary_screen.availableGeometry()
-
-        usable_width = available_geometry.width()
-        usable_height = available_geometry.height()
-
-        return QSize(usable_width, usable_height)
 
     def choose_rules(self, rules: Optional[list] = None) -> bool:
         return self.simulation.choose_rules(rules)
@@ -900,25 +934,10 @@ class MainWin(QMainWindow):
         self.normalPlainTextEditOutput.enable_updates = True
 
         # Only adjust once
-        if not self._size_adjusted:
-            QTest.qWait(50)
-            frame_diff = self.frameGeometry().size() - self.size()
-            # target_size = QSize(1700, 1000) + frame_diff
-            target_size = self.default_window_size - frame_diff
-            self.resize(target_size)
-            self._size_adjusted = True
-
-            # Capture default arrangement.
-            if not self.layout_exists():
-                self.setGeometry(QRect(QPoint(0, 0), QSize(1980, 970)))  # self.default_window_size))
-                self.update()
-                self.default_geometry = self.saveGeometry()
-                self.default_state = self.saveState()
-                self.default_top_custom_settings = self.topAreaInner.get_custom_settings()
-                self.default_middle_custom_settings = self.middleAreaInner.get_custom_settings()
-            else:
-                # Load saved settings for "Default" session.
-                self.layout_load()  # regular and custom
+        if not self.layout_exists("Default"):
+            self.layout_save("Default")
+        else:
+            self.layout_load("Main")  # regular and custom
 
     def set_view_background_image(self, view_type: str, img_filename: str, scaled: bool = True):
         if not config.device_cfg.allow_device_images:
@@ -1512,10 +1531,14 @@ class MainWin(QMainWindow):
     # Layout Save/Restore
     # =============================================
 
-    def layout_save(self):
+    def layout_save(self, layout_name: Optional[str] = ""):
+        if layout_name:
+            layout = layout_name
+        else:
+            layout = self.context
         # save settings
-        self.window_settings.setValue(f"{self.context}Geometry", self.saveGeometry())
-        self.window_settings.setValue(f"{self.context}WindowState", self.saveState())
+        self.window_settings.setValue(f"{layout}Geometry", self.saveGeometry())
+        self.window_settings.setValue(f"{layout}WindowState", self.saveState())
 
         # save custom settings
         custom = {}
@@ -1527,24 +1550,32 @@ class MainWin(QMainWindow):
         custom["outer"] = outer
         custom["topAreaInner"] = self.topAreaInner.get_custom_settings()
         custom["middleAreaInner"] = self.middleAreaInner.get_custom_settings()
-        self.window_settings.setValue(self.context, custom)
+        self.window_settings.setValue(layout, custom)
 
         self.window_settings.sync()
 
-    def layout_exists(self) -> bool:
-        geometry = self.window_settings.value(f"{self.context}Geometry")
-        window_state = self.window_settings.value(f"{self.context}WindowState")
+    def layout_exists(self, layout_name: Optional[str] = "") -> bool:
+        if layout_name:
+            layout = layout_name
+        else:
+            layout = self.context
+        geometry = self.window_settings.value(f"{layout}Geometry")
+        window_state = self.window_settings.value(f"{layout}WindowState")
         return geometry or window_state
 
-    def layout_load(self):
-        geometry = self.window_settings.value(f"{self.context}Geometry")
+    def layout_load(self, layout_name: Optional[str] = ""):
+        if layout_name:
+            layout = layout_name
+        else:
+            layout = self.context
+        geometry = self.window_settings.value(f"{layout}Geometry")
         if geometry:
             self.restoreGeometry(geometry)
-        window_state = self.window_settings.value(f"{self.context}WindowState")
+        window_state = self.window_settings.value(f"{layout}WindowState")
         if window_state:
             self.restoreState(window_state)
 
-        custom = self.window_settings.value(self.context)
+        custom = self.window_settings.value(layout)
         if not custom:
             return
         if "outer" in custom:
@@ -1562,22 +1593,28 @@ class MainWin(QMainWindow):
             self.middleAreaInner.apply_custom_settings(custom["middleAreaInner"])
 
     def layout_reset(self):
-        settings = QSettings()
-        settings.remove(f"{self.context}Geometry")
-        settings.remove(f"{self.context}WindowState")
-        settings.remove(self.context)
+        # settings = QSettings()
+        # settings.remove(f"{self.context}Geometry")
+        # settings.remove(f"{self.context}WindowState")
+        # settings.remove(self.context)
+        #
+        # self.restoreGeometry(self.default_geometry)
+        # self.restoreState(self.default_state)
+        # self.update()
+        # self.showMaximized()
+        # QTest.qWait(100)
+        # self.showNormal()
+        #
+        # for name in ["dockTop", "dockMiddle", "dockBottom", "dockSide", "dockTrace"]:
+        #     dock = self.findChild(QDockWidget, name)
+        #     if dock:
+        #         dock.show()
 
-        self.restoreGeometry(self.default_geometry)
-        self.restoreState(self.default_state)
-        self.update()
-        self.showMaximized()
-        QTest.qWait(100)
-        self.showNormal()
-
-        for name in ["dockTop", "dockMiddle", "dockBottom", "dockSide", "dockTrace"]:
-            dock = self.findChild(QDockWidget, name)
-            if dock:
-                dock.show()
+        if self.layout_exists("Default"):
+            self.layout_load("Default")
+            # self.showMaximized()
+            # QTest.qWait(100)
+            # self.showNormal()
 
         def force_visible(custom_dict):
             new_dict = {}

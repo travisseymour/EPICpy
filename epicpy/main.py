@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import platform
 from importlib.resources import files, as_file
 
+from PySide6.QtCore import Qt
 from fastnumbers import check_int
 
 import datetime
