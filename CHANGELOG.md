@@ -1,6 +1,15 @@
 
 # EPICpy Changelog
 
+
+---
+
+## VERSION: 2025.3.24.1
+
+1. **FIXED**: Problems with ui saving.
+2. **FIXED**: Problems with test runner.
+3. **UPDATED**: Overhauled User Interface. Instead of multiple windows, uses a unified dockable interface.
+
 ---
 
 ## VERSION: 2025.3.14.1
