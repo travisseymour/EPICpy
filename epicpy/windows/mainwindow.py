@@ -20,14 +20,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os
-import sys
 
 from itertools import chain
 from textwrap import dedent
 
 from PySide6.QtCore import QThread, Signal, QRect, QEvent
 from PySide6.QtGui import QHideEvent, QShowEvent
-from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QDockWidget, QWidget, QSizePolicy
 
 from epicpy.utils import fitness, config
@@ -40,7 +38,7 @@ from epicpy.utils.defaultfont import get_default_font
 from epicpy.widgets.largetextview import LargeTextView
 from epicpy.windows import mainwindow_menu
 from epicpy.windows.appstyle import set_dark_style, set_light_style
-from epicpy.windows.mainwindow_utils import get_desktop_usable_geometry, usable_size_at_least, get_desktop_geometry
+from epicpy.windows.mainwindow_utils import get_desktop_usable_geometry, get_desktop_geometry
 from epicpy.windows.statswidget import StatsWidget
 
 from qtpy.QtGui import (
@@ -64,7 +62,6 @@ from qtpy.QtWidgets import (
     QMenu,
     QApplication,
     QPlainTextEdit,
-    QMessageBox,
 )
 
 from pathlib import Path
@@ -254,9 +251,6 @@ class MainWin(QMainWindow):
             self.default_window_size = QSize(int(round(1713 / 1.1)), int(round(1000 / 1.1)))
         else:
             self.default_window_size = self.usable_desktop_size
-            # NOTE: if max usable height less than 776, should close auditory row
-
-        # print(f'\n\ndesktop_height = {self.desktop_size.height()} scaled desktop_height = {int(round(self.desktop_size.height() * self.scaling_factor))} saling_factor={self.scaling_factor}\n\n')
 
         self.minimum_view_size = QSize(240, 186)
 
@@ -447,11 +441,11 @@ class MainWin(QMainWindow):
         # ----- Left Column Dock Widgets -----
         # Top Dock Area: Contains three inner docks.
         self.topAreaInner = HorizontalDockArea(self.visual_views, self.minimum_view_size, self)
-        dockTop = QDockWidget("Visual Views", self)
-        dockTop.setObjectName("dockTop")
-        dockTop.setWidget(self.topAreaInner)
-        dockTop.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
-        dockTop.setFeatures(
+        self.dockTop = QDockWidget("Visual Views", self)
+        self.dockTop.setObjectName("dockTop")
+        self.dockTop.setWidget(self.topAreaInner)
+        self.dockTop.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
+        self.dockTop.setFeatures(
             QDockWidget.DockWidgetFeature.DockWidgetClosable
             | QDockWidget.DockWidgetFeature.DockWidgetMovable
             | QDockWidget.DockWidgetFeature.DockWidgetFloatable
@@ -459,88 +453,108 @@ class MainWin(QMainWindow):
 
         # Middle Dock Area: Contains three inner docks.
         self.middleAreaInner = HorizontalDockArea(self.auditory_views, self.minimum_view_size, self)
-        dockMiddle = QDockWidget("Auditory Views", self)
-        dockMiddle.setObjectName("dockMiddle")
-        dockMiddle.setWidget(self.middleAreaInner)
-        dockMiddle.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
-        dockMiddle.setFeatures(
+        self.dockMiddle = QDockWidget("Auditory Views", self)
+        self.dockMiddle.setObjectName("dockMiddle")
+        self.dockMiddle.setWidget(self.middleAreaInner)
+        self.dockMiddle.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
+        self.dockMiddle.setFeatures(
             QDockWidget.DockWidgetFeature.DockWidgetClosable
             | QDockWidget.DockWidgetFeature.DockWidgetMovable
             | QDockWidget.DockWidgetFeature.DockWidgetFloatable
         )
 
         # Bottom Dock Area: A plain text edit for Normal Output.
-        dockBottom = QDockWidget("Normal Output", self)
-        dockBottom.setObjectName("dockBottom")
+        self.dockBottom = QDockWidget("Normal Output", self)
+        self.dockBottom.setObjectName("dockBottom")
         normalPlainText = self.normalPlainTextEditOutput
         normalPlainText.setStyleSheet("border: 2px solid #B9B8B6;")
-        dockBottom.setWidget(normalPlainText)
-        dockBottom.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
-        dockBottom.setFeatures(
+        self.dockBottom.setWidget(normalPlainText)
+        self.dockBottom.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
+        self.dockBottom.setFeatures(
             QDockWidget.DockWidgetFeature.DockWidgetClosable
             | QDockWidget.DockWidgetFeature.DockWidgetMovable
             | QDockWidget.DockWidgetFeature.DockWidgetFloatable
         )
 
         # New: Trace Output dock.
-        dockTrace = QDockWidget("Trace Output", self)
-        dockTrace.setObjectName("dockTrace")
+        self.dockTrace = QDockWidget("Trace Output", self)
+        self.dockTrace.setObjectName("dockTrace")
         tracePlainText = self.tracePlainTextEditOutput
         tracePlainText.setStyleSheet("border: 2px solid #B9B8B6;")
-        dockTrace.setWidget(tracePlainText)
-        dockTrace.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
-        dockTrace.setFeatures(
+        self.dockTrace.setWidget(tracePlainText)
+        self.dockTrace.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
+        self.dockTrace.setFeatures(
             QDockWidget.DockWidgetFeature.DockWidgetClosable
             | QDockWidget.DockWidgetFeature.DockWidgetMovable
             | QDockWidget.DockWidgetFeature.DockWidgetFloatable
         )
 
         # Stack the left column docks vertically.
-        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dockTop)
-        self.splitDockWidget(dockTop, dockMiddle, Qt.Orientation.Vertical)
-        self.splitDockWidget(dockMiddle, dockBottom, Qt.Orientation.Vertical)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dockTop)
+        self.splitDockWidget(self.dockTop, self.dockMiddle, Qt.Orientation.Vertical)
+        self.splitDockWidget(self.dockMiddle, self.dockBottom, Qt.Orientation.Vertical)
         # Tabify Normal Output and Trace Output so they share the same area.
-        self.tabifyDockWidget(dockBottom, dockTrace)
+        self.tabifyDockWidget(self.dockBottom, self.dockTrace)
         # Ensure Normal Output is the active tab.
-        dockBottom.raise_()
+        self.dockBottom.raise_()
 
         # ----- Right Dock Widget (Side Dock Area) -----
-        dockSide = QDockWidget("Statistics Output", self)
-        dockSide.setObjectName("dockSide")
+        self.dockSide = QDockWidget("Statistics Output", self)
+        self.dockSide.setObjectName("dockSide")
         plainTextEditSide = self.stats_win
         plainTextEditSide.setStyleSheet("border: 2px solid #B9B8B6;")
-        dockSide.setWidget(plainTextEditSide)
-        dockSide.setAllowedAreas(Qt.DockWidgetArea.RightDockWidgetArea)
-        dockSide.setFeatures(
+        self.dockSide.setWidget(plainTextEditSide)
+        self.dockSide.setAllowedAreas(Qt.DockWidgetArea.RightDockWidgetArea)
+        self.dockSide.setFeatures(
             QDockWidget.DockWidgetFeature.DockWidgetClosable
             | QDockWidget.DockWidgetFeature.DockWidgetMovable
             | QDockWidget.DockWidgetFeature.DockWidgetFloatable
         )
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dockSide)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockSide)
 
         self.setGeometry(QRect(QPoint(0, 0), self.default_window_size))
 
         if self.usable_desktop_size.height() < 776:
-            dockMiddle.close()
+            self.dockMiddle.close()
 
             # Assume 'self' is your MainWindow instance and you have references to the dock widgets:
-            min_top = dockTop.widget().minimumSizeHint().height()
-            min_middle = dockMiddle.widget().minimumSizeHint().height()
+            min_top = self.dockTop.widget().minimumSizeHint().height()
+            min_middle = self.dockMiddle.widget().minimumSizeHint().height()
             # Compute the available height in the main window minus what’s needed for the two upper docks.
             available_for_bottom = self.height() - (min_top + min_middle)
 
             # Now call resizeDocks with the vertical orientation.
             self.resizeDocks(
-                [dockTop, dockMiddle, dockBottom],
-                [min_top, min_middle, max(available_for_bottom, dockBottom.widget().minimumSizeHint().height())],
+                [self.dockTop, self.dockMiddle, self.dockBottom],
+                [min_top, min_middle, max(available_for_bottom, self.dockBottom.widget().minimumSizeHint().height())],
                 Qt.Orientation.Vertical,
             )
 
         self.update()
 
+    def restore_ui_component(self, component: str):
+        components = {
+            "visual": self.dockTop,
+            "auditory": self.dockMiddle,
+            "normal": self.dockBottom,
+            "trace": self.dockTrace,
+            "stats": self.dockSide,
+        }
+        if component in components:
+            dock = components[component]
+            dock.show()
+            for child in dock.children():
+                widget: QDockWidget = child
+                if hasattr(widget, "setVisible"):
+                    widget.setVisible(True)
+                if hasattr(widget, "show"):
+                    widget.show()
+                if hasattr(widget, "raise_"):
+                    widget.raise_()
+
     # ==============================================================================
     # Delegates for methods of self.simulation. This is required because we may delete
-    # and re-init self.simulation and we don't want various menu items to then point
+    # and re-init self.simulation, and we don't want various menu items to then point
     # to nothing.
     # ==============================================================================
 
@@ -1321,16 +1335,6 @@ class MainWin(QMainWindow):
         self.sound_text_settings_dialog.setup_options()
         self.sound_text_settings_dialog.setModal(True)
         self.sound_text_settings_dialog.exec()  # needed to make it modal?!
-
-    def show_epiclib_settings_dialog(self):
-        _ = QMessageBox(
-            QMessageBox.Icon.Information,
-            "This Function Has Been Disabled",
-            "At the moment, the ability to switch EPIClib versions has been disabled. It is currently"
-            "hard-coded to the version published in 2016 by David Kieras at https://github.com/dekieras/EPIC",
-            # QMessageBox.Ok,
-        )
-        return
 
     def set_application_font(self):
         # keeping the unused code from below just in case someone complains that they

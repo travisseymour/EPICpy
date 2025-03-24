@@ -1,4 +1,23 @@
-# main_window_menu.py
+"""
+This file is part of the EPICpy source code. EPICpy is a tool for simulating
+human performance tasks using the EPIC computational cognitive architecture
+(David Kieras and David Meyer 1997a) using the Python programming language.
+Copyright (C) 2022 Travis L. Seymour, PhD
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import platform
 from functools import partial
 
@@ -145,6 +164,18 @@ def setup_menu(window):
     windows_menu.addAction(window.actionClear_Output_Windows)
     windows_menu.addSeparator()
 
+    window.actionRestore_Visual_Views = QAction("Restore Visual Views", window)
+    window.actionRestore_Auditory_Views = QAction("Restore Auditory Views", window)
+    window.actionRestore_Normal_Output = QAction("Restore Normal Output", window)
+    window.actionRestore_Trace_Output = QAction("Restore Trace Output", window)
+    window.actionRestore_Stats_Output = QAction("Restore Stats Output", window)
+    windows_menu.addAction(window.actionRestore_Visual_Views)
+    windows_menu.addAction(window.actionRestore_Auditory_Views)
+    windows_menu.addAction(window.actionRestore_Normal_Output)
+    windows_menu.addAction(window.actionRestore_Trace_Output)
+    windows_menu.addAction(window.actionRestore_Stats_Output)
+    windows_menu.addSeparator()
+
     window.actionReset_Layout = QAction("Restore Default Layout", window)
     windows_menu.addAction(window.actionReset_Layout)
 
@@ -225,3 +256,9 @@ def setup_menu_connections(window):
     window.actionClear_Output_Windows.triggered.connect(window.clear_output_windows)
     window.actionReset_Layout.triggered.connect(window.layout_reset)
     window.actionReload_Session.triggered.connect(partial(window.session_reload, quiet=False))
+
+    window.actionRestore_Visual_Views.triggered.connect(partial(window.restore_ui_component, component="visual"))
+    window.actionRestore_Auditory_Views.triggered.connect(partial(window.restore_ui_component, component="auditory"))
+    window.actionRestore_Normal_Output.triggered.connect(partial(window.restore_ui_component, component="normal"))
+    window.actionRestore_Trace_Output.triggered.connect(partial(window.restore_ui_component, component="trace"))
+    window.actionRestore_Stats_Output.triggered.connect(partial(window.restore_ui_component, component="stats"))
