@@ -22,6 +22,7 @@ import platform
 from importlib.resources import files, as_file
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
 from fastnumbers import check_int
 
 import datetime
@@ -57,7 +58,7 @@ if sys.platform.startswith("linux"):
 from qtpy.QtWidgets import QApplication
 from qtpy.QtCore import qInstallMessageHandler, QCoreApplication
 
-from epicpy.utils.apputils import frozen
+from epicpy.utils.apputils import frozen, get_resource
 from epicpy.utils import config
 
 # epiclib name (epiclib.so) is same on mac and linux.
@@ -235,6 +236,7 @@ def shut_it_down():
 
 def main():
     application = QApplication([])
+    application.setWindowIcon(QIcon(str(get_resource('uiicons', 'Icon.png'))))
 
     try:
         cmd = sys.argv[1].lower()
@@ -258,6 +260,7 @@ def main():
     print("Loading EPICpy, please wait...")
 
     # create launcher on first launch of epicpy
+    print(f'{platform.system()=}')
     if os.environ.get("PYCHARM_HOSTED") != "1":
         print("Making sure EPICpy application launcher exists (otherwise, create one).")
         if platform.system() == "Linux":

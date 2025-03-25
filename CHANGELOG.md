@@ -4,6 +4,12 @@
 
 ---
 
+## VERSION: 2025.3.24.10
+
+1. **FIXED**: Added app tray icon.
+
+---
+
 ## VERSION: 2025.3.24.9
 
 1. **FIXED**: Launcher icon was missing on macos.
