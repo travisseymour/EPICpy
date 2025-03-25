@@ -35,8 +35,11 @@ from pathlib import Path
 from shutil import copyfile
 from loguru import logger as log
 
-from epicpy.launcher.linux_launcher import linux_desktop_entry_exists, remove_linux_desktop_entry, \
-    create_linux_desktop_entry
+from epicpy.launcher.linux_launcher import (
+    linux_desktop_entry_exists,
+    remove_linux_desktop_entry,
+    create_linux_desktop_entry,
+)
 from epicpy.launcher.macos_launcher import macos_launcher_exists, remove_macos_app_launcher, create_macos_app_launcher
 from epicpy.launcher.windows_launcher import windows_shortcut_exists, remove_windows_shortcut, create_windows_shortcut
 from epicpy.utils.defaultfont import get_default_font
@@ -255,7 +258,7 @@ def main():
     print("Loading EPICpy, please wait...")
 
     # create launcher on first launch of epicpy
-    if os.environ.get('PYCHARM_HOSTED') != '1':
+    if os.environ.get("PYCHARM_HOSTED") != "1":
         print("Making sure EPICpy application launcher exists (otherwise, create one).")
         if platform.system() == "Linux":
             if not linux_desktop_entry_exists("epicpy"):
