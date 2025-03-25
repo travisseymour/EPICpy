@@ -41,7 +41,7 @@ from loguru import logger as log
 import timeit
 import datetime
 import platform
-from typing import Union, List
+from typing import Union, List, Optional
 import re
 import itertools
 
@@ -477,7 +477,7 @@ def print_tree(path: Path, prefix: str = ""):
             print_tree(item, prefix + extension)
 
 
-def extract_from_zip(zip_path: Path, target_path: Path, start_path: str | None = None):
+def extract_from_zip(zip_path: Path, target_path: Path, start_path: Optional[str] = None):
     """
     Extract files from a zip archive.
 
