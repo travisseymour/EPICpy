@@ -4,10 +4,15 @@
 
 ---
 
+## VERSION: 2025.3.24.8
+
+1. **FIXED**: Launcher icon was missing on macos.
+
+---
+
 ## VERSION: 2025.3.24.7
 
 1. **FIXED**: Launcher check error on Windows.
-
 
 ---
 

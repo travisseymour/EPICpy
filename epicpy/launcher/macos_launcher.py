@@ -136,10 +136,10 @@ def remove_macos_app_launcher(app_name: str):
             f"You can remove it manually by dragging it to the Trash.\n",
             QMessageBox.StandardButton.Ok,
         )
-    else:
-        QMessageBox.information(
-            None,
-            "Launcher Application Removed Successfully",
-            f"The {app_name} launcher application was removed successfully.",
-            QMessageBox.StandardButton.Ok,
-        )
+    # else:
+    #     QMessageBox.information(
+    #         None,
+    #         "Launcher Application Removed Successfully",
+    #         f"The {app_name} launcher application was removed successfully.",
+    #         QMessageBox.StandardButton.Ok,
+    #     )
