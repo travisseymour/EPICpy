@@ -13,7 +13,7 @@ def get_app_path(app_name: str) -> Optional[str]:
     return app_path
 
 
-def find_app_icon(app_name: str) -> Path | None:
+def find_app_icon(app_name: str) -> Optional[Path]:
     """Finds the icon file for a uv-installed app."""
     base_path = Path.home() / ".local/share/uv/tools" / app_name
     # Recursively search for Icon.png inside base_path
@@ -71,7 +71,7 @@ def remove_linux_desktop_entry(app_name: str):
 
     if desktop_file.exists():
         desktop_file.unlink()
-        print(f"🗑️ Removed '{str(desktop_file.absolute())}'")
+        print(f"Removed '{str(desktop_file.absolute())}'")
 
         # Refresh desktop database
         os.system("update-desktop-database ~/.local/share/applications/")
