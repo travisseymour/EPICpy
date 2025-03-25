@@ -39,6 +39,10 @@ DEPENDENCIES = [
     "qdarkstyle==3.2.3",
     "platformdirs"
 ]
+
+if platform.system() == "Windows":
+    DEPENDENCIES.append('pywin32')
+
 # install these with `pip install .[dev]`
 DEVELOPMENT_DEPENDENCIES = [
     [

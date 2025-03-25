@@ -4,7 +4,7 @@
 
 ---
 
-## VERSION: 2025.3.24.5
+## VERSION: 2025.3.24.6
 
 1. **FIXED**: Launcher check error on Windows.
 
