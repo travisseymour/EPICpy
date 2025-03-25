@@ -4,6 +4,13 @@
 
 ---
 
+## VERSION: 2025.3.24.4
+
+1. **FIXED**: Launcher check error on Windows.
+
+
+---
+
 ## VERSION: 2025.3.24.3
 
 1. **FIXED**: Launcher code was using wrong case for Icon.x.

@@ -264,7 +264,7 @@ def main():
             if not macos_launcher_exists("epicpy"):
                 create_macos_app_launcher("epicpy", "EPICpy")
         elif platform.system() == "Windows":
-            if not linux_desktop_entry_exists("epicpy"):
+            if not windows_shortcut_exists("epicpy"):
                 create_windows_shortcut("epicpy", "EPICpy")
 
     # Create splash screen that will close itself when main window appears
