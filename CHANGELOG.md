@@ -4,7 +4,7 @@
 
 ---
 
-## VERSION: 2025.3.24.8
+## VERSION: 2025.3.24.9
 
 1. **FIXED**: Launcher icon was missing on macos.
 

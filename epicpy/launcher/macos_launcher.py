@@ -105,13 +105,13 @@ exec "{app_path}" "$@"
     launcher_script.write_text(launcher_script_content)
     launcher_script.chmod(0o755)
 
-    QMessageBox.information(
-        None,
-        "Launcher Application Created Successfully",
-        f"{app_title} launcher application was added successfully to your Desktop.\n"
-        "Consider moving it to your Applications folder.",
-        QMessageBox.StandardButton.Ok,
-    )
+    # QMessageBox.information(
+    #     None,
+    #     "Launcher Application Created Successfully",
+    #     f"{app_title} launcher application was added successfully to your Desktop.\n"
+    #     "Consider moving it to your Applications folder.",
+    #     QMessageBox.StandardButton.Ok,
+    # )
 
 
 def remove_macos_app_launcher(app_name: str):
@@ -129,13 +129,15 @@ def remove_macos_app_launcher(app_name: str):
             ...
 
     if macos_launcher_exists(app_name):
-        QMessageBox.information(
-            None,
-            "Launcher Application Removal Failed.",
-            f"{app_name} launcher application was not removed successfully. "
-            f"You can remove it manually by dragging it to the Trash.\n",
-            QMessageBox.StandardButton.Ok,
-        )
+        # QMessageBox.information(
+        #     None,
+        #     "Launcher Application Removal Failed.",
+        #     f"{app_name} launcher application was not removed successfully. "
+        #     f"You can remove it manually by dragging it to the Trash.\n",
+        #     QMessageBox.StandardButton.Ok,
+        # )
+        print(f'\n\nLauncher Application Removal Failed. You can remove EPICpy.app manually by dragging it to the Trash.')
+
     # else:
     #     QMessageBox.information(
     #         None,
