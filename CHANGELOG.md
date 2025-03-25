@@ -4,6 +4,12 @@
 
 ---
 
+## VERSION: 2025.3.24.3
+
+1. **FIXED**: Launcher code was using wrong case for Icon.x.
+
+---
+
 ## VERSION: 2025.3.24.2
 
 1. **FIXED**: Problems with ui saving.

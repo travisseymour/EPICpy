@@ -38,7 +38,7 @@ def find_app_icon(app_name: str) -> Optional[Path]:
         "site-packages",
         app_name,
         "resources",
-        "icon.ico",
+        "Icon.ico",
     )
 
     if icon_path.is_file():
@@ -59,7 +59,7 @@ def create_windows_shortcut(app_name: str, app_title: Optional[str] = ""):
     Creates a Windows shortcut (.lnk) in the current user's Start Menu Programs folder.
 
     The shortcut will point to the installed application's executable (found via get_app_path)
-    and use icon.ico (if available) as its icon.
+    and use Icon.ico (if available) as its Icon.
     """
     app_path = get_app_path(app_name)
     if not app_path:
@@ -73,7 +73,7 @@ def create_windows_shortcut(app_name: str, app_title: Optional[str] = ""):
     if icon_path:
         icon_path = str(icon_path.absolute())
     else:
-        icon_path = ""  # If no icon is found, Windows will default to the app's icon.
+        icon_path = ""  # If no icon is found, Windows will default to the app's Icon.
 
     shell = win32com.client.Dispatch("WScript.Shell")
     shortcut = shell.CreateShortCut(str(shortcut_file))

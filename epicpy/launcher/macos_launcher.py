@@ -16,13 +16,13 @@ def get_app_path(app_name: str) -> str:
 
 
 def find_app_icon(app_name: str) -> Optional[Path]:
-    """Finds the icon file for a uv-installed app (expects icon.icns)."""
+    """Finds the icon file for a uv-installed app (expects Icon.icns)."""
     base_path = Path.home() / ".local/share/uv/tools" / app_name
-    icon_paths = list(base_path.rglob("icon.icns"))
+    icon_paths = list(base_path.rglob("Icon.icns"))
     if icon_paths:
         return icon_paths[0]
     else:
-        print(f"No icon.icns found in {base_path}")
+        print(f"No Icon.icns found in {base_path}")
         return None
 
 
@@ -42,7 +42,7 @@ def create_macos_app_launcher(app_name: str, app_title: Optional[str] = ""):
                 MacOS/
                     <app_name>  (a wrapper executable script)
                 Resources/
-                    icon.icns (if available)
+                    Icon.icns (if available)
     """
     app_path = get_app_path(app_name)
     if not app_path:
@@ -58,12 +58,12 @@ def create_macos_app_launcher(app_name: str, app_title: Optional[str] = ""):
     macos_dir.mkdir(parents=True, exist_ok=True)
     resources_dir.mkdir(parents=True, exist_ok=True)
 
-    # Handle icon: If an icon.icns exists, copy it as icon.icns.
+    # Handle icon: If an Icon.icns exists, copy it as Icon.icns.
     icon_path = find_app_icon(app_name)
     if icon_path:
-        target_icon = resources_dir / "icon.icns"
+        target_icon = resources_dir / "Icon.icns"
         shutil.copy(str(icon_path), str(target_icon))
-        icon_file_entry = "icon.icns"
+        icon_file_entry = "Icon.icns"
     else:
         icon_file_entry = ""
 

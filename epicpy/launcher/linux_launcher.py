@@ -16,13 +16,13 @@ def get_app_path(app_name: str) -> Optional[str]:
 def find_app_icon(app_name: str) -> Path | None:
     """Finds the icon file for a uv-installed app."""
     base_path = Path.home() / ".local/share/uv/tools" / app_name
-    # Recursively search for icon.png inside base_path
-    icon_paths = list(base_path.rglob("icon.png"))
+    # Recursively search for Icon.png inside base_path
+    icon_paths = list(base_path.rglob("Icon.png"))
 
     if icon_paths:
         return icon_paths[0]  # Return the first match
     else:
-        print(f"No icon.png found in {base_path}")
+        print(f"No Icon.png found in {base_path}")
         return None
 
 
