@@ -25,7 +25,7 @@ from itertools import chain
 from textwrap import dedent
 
 from PySide6.QtCore import QThread, Signal, QRect, QEvent
-from PySide6.QtGui import QHideEvent, QShowEvent
+from PySide6.QtGui import QHideEvent, QShowEvent, QIcon
 from PySide6.QtWidgets import QDockWidget, QWidget, QSizePolicy
 
 from epicpy.utils import fitness, config
@@ -33,7 +33,7 @@ from epicpy.dialogs.aboutwindow import AboutWin
 from epicpy.dialogs.fontsizewindow import FontSizeDialog
 from epicpy.epic.runinfo import RunInfo
 from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
-from epicpy.utils.apputils import loading_cursor, clear_font, run_without_waiting, has_epiccoder
+from epicpy.utils.apputils import loading_cursor, clear_font, run_without_waiting, has_epiccoder, get_resource
 from epicpy.utils.defaultfont import get_default_font
 from epicpy.widgets.largetextview import LargeTextView
 from epicpy.windows import mainwindow_menu
@@ -430,6 +430,8 @@ class MainWin(QMainWindow):
         self.ui_timer.timeout.connect(self.update_ui_status)
         self.ui_timer.start(1000)
 
+        self.setWindowIcon(QIcon(str(get_resource('uiicons', 'Icon.png'))))
+        self.setWindowIconText('EPICpy')
         self.show()
 
     def setup_base_ui(self):
