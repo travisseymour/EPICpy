@@ -35,6 +35,10 @@ from pathlib import Path
 from shutil import copyfile
 from loguru import logger as log
 
+from epicpy.launcher.linux_launcher import linux_desktop_entry_exists, remove_linux_desktop_entry, \
+    create_linux_desktop_entry
+from epicpy.launcher.macos_launcher import macos_launcher_exists, remove_macos_app_launcher, create_macos_app_launcher
+from epicpy.launcher.windows_launcher import windows_shortcut_exists, remove_windows_shortcut, create_windows_shortcut
 from epicpy.utils.defaultfont import get_default_font
 from epicpy.utils.splashscreen import SplashScreen
 
@@ -229,7 +233,39 @@ def shut_it_down():
 def main():
     application = QApplication([])
 
+    try:
+        cmd = sys.argv[1].lower()
+    except IndexError:
+        cmd = ""
+
+    # allow user to clean up epicpy application launcher from the commandline
+    if cmd == "cleanup":
+        print("Attempting to cleanup EPICpy application launcher.")
+        if platform.system() == "Linux":
+            if linux_desktop_entry_exists("epicpy"):
+                remove_linux_desktop_entry("epicpy")
+        elif platform.system() == "Darwin":
+            if macos_launcher_exists("epicpy"):
+                remove_macos_app_launcher("epicpy")
+        elif platform.system() == "Linux":
+            if windows_shortcut_exists("epicpy"):
+                remove_windows_shortcut("epicpy")
+        sys.exit()
+
     print("Loading EPICpy, please wait...")
+
+    # create launcher on first launch of epicpy
+    if os.environ.get('PYCHARM_HOSTED') != '1':
+        print("Making sure EPICpy application launcher exists (otherwise, create one).")
+        if platform.system() == "Linux":
+            if not linux_desktop_entry_exists("epicpy"):
+                create_linux_desktop_entry("epicpy", "EPICpy")
+        elif platform.system() == "Darwin":
+            if not macos_launcher_exists("epicpy"):
+                create_macos_app_launcher("epicpy", "EPICpy")
+        elif platform.system() == "Windows":
+            if not linux_desktop_entry_exists("epicpy"):
+                create_windows_shortcut("epicpy", "EPICpy")
 
     # Create splash screen that will close itself when main window appears
     splash = SplashScreen()

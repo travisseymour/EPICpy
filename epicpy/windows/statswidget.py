@@ -183,6 +183,31 @@ class StatsWidget(QWidget):
         self.clearing: bool = False
 
         self.write(f"""{f'Stats Out! ({datetime.now().strftime("%r")})'}""")
+        self.write(
+            """
+            <h3><u><font color="orange">Important Notice</u></h3></font>
+            <h4><font color="blue">Update 'write' function in epicpydevice</font></h4>
+            
+            As of EPICpy version <b>2025.3.25.1</b>, those who have existing copies of the epicpydevice folder, will need to update one of its files:
+
+            <ul>
+              <li>Open epicpydevice/epicpy_device_base.py in a text editor.</li>
+              <li>Replace the existing definition of the `write` method with this one:</li>
+            </ul>
+
+            <pre>
+              <code class="language-python">
+              def write(self, text: str):
+                  '''
+                  Device write method for text that adds newlines properly. 
+                  This will be dynamically added to the device object after 
+                  it has been loaded and instantiated.
+                  '''
+                  self.parent.write(text, copy_to_trace=True)
+              </code>
+            </pre>
+            """
+        )
 
     def _write(self, text: str):
         """

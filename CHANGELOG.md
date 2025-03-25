@@ -4,11 +4,14 @@
 
 ---
 
-## VERSION: 2025.3.24.1
+## VERSION: 2025.3.24.2
 
 1. **FIXED**: Problems with ui saving.
 2. **FIXED**: Problems with test runner.
 3. **UPDATED**: Overhauled User Interface. Instead of multiple windows, uses a unified dockable interface.
+4. Added code to create app launcher following first load.
+5. Allows launcher cleanup via "cleanup" argument on commandline. 
+6. Added epicpydevice notice to StatsOutput.
 
 ---
 

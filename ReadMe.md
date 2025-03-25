@@ -6,6 +6,7 @@ Travis L. Seymour, PhD
 
 _Seymour, T. L., (2022). **EPICpy: A Python Interface for EPIC Computational Cognitive Modeling**. Journal of Open Source Software, 7(76), 4533, https://doi.org/10.21105/joss.04533_
 
+
 ---
 
 [![EPICpy Interface](https://travisseymour.github.io/EPICpyDocs/resources/images/custom_layout_choicetask.png)](https://travisseymour.github.io/EPICpyDocs/resources/images/custom_layout_choicetask.png)
@@ -31,7 +32,28 @@ Project Sources
 * [EPICpy Source Repository](https://github.com/travisseymour/EPICpy) (this repository)
 * [EPICpy Documentation Repository](https://github.com/travisseymour/EPICpyDocs)
 
---
+
+---
+
+<mark>IMPORTANT NOTICE<br>Monday March 24, 2025</mark>
+As of version 2025.3.25.1, those who have existing copies of the epicpydevice folder, will need to update one of its files:
+
+- Open epicpydevice/epicpy_device_base.py in a text editor.
+- Replace the existing definition of the `write` method with this one:
+
+```python
+def write(self, text: str):
+    """
+    Device write method for text that adds newlines properly. 
+    This will be dynamically added to the device object after 
+    it has been loaded and instantiated.
+    """
+    self.parent.write(text, copy_to_trace=True)
+```
+
+---
+
+
 
 ### EPCpy Installation
 
