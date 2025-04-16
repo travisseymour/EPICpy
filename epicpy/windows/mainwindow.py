@@ -24,9 +24,9 @@ import os
 from itertools import chain
 from textwrap import dedent
 
-from PySide6.QtCore import QThread, Signal, QRect, QEvent
-from PySide6.QtGui import QHideEvent, QShowEvent, QIcon
-from PySide6.QtWidgets import QDockWidget, QWidget, QSizePolicy
+from qtpy.QtCore import QThread, Signal, QRect, QEvent
+from qtpy.QtGui import QHideEvent, QShowEvent, QIcon
+from qtpy.QtWidgets import QDockWidget, QWidget, QSizePolicy
 
 from epicpy.utils import fitness, config
 from epicpy.dialogs.aboutwindow import AboutWin
@@ -244,9 +244,9 @@ class MainWin(QMainWindow):
         elif self.usable_desktop_size.height() >= 960:
             """
             FHD
-            self.usable_desktop_size=PySide6.QtCore.QSize(1920, 1080)
-            self.default_window_size=PySide6.QtCore.QSize(1557, 909)
-            PySide6.QtCore.QSize(1713, 1000)
+            self.usable_desktop_size=qtpy.QtCore.QSize(1920, 1080)
+            self.default_window_size=qtpy.QtCore.QSize(1557, 909)
+            qtpy.QtCore.QSize(1713, 1000)
             """
             self.default_window_size = QSize(int(round(1713 / 1.1)), int(round(1000 / 1.1)))
         else:

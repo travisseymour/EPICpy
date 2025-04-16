@@ -23,7 +23,7 @@ from datetime import datetime
 import base64
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from qtpy.QtCore import Qt
 from qtpy.QtCore import (
     QMargins,
 )

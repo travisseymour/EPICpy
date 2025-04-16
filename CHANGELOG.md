@@ -1,6 +1,11 @@
 
 # EPICpy Changelog
 
+---
+
+## VERSION: 2025.4.15.1
+
+1. **FIXED**: Several explicit references to PySide6 (instead of qtpy) caused issues on older versions of MacOS, which required PySide2.
 
 ---
 

@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import platform
 from functools import partial
 
-from PySide6.QtGui import QAction
+from qtpy.QtGui import QAction
 
 
 def setup_menu(window):

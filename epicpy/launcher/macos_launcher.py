@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtWidgets import QMessageBox
 
 
 def get_app_path(app_name: str) -> str:

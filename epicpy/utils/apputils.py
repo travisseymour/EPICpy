@@ -31,7 +31,7 @@ from pathlib import Path
 from threading import Lock
 from weakref import WeakKeyDictionary
 
-from PySide6.QtGui import QPalette
+from qtpy.QtGui import QPalette
 from qtpy.QtWidgets import QWidget
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
