@@ -928,11 +928,14 @@ class MainWin(QMainWindow):
         super().closeEvent(event)
 
     def update_theme(self):
-        scheme = QGuiApplication.styleHints().colorScheme()
-        if scheme == Qt.ColorScheme.Dark:
-            set_dark_style(QApplication.instance())
-        else:
-            set_light_style(QApplication.instance())
+        try:
+            scheme = QGuiApplication.styleHints().colorScheme()
+            if scheme == Qt.ColorScheme.Dark:
+                set_dark_style(QApplication.instance())
+            else:
+                set_light_style(QApplication.instance())
+        except AttributeError:
+            ...
 
     def changeEvent(self, event):
         if event.type() == QEvent.Type.ThemeChange:
