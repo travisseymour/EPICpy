@@ -235,7 +235,9 @@ def shut_it_down():
 
 def main():
     application = QApplication([])
-    application.setWindowIcon(QIcon(str(get_resource('uiicons', 'Icon.png'))))
+    application.setWindowIcon(QIcon(str(get_resource("uiicons", "Icon.png"))))
+
+    print("Loading EPICpy, please wait...")
 
     try:
         cmd = sys.argv[1].lower()
@@ -245,32 +247,36 @@ def main():
     # allow user to clean up epicpy application launcher from the commandline
     if cmd == "cleanup":
         print("Attempting to cleanup EPICpy application launcher.")
-        if platform.system() == "Linux":
-            if linux_desktop_entry_exists("epicpy"):
-                remove_linux_desktop_entry("epicpy")
-        elif platform.system() == "Darwin":
-            if macos_launcher_exists("epicpy"):
-                remove_macos_app_launcher("epicpy")
-        elif platform.system() == "Linux":
-            if windows_shortcut_exists("epicpy"):
-                remove_windows_shortcut("epicpy")
+        try:
+            if platform.system() == "Linux":
+                if linux_desktop_entry_exists("epicpy"):
+                    remove_linux_desktop_entry("epicpy")
+            elif platform.system() == "Darwin":
+                if macos_launcher_exists("epicpy"):
+                    remove_macos_app_launcher("epicpy")
+            elif platform.system() == "Linux":
+                if windows_shortcut_exists("epicpy"):
+                    remove_windows_shortcut("epicpy")
+        except Exception as e:
+            print(f"Unable to cleanup application launcher: {e}")
         sys.exit()
 
-    print("Loading EPICpy, please wait...")
-
     # create launcher on first launch of epicpy
-    print(f'{platform.system()=}')
+    print(f"{platform.system()=}")
     if os.environ.get("PYCHARM_HOSTED") != "1":
-        print("Making sure EPICpy application launcher exists (otherwise, create one).")
-        if platform.system() == "Linux":
-            if not linux_desktop_entry_exists("epicpy"):
-                create_linux_desktop_entry("epicpy", "EPICpy")
-        elif platform.system() == "Darwin":
-            if not macos_launcher_exists("epicpy"):
-                create_macos_app_launcher("epicpy", "EPICpy")
-        elif platform.system() == "Windows":
-            if not windows_shortcut_exists("epicpy"):
-                create_windows_shortcut("epicpy", "EPICpy")
+        try:
+            print("Making sure EPICpy application launcher exists (otherwise, create one).")
+            if platform.system() == "Linux":
+                if not linux_desktop_entry_exists("epicpy"):
+                    create_linux_desktop_entry("epicpy", "EPICpy")
+            elif platform.system() == "Darwin":
+                if not macos_launcher_exists("epicpy"):
+                    create_macos_app_launcher("epicpy", "EPICpy")
+            elif platform.system() == "Windows":
+                if not windows_shortcut_exists("epicpy"):
+                    create_windows_shortcut("epicpy", "EPICpy")
+        except Exception as e:
+            print(f"Unable to create application launcher: {e}")
 
     # Create splash screen that will close itself when main window appears
     splash = SplashScreen()

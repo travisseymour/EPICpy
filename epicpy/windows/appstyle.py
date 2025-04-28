@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+
 import platform
 
 import qdarkstyle
@@ -43,7 +44,7 @@ def set_light_style(app_instance):
 
 
 def set_dark_style(app_instance):
-    if platform.system() == 'Darwin' and platform.mac_ver()[0] < '12.0.0':
+    if platform.system() == "Darwin" and platform.mac_ver()[0] < "12.0.0":
         app_instance.setStyleSheet(qdarkstyle.load_stylesheet_pyside2())
     else:
         app_instance.setStyleSheet(qdarkstyle.load_stylesheet_pyside6())

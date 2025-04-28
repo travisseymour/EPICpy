@@ -430,8 +430,8 @@ class MainWin(QMainWindow):
         self.ui_timer.timeout.connect(self.update_ui_status)
         self.ui_timer.start(1000)
 
-        self.setWindowIcon(QIcon(str(get_resource('uiicons', 'Icon.png'))))
-        self.setWindowIconText('EPICpy')
+        self.setWindowIcon(QIcon(str(get_resource("uiicons", "Icon.png"))))
+        self.setWindowIconText("EPICpy")
         self.show()
 
     def setup_base_ui(self):

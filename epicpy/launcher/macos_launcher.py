@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Optional
 
 
-
 def get_app_path(app_name: str) -> str:
     """Finds the installed application path using shutil.which()."""
     app_path = shutil.which(app_name)
@@ -135,7 +134,9 @@ def remove_macos_app_launcher(app_name: str):
         #     f"You can remove it manually by dragging it to the Trash.\n",
         #     QMessageBox.StandardButton.Ok,
         # )
-        print(f'\n\nLauncher Application Removal Failed. You can remove EPICpy.app manually by dragging it to the Trash.')
+        print(
+            f"\n\nLauncher Application Removal Failed. You can remove EPICpy.app manually by dragging it to the Trash."
+        )
 
     # else:
     #     QMessageBox.information(

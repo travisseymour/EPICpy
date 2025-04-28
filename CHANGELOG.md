@@ -3,6 +3,12 @@
 
 ---
 
+## VERSION: 2025.5.27.1
+
+1. **FIXED**: Error when creating or removing desktop icons on some systems (in particular those without standard gui desktop conventions (e.g., running via wsl on windows)).
+
+---
+
 ## VERSION: 2025.4.15.1
 
 1. **FIXED**: Several explicit references to PySide6 (instead of qtpy) caused issues on older versions of MacOS, which required PySide2.
