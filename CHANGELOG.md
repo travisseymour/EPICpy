@@ -3,7 +3,15 @@
 
 ---
 
-## VERSION: 2025.5.27.1
+## VERSION: 2025.5.8.1
+
+1. **FIXED**: Device load spinner was too generalized.
+2. **ADDED**: On load, EPICpy will let user know if there is a new version and how to upgrade if desired.
+3. **FIXED**: When loading a device, file browser will attempt to start in the folder of the most recently loaded device. Otherwise, will default to users home folder.
+
+---
+
+## VERSION: 2025.4.27.1
 
 1. **FIXED**: Error when creating or removing desktop icons on some systems (in particular those without standard gui desktop conventions (e.g., running via wsl on windows)).
 

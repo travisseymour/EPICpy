@@ -37,7 +37,8 @@ DEPENDENCIES = [
     "pyqtdarktheme==2.1.0",
     "fastnumbers==5.1.1",
     "qdarkstyle==3.2.3",
-    "platformdirs"
+    "platformdirs",
+    "requests"
 ]
 
 if platform.system() == "Windows":

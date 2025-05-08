@@ -33,7 +33,7 @@ from epicpy.dialogs.aboutwindow import AboutWin
 from epicpy.dialogs.fontsizewindow import FontSizeDialog
 from epicpy.epic.runinfo import RunInfo
 from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
-from epicpy.utils.apputils import loading_cursor, clear_font, run_without_waiting, has_epiccoder, get_resource
+from epicpy.utils.apputils import clear_font, run_without_waiting, has_epiccoder, get_resource
 from epicpy.utils.defaultfont import get_default_font
 from epicpy.widgets.largetextview import LargeTextView
 from epicpy.windows import mainwindow_menu
@@ -76,7 +76,7 @@ from epicpy.views.auditoryviewwindow import AuditoryViewWin
 from epicpy.epic.encoderpassthru import NullVisualEncoder, NullAuditoryEncoder
 import datetime
 import subprocess
-from epicpy.constants.version import __version__
+from epicpy.constants.version import __version__, update_available
 import tempfile
 import webbrowser
 from loguru import logger as log
@@ -268,6 +268,9 @@ class MainWin(QMainWindow):
         self.normalPlainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.normalPlainTextEditOutput.setObjectName("MainWindow")  # "plainTextEditOutput"
         self.normalPlainTextEditOutput.setPlainText(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
+        update = update_available()
+        if update:
+            self.normalPlainTextEditOutput.append_text(update)
         self.normalPlainTextEditOutput.customContextMenuRequested.connect(self.normal_search_context_menu)
         self.normal_out_view = EPICTextViewCachedWrite(text_widget=self.normalPlainTextEditOutput)
 
@@ -560,7 +563,6 @@ class MainWin(QMainWindow):
     # to nothing.
     # ==============================================================================
 
-    @loading_cursor
     def on_load_device(self, file: str = "", quiet: bool = False, auto_load_rules: bool = True) -> bool:
         self.layout_save()
 

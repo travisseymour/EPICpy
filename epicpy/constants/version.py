@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 # year.month.version
-__version__ = "2025.4.27.1"
+__version__ = "2025.5.8.1"
 
 __loglevel__ = "INFO"
 
@@ -32,3 +32,35 @@ INFO 	    20
 DEBUG 	    10
 NOTSET 	    0
 """
+
+import requests
+import re
+
+
+def get_remote_version(owner: str, repo: str, branch: str = "main", path: str = "epicpy/constants/version.py") -> str:
+    url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}"
+    response = requests.get(url)
+    response.raise_for_status()
+
+    match = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', response.text)
+    if not match:
+        raise ValueError("Could not find __version__ in remote version.py")
+    return match.group(1)
+
+
+def update_available() -> str:
+    remote_version = get_remote_version("travisseymour", "EPICpy")
+    if remote_version != __version__ and remote_version > __version__:
+        return (
+            f"----------------------------------------------"
+            f"A NEW version of EPICpy is available ({remote_version}), you have version {__version__}. "
+            f"To update, run\nuv tool upgrade epicpy\nin your terminal, and then press ENTER."
+            f"----------------------------------------------"
+        )
+    else:
+        return ""
+
+
+if __name__ == "__main__":
+    print(f'{__version__=}')
+    print(f"{update_available()=}")
