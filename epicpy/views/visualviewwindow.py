@@ -56,7 +56,8 @@ from epicpy.epiclib.epiclib import geometric_utilities as GU
 
 
 WARNING_ACCUMULATOR = set()
-
+# OBJ_DEBUG: bool = False
+# PAINT_DEBUG: bool = False
 
 def cache_warn(msg: str):
     global WARNING_ACCUMULATOR
@@ -234,6 +235,18 @@ class VisualViewWin(QMainWindow):
                 property=DefaultMunch(None) if not properties else DefaultMunch(None, properties),
             )
 
+            # # Debug: print obj creation as soon as it comes in
+            # if OBJ_DEBUG:
+            #     if self.view_type == "Visual Sensory":
+            #         for o in self.objects.values():
+            #             _location = Point(round(o.location.x, 1), round(o.location.y, 1))
+            #             _size = Size(round(o.size.w, 1), round(o.size.h, 1))
+            #             _o = VisualObject(
+            #                 kind=o.kind, name=o.name, location=str(_location), size=str(_size), property=o.property.toDict() if isinstance(o.property, Munch) else {}
+            #             )
+            #             print(f'{self.current_time}: {self.view_title}(make): {_o}')
+            #         print('============================================================')
+
     def erase_object(self, object_name: str):
         if object_name in self.objects:
             del self.objects[object_name]
@@ -258,6 +271,18 @@ class VisualViewWin(QMainWindow):
 
             else:
                 self.objects[object_name].property[prop_name] = prop_value
+
+            # Debug: print change as soon as it comes in
+            # if OBJ_DEBUG:
+            #     if self.view_type == "Visual Sensory":
+            #         for o in self.objects.values():
+            #             _location = Point(round(o.location.x, 1), round(o.location.y, 1))
+            #             _size = Size(round(o.size.w, 1), round(o.size.h, 1))
+            #             _o = VisualObject(
+            #                 kind=o.kind, name=o.name, location=str(_location), size=str(_size), property=o.property.toDict() if isinstance(o.property, Munch) else {}
+            #             )
+            #             print(f'{self.current_time}: {self.view_title}(make): {_o}')
+            #         print('============================================================')
 
     # ========================================================================
     # Drawing Routines
@@ -297,6 +322,16 @@ class VisualViewWin(QMainWindow):
             self.draw_info_overlay(painter)
         finally:
             painter.end()
+
+        # Debug: print object information without size or location
+        # if PAINT_DEBUG:
+        #     if self.view_type == "Visual Sensory":
+        #         if self.objects:
+        #             for o in self.objects.values():
+        #                 print(f'{self.current_time} | {self.view_title} | {o.name} | {o.property}')
+        #         else:
+        #             print(f'{self.current_time} | {self.view_title} | NO OBJECTS')
+        #         print('---------------------------------------------------------------------------')
 
         self.painting = False
         self.can_draw = False
