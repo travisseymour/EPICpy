@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 # year.month.version
-__version__ = "2025.5.22.1"
+__version__ = "2025.5.25.1"
 
 __loglevel__ = "INFO"
 
@@ -62,5 +62,5 @@ def update_available() -> str:
 
 
 if __name__ == "__main__":
-    print(f'{__version__=}')
+    print(f"{__version__=}")
     print(f"{update_available()=}")

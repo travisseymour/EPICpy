@@ -3,6 +3,12 @@
 
 ---
 
+## VERSION: 2025.5.25.1
+
+1. **ADDED**: Attempt to prevent Linux users from having to deal with xcb/wayland issue.
+
+---
+
 ## VERSION: 2025.5.8.1
 
 1. **FIXED**: Device load spinner was too generalized.

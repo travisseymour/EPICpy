@@ -18,7 +18,35 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import os
+import sys
 import platform
+
+
+# Function to determine the available display server
+def set_qt_platform():
+    # Check if the operating system is Linux
+    if platform.system() == "Linux":
+        if "WAYLAND_DISPLAY" in os.environ:
+            os.environ["QT_QPA_PLATFORM"] = "wayland"
+            print("Using Wayland as the display server.")
+        else:
+            os.environ["QT_QPA_PLATFORM"] = "xcb"
+            print("Using X11 (xcb) as the display server.")
+    elif platform.system() == "Windows":
+        # Windows typically does not require setting this
+        pass
+    elif platform.system() == "Darwin":  # macOS
+        # macOS typically does not require setting this
+        pass
+    else:
+        # Optionally handle other operating systems or set a default
+        os.environ["QT_QPA_PLATFORM"] = "xcb"  # Default to X11 for non-Linux
+
+
+# Set the appropriate platform before importing QApplication
+set_qt_platform()
+
 from importlib.resources import files, as_file
 
 from qtpy.QtGui import QIcon
@@ -27,8 +55,6 @@ from fastnumbers import check_int
 import datetime
 import ctypes.wintypes
 import signal
-import sys
-import os
 import re
 import subprocess
 from pathlib import Path
@@ -50,9 +76,6 @@ if platform.platform().split("-")[1].startswith("10."):
     os.environ["QT_MAC_WANTS_LAYER"] = "1"
 
 # os.environ["QT_DEBUG_PLUGINS"] = "1" # for more info when there are plugin load errors
-if sys.platform.startswith("linux"):
-    os.environ["QT_QPA_PLATFORM"] = "xcb"  # This has to be set BEFORE importing QApplication
-
 
 from qtpy.QtWidgets import QApplication
 from qtpy.QtCore import qInstallMessageHandler, QCoreApplication
