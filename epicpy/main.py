@@ -80,41 +80,9 @@ if platform.platform().split("-")[1].startswith("10."):
 from qtpy.QtWidgets import QApplication
 from qtpy.QtCore import qInstallMessageHandler, QCoreApplication
 
-from epicpy.utils.apputils import frozen, get_resource
+from epicpy.utils.apputils import frozen
+from epicpy import get_resource
 from epicpy.utils import config
-
-# epiclib name (epiclib.so) is same on mac and linux.
-# just in case we were recently running on a different os,
-# let's copy the right one for this system
-
-
-try:
-    # Determine the source file based on the platform
-    if platform.system() == "Darwin":
-        if platform.machine() == "x86_64":
-            source = files("epicpy").joinpath("epiclib/epiclib_macos.so")
-        else:
-            source = files("epicpy").joinpath("epiclib/epiclib_macos_arm.so")
-    elif platform.system() == "Linux":
-        source = files("epicpy").joinpath("epiclib/epiclib_linux.so")
-    else:
-        source = None
-
-    if source:
-        # Resolve the source path
-        with as_file(source) as source_path:
-            source_path_resolved = Path(source_path).resolve()
-
-            # Define the destination path relative to the source directory
-            destination = source_path_resolved.parent / "epiclib.so"
-
-            # Safely copy the resource to the destination
-            print(f"Copying {source_path_resolved}")
-            print(f"     to {destination}")
-            copyfile(source_path_resolved, destination)
-
-except Exception as e:
-    print(f"Error trying to reset epiclib.so for {platform.system()} using {source}: '{e}'")
 
 DONE = False
 

@@ -7,7 +7,7 @@ from qtpy.QtGui import QPixmap
 from qtpy.QtCore import Qt, QThread, QTimer
 
 from epicpy.utils import config
-from epicpy.utils.apputils import get_resource
+from epicpy import get_resource
 
 
 class AppLoader(QThread):

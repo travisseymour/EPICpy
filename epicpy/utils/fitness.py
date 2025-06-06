@@ -14,7 +14,8 @@ from qtpy.QtGui import QAction
 from qtpy.QtWidgets import QMainWindow
 
 import epicpy.utils.config as config
-from epicpy.utils.apputils import get_resource, extract_from_zip
+from epicpy.utils.apputils import extract_from_zip
+from epicpy import get_resource
 from epicpy.widgets.largetextview import LargeTextView
 
 """

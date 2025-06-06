@@ -33,7 +33,8 @@ from epicpy.dialogs.aboutwindow import AboutWin
 from epicpy.dialogs.fontsizewindow import FontSizeDialog
 from epicpy.epic.runinfo import RunInfo
 from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
-from epicpy.utils.apputils import clear_font, run_without_waiting, has_epiccoder, get_resource
+from epicpy.utils.apputils import clear_font, run_without_waiting, has_epiccoder
+from epicpy import get_resource
 from epicpy.utils.defaultfont import get_default_font
 from epicpy.widgets.largetextview import LargeTextView
 from epicpy.windows import mainwindow_menu

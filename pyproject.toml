@@ -1,2 +1,88 @@
+
+# NOTES:
+# - Currently using Python 3.10 on linux and macos, but Python 3.9 on Win10
+# - Currently, the devices in fullbindings are the ones that work
+# - Fix PyQt6/PySide6 xcb plugin error on Linux by installing:
+#  sudo apt install libxcb-cursor0
+
+
+[build-system]
+requires = ["setuptools>=61", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "epicpy"
+authors = [
+  { name = "Travis L. Seymour, PhD", email = "nogard@ucsc.edu" }
+]
+description = "Python interface to the EPIC computational cognitive architecture simulation environment."
+readme = "ReadMe.md"
+requires-python = ">=3.9,<3.11"
+license = { text = "GNU General Public License v3 or later (GPLv3+)" }
+classifiers = [
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Operating System :: OS Independent",
+  "Natural Language :: English",
+  "Topic :: Education",
+  "Topic :: Scientific/Engineering",
+]
+dynamic = ["version"]
+dependencies = [
+  "loguru>=0.6.0,<0.8",
+  "qtpy>=2.3,<3.0",
+  "PySide6>=6.8.1.1,<7.0",
+  "python-dateutil>=2.8.2,<3.0",
+  "ulid>=1.1,<2.0",
+  "ulid2>=0.3.0,<1.0",
+  "numpy>=1.24,<3.0",
+  "scipy>=1.9,<2.0",
+  "pingouin>=0.5.2,<1.0",
+  "plum-dispatch>=2.0.0,<3.0",
+  "ascii_frame>=0.0.1,<1.0",
+  "pandas>=2.0,<3.0",
+  "pyqtdarktheme>=2.1.0,<3.0",
+  "fastnumbers>=5.0.0,<6.0",
+  "qdarkstyle>=3.1.0,<4.0",
+  "platformdirs>=3.0,<4.0",
+  "requests>=2.28,<3.0",
+  "pywin32; sys_platform == 'win32'"
+]
+
+[project.optional-dependencies]
+dev = [
+  "black>=23.3.0",
+  "plumbum>=1.8.1",
+  "pytest>=7.2.2",
+  "qt6-tools==6.4.3.1.3"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/travisseymour/EPICpy"
+
+[tool.setuptools.packages.find]
+exclude = ["contrib", "docs", "tests*", "test*", "build", "epicpy.egg-info"]
+
+[tool.setuptools.package-data]
+"epicpy.epiclib" = [
+  "epiclib_linux.so",
+  "epiclib_macos.so",
+  "epiclib_macos_arm.so",
+  "epiclib.pyd"
+]
+
+[tool.setuptools_scm]
+version_file = "epicpy/constants/version.py"
+
+[project.scripts]
+EPICpy = "epicpy.main:main"
+epicpy = "epicpy.main:main"
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+
 [tool.black]
 line-length = 120

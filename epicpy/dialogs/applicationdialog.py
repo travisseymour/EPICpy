@@ -22,7 +22,8 @@ from qtpy.QtWidgets import (
 from qtpy.QtGui import QFont, QIcon
 from qtpy.QtCore import QSize, Qt
 
-from epicpy.utils.apputils import get_resource, has_epiccoder
+from epicpy.utils.apputils import has_epiccoder
+from epicpy import get_resource
 from epicpy.utils.defaultfont import get_default_font
 
 

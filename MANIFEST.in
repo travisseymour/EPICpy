@@ -1,1 +1,2 @@
 recursive-include epicpy/resources *
+recursive-include epicpy/epiclib *.so *.pyd

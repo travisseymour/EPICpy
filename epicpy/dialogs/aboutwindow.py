@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from qtpy.QtGui import QPixmap
 
-from epicpy.utils.apputils import get_resource
+from epicpy import get_resource
 from epicpy.uifiles.aboutui import Ui_aboutDialog
 from qtpy.QtWidgets import QDialog
 from epicpy.constants import version

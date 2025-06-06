@@ -45,7 +45,6 @@ from qtpy.QtWidgets import QMainWindow, QGraphicsTextItem
 from loguru import logger as log
 
 from epicpy.utils.apputils import Point, Size, Rect, conditional_dataclass
-from dataclasses import dataclass
 from functools import partial, lru_cache
 
 from epicpy.utils.localmunch import Munch, DefaultMunch
@@ -58,6 +57,7 @@ from epicpy.epiclib.epiclib import geometric_utilities as GU
 WARNING_ACCUMULATOR = set()
 # OBJ_DEBUG: bool = False
 # PAINT_DEBUG: bool = False
+
 
 def cache_warn(msg: str):
     global WARNING_ACCUMULATOR
