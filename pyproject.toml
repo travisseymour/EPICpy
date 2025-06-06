@@ -40,7 +40,7 @@ dependencies = [
   "numpy>=1.24,<3.0",
   "scipy>=1.9,<2.0",
   "pingouin>=0.5.2,<1.0",
-  "plum-dispatch>=2.0.0,<3.0",
+  "plum-dispatch==1.5.2",
   "ascii_frame>=0.0.1,<1.0",
   "pandas>=2.0,<3.0",
   "pyqtdarktheme>=2.1.0,<3.0",
