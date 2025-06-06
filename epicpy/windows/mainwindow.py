@@ -36,6 +36,7 @@ from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
 from epicpy.utils.apputils import clear_font, run_without_waiting, has_epiccoder
 from epicpy import get_resource
 from epicpy.utils.defaultfont import get_default_font
+from epicpy.utils.update_utils import update_available
 from epicpy.widgets.largetextview import LargeTextView
 from epicpy.windows import mainwindow_menu
 from epicpy.windows.appstyle import set_dark_style, set_light_style
@@ -77,7 +78,7 @@ from epicpy.views.auditoryviewwindow import AuditoryViewWin
 from epicpy.epic.encoderpassthru import NullVisualEncoder, NullAuditoryEncoder
 import datetime
 import subprocess
-from epicpy.constants.version import __version__, update_available
+from epicpy.constants.version import __version__
 import tempfile
 import webbrowser
 from loguru import logger as log
