@@ -17,13 +17,16 @@ authors = [
 ]
 description = "Python interface to the EPIC computational cognitive architecture simulation environment."
 readme = "ReadMe.md"
-requires-python = ">=3.9,<3.11"
+requires-python = ">=3.9,<3.14"
 license = { text = "GNU General Public License v3 or later (GPLv3+)" }
 classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Operating System :: OS Independent",
   "Natural Language :: English",
   "Topic :: Education",
@@ -40,10 +43,11 @@ dependencies = [
   "numpy>=1.24,<3.0",
   "scipy>=1.9,<2.0",
   "pingouin>=0.5.2,<1.0",
-  "plum-dispatch==1.5.2",
+  "plum-dispatch>=1.5.2,<2.0; sys_platform != 'win32'",
+  "plum-dispatch==1.5.2; sys_platform == 'win32'",
   "ascii_frame>=0.0.1,<1.0",
   "pandas>=2.0,<3.0",
-  "pyqtdarktheme>=2.1.0,<3.0",
+  "pyqtdarktheme", # ">=2.1.0,<3.0",
   "fastnumbers>=5.0.0,<6.0",
   "qdarkstyle>=3.1.0,<4.0",
   "platformdirs>=3.0,<4.0",

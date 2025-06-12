@@ -9,17 +9,36 @@ from epicpy.utils.resource_utils import get_resource
 
 
 def _load_platform_module():
+    major = sys.version_info.major
+    minor = sys.version_info.minor
+    py_ver = f'{major}.{minor}'
     system = platform.system().lower()
 
     if system == "windows":
         modname = "epiclib.pyd"
     elif system == "linux":
-        modname = "epiclib_linux.so"
-    elif system == "darwin":
-        if "ARM" in platform.uname().version.upper():
-            modname = "epiclib_macos_arm.so"
+        if py_ver == '3.10':
+            modname = "epiclib_linux_310.so"
+        elif py_ver == '3.11':
+            modname = "epiclib_linux_311.so"
+        elif py_ver == '3.12':
+            modname = "epiclib_linux_312.so"
+        elif py_ver == '3.13':
+            modname = "epiclib_linux_313.so"
         else:
-            modname = "epiclib_macos.so"
+            modname = "epiclib_linux_310.so"
+    elif system == "darwin":
+        extra = "_arm" if "ARM" in platform.uname().version.upper() else ""
+        if py_ver == '3.10':
+            modname = f"epiclib_macos{extra}_310.so"
+        elif py_ver == '3.11':
+            modname = f"epiclib_macos{extra}_311.so"
+        elif py_ver == '3.12':
+            modname = f"epiclib_macos{extra}_312.so"
+        elif py_ver == '3.13':
+            modname = f"epiclib_macos{extra}_313.so"
+        else:
+            modname = f"epiclib_macos{extra}_310.so"
     else:
         raise NotImplementedError(f"Unsupported platform: {system}")
 
