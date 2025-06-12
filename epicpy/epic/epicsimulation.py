@@ -46,9 +46,10 @@ from loguru import logger as log
 from epicpy.utils.modulereloader import reset_module
 from epicpy.views.epicpy_visualview import EPICVisualView
 
-warnings.filterwarnings("ignore", module="matplotlib\..*")
-warnings.filterwarnings("ignore", module="pingouin\..*")
-warnings.filterwarnings("ignore", module="pandas\..*")
+warnings.filterwarnings("ignore", module=r"^matplotlib")
+warnings.filterwarnings("ignore", module=r"^pingouin")
+warnings.filterwarnings("ignore", module=r"^pandas")
+
 
 # KEEP HERE, USED IN EXEC STATEMENT!
 
