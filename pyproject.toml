@@ -52,6 +52,8 @@ dependencies = [
   "qdarkstyle>=3.1.0,<4.0",
   "platformdirs>=3.0,<4.0",
   "requests>=2.28,<3.0",
+  "fastparquet>=2024.11.0",
+  "pyarrow>=21.0.0",
   "pywin32; sys_platform == 'win32'"
 ]
 
