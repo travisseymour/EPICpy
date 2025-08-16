@@ -7,6 +7,7 @@
 
 1. **ADDED**: pyarrow and fastparquet to support more efficient data file reads.
 2. **CHANGED**: Reorganized location of some internal utilities.
+3. **UPDATED**: Using new import apporoach for devices.
 
 ---
 
