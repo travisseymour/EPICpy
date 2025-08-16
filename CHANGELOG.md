@@ -3,6 +3,10 @@
 
 ---
 
+## VERSION: 2025.8.16.1
+
+1. **ADDED**: commandline "debug" flag for dev testing. E.g., `epicpy debug`.
+
 ## VERSION: 2025.8.15.1
 
 1. **ADDED**: pyarrow and fastparquet to support more efficient data file reads.

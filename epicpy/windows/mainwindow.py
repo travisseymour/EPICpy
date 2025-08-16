@@ -625,6 +625,12 @@ class MainWin(QMainWindow):
             if auto_load_rules and config.device_cfg.rule_files:
                 self.simulation.choose_rules(config.device_cfg.rule_files)
 
+            if os.environ["EPICPY_DEBUG"] == "1":
+                try:
+                    self.simulation.device.show_output_stats()
+                except Exception:
+                    ...
+
             return True
         else:
             return False

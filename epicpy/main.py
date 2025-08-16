@@ -74,6 +74,7 @@ from epicpy.utils.splashscreen import SplashScreen
 os.environ["OUTDATED_IGNORE"] = "1"
 if platform.platform().split("-")[1].startswith("10."):
     os.environ["QT_MAC_WANTS_LAYER"] = "1"
+os.environ["EPICPY_DEBUG"] = "0"  # off by default, set by passing "debug" on commandline
 
 # os.environ["QT_DEBUG_PLUGINS"] = "1" # for more info when there are plugin load errors
 
@@ -251,8 +252,10 @@ def main():
         except Exception as e:
             print(f"Unable to cleanup application launcher: {e}")
         sys.exit()
+    elif cmd == "debug":
+        os.environ["EPICPY_DEBUG"] = "1"
 
-    # create launcher on first launch of epicpy
+        # create launcher on first launch of epicpy
     print(f"{platform.system()=}")
     if os.environ.get("PYCHARM_HOSTED") != "1":
         try:
