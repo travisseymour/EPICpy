@@ -79,10 +79,11 @@ exclude = ["contrib", "docs", "tests*", "test*", "build", "epicpy.egg-info"]
   "epiclib.pyd"
 ]
 
-[tool.setuptools_scm]
-version_file = "epicpy/constants/version.py"
-version_scheme = "guess-next-dev"
-local_scheme = "no-local-version"
+# Manually Updating Version in version.py as of 8/16/25
+#[tool.setuptools_scm]
+#version_file = "epicpy/constants/version.py"
+#version_scheme = "guess-next-dev"
+#local_scheme = "no-local-version"
 
 [project.scripts]
 EPICpy = "epicpy.main:main"
