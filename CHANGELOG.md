@@ -3,6 +3,13 @@
 
 ---
 
+## VERSION: 2025.8.15.1
+
+1. **ADDED**: pyarrow and fastparquet to support more efficient data file reads.
+2. **CHANGED**: Reorganized location of some internal utilities.
+
+---
+
 ## VERSION: 2025.5.25.1
 
 1. **ADDED**: Attempt to prevent Linux users from having to deal with xcb/wayland issue.
