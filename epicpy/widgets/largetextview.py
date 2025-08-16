@@ -1,313 +1,505 @@
+import platform
+import subprocess
+import re
+from pathlib import Path
 import sys
-import timeit
+
+from qtpy import QtGui
+from qtpy.QtWidgets import (
+    QWidget,
+    QHBoxLayout,
+    QScrollBar,
+    QMenu,
+    QDialog,
+    QVBoxLayout,
+    QLineEdit,
+    QPushButton,
+    QLabel,
+    QHBoxLayout as HBox,
+    QCheckBox,
+    QMessageBox,
+)
 from collections import deque
 
-from epicpy.utils import config
-from qtpy.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QScrollBar, QMessageBox, QMenu
-from qtpy.QtCore import Qt, QTimer
-from qtpy.QtGui import QPainter, QFontMetrics, QWheelEvent, QFont, QContextMenuEvent
+from qtpy.QtCore import Qt, QPoint, QTimer
+from qtpy.QtGui import QPainter, QFontMetrics, QFont, QContextMenuEvent, QKeySequence, QShortcut
 
-from epicpy.dialogs.searchwindow import SearchWin
-from epicpy.utils.apputils import is_dark_mode
-from epicpy.utils.viewsearch import find_next_index_with_target_parallel_concurrent, find_next_index_with_target_serial
+from epicpy.constants.stateconstants import PAUSED, RUNNING
+from epicpy.utils import config
+
+
+class SearchDialog(QDialog):
+    def __init__(self, parent=None, start_text: str = "", start_is_regex: bool = False):
+        super().__init__(parent)
+        self.setWindowTitle("Find Text")
+        self.setModal(True)
+        self.setMinimumWidth(420)  # make it wider
+
+        self.input = QLineEdit(self)
+        self.regex_cb = QCheckBox("Regex", self)
+
+        self.next_button = QPushButton("Find Next")
+        self.prev_button = QPushButton("Find Previous")
+
+        layout = QVBoxLayout(self)
+
+        form = HBox()
+        form.addWidget(QLabel("Find:"))
+        form.addWidget(self.input)
+        layout.addLayout(form)
+
+        layout.addWidget(self.regex_cb)
+
+        button_row = HBox()
+        button_row.addWidget(self.prev_button)
+        button_row.addWidget(self.next_button)
+        layout.addLayout(button_row)
+
+        self.next_button.clicked.connect(self.accept)
+        self.prev_button.clicked.connect(self.reject)
+
+        if start_text:
+            self.input.setText(start_text)
+            self.input.selectAll()
+        self.regex_cb.setChecked(start_is_regex)
 
 
 class LargeTextView(QWidget):
     def __init__(
         self,
-        parent=None,
+        parent: object = None,
         update_frequency_ms: int = 100,
         page_step_lines: int = 100,
-        wait_msg_limit: int = 100_1000,
-        enable_context_menu: bool = True,
+        wait_msg_limit: int = 100_000,
+        name: str = "",
+        enable_shortcuts: bool = True,
     ):
         super().__init__(parent)
+        self.name = name
+        self._parent = parent
+
         self.lines: list[str] = []
         self.pending_lines = deque()
 
-        self.enable_updates: bool = True
-        self.is_dark_mode: bool = config.app_cfg.dark_mode.lower() == "dark" or is_dark_mode()
-        self.enable_context_menu = enable_context_menu
-        self.current_line_location = 0
-        self.default_pen = None
         self.update_frequency_ms = update_frequency_ms
         self.wait_msg_limit = wait_msg_limit
 
-        # Create context menu if enabled
-        if self.enable_context_menu:
-            self.context_menu = QMenu(self)
-            self.search_action = self.context_menu.addAction("Search")
-            self.context_menu.addSeparator()
-            self.copy_action = self.context_menu.addAction("Copy")
-            self.copy_action.setText("Copy All")
-            self.context_menu.addSeparator()
-            self.clear_action = self.context_menu.addAction("Clear")
-            self.contextMenuEvent = self.context_menu_event_handler
-        else:
-            self.context_menu = None
+        self.selection_start_line = None
+        self.selection_end_line = None
+        self.word_wrap = True
+        self.current_search_index = 0
+        self.processing_paused = False
 
-        # Create the scrollbar and set it to the right
+        self.last_search_pattern: str = ""
+        self.last_is_regex: bool = False
+        self._last_regex = None  # type: re.Pattern | None
+
+        font = QFont("Courier New" if sys.platform == "win32" else "Courier", 14)
+        font.setStyleHint(QFont.StyleHint.Monospace)
+        self.setFont(font)
+        self._font_metrics = QFontMetrics(self.font())
+
         self.scroll_bar = QScrollBar(Qt.Orientation.Vertical, self)
         self.scroll_bar.valueChanged.connect(self.update)
         self.scroll_bar.setMaximum(0)
         self.scroll_bar.setPageStep(page_step_lines)
+        # self.scroll_bar.setSingleStep(3)
 
-        # Create a layout to hold the scrollbar and content area
         layout = QHBoxLayout(self)
         layout.addWidget(self.scroll_bar, 0, Qt.AlignmentFlag.AlignRight)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Search dialog setup
-        self.search_dialog = SearchWin()
-        self.search_dialog.setModal(True)
-        self.last_search_spec = {}
+        # make focusable
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.scroll_bar.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        # (The "Please Wait" label has been removed)
+        # shortcuts: disable if you are planning global shortcuts on the parent window.
+        if enable_shortcuts:
+            self.copy_sc = QShortcut(QKeySequence(QKeySequence.StandardKey.Copy), self)
+            self.copy_sc.setContext(Qt.ShortcutContext.WindowShortcut)
+            self.copy_sc.activated.connect(self.copy_selected_text)
 
-        # Start the self-rescheduling timer
+            self.selall_sc = QShortcut(QKeySequence(QKeySequence.StandardKey.SelectAll), self)
+            self.selall_sc.setContext(Qt.ShortcutContext.WindowShortcut)
+            self.selall_sc.activated.connect(self.select_all)
+
+            self.find_sc = QShortcut(QKeySequence(QKeySequence.StandardKey.Find), self)
+            self.find_sc.setContext(Qt.ShortcutContext.WindowShortcut)
+            self.find_sc.activated.connect(self.show_search_dialog)
+
+            self.find_next_sc = QShortcut(QKeySequence(QKeySequence.StandardKey.FindNext), self)
+            self.find_next_sc.setContext(Qt.ShortcutContext.WindowShortcut)
+            self.find_next_sc.activated.connect(self.find_next)
+
+            self.find_prev_sc = QShortcut(QKeySequence(QKeySequence.StandardKey.FindPrevious), self)
+            self.find_prev_sc.setContext(Qt.ShortcutContext.WindowShortcut)
+            self.find_prev_sc.activated.connect(self.find_prev)
+
         QTimer.singleShot(self.update_frequency_ms, self.process_pending_lines)
 
-    @property
     def line_height(self):
-        return QFontMetrics(self.font()).lineSpacing()
+        return self._font_metrics.lineSpacing()
 
-    def setPlainText(self, text: str):
-        self.clear()
-        self.write(text)
-
-    def append_text(self, text):
-        self.write(text)
-
-    def write(self, text):
-        if "\n" in text:
-            self.pending_lines.extend(line for line in text.splitlines(False) if "TLSDEBUG" not in line)
-        elif "TLSDEBUG" not in text:
-            self.pending_lines.append(text)
-        # No need to start a timer—our self-rescheduling timer is always running
+    def write(self, text: str):
+        self.pending_lines.extend(text.splitlines(False))
 
     def clear(self):
-        self.lines = []
+        self.lines.clear()
         self.pending_lines.clear()
-        self.current_line_location = 0
+        self.selection_start_line = None
+        self.selection_end_line = None
         self.scroll_bar.setValue(0)
         self.scroll_bar.setMaximum(0)
-        self.update()  # Force immediate repaint
+        self.current_search_index = 0
+        self.last_search_pattern = ""
+        self.last_is_regex = False
+        self._last_regex = None
+        self.update()
 
-    def is_idle(self):
-        return not self.pending_lines
-
-    def flush(self):
-        self.clear()
-
-    def get_text(self) -> str:
+    def get_text(self):
+        self.flush()
         return "\n".join(self.lines)
 
     def process_pending_lines(self):
+        # Exit early if paused - don't schedule another timer
+        if self.processing_paused:
+            return
+
         delay = self.update_frequency_ms
 
-        if self.enable_updates:
-            # Process pending lines if any
-            if self.pending_lines:
-                # Process in controlled batches
-                batch_size = min(5000, len(self.pending_lines))
-                for _ in range(batch_size):
-                    self.lines.append(self.pending_lines.popleft())
+        if self.pending_lines:
+            batch_size = min(5000, len(self.pending_lines))
+            for _ in range(batch_size):
+                self.lines.append(self.pending_lines.popleft())
 
-                # Adjust scrollbar maximum and auto-scroll to the bottom
-                self.scroll_bar.setMaximum(len(self.lines) - 1)
-                visible_lines = self.height() // self.line_height
-                new_scroll_value = max(0, len(self.lines) - visible_lines)
-                self.scroll_bar.setValue(new_scroll_value)
-                # Use a shorter delay when there’s a backlog
-                delay = self.update_frequency_ms // 2
+            # self.scroll_bar.setMaximum(len(self.lines) - 1)
+            self._recalc_scrollbar_limits()
+            visible_lines = self.height() // self.line_height()
+            self.scroll_bar.setValue(max(0, len(self.lines) - visible_lines))
+            self.update()
+            delay = self.update_frequency_ms // 2
 
-                self.update()  # Trigger UI repaint only if a change is made
-
-        # Reschedule the next update
+        # Only schedule next processing if not paused
         QTimer.singleShot(delay, self.process_pending_lines)
 
-    def lines_in_view(self):
-        visible_lines = self.height() // self.line_height
-        start_line = self.scroll_bar.value()
-        return set(range(start_line, start_line + visible_lines))
+    def flush(self):
+        """
+        Similar to process_pending_lines(),
+        but does not enable the singleShot
+        """
+        if self.pending_lines:
+            batch_size = min(5000, len(self.pending_lines))
+            for _ in range(batch_size):
+                self.lines.append(self.pending_lines.popleft())
+
+            # self.scroll_bar.setMaximum(len(self.lines) - 1)
+            self._recalc_scrollbar_limits()
+            visible_lines = self.height() // self.line_height()
+            self.scroll_bar.setValue(max(0, len(self.lines) - visible_lines))
+            self.update()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._recalc_scrollbar_limits()
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        if self.default_pen is None:
-            self.default_pen = painter.pen()
-
-        line_height = self.line_height
+        painter.setFont(self.font())
+        line_height = self.line_height()
         visible_lines = self.height() // line_height
         start_line = self.scroll_bar.value()
         text_area_width = self.width() - self.scroll_bar.width()
 
-        # Determine a suitable highlight color
-        if self.is_dark_mode:
-            highlight_color = self.palette().highlight().color().lighter(120)
-        else:
-            highlight_color = self.palette().highlight().color().darker(120)
+        highlight_color = self.palette().highlight().color()
+        text_color = self.palette().text().color()
 
-        # Determine the relative position of the highlighted line
-        highlighted_line = self.current_line_location - start_line
-        if 0 <= highlighted_line < visible_lines:
-            painter.fillRect(0, highlighted_line * line_height, text_area_width, line_height, highlight_color)
+        if self.selection_start_line is not None and self.selection_end_line is not None:
+            sel_start = min(self.selection_start_line, self.selection_end_line)
+            sel_end = max(self.selection_start_line, self.selection_end_line)
+        else:
+            sel_start = sel_end = -1
 
         for i in range(visible_lines):
             line_number = start_line + i
-            if line_number < len(self.lines):
-                line_text = self.lines[line_number]
-                painter.drawText(
-                    0, i * line_height, text_area_width, line_height, Qt.AlignmentFlag.AlignLeft, line_text
-                )
+            if line_number >= len(self.lines):
+                break
+            y = i * line_height
+            if sel_start <= line_number <= sel_end:
+                painter.fillRect(0, y, text_area_width, line_height, highlight_color)
 
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self.scroll_bar.setSingleStep(self.height() // self.line_height)
-
-    def wheelEvent(self, event: QWheelEvent):
-        scroll_amount = event.angleDelta().y()
-        new_value = self.scroll_bar.value() - scroll_amount // 120  # Standard delta is 120 per step
-        self.scroll_bar.setValue(new_value)
-        event.accept()
-
-    def context_menu_event_handler(self, event: QContextMenuEvent):
-        action = self.context_menu.exec(event.globalPos())
-        if action == self.clear_action:
-            self.clear()
-        elif action == self.search_action:
-            self.query_search()
-        elif action == self.copy_action:
-            self.copy_all_to_clipboard()
+            painter.setPen(text_color)
+            flags = Qt.TextFlag.TextWordWrap if self.word_wrap else Qt.TextFlag.TextSingleLine
+            painter.drawText(
+                0, y, text_area_width, line_height, flags | Qt.AlignmentFlag.AlignLeft, self.lines[line_number]
+            )
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
-            line_height = self.line_height
-            click_pos = event.position() - self.rect().topLeft()
-            clicked_row = (click_pos.y() + self.scroll_bar.value() * line_height) // line_height
-            if 0 <= clicked_row < len(self.lines):
-                self.current_line_location = int(clicked_row)
-                self.update()  # Force a repaint to show the highlight
+            clicked_line = self.scroll_bar.value() + int(event.position().y()) // self.line_height()
+            self.selection_start_line = clicked_line
+            self.selection_end_line = clicked_line
+            self.update()
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() & Qt.MouseButton.LeftButton:
+            current_line = self.scroll_bar.value() + int(event.position().y()) // self.line_height()
+            self.selection_end_line = current_line
+            self.update()
+
+    def copy_selected_text(self):
+        if self.selection_start_line is not None and self.selection_end_line is not None:
+            start = max(0, min(self.selection_start_line, self.selection_end_line))
+            end = min(len(self.lines) - 1, max(self.selection_start_line, self.selection_end_line))
+            selected_text = "\n".join(self.lines[start : end + 1])
+            QApplication.clipboard().setText(selected_text)
+
+    def select_all(self):
+        self.selection_start_line = 0
+        self.selection_end_line = len(self.lines) - 1
+        self.update()
+
+    def _recalc_scrollbar_limits(self):
+        vis = max(1, self.height() // self.line_height())
+        self.scroll_bar.setMaximum(max(0, len(self.lines) - vis))
+
+    def wheelEvent(self, event):
+        # positive y => wheel up
+        dy = event.angleDelta().y()
+        if dy == 0:
+            return
+        steps = dy // 120  # 120 units per notch
+        self.scroll_bar.setValue(self.scroll_bar.value() - steps * self.scroll_bar.singleStep())
+        self.update()
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_F3:
-            self.continue_find_text()
+        key = event.key()
+        sb = self.scroll_bar
+        if key == Qt.Key.Key_Up:
+            sb.setValue(sb.value() - sb.singleStep())
+        elif key == Qt.Key.Key_Down:
+            sb.setValue(sb.value() + sb.singleStep())
+        elif key == Qt.Key.Key_PageUp:
+            sb.setValue(max(sb.minimum(), sb.value() - sb.pageStep()))
+        elif key == Qt.Key.Key_PageDown:
+            sb.setValue(min(sb.maximum(), sb.value() + sb.pageStep()))
+        elif key == Qt.Key.Key_Home:
+            sb.setValue(sb.minimum())
+        elif key == Qt.Key.Key_End:
+            sb.setValue(sb.maximum())
         else:
             super().keyPressEvent(event)
+        self.update()
 
-    def continue_find_text(self) -> bool:
-        if not self.last_search_spec or not self.lines:
+    def contextMenuEvent(self, event: QContextMenuEvent):
+        menu = QMenu(self)
+        copy_action = menu.addAction("Copy")
+        select_all_action = menu.addAction("Select All")
+        find_action = menu.addAction("Find...")
+        clear_action = menu.addAction("Clear")
+
+        # action = menu.exec(event.globalPos())
+        action = menu.exec(self.parent().mapToGlobal(event if isinstance(event, QPoint) else event.pos()))
+        if action == copy_action:
+            self.copy_selected_text()
+        elif action == select_all_action:
+            self.select_all()
+        elif action == find_action:
+            self.show_search_dialog()
+        elif action == clear_action:
+            self.clear()
+
+    # ---- search helpers ----
+    def _compile_regex(self, pattern: str) -> bool:
+        try:
+            self._last_regex = re.compile(pattern)
+            return True
+        except re.error as e:
+            QMessageBox.warning(self, "Invalid Regex", f"{e}")
+            self._last_regex = None
             return False
 
-        if self.last_search_spec["backwards"]:
-            if self.current_line_location - 1 >= 0:
-                self.current_line_location -= 1
+    def _matches(self, line: str) -> bool:
+        if not self.last_search_pattern:
+            return False
+        if self.last_is_regex:
+            return bool(self._last_regex.search(line)) if self._last_regex else False
+        return self.last_search_pattern in line
+
+    def show_search_dialog(self):
+        dlg = SearchDialog(self, self.last_search_pattern, self.last_is_regex)
+        ok = dlg.exec()
+        pattern = dlg.input.text()
+        is_regex = dlg.regex_cb.isChecked()
+
+        if pattern:
+            if is_regex:
+                if not self._compile_regex(pattern):
+                    return
+            self.last_search_pattern = pattern
+            self.last_is_regex = is_regex
+
+        if ok:
+            self.find_next()
         else:
-            if self.current_line_location + 1 < len(self.lines):
-                self.current_line_location += 1
+            self.find_prev()
 
-        self.find_text(
-            pattern=self.last_search_spec["pattern"],
-            use_regex=self.last_search_spec["use_regex"],
-            ignore_case=self.last_search_spec["ignore_case"],
-            backwards=self.last_search_spec["backwards"],
-        )
-        return True
+    def find_next(self):
+        if not self.last_search_pattern:
+            return -1
+        # ensure compiled if regex
+        if self.last_is_regex and (self._last_regex is None or self._last_regex.pattern != self.last_search_pattern):
+            if not self._compile_regex(self.last_search_pattern):
+                return -1
 
-    def find_text(
-        self,
-        pattern: str,
-        use_regex: bool = False,
-        ignore_case: bool = False,
-        backwards: bool = False,
-    ):
-        self.last_search_spec = {
-            "pattern": pattern,
-            "use_regex": use_regex,
-            "ignore_case": ignore_case,
-            "backwards": backwards,
-        }
+        for i in range(self.current_search_index + 1, len(self.lines)):
+            if self._matches(self.lines[i]):
+                self.current_search_index = i
+                self.scroll_bar.setValue(i)
+                self.selection_start_line = self.selection_end_line = i
+                self.update()
+                return i
 
-        if self.current_line_location > len(self.lines) - 1:
-            self.current_line_location = len(self.lines) - 1
+        # no match → clear selection
+        self.selection_start_line = None
+        self.selection_end_line = None
+        self.update()
 
-        find_func = (
-            find_next_index_with_target_parallel_concurrent
-            if len(self.lines) > 500_000
-            else find_next_index_with_target_serial
-        )
+        return -1
 
-        result = find_func(
-            lines=self.lines,
-            target=pattern,
-            start_line=self.current_line_location,
-            direction="backward" if backwards else "forward",
-            is_regex=use_regex,
-            ignore_case=ignore_case,
-        )
+    def find_prev(self):
+        if not self.last_search_pattern:
+            return -1
+        # ensure compiled if regex
+        if self.last_is_regex and (self._last_regex is None or self._last_regex.pattern != self.last_search_pattern):
+            if not self._compile_regex(self.last_search_pattern):
+                return -1
 
-        if result >= 0:
-            self.scroll_bar.setValue(result)
-            self.current_line_location = result
-            self.update()
-        else:
-            QMessageBox.critical(
-                self,
-                "Search Error",
-                f"{'BACKWARD' if backwards else 'FORWARD'} SEARCH ERROR: Unable to locate '{pattern}' "
-                f"in text starting from line {self.current_line_location}.",
-                QMessageBox.StandardButton.Ok,
-            )
+        for i in range(self.current_search_index - 1, -1, -1):
+            if self._matches(self.lines[i]):
+                self.current_search_index = i
+                self.scroll_bar.setValue(i)
+                self.selection_start_line = self.selection_end_line = i
+                self.update()
+                return i
 
-    def query_search(self):
-        if not self.lines:
-            QMessageBox.warning(self, "Warning", "There is currently no text to search.", QMessageBox.StandardButton.Ok)
-            return
+        # no match → clear selection
+        self.selection_start_line = None
+        self.selection_end_line = None
+        self.update()
 
-        self.search_dialog.ok = False
-        self.search_dialog.ui.checkBoxRegEx.setChecked(self.last_search_spec.get("use_regex", False))
-        self.search_dialog.ui.checkBoxIgnoreCase.setChecked(self.last_search_spec.get("ignore_case", False))
-        self.search_dialog.exec()
+        return -1
 
-        if self.search_dialog.ok:
-            self.last_search_spec = {
-                "pattern": self.search_dialog.ui.lineEditSearchText.text(),
-                "use_regex": self.search_dialog.ui.checkBoxRegEx.isChecked(),
-                "ignore_case": self.search_dialog.ui.checkBoxIgnoreCase.isChecked(),
-                "backwards": self.search_dialog.backwards,
-            }
-            self.find_text(**self.last_search_spec)
+    def pause_writes(self):
+        """Pause processing of pending lines to UI. Writes to buffer continue."""
+        self.processing_paused = True
+        # Timer will naturally stop scheduling new singleShots
 
-    def has_selection(self) -> bool:
-        return 0 <= self.current_line_location < len(self.lines)
+    def resume_writes(self):
+        """Resume processing of pending lines to UI."""
+        self.processing_paused = False
+        # Restart the processing timer immediately
+        QTimer.singleShot(0, self.process_pending_lines)
 
-    def copy_all_to_clipboard(self):
-        QApplication.instance().clipboard().setText(self.get_text())
-        # TODO: move this to a dialog box?
-        # self.write(
-        #     "Copied contents of this window to the clipboard.",
-        # )
+    def is_paused(self) -> bool:
+        """Check if UI processing is paused."""
+        return self.processing_paused
 
-    def copy_line_to_clipboard(self):
-        if self.has_selection():
-            line_text = self.lines[self.current_line_location]
-            QApplication.instance().clipboard().setText(line_text)
-            # TODO: Move this to a dialog box?
-            # self.write("Copied the selected line to the clipboard.")
-        else:
-            # FIXME: Move This To A Dialog Box!!
-            # self.write("No valid line is selected to copy.")
-            ...
+
+class CustomLargeTextView(LargeTextView):
+    """
+    Same as LargeTextView, but with extra context menu suitable for the NormalOutputWindow in EPIC
+    """
+
+    def contextMenuEvent(self, event: QtGui.QContextMenuEvent):
+        device_file_exists = bool(config.device_cfg.device_file) and Path(config.device_cfg.device_file).is_file()
+        rule_file_exists = bool(config.device_cfg.rule_files) and Path(config.device_cfg.rule_files[0]).is_file()
+        sim_setup = device_file_exists and rule_file_exists
+        #running = COORDINATOR.state in (SimState.running, SimState.timed_out)
+        running = (self.parent().run_state == RUNNING) and (not self.parent().run_state == PAUSED)
+
+        # define context menu
+
+        menu = QMenu(self)
+        copy_action = menu.addAction("Copy")
+        select_all_action = menu.addAction("Select All")
+        find_action = menu.addAction("Find...")
+        clear_action = menu.addAction("Clear")
+        menu.addSeparator()
+        stop_action = menu.addAction("Stop Simulation")
+        menu.addSeparator()
+        open_output_action = menu.addAction("Open Normal Output Text")
+        edit_rules_action = menu.addAction("Edit Production Rule File")
+        edit_data_action = menu.addAction("Edit Data Output File")
+        open_folder_action = menu.addAction("Open Project Folder")
+        menu.addSeparator()
+        quit_action = menu.addAction("Quit Application")
+
+        # Decide Which Items Are Enabled
+
+        find_action.setEnabled(not running)
+        clear_action.setEnabled(not running)
+        open_output_action.setEnabled(not running)
+        open_folder_action.setEnabled(device_file_exists and not running)
+
+        edit_data_action.setEnabled(sim_setup and not running)
+        edit_rules_action.setEnabled(sim_setup and not running)
+
+        copy_action.setEnabled(bool(self.selection_start_line or self.selection_end_line) and not running)
+
+        stop_action.setEnabled(sim_setup and (running or self.parent().run_state == PAUSED))
+
+        # process menu
+        action = menu.exec(self.parent().mapToGlobal(event if isinstance(event, QPoint) else event.pos()))
+
+        if action == copy_action:
+            self.copy_selected_text()
+        elif action == select_all_action:
+            self.select_all()
+        elif action == find_action:
+            self.show_search_dialog()
+        elif action == clear_action:
+            self.clear()
+        elif action == stop_action:
+            self._parent.halt_simulation()
+        elif action == open_output_action:
+            self._parent.launch_editor(which_file="NormalOut")
+        elif action == edit_rules_action:
+            self._parent.launch_editor(which_file="RuleFile")
+        elif action == edit_data_action:
+            self._parent.launch_editor(which_file="DataFile")
+        elif action == open_folder_action:
+            operating_system = platform.system()
+            if operating_system == "Linux":
+                open_cmd = "xdg-open"
+            elif operating_system == "Darwin":
+                open_cmd = "open"
+            elif operating_system == "Windows":
+                open_cmd = "explorer"
+            else:
+                open_cmd = ""
+                self.parent().write(f"ERROR: Opening project folder when OS=='{operating_system}' is not yet implemented!")
+            if open_cmd and config.device_cfg.device_file:
+                cmd = [open_cmd, str(Path(config.device_cfg.device_file).resolve().parent)]
+                subprocess.run(args=cmd)
+        elif action == quit_action:
+            # self._parent.halt_simulation()
+            self._parent.close()
 
 
 if __name__ == "__main__":
+    from qtpy.QtWidgets import QMainWindow, QApplication
+    from qtpy.QtCore import QTimer
+    import timeit
+    import sys
 
     class LTTTestMainWindow(QMainWindow):
         def __init__(self):
             super().__init__()
             self.setWindowTitle("Large Text Viewer")
 
-            self.viewer = LargeTextView(update_frequency_ms=50)
+            self.viewer = CustomLargeTextView(parent=self)
+            self.viewer.cache_writes = True
             self.viewer.setFixedSize(800, 600)
             self.setCentralWidget(self.viewer)
 
@@ -315,25 +507,22 @@ if __name__ == "__main__":
             QTimer.singleShot(0, self.populate_text)
 
         def populate_text(self):
-            # n = 33_000_000
-            n = 10_000_000
+            n = 241_511
             # n = 1_000_000
-            # n = 100_000
-            # n = 1000
             start = timeit.default_timer()
-            batch_size = 5000  # Number of lines per batch
+            batch_size = 10  # Number of lines per batch
             buffer = []
 
             for i in range(n):
                 buffer.append(f"Line {i}")
                 if len(buffer) >= batch_size:
-                    self.viewer.append_text("\n".join(buffer))
+                    self.viewer.write("\n".join(buffer))
                     buffer.clear()
                     QApplication.processEvents()
 
             if buffer:
-                self.viewer.append_text("\n".join(buffer))
-
+                self.viewer.write("\n".join(buffer))
+            self.viewer.cache_writes = False
             print(f"populate_text added {n} lines in {timeit.default_timer() - start} sec.")
 
     app = QApplication(sys.argv)

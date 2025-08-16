@@ -810,17 +810,18 @@ class Simulation:
         self.parent.enable_view_updates(True)
         self.parent.enable_text_updates(True)
 
-        _ = self.wait_until_text_outputs_are_idle()
+        # _ = self.wait_until_text_outputs_are_idle()  # TODO: DELME
 
         self.write(f"\n{e_info} Run paused\n", copy_to_trace=True)
 
-    def wait_until_text_outputs_are_idle(self) -> bool:
-        start = time.time()
-        while time.time() - start < 3.0:
-            QCoreApplication.processEvents(QEventLoop.AllEvents, 1000)
-            if self.parent.normalPlainTextEditOutput.is_idle or self.parent.tracePlainTextEditOutput.is_idle:
-                break
-        return True
+    # TODO: DELME
+    # def wait_until_text_outputs_are_idle(self) -> bool:
+    #     start = time.time()
+    #     while time.time() - start < 3.0:
+    #         QCoreApplication.processEvents(QEventLoop.ProcessEventsFlag.AllEvents, 1000)
+    #         if self.parent.normalPlainTextEditOutput.is_idle or self.parent.tracePlainTextEditOutput.is_idle:
+    #             break
+    #     return True
 
     def halt_simulation(self, reason: str = "", extra: str = ""):
         try:
@@ -842,7 +843,7 @@ class Simulation:
         self.parent.enable_view_updates(True)
         self.parent.enable_text_updates(True)
 
-        _ = self.wait_until_text_outputs_are_idle()
+        # _ = self.wait_until_text_outputs_are_idle()  # TODO: DELME
 
         if not reason:
             self.write(f"\n{e_bangbang} Run halted\n")

@@ -201,12 +201,6 @@ def setup_menu(window):
 def setup_menu_connections(window):
     # Connect menu actions to slots and set shortcuts
 
-    # Find actions
-    window.actionFind.triggered.connect(window.normalPlainTextEditOutput.query_search)
-    window.actionFind.setShortcut("Ctrl+F")
-    window.actionFindNext.triggered.connect(window.normalPlainTextEditOutput.continue_find_text)
-    window.actionFindNext.setShortcut("F3")
-
     # File menu actions
     window.actionQuit.triggered.connect(window.close)
     window.actionQuit.setShortcut("Ctrl+Q")

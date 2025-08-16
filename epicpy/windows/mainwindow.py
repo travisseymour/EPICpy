@@ -37,7 +37,7 @@ from epicpy.utils.apputils import clear_font, run_without_waiting, has_epiccoder
 from epicpy import get_resource
 from epicpy.utils.defaultfont import get_default_font
 from epicpy.utils.update_utils import update_available
-from epicpy.widgets.largetextview import LargeTextView
+from epicpy.widgets.largetextview import LargeTextView, CustomLargeTextView
 from epicpy.windows import mainwindow_menu
 from epicpy.windows.appstyle import set_dark_style, set_light_style
 from epicpy.windows.mainwindow_utils import get_desktop_usable_geometry, get_desktop_geometry
@@ -198,7 +198,7 @@ class HorizontalDockArea(QMainWindow):
                 group.append(dock)
                 sizes.append(info.get("width", dock.width()))
         if group:
-            self.resizeDocks(group, sizes, Qt.Horizontal)
+            self.resizeDocks(group, sizes, Qt.Orientation.Horizontal)
 
 
 class MainWin(QMainWindow):
@@ -266,14 +266,13 @@ class MainWin(QMainWindow):
         self.default_middle_custom_settings: dict = {}
 
         # add central widget and setup
-        self.normalPlainTextEditOutput = LargeTextView(enable_context_menu=False)
+        self.normalPlainTextEditOutput = CustomLargeTextView()
         self.normalPlainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.normalPlainTextEditOutput.setObjectName("MainWindow")  # "plainTextEditOutput"
-        self.normalPlainTextEditOutput.setPlainText(f'Normal Out! ({datetime.datetime.now().strftime("%r")})\n')
         update = update_available()
-        if update:
-            self.normalPlainTextEditOutput.append_text(update)
-        self.normalPlainTextEditOutput.customContextMenuRequested.connect(self.normal_search_context_menu)
+        update_msg = f'\n{update}\n'if update else ""
+        self.normalPlainTextEditOutput.write( f'Normal Out! ({datetime.datetime.now().strftime("%r")}){update_msg}' )
+        # self.normalPlainTextEditOutput.customContextMenuRequested.connect(self.normal_search_context_menu) # TODO: DELME
         self.normal_out_view = EPICTextViewCachedWrite(text_widget=self.normalPlainTextEditOutput)
 
         # attach Normal_out and PPS_out output to this window
@@ -283,11 +282,11 @@ class MainWin(QMainWindow):
 
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
         # connect Trace_out now
-        self.tracePlainTextEditOutput = LargeTextView(enable_context_menu=False)
+        self.tracePlainTextEditOutput = LargeTextView()
         self.tracePlainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tracePlainTextEditOutput.setObjectName("TraceWindow")
-        self.tracePlainTextEditOutput.setPlainText(f'Trace Out! ({datetime.datetime.now().strftime("%r")})\n')
-        self.normalPlainTextEditOutput.customContextMenuRequested.connect(self.trace_search_context_menu)
+        self.tracePlainTextEditOutput.write(f'Trace Out! ({datetime.datetime.now().strftime("%r")})\n')
+        # self.normalPlainTextEditOutput.customContextMenuRequested.connect(self.trace_search_context_menu) # TODL: DELME
         self.trace_out_view = EPICTextViewCachedWrite(text_widget=self.tracePlainTextEditOutput)
 
         # attach TRACE_out output to this window
@@ -577,7 +576,7 @@ class MainWin(QMainWindow):
                 self.auditory_sensory_view,
                 self.auditory_perceptual_view,
             )
-        except:  # broad on purpose!
+        except Exception:  # broad on purpose!
             ...
 
         self.clear_output_windows()
@@ -895,7 +894,7 @@ class MainWin(QMainWindow):
 
         self.remove_file_loggers()
 
-        _ = self.layout_save()  # regular and custom
+        self.layout_save()  # regular and custom
 
         self.stats_win.can_close = True
         self.stats_win.close()  # destroy()
@@ -915,7 +914,7 @@ class MainWin(QMainWindow):
                 self.auditory_sensory_view,
                 self.auditory_perceptual_view,
             )
-        except:
+        except Exception:
             pass
 
         if self.simulation:
@@ -937,7 +936,8 @@ class MainWin(QMainWindow):
 
         super().closeEvent(event)
 
-    def update_theme(self):
+    @staticmethod
+    def update_theme():
         try:
             scheme = QGuiApplication.styleHints().colorScheme()
             if scheme == Qt.ColorScheme.Dark:
@@ -1457,9 +1457,9 @@ class MainWin(QMainWindow):
             # it's pretty ugly!
             file_dialog.setOption(QFileDialog.Option.DontUseNativeDialog, True)
         file, _ = file_dialog.getSaveFileName(
-            None,
+            parent=None,
             caption=f"Specify {kind} Output File",
-            directory=str(start_file),
+            dir=str(start_file),
             filter=_filter,
             selectedFilter=initial_filter,
         )
@@ -1676,113 +1676,114 @@ class MainWin(QMainWindow):
         self.context_menu.addSeparator()
         self.context_items["Quit"] = self.context_menu.addAction("Quit")
 
-    def normal_search_context_menu(self, event):
-        device_file = config.device_cfg.device_file
-        rules_file = config.device_cfg.rule_files[0] if config.device_cfg.rule_files else ""
-
-        if self.run_state == RUNNING:
-            self.disable_all_context_items()
-            for item in ["Stop", "EditPRS", "OpenOutput", "Quit"]:
-                try:
-                    self.context_items[item].setEnabled(True)
-                except KeyError:
-                    ...
-        else:
-            self.disable_all_context_items()
-
-            self.context_items["Search"].setEnabled(True)
-
-            self.context_items["Copy"].setEnabled(True)
-            self.context_items["CopyLine"].setEnabled(self.normalPlainTextEditOutput.has_selection())
-            self.context_items["Clear"].setEnabled(True)
-
-            self.context_items["OpenOutput"].setEnabled(True)
-
-            if self.run_state:
-                self.context_items["EditData"].setEnabled(True)
-
-            if Path(rules_file).is_file():
-                self.context_items["EditRules"].setEnabled(True)
-
-            if Path(device_file).is_file():
-                self.context_items["OpenFolder"].setEnabled(True)
-
-            self.context_items["Quit"].setEnabled(True)
-
-        if hasattr(self.context_menu, "exec"):
-            action = self.context_menu.exec(self.mapToGlobal(event))
-        elif hasattr(self.context_menu, "exec_"):
-            action = self.context_menu.exec_(self.mapToGlobal(event))
-        else:
-            self.write(f"Error bringing up context-menu (contact maintainer about exec/exe_ bug)")
-            action = None
-            return
-
-        if action is None:
-            return
-        elif action == self.context_items["Clear"]:
-            self.clear()
-        elif action == self.context_items["Search"]:
-            self.normalPlainTextEditOutput.query_search()
-        elif action == self.context_items["Quit"]:
-            self.close()
-        elif action == self.context_items["Stop"]:
-            self.halt_simulation()
-        # elif action == self.context_items['SelectAll']:
-        #     self.plainTextEditOutput.selectAll()
-        elif action == self.context_items["Copy"]:
-            self.normalPlainTextEditOutput.copy_all_to_clipboard()
-        elif action == self.context_items["CopyLine"]:
-            self.normalPlainTextEditOutput.copy_line_to_clipboard()
-        elif action == self.context_items["OpenOutput"]:
-            self.launchEditor(which_file="NormalOut")
-        elif action == self.context_items["EditRules"]:
-            self.launchEditor(which_file="RuleFile")
-        elif action == self.context_items["EditData"]:
-            self.launchEditor(which_file="DataFile")
-        elif action == self.context_items["OpenFolder"]:
-            OS = platform.system()
-            if OS == "Linux":
-                open_cmd = "xdg-open"
-            elif OS == "Darwin":
-                open_cmd = "open"
-            elif OS == "Windows":
-                open_cmd = "explorer"
-            else:
-                open_cmd = ""
-                err_msg = f"ERROR: Opening device folder when OS=='{OS}' is not yet implemented!"
-                self.write(emoji_box(err_msg, line="thick"))
-            if open_cmd:
-                cmd = [open_cmd, str(Path(device_file).resolve().parent)]
-                self.write(f'{" ".join(cmd)}')
-                subprocess.run(cmd)
-
-    def trace_search_context_menu(self, event):
-        contextMenu = QMenu(self)
-
-        if hasattr(self, "simulation") and self.run_state == RUNNING:
-            return
-
-        searchAction = contextMenu.addAction("Search")
-        clearAction = contextMenu.addAction("Clear")
-        # contextMenu.addSeparator()
-        # selectAllAction = contextMenu.addAction("Select All")
-        copyAction = contextMenu.addAction("Copy")
-        copyAction.setText(f"Copy All Lines)")
-        # contextMenu.addSeparator()
-
-        action = contextMenu.exec(self.mapToGlobal(event))
-
-        if action is None:
-            ...
-        elif action == clearAction:
-            self.tracePlainTextEditOutput.flush()
-        elif action == searchAction:
-            self.tracePlainTextEditOutput.query_search()
-        # elif action == selectAllAction:
-        #     self.tracePlainTextEditOutput.selectAll()
-        elif action == copyAction:
-            self.tracePlainTextEditOutput.copy_all_to_clipboard()
+    # TODO: DELETE THIS
+    # def normal_search_context_menu(self, event):
+    #     device_file = config.device_cfg.device_file
+    #     rules_file = config.device_cfg.rule_files[0] if config.device_cfg.rule_files else ""
+    #
+    #     if self.run_state == RUNNING:
+    #         self.disable_all_context_items()
+    #         for item in ["Stop", "EditPRS", "OpenOutput", "Quit"]:
+    #             try:
+    #                 self.context_items[item].setEnabled(True)
+    #             except KeyError:
+    #                 ...
+    #     else:
+    #         self.disable_all_context_items()
+    #
+    #         self.context_items["Search"].setEnabled(True)
+    #
+    #         self.context_items["Copy"].setEnabled(True)
+    #         self.context_items["CopyLine"].setEnabled(self.normalPlainTextEditOutput.has_selection())
+    #         self.context_items["Clear"].setEnabled(True)
+    #
+    #         self.context_items["OpenOutput"].setEnabled(True)
+    #
+    #         if self.run_state:
+    #             self.context_items["EditData"].setEnabled(True)
+    #
+    #         if Path(rules_file).is_file():
+    #             self.context_items["EditRules"].setEnabled(True)
+    #
+    #         if Path(device_file).is_file():
+    #             self.context_items["OpenFolder"].setEnabled(True)
+    #
+    #         self.context_items["Quit"].setEnabled(True)
+    #
+    #     if hasattr(self.context_menu, "exec"):
+    #         action = self.context_menu.exec(self.mapToGlobal(event))
+    #     elif hasattr(self.context_menu, "exec_"):
+    #         action = self.context_menu.exec_(self.mapToGlobal(event))
+    #     else:
+    #         self.write(f"Error bringing up context-menu (contact maintainer about exec/exe_ bug)")
+    #         action = None
+    #         return
+    #
+    #     if action is None:
+    #         return
+    #     elif action == self.context_items["Clear"]:
+    #         self.clear()
+    #     elif action == self.context_items["Search"]:
+    #         self.normalPlainTextEditOutput.query_search()
+    #     elif action == self.context_items["Quit"]:
+    #         self.close()
+    #     elif action == self.context_items["Stop"]:
+    #         self.halt_simulation()
+    #     # elif action == self.context_items['SelectAll']:
+    #     #     self.plainTextEditOutput.selectAll()
+    #     elif action == self.context_items["Copy"]:
+    #         self.normalPlainTextEditOutput.copy_all_to_clipboard()
+    #     elif action == self.context_items["CopyLine"]:
+    #         self.normalPlainTextEditOutput.copy_line_to_clipboard()
+    #     elif action == self.context_items["OpenOutput"]:
+    #         self.launchEditor(which_file="NormalOut")
+    #     elif action == self.context_items["EditRules"]:
+    #         self.launchEditor(which_file="RuleFile")
+    #     elif action == self.context_items["EditData"]:
+    #         self.launchEditor(which_file="DataFile")
+    #     elif action == self.context_items["OpenFolder"]:
+    #         OS = platform.system()
+    #         if OS == "Linux":
+    #             open_cmd = "xdg-open"
+    #         elif OS == "Darwin":
+    #             open_cmd = "open"
+    #         elif OS == "Windows":
+    #             open_cmd = "explorer"
+    #         else:
+    #             open_cmd = ""
+    #             err_msg = f"ERROR: Opening device folder when OS=='{OS}' is not yet implemented!"
+    #             self.write(emoji_box(err_msg, line="thick"))
+    #         if open_cmd:
+    #             cmd = [open_cmd, str(Path(device_file).resolve().parent)]
+    #             self.write(f'{" ".join(cmd)}')
+    #             subprocess.run(cmd)
+    #
+    # def trace_search_context_menu(self, event):
+    #     contextMenu = QMenu(self)
+    #
+    #     if hasattr(self, "simulation") and self.run_state == RUNNING:
+    #         return
+    #
+    #     searchAction = contextMenu.addAction("Search")
+    #     clearAction = contextMenu.addAction("Clear")
+    #     # contextMenu.addSeparator()
+    #     # selectAllAction = contextMenu.addAction("Select All")
+    #     copyAction = contextMenu.addAction("Copy")
+    #     copyAction.setText(f"Copy All Lines)")
+    #     # contextMenu.addSeparator()
+    #
+    #     action = contextMenu.exec(self.mapToGlobal(event))
+    #
+    #     if action is None:
+    #         ...
+    #     elif action == clearAction:
+    #         self.tracePlainTextEditOutput.flush()
+    #     elif action == searchAction:
+    #         self.tracePlainTextEditOutput.query_search()
+    #     # elif action == selectAllAction:
+    #     #     self.tracePlainTextEditOutput.selectAll()
+    #     elif action == copyAction:
+    #         self.tracePlainTextEditOutput.copy_all_to_clipboard()
 
     def launchEditor(self, which_file: str = "NormalOut"):
         if which_file == "NormalOut":
@@ -1838,7 +1839,7 @@ class MainWin(QMainWindow):
             try:
                 # user has specified the system default editor
                 ec_path = has_epiccoder()
-                OS = platform.system()
+                _os = platform.system()
                 if (
                     which_file != "DataFile"
                     and hasattr(config.app_cfg, "text_editor")
@@ -1853,22 +1854,22 @@ class MainWin(QMainWindow):
                     and ec_path
                 ):
                     open_cmd = "epiccoder"  # ec_path
-                elif OS == "Linux":
+                elif _os == "Linux":
                     open_cmd = "xdg-open"
-                elif OS == "Darwin":
+                elif _os == "Darwin":
                     open_cmd = "open"
-                elif OS == "Windows":
+                elif _os == "Windows":
                     open_cmd = "start"
                 else:
                     open_cmd = ""
                     err_msg = (
                         f"ERROR: EPICpy can only open system default editor on\n"
                         f"Linux, Darwin, and Windows based operating systems.\n"
-                        f"It does not currently support your operating system type ({OS})."
+                        f"It does not currently support your operating system type ({_os})."
                     )
                     self.write(emoji_box(err_msg, line="thick"))
                 if open_cmd:
-                    if OS == "Windows":
+                    if _os == "Windows":
                         os.startfile(str(file_path.resolve()))
                     else:
                         # subprocess.run([open_cmd, str(file_path.resolve())])
@@ -1888,13 +1889,14 @@ class MainWin(QMainWindow):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
             self.close()
-        elif event.key() == Qt.Key.Key_F3:
-            if not self.normalPlainTextEditOutput.continue_find_text():
-                self.normalPlainTextEditOutput.query_search()
-            else:
-                super().keyPressEvent(event)
-        elif event.key() == Qt.Key.Key_F and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
-            self.normalPlainTextEditOutput.query_search()
+        # TODO: Delete this
+        # elif event.key() == Qt.Key.Key_F3:
+        #     if not self.normalPlainTextEditOutput.continue_find_text():
+        #         self.normalPlainTextEditOutput.query_search()
+        #     else:
+        #         super().keyPressEvent(event)
+        # elif event.key() == Qt.Key.Key_F and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+        #     self.normalPlainTextEditOutput.query_search()
         else:
             super().keyPressEvent(event)
 
