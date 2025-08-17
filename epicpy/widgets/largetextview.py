@@ -416,7 +416,7 @@ class CustomLargeTextView(LargeTextView):
         rule_file_exists = bool(config.device_cfg.rule_files) and Path(config.device_cfg.rule_files[0]).is_file()
         sim_setup = device_file_exists and rule_file_exists
         #running = COORDINATOR.state in (SimState.running, SimState.timed_out)
-        running = (self.parent().run_state == RUNNING) and (not self.parent().run_state == PAUSED)
+        running = (self._parent.run_state == RUNNING) and (not self._parent.run_state == PAUSED)
 
         # define context menu
 
@@ -447,7 +447,7 @@ class CustomLargeTextView(LargeTextView):
 
         copy_action.setEnabled(bool(self.selection_start_line or self.selection_end_line) and not running)
 
-        stop_action.setEnabled(sim_setup and (running or self.parent().run_state == PAUSED))
+        stop_action.setEnabled(sim_setup and (running or self._parent.run_state == PAUSED))
 
         # process menu
         action = menu.exec(self.parent().mapToGlobal(event if isinstance(event, QPoint) else event.pos()))
@@ -463,11 +463,11 @@ class CustomLargeTextView(LargeTextView):
         elif action == stop_action:
             self._parent.halt_simulation()
         elif action == open_output_action:
-            self._parent.launch_editor(which_file="NormalOut")
+            self._parent.launchEditor(which_file="NormalOut")
         elif action == edit_rules_action:
-            self._parent.launch_editor(which_file="RuleFile")
+            self._parent.launchEditor(which_file="RuleFile")
         elif action == edit_data_action:
-            self._parent.launch_editor(which_file="DataFile")
+            self._parent.launchEditor(which_file="DataFile")
         elif action == open_folder_action:
             operating_system = platform.system()
             if operating_system == "Linux":
@@ -478,7 +478,7 @@ class CustomLargeTextView(LargeTextView):
                 open_cmd = "explorer"
             else:
                 open_cmd = ""
-                self.parent().write(f"ERROR: Opening project folder when OS=='{operating_system}' is not yet implemented!")
+                self._parent.write(f"ERROR: Opening project folder when OS=='{operating_system}' is not yet implemented!")
             if open_cmd and config.device_cfg.device_file:
                 cmd = [open_cmd, str(Path(config.device_cfg.device_file).resolve().parent)]
                 subprocess.run(args=cmd)

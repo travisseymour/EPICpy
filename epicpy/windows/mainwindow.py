@@ -266,13 +266,15 @@ class MainWin(QMainWindow):
         self.default_middle_custom_settings: dict = {}
 
         # add central widget and setup
-        self.normalPlainTextEditOutput = CustomLargeTextView()
+        self.normalPlainTextEditOutput = CustomLargeTextView(parent=self, enable_shortcuts=False)
         self.normalPlainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.normalPlainTextEditOutput.setObjectName("MainWindow")  # "plainTextEditOutput"
         update = update_available()
         update_msg = f'\n{update}\n'if update else ""
         self.normalPlainTextEditOutput.write( f'Normal Out! ({datetime.datetime.now().strftime("%r")}){update_msg}' )
-        # self.normalPlainTextEditOutput.customContextMenuRequested.connect(self.normal_search_context_menu) # TODO: DELME
+        self.normalPlainTextEditOutput.customContextMenuRequested.connect(
+            self.normalPlainTextEditOutput.contextMenuEvent
+        )
         self.normal_out_view = EPICTextViewCachedWrite(text_widget=self.normalPlainTextEditOutput)
 
         # attach Normal_out and PPS_out output to this window
@@ -282,11 +284,13 @@ class MainWin(QMainWindow):
 
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
         # connect Trace_out now
-        self.tracePlainTextEditOutput = LargeTextView()
+        self.tracePlainTextEditOutput = LargeTextView(self)
         self.tracePlainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tracePlainTextEditOutput.setObjectName("TraceWindow")
         self.tracePlainTextEditOutput.write(f'Trace Out! ({datetime.datetime.now().strftime("%r")})\n')
-        # self.normalPlainTextEditOutput.customContextMenuRequested.connect(self.trace_search_context_menu) # TODL: DELME
+        self.tracePlainTextEditOutput.customContextMenuRequested.connect(
+            self.tracePlainTextEditOutput.contextMenuEvent
+        )
         self.trace_out_view = EPICTextViewCachedWrite(text_widget=self.tracePlainTextEditOutput)
 
         # attach TRACE_out output to this window
