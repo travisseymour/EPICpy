@@ -92,7 +92,7 @@ from epicpy.views.epicpy_visualview import EPICVisualView
 from epicpy.views.epicpy_auditoryview import EPICAuditoryView
 
 from epicpy.epiclib.epiclib.pps_globals import PPS_out
-from epicpy.epiclib.epiclib.output_tee_globals import (Normal_out, Trace_out, Exception_out, Debug_out, Device_out)
+from epicpy.epiclib.epiclib.output_tee_globals import (Normal_out, Trace_out, Exception_out, Debug_out, Device_out, Stats_out)
 
 
 class HorizontalDockArea(QMainWindow):
@@ -266,6 +266,7 @@ class MainWin(QMainWindow):
 
         # stats widget
         self.stats_win = StatsWidget(self)
+        Stats_out.add_py_stream(self.stats_win)
 
         # init output logging
         self.normal_file_output_never_updated = True
@@ -821,28 +822,41 @@ class MainWin(QMainWindow):
 
     def closeEvent(self, event: QCloseEvent):
         if self.closing:
+            print('0. got duplicate close event')
             event.ignore()
             return
 
         self.closing = True
 
+        print('Shutting Down EPICpy:')
+        print('---------------------')
+
+        print('1. Stopping sim')
         if self.run_state == RUNNING:
             self.halt_simulation()
 
-
+        print('2. Removing file loggers')
         self.remove_file_loggers()
 
+        print('3. Saving layout')
         self.layout_save()  # regular and custom
 
+        print('4. Close stats win')
         self.stats_win.can_close = True
         self.stats_win.close()  # destroy()
 
-        for view in chain(self.visual_views.values(), self.auditory_views.values()):
-            view.can_close = True
-            view.close()  # destroy()
+        print('5. Close views')
+        try:
+            for view in chain(self.visual_views.values(), self.auditory_views.values()):
+                view.can_close = True
+                view.close()  # destroy()
+        except Exception as e:
+            print(f'\tWARNING: Unable to successfully close all views.')
 
+        print('6. Close output files')
         self.close_output_files()
 
+        print('7. Remove views from model')
         try:
             self.simulation.remove_views_from_model(
                 self.visual_physical_view,
@@ -852,33 +866,36 @@ class MainWin(QMainWindow):
                 self.auditory_sensory_view,
                 self.auditory_perceptual_view,
             )
-        except Exception:
-            pass
+        except Exception as e:
+            print(f'\tWARNING: Unable to cleanly release views from model.')
 
+        print('8. Pausing and stopping simulation -- seems redundant, halted above')
         if self.simulation:
-            self.simulation.pause_simulation()
-            if self.simulation.model:
-                self.simulation.model.stop()
-            if self.simulation.device:
-                self.simulation.device.stop_simulation()
-            self.simulation.instance.shutdown_simulation()
+            try:
+                self.simulation.pause_simulation()
+                if self.simulation.model:
+                    self.simulation.model.stop()
+                if self.simulation.device:
+                    self.simulation.device.stop_simulation()
+                self.simulation.instance.shutdown_simulation()
+            except Exception as e:
+                log.warning(f'Unable to stop and shutdown simulation: {e}')
 
-        self.simulation.model = None
-        self.simulation.device = None
-        self.simulation.instance = None
-
+        print('9. Shutting down output tee instances')
         ot_info = zip(
-            ('Normal_out', 'Trace_out', 'Exception_out', 'Debug_out', 'Device_out', 'PPS_out'),
-            (Normal_out, Trace_out, Exception_out, Debug_out, Device_out, PPS_out)
+            ('Normal_out', 'Trace_out', 'Exception_out', 'Debug_out', 'Device_out', 'PPS_out', 'Stats_out'),
+            (Normal_out, Trace_out, Exception_out, Debug_out, Device_out, PPS_out, Stats_out)
         )
-        log.debug('Shutting down Output_tee instances:')
+
+        print('10. Shutting down Output_tee instances:')
         for ot_name, ot in ot_info:
-            log.debug(f'   {ot_name}...')
+            print(f'\t{ot_name}...')
             ot.py_flush()
             ot.clear_py_streams()
             ot.py_close()
-        log.debug('Output_tee shutdown finished.')
+        print('11. Output_tee shutdown finished.')
 
+        print('12. Closing application window.')
         super().closeEvent(event)
 
     @staticmethod

@@ -46,6 +46,23 @@ from qtpy.QtGui import QImage, QTextDocument
 from epicpy.utils.config import get_start_dir
 from loguru import logger as log
 
+SPECIAL_MESSAGE = \
+"""
+<h3><u><font color="orange">Important Notice</u></h3></font>
+<h4><font color="blue">New version of epicpydevice and models needed!</font></h4>
+
+As of EPICpy version <b>2025.8.18.1</b>, You will need new copies of <span style="white-space: pre; font-family: monospace;"><small><b>epicpydevice</small></b></span> and all demo devices.
+
+<br><br><b>If you have custom devices, make these changes</b>:
+
+<ul>
+  <li>Add this to imports: 
+  <span style="white-space: pre; font-family: monospace;"><br><small><b>from epicpydevice.output_tee_globals import (Device_out, Exception_out, Debug_out)</small></b></span>
+  </li>
+  <li>Replace any instances of <span style="white-space: pre; font-family: monospace;"><small><b>self.write</small></b></span> or <span style="white-space: pre; font-family: monospace;"><small><b>parent.write</small></b></span> with <span style="white-space: pre; font-family: monospace;"><small><b>Device_out</small></b></span><li>
+  <li>Note that using <span style="white-space: pre; font-family: monospace;"><small><b>self.stats_write</small></b></span> is still the right way for devices to send stats and graph objects to the Stats Ouput Window.</span></li>
+</ul>
+"""
 
 class CustomStatsTextBrowser(QTextBrowser):
     def __init__(self, parent=None):
@@ -183,24 +200,8 @@ class StatsWidget(QWidget):
         self.clearing: bool = False
 
         self.write(f"""{f'Stats Out! ({datetime.now().strftime("%r")})'}""")
-        self.write(
-            """
-            <h3><u><font color="orange">Important Notice</u></h3></font>
-            <h4><font color="blue">New version of epicpydevice and models needed!</font></h4>
-            
-            As of EPICpy version <b>2025.8.18.1</b>, You will need new copies of <span style="white-space: pre; font-family: monospace;"><small><b>epicpydevice</small></b></span> and all demo devices.
-            
-            <br><br><b>If you have custom devices, make these changes</b>:
-            
-            <ul>
-              <li>Add this to imports: 
-              <span style="white-space: pre; font-family: monospace;"><br><small><b>from epicpydevice.output_tee_globals import (Device_out, Exception_out, Debug_out)</small></b></span>
-              </li>
-              <li>Replace any instances of <span style="white-space: pre; font-family: monospace;"><small><b>self.write</small></b></span> or <span style="white-space: pre; font-family: monospace;"><small><b>parent.write</small></b></span> with <span style="white-space: pre; font-family: monospace;"><small><b>Device_out</small></b></span><li>
-              <li>Note that using <span style="white-space: pre; font-family: monospace;"><small><b>self.stats_write</small></b></span> is still the right way for devices to send stats and graph objects to the Stats Ouput Window.</span></li>
-            </ul>
-            """
-        )
+        if SPECIAL_MESSAGE:
+            self.write(SPECIAL_MESSAGE)
 
     def _write(self, text: str):
         """
@@ -329,9 +330,11 @@ class StatsWidget(QWidget):
 
 if __name__ == "__main__":
     import sys
+    from epicpy.epiclib.epiclib.output_tee_globals import Stats_out
 
     app = QApplication(sys.argv)
     win = StatsWidget(parent=None)
+    win.setGeometry(10,100,1024,768)
     win.show()
 
     # Example usage:
@@ -346,5 +349,26 @@ if __name__ == "__main__":
         "9TXL0Y4OHwAAAABJRU5ErkJggg==' />"
     )
     win.write(dummy_img_html)
+
+    Stats_out.add_py_stream(win)
+
+    check_icon_html = (
+        "<img src='data:image/svg+xml;utf8,"
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\">"
+        "<circle cx=\"8\" cy=\"8\" r=\"7\" fill=\"%2308c\"/>"
+        "<path d=\"M4 8l2 2 6-6\" stroke=\"%23fff\" stroke-width=\"2\" fill=\"none\" "
+        "stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
+        "</svg>' alt='ok'/>"
+    )
+
+    Stats_out(
+        f"""
+        <hr/>
+        <h3>This is a <font color="Red">Hamburger!!!</font>
+        <br>{check_icon_html}
+        <hr/>
+        <img src="https://www.python.org/static/img/python-logo.png" alt="PythonStatic">
+        """
+    )
 
     sys.exit(app.exec_())

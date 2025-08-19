@@ -18,6 +18,8 @@ from epicpy.utils.apputils import extract_from_zip
 from epicpy import get_resource
 from epicpy.widgets.largetextview import LargeTextView
 
+from epicpy.epiclib.epiclib.output_tee_globals import (Normal_out, Trace_out, Exception_out)
+
 """
 Code for testing various EPICpy functionality
 """
@@ -81,9 +83,9 @@ def setup_test_device_config():
 
 def setup_test_device_folder(window: QMainWindow):
     global TEST_DEVICE_FOLDER, DEVICE_BASE_FOLDER
-    window.write("Initializing EPICpy Testing...")
+    Normal_out("Initializing EPICpy Testing...")
     if TEST_DEVICE_FOLDER and TEST_DEVICE_FOLDER.is_dir():
-        window.write("  Test files already created.")
+        Normal_out("  Test files already created.")
         return True
 
     try:
@@ -95,12 +97,12 @@ def setup_test_device_folder(window: QMainWindow):
     try:
         devices = get_resource("other", "devices.zip")
     except Exception as e:
-        window.write(
+        Normal_out(
             f"  Unable to locate test device archive inside application package! {e}. Contact project maintainer."
         )
         return False
 
-    window.write("  Unzipping test device package...")
+    Normal_out("  Unzipping test device package...")
     try:
         extract_from_zip(
             zip_path=Path(devices),
@@ -112,15 +114,15 @@ def setup_test_device_folder(window: QMainWindow):
             DEVICE_BASE_FOLDER, "devices"
         ).is_dir(), "Uncompressed folder devices could not be located in Documents folder."
     except Exception as e:
-        window.write(f"ERROR: {e}")
+        Normal_out(f"ERROR: {e}")
         return False
 
     TEST_DEVICE_FOLDER = Path(DEVICE_BASE_FOLDER, "devices")
     if not TEST_DEVICE_FOLDER.is_dir():
-        window.write(f"  Failed to setup test device in {DEVICE_BASE_FOLDER}.")
+        Normal_out(f"  Failed to setup test device in {DEVICE_BASE_FOLDER}.")
         return False
     else:
-        window.write(f"  Successfully setup test device in {DEVICE_BASE_FOLDER}.")
+        Normal_out(f"  Successfully setup test device in {DEVICE_BASE_FOLDER}.")
         return True
 
 
@@ -221,7 +223,7 @@ def add_result(name: str, worked: bool, outcome: str):
 def wait(window: QMainWindow, duration: float, msg: str = ""):
     start = timeit.default_timer()
     if msg:
-        window.write(msg)
+        Normal_out(msg)
     while True:
         QCoreApplication.processEvents()
         if timeit.default_timer() - start > duration:
@@ -404,7 +406,7 @@ def run_model_test(
     if see_results:
         wait(window, 2, "\nCreating Results Output, Please wait...")
         show_results()
-        window.write("Test Complete.")
+        Normal_out("Test Complete.")
 
     if close_on_finish:
         window.close()
@@ -423,7 +425,7 @@ def run_all_model_tests(window: QMainWindow, close_on_finish: bool = True, see_r
     if see_results:
         wait(window, 2, "\nCreating Results Output, Please wait...")
         show_results()
-        window.write("Test Finished.")
+        Normal_out("Test Finished.")
 
     wait(window, 2)
     if close_on_finish:
