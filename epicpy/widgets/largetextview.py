@@ -3,7 +3,6 @@ import subprocess
 import re
 from pathlib import Path
 import sys
-
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QWidget,
@@ -27,6 +26,7 @@ from qtpy.QtGui import QPainter, QFontMetrics, QFont, QContextMenuEvent, QKeySeq
 from epicpy.constants.stateconstants import PAUSED, RUNNING
 from epicpy.utils import config
 
+from epicpy.epiclib.epiclib.output_tee_globals import Exception_out
 
 class SearchDialog(QDialog):
     def __init__(self, parent=None, start_text: str = "", start_is_regex: bool = False):
@@ -478,7 +478,11 @@ class CustomLargeTextView(LargeTextView):
                 open_cmd = "explorer"
             else:
                 open_cmd = ""
-                self._parent.write(f"ERROR: Opening project folder when OS=='{operating_system}' is not yet implemented!")
+                msg = f"ERROR: Opening project folder when OS=='{operating_system}' is not yet implemented!"
+                try:
+                    Exception_out(msg)
+                except Exception:
+                    print(msg)
             if open_cmd and config.device_cfg.device_file:
                 cmd = [open_cmd, str(Path(config.device_cfg.device_file).resolve().parent)]
                 subprocess.run(args=cmd)

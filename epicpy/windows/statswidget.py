@@ -186,26 +186,19 @@ class StatsWidget(QWidget):
         self.write(
             """
             <h3><u><font color="orange">Important Notice</u></h3></font>
-            <h4><font color="blue">Update 'write' function in epicpydevice</font></h4>
+            <h4><font color="blue">New version of epicpydevice and models needed!</font></h4>
             
-            As of EPICpy version <b>2025.3.25.1</b>, those who have existing copies of the epicpydevice folder, will need to update one of its files:
-
+            As of EPICpy version <b>2025.8.18.1</b>, You will need new copies of <span style="white-space: pre; font-family: monospace;"><small><b>epicpydevice</small></b></span> and all demo devices.
+            
+            <br><br><b>If you have custom devices, make these changes</b>:
+            
             <ul>
-              <li>Open epicpydevice/epicpy_device_base.py in a text editor.</li>
-              <li>Replace the existing definition of the `write` method with this one:</li>
+              <li>Add this to imports: 
+              <span style="white-space: pre; font-family: monospace;"><br><small><b>from epicpydevice.output_tee_globals import (Device_out, Exception_out, Debug_out)</small></b></span>
+              </li>
+              <li>Replace any instances of <span style="white-space: pre; font-family: monospace;"><small><b>self.write</small></b></span> or <span style="white-space: pre; font-family: monospace;"><small><b>parent.write</small></b></span> with <span style="white-space: pre; font-family: monospace;"><small><b>Device_out</small></b></span><li>
+              <li>Note that using <span style="white-space: pre; font-family: monospace;"><small><b>self.stats_write</small></b></span> is still the right way for devices to send stats and graph objects to the Stats Ouput Window.</span></li>
             </ul>
-
-            <pre>
-              <code class="language-python">
-              def write(self, text: str):
-                  '''
-                  Device write method for text that adds newlines properly. 
-                  This will be dynamically added to the device object after 
-                  it has been loaded and instantiated.
-                  '''
-                  self.parent.write(text, copy_to_trace=True)
-              </code>
-            </pre>
             """
         )
 

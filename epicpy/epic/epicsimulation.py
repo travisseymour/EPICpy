@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import importlib
-import time
 import warnings
 from typing import Optional, List
 from pathlib import Path
@@ -27,7 +26,7 @@ import sys
 import weakref
 import timeit
 
-from qtpy.QtCore import QTimer, QCoreApplication, QEventLoop
+from qtpy.QtCore import QTimer
 from qtpy.QtWidgets import QFileDialog
 
 from epicpy.utils.apputils import unpack_param_string, loading_cursor
@@ -41,8 +40,6 @@ from epicpy.dialogs.loggingwindow import LoggingSettingsWin
 
 from epicpy.utils import config
 
-from loguru import logger as log
-
 from epicpy.utils.modulereloader import reset_module
 from epicpy.views.epicpy_visualview import EPICVisualView
 
@@ -55,7 +52,8 @@ warnings.filterwarnings("ignore", module=r"^pandas")
 
 # KEEP HERE, NEEDED FOR DEVICES
 
-from epicpy.epiclib.epiclib import Model, Coordinator, Normal_out
+from epicpy.epiclib.epiclib.output_tee_globals import Normal_out, Trace_out, Exception_out
+from epicpy.epiclib.epiclib import Model, Coordinator
 from epicpy.epiclib.epiclib import set_visual_encoder_ptr, set_auditory_encoder_ptr
 
 try:
@@ -64,7 +62,7 @@ try:
     desc_param_loaded = True
 except:
     desc_param_loaded = False
-    log.warning(f'Failed to load "describe_parameters_u" from epiclib. Will not be able to dump parameters.')
+    Exception_out(f'WARNING: Failed to load "describe_parameters_u" from epiclib. Will not be able to dump parameters.')
 
 
 class Simulation:
@@ -92,8 +90,6 @@ class Simulation:
 
         self.steps_since_last_text_out = 0
         self.steps_run = 0
-
-        self.write = self.parent.write
 
         self.raw_device_param_string = ""
         self.param_set = []
@@ -132,7 +128,7 @@ class Simulation:
             self.model.set_trace_temporal(config.device_cfg.trace_temporal)
             self.model.set_trace_device(config.device_cfg.trace_device)
         except Exception as e:
-            self.write(f"\n❌ ERROR: Failed to update EPIC output or trace settings:\n{e}\n")
+            Normal_out(f"\n❌ ERROR: Failed to update EPIC output or trace settings:\n{e}\n")
 
     @loading_cursor
     def on_load_device(self, device_file: str = "", quiet: bool = False):
@@ -183,14 +179,14 @@ class Simulation:
 
         # make sure __init__.py exists in device folder
         if not Path(device_file_root, "../__init__.py").is_file():
-            self.write(
+            Normal_out(
                 f'\n{e_info} Unable to find "__init__.py" in device folder '
                 f"({str(device_file_root)}). Will attempt to create one.\n"
             )
             try:
                 Path(device_file_root, "../__init__.py").write_text("")
             except IOError:
-                self.write(
+                Normal_out(
                     f"\nERROR: Unable to create needed file \n"
                     f'"{str(Path(device_file_root, "../__init__.py"))}".\n'
                     f"If your device does not load correctly, you may need to\n"
@@ -225,7 +221,7 @@ class Simulation:
             globals()[module_name] = module
 
             if not quiet:
-                self.write(f"\n{e_info} loading device code from {device_file_p.name}...\n")
+                Normal_out(f"\n{e_info} loading device code from {device_file_p.name}...\n")
 
             # Dynamically retrieve the class and instantiate the object
             EpicDeviceClass = getattr(module, "EpicDevice", None)
@@ -235,8 +231,8 @@ class Simulation:
             self.device = EpicDeviceClass(ot=Normal_out, parent=self.parent, device_folder=device_file_p.parent)
 
             if not quiet:
-                self.write(f"\n{e_info} found EpicDevice class, created new device instance based on this class.\n")
-            self.write(f"\n{e_boxed_check} {self.device.device_name} device was created successfully.\n")
+                Normal_out(f"\n{e_info} found EpicDevice class, created new device instance based on this class.\n")
+            Normal_out(f"\n{e_boxed_check} {self.device.device_name} device was created successfully.\n")
 
             # must store default device params before we reload one from settings
             if hasattr(self.device, "condition_string"):
@@ -255,7 +251,7 @@ class Simulation:
                 self.device.set_parameter_string(config.device_cfg.device_params)
 
         except Exception as e:
-            self.write(f"\nERROR: Failed to create new EpicDevice from\n{device_file_p.name}!\n{e}\n")
+            Normal_out(f"\nERROR: Failed to create new EpicDevice from\n{device_file_p.name}!\n{e}\n")
             self.device = None
             self.parent.context = "UnKnown"
             return
@@ -263,7 +259,7 @@ class Simulation:
         try:
             assert self.device.processor_info()
         except AssertionError:
-            self.write(f"\nERROR: Created new device, but access to device_processor_pointer failed!\n")
+            Normal_out(f"\nERROR: Created new device, but access to device_processor_pointer failed!\n")
             self.device = None
             self.parent.context = "UnKnown"
             return
@@ -272,7 +268,7 @@ class Simulation:
         try:
             self.model = Model(self.device)
             if isinstance(self.model, Model):
-                self.write(f"\n{e_boxed_check} New Model() was successfully created with device.\n")
+                Normal_out(f"\n{e_boxed_check} New Model() was successfully created with device.\n")
             else:
                 raise EPICpyException(f"\n{e_boxed_x} Error creating new Model() with device.\n")
 
@@ -281,21 +277,21 @@ class Simulation:
             self.model.interconnect_device_and_human()
 
             # if self.model.compile() and self.model.initialize():
-            #     self.write(f"{e_boxed_check} Model() was successfully initialized.")
+            #     Normal_out(f"{e_boxed_check} Model() was successfully initialized.")
             # else:
             #     raise EPICpyException(f"{e_boxed_x} Error compiling and initializing Model().")
 
             self.update_model_output_settings()
 
         except Exception as e:
-            self.write(f"\nERROR: Simulation unable to properly connect new Device and Model:\n{e}\n")
+            Normal_out(f"\nERROR: Simulation unable to properly connect new Device and Model:\n{e}\n")
             self.device = None
             self.parent.context = "UnKnown"
             return
 
         self.parent.update_title()
         if not quiet:
-            self.write(f"\n{e_boxed_check} Successfully initialized device: {device_file}.\n")
+            Normal_out(f"\n{e_boxed_check} Successfully initialized device: {device_file}.\n")
 
         if self.device and self.model.get_compiled():
             self.parent.run_state = RUNNABLE
@@ -333,10 +329,10 @@ class Simulation:
         encoder = self.visual_encoder if kind == "Visual" else self.auditory_encoder
 
         if not encoder:
-            self.write(f"\nFailed to unload {kind} encoder...none appears to be currently loaded.\n")
+            Normal_out(f"\nFailed to unload {kind} encoder...none appears to be currently loaded.\n")
             return
         else:
-            self.write(f"\nAttempting to unload {kind} encoder...\n")
+            Normal_out(f"\nAttempting to unload {kind} encoder...\n")
 
         # go ahead and save now. Unlike in on_load_encoder(), we do this first.
         # If unload fails, it will still be effectively unloaded on session reload.
@@ -359,7 +355,7 @@ class Simulation:
                 # self.model.get_human_ptr().set_aditory_encoder_ptr( self.auditory_encoder )
                 set_auditory_encoder_ptr(self.model, self.auditory_encoder)
         except Exception as e:
-            self.write(
+            Normal_out(
                 f"\nERROR: Unable to unload {kind} encoder!\n"
                 f"[{e}]\n"
                 f"However, it won't be loaded the next time this device is loaded.\n",
@@ -372,7 +368,7 @@ class Simulation:
 
         self.parent.update_title()
 
-        self.write(f"\n{e_boxed_check} {kind} encoder successfully unloaded.\n")
+        Normal_out(f"\n{e_boxed_check} {kind} encoder successfully unloaded.\n")
 
     def on_load_encoder(self, kind: str, file: str = "", quiet: bool = False):
         assert kind in ("Auditory", "Visual")
@@ -417,7 +413,7 @@ class Simulation:
                 exec(f"reset_module({encoder_file_p.stem})")
 
                 if not quiet:
-                    self.write(f"\n{e_info} loading encoder from {encoder_file_p.name}...\n")
+                    Normal_out(f"\n{e_info} loading encoder from {encoder_file_p.name}...\n")
 
                 ul_name = encoder_file_p.stem.replace("_", " ").title()
                 if kind == "Visual":
@@ -426,17 +422,17 @@ class Simulation:
                     exec(f'self.auditory_encoder = {encoder_file_p.stem}.AuditoryEncoder("{ul_name}", self)')
 
                 if kind == "Visual":
-                    setattr(self.visual_encoder, "write", self.write)
+                    setattr(self.visual_encoder, "write", Normal_out)
                 else:
-                    setattr(self.auditory_encoder, "write", self.write)
+                    setattr(self.auditory_encoder, "write", Normal_out)
 
                 if not quiet:
-                    self.write(
+                    Normal_out(
                         f"\n{e_info} found {kind}Encoder class, creating new encoder instance based on this class...\n"
                     )
-                self.write(f"\n{e_boxed_check} {kind}encoder was created successfully.\n")
+                Normal_out(f"\n{e_boxed_check} {kind}encoder was created successfully.\n")
             except Exception as e:
-                self.write(f"\nERROR: Failed to create new {kind}Encoder from\n{encoder_file_p.name}: {e}\n")
+                Normal_out(f"\nERROR: Failed to create new {kind}Encoder from\n{encoder_file_p.name}: {e}\n")
                 if kind == "Visual":
                     self.visual_encoder = None
                     config.device_cfg.visual_encoder = ""
@@ -455,7 +451,7 @@ class Simulation:
                     # self.model.get_human_ptr().set_auditory_encoder_ptr( self.auditory_encoder )
                     set_auditory_encoder_ptr(self.model, self.auditory_encoder)
             except Exception as e:
-                self.write(f"\nERROR: Created new {kind} encoder, but connection to\nHuman_processor failed:\n{e}\n")
+                Normal_out(f"\nERROR: Created new {kind} encoder, but connection to\nHuman_processor failed:\n{e}\n")
                 if kind == "Visual":
                     self.visual_encoder = None
                     config.device_cfg.visual_encoder = ""
@@ -476,10 +472,10 @@ class Simulation:
     def recompile_rules(self):
         self.current_rule_index = 0
         if self.rule_files and Path(self.rule_files[self.current_rule_index].rule_file).is_file():
-            self.write(f"\n{e_info} Recompiling {self.rule_files[self.current_rule_index].rule_file}...\n")
+            Normal_out(f"\n{e_info} Recompiling {self.rule_files[self.current_rule_index].rule_file}...\n")
             self.compile_rule(self.rule_files[self.current_rule_index].rule_file)
         else:
-            self.write(
+            Normal_out(
                 f"\nERROR: Rule recompile failed because former rule file no longer\nexists or is not readable.\n"
             )
             self.parent.actionRecompile_Rules.setEnabled(False)
@@ -496,7 +492,7 @@ class Simulation:
                 mode = "rule_files"
             else:
                 the_types = set([type(item) for item in files])
-                self.write(
+                Normal_out(
                     f"\nERROR: epicsimulation.choose_rules can only accept a list of ALL RuleInfo objects, or"
                     f" a list of ALL rule file path strings, not a list consisting of multiple types"
                     f" (e.g., {the_types}).\n"
@@ -550,11 +546,11 @@ class Simulation:
             if not any(item.from_script for item in self.rule_files):
                 config.device_cfg.rule_files = rule_file_paths
             endl = "\n"
-            self.write(
+            Normal_out(
                 f"\n{len(rule_file_paths)} ruleset files {note}:\n"
                 f"{endl.join(Path(rule_file).name for rule_file in rule_file_paths)}\n"
             )
-            self.write(
+            Normal_out(
                 f"\n{e_info} Attempting to compile first rule in {note} ruleset list...\n"
                 if len(rule_files) > 1
                 else f"\n{e_info} Attempting to compile {note} ruleset...\n"
@@ -566,7 +562,7 @@ class Simulation:
             )
         else:
             self.rule_files = []
-            self.write(f"\n{e_boxed_x} No valid rule file(s) {note}.\n")
+            Normal_out(f"\n{e_boxed_x} No valid rule file(s) {note}.\n")
 
         return False
 
@@ -580,22 +576,22 @@ class Simulation:
             result = self.model.compile() and self.model.initialize()
         except Exception as e:
             if calm:
-                self.write(f"\nWARNING: Unable to compile ruleset file\n{rule_path.name}: {e}\n")
+                Normal_out(f"\nWARNING: Unable to compile ruleset file\n{rule_path.name}: {e}\n")
             else:
-                self.write(
+                Normal_out(
                     f"\nERROR: Unable to compile ruleset file\n{rule_path.name}:\n{e}\n",
                 )
             result = False
 
         if result:
-            self.write(f"\nRule file {rule_path.name} compiled successfully!\n")
+            Normal_out(f"\nRule file {rule_path.name} compiled successfully!\n")
             self.parent.update_title()
             rule_compiled = True
         else:
             if calm:
-                self.write(f"\nWARNING: Unable to (re)compile ruleset file\n{rule_path.name}\n")
+                Normal_out(f"\nWARNING: Unable to (re)compile ruleset file\n{rule_path.name}\n")
             else:
-                self.write(f"\nERROR: Unable to (re)compile ruleset file\n" f"{rule_path.name}!\n")
+                Normal_out(f"\nERROR: Unable to (re)compile ruleset file\n" f"{rule_path.name}!\n")
             rule_compiled = False
 
         # make sure run state reflects result of rule compile attempt
@@ -647,7 +643,6 @@ class Simulation:
 
         self.last_run_mode = "run_one_step"
         try:
-            # self.parent.write_plain('\n')
             self.instance.run_for(50)
             self.call_for_display_refresh()
 
@@ -655,7 +650,7 @@ class Simulation:
             self.run_time = self.model.get_time()
         except Exception as e:
             run_result = False
-            self.write(f"\nERROR:\n{e}\n")
+            Normal_out(f"\nERROR:\n{e}\n")
             return
 
         if not run_result:
@@ -669,7 +664,7 @@ class Simulation:
         self.update_model_output_settings()
         if self.parent.run_state not in (RUNNABLE, PAUSED):
             # This shouldn't be possible
-            self.write(
+            Normal_out(
                 f"\nERROR: Unable to run simulation because model is not yet RUNNABLE\n"
                 f"(device successfully loaded and rules successfully compiled).\n",
             )
@@ -699,9 +694,9 @@ class Simulation:
 
             if config.device_cfg.describe_parameters:
                 if desc_param_loaded:
-                    self.write(f"\n{describe_parameters_u(self.model)}\n")
+                    Normal_out(f"\n{describe_parameters_u(self.model)}\n")
 
-            self.write("\nSIMULATION STARTING\n")
+            Normal_out("\nSIMULATION STARTING\n")
 
             device_param_str = self.device.get_parameter_string()
 
@@ -722,7 +717,7 @@ class Simulation:
             if config.device_cfg.run_command in run_commands:
                 self.run_time_limit = run_commands.get(config.device_cfg.run_command, sys.maxsize)
             else:
-                self.write(
+                Normal_out(
                     f"\n{e_info} WARNING: unexpected run command found in config file "
                     f' ("{config.device_cfg.run_command}"), using "RUN_UNTIL_DONE" '
                     f"instead.\n"
@@ -738,7 +733,7 @@ class Simulation:
                     # are we past the specified time or did we pause and change from
                     #   run until done?
                     if self.run_time >= config.device_cfg.run_command_value:
-                        self.write(
+                        Normal_out(
                             f"\n{e_info} Unable to run additional steps, RUN_UNTIL_TIME value already reached!\n"
                         )
                     self.run_time_limit = 0
@@ -746,7 +741,7 @@ class Simulation:
                 else:
                     self.run_time_limit = 0
 
-        self.write(f"\nRun Started...\n")
+        Normal_out(f"\nRun Started...\n")
         self.parent.run_state = RUNNING
 
         disable_views = config.device_cfg.display_refresh == "none_during_run"
@@ -763,7 +758,6 @@ class Simulation:
             return
 
         try:
-            # self.parent.write_plain('\n')
             self.instance.run_for(50)
             self.call_for_display_refresh()
 
@@ -779,7 +773,7 @@ class Simulation:
         if self.instance.is_paused():
             # this is presumably because of a rule with a break state set
             self.parent.run_state = PAUSED
-            self.write(f"\n{e_info} Run of {self.device.rule_filename} Paused.\n")
+            Normal_out(f"\n{e_info} Run of {self.device.rule_filename} Paused.\n")
 
         if run_result and (
             (config.device_cfg.run_command in ("run_for", "run_until") and self.run_time < self.run_time_limit)
@@ -812,7 +806,7 @@ class Simulation:
 
         # _ = self.wait_until_text_outputs_are_idle()  # TODO: DELME
 
-        self.write(f"\n{e_info} Run paused\n", copy_to_trace=True)
+        Normal_out(f"\n{e_info} Run paused\n")
 
     # TODO: DELME
     # def wait_until_text_outputs_are_idle(self) -> bool:
@@ -828,7 +822,7 @@ class Simulation:
             # TODO: Not clear on whether this is needed or even a good idea.
             self.device.stop_simulation()
         except Exception as e:
-            log.debug(f"While calling `self.device.stop_simulation()` got this error: {e}")
+            Exception_out(f"While calling `self.device.stop_simulation()` got this error: {e}")
         self.model.stop()
         self.instance.stop()
 
@@ -846,23 +840,16 @@ class Simulation:
         # _ = self.wait_until_text_outputs_are_idle()  # TODO: DELME
 
         if not reason:
-            self.write(f"\n{e_bangbang} Run halted\n")
+            Normal_out(f"\n{e_bangbang} Run halted\n")
 
-        self.write(extra, copy_to_trace=True)
+        Normal_out(extra)
 
         duration = timeit.default_timer() - self.run_start_time
 
-        self.write(
-            f"\n{e_info} {self.rule_files[self.current_rule_index].parameter_string} "
-            f"(run took {duration:0.4f} seconds)\n",
-            True,
-        )
-        # FIXME: This vvv is silly, if logging is supposed to be on, then all writes to the output windows should alslo
-        #        call this log command. In fact, because you can set a widget as a log target, you could just call
-        #        log.info() once and write to ui and logfile!
-        log.info(
-            f"{e_info} {self.rule_files[self.current_rule_index].parameter_string} (run took {duration:0.4f} seconds)"
-        )
+        msg = (f"\n{e_info} {self.rule_files[self.current_rule_index].parameter_string} "
+               f"(run took {duration:0.4f} seconds)\n")
+        Normal_out(msg)
+        Trace_out(msg)
 
         # For ensuring that all param string versions get run
         #  when done, drop to next section to make sure all files get run!
@@ -883,7 +870,7 @@ class Simulation:
                 next_sim = self.rule_files[self.current_rule_index]
                 prev_sim = self.rule_files[self.current_rule_index - 1]
                 rule_name = Path(next_sim.rule_file).name
-                self.write(f"\nRULE FILE: {rule_name} ({self.current_rule_index}/{len(self.rule_files)})\n")
+                Normal_out(f"\nRULE FILE: {rule_name} ({self.current_rule_index}/{len(self.rule_files)})\n")
 
                 if next_sim.clear_data:
                     # nothing that this is an odd thing to ask for...what's the point in running
@@ -894,7 +881,7 @@ class Simulation:
                 #       and next_sim.reload_device is False. Thus, this section gets bypassed
                 if (next_sim.device_file and next_sim.device_file != prev_sim.device_file) or next_sim.reload_device:
                     if not self.parent.on_load_device(next_sim.device_file, auto_load_rules=False, quiet=True):
-                        self.write(
+                        Normal_out(
                             f"\n{e_boxed_x} Device (re)load failed while running "
                             f"{next_sim.device_file} + {next_sim.rule_file} from script!\n"
                         )
@@ -909,7 +896,7 @@ class Simulation:
                 else:
                     self.current_rule_index += 1
                     if self.current_rule_index < len(self.rule_files):
-                        self.write(f"\n{e_boxed_x} Compile Failed for {rule_name}, moving to next rule in list....\n")
+                        Normal_out(f"\n{e_boxed_x} Compile Failed for {rule_name}, moving to next rule in list....\n")
                         if self.compile_rule(self.rule_files[self.current_rule_index].rule_file):
                             self.run_all()
                     else:

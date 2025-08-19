@@ -20,11 +20,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os
+import sys
 
 from itertools import chain
 from textwrap import dedent
 
-from qtpy.QtCore import QThread, Signal, QRect, QEvent
+from qtpy.QtCore import QRect, QEvent
 from qtpy.QtGui import QHideEvent, QShowEvent, QIcon
 from qtpy.QtWidgets import QDockWidget, QWidget, QSizePolicy
 
@@ -77,7 +78,6 @@ from epicpy.views.visualviewwindow import VisualViewWin
 from epicpy.views.auditoryviewwindow import AuditoryViewWin
 from epicpy.epic.encoderpassthru import NullVisualEncoder, NullAuditoryEncoder
 import datetime
-import subprocess
 from epicpy.constants.version import __version__
 import tempfile
 import webbrowser
@@ -91,46 +91,8 @@ from epicpy.views.epicpy_textview import EPICTextViewCachedWrite
 from epicpy.views.epicpy_visualview import EPICVisualView
 from epicpy.views.epicpy_auditoryview import EPICAuditoryView
 
-from epicpy.epiclib.epiclib import initialize_py_streamers, uninitialize_py_streamers
-
-
-import socket
-
-
-class UdpThread(QThread):
-    messageReceived = Signal(str)
-
-    def __init__(self, parent, udp_ip: str, udp_port: int):
-        super().__init__(parent)
-        self.udp_ip = udp_ip  # e.g., "127.0.0.1"
-        self.udp_port = udp_port  # e.g., 13047
-        self.is_running = True
-        self.sock = None
-
-    def run(self):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind((self.udp_ip, self.udp_port))
-        self.sock.settimeout(0.5)  # Timeout to check the loop condition regularly
-
-        try:
-            while self.is_running:
-                try:
-                    data, addr = self.sock.recvfrom(4096)
-                    message = data.decode("utf-8")
-                    self.messageReceived.emit(message)
-                except socket.timeout:
-                    continue  # Allows periodic checking of self.is_running
-                except OSError:
-                    # This is raised when the socket is closed during recvfrom()
-                    break
-        finally:
-            if self.sock:
-                self.sock.close()
-
-    def stop(self):
-        self.is_running = False
-        if self.sock:
-            self.sock.close()  # Force unblock recvfrom()
+from epicpy.epiclib.epiclib.pps_globals import PPS_out
+from epicpy.epiclib.epiclib.output_tee_globals import (Normal_out, Trace_out, Exception_out, Debug_out, Device_out)
 
 
 class HorizontalDockArea(QMainWindow):
@@ -269,53 +231,41 @@ class MainWin(QMainWindow):
         self.normalPlainTextEditOutput = CustomLargeTextView(parent=self, enable_shortcuts=False)
         self.normalPlainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.normalPlainTextEditOutput.setObjectName("MainWindow")  # "plainTextEditOutput"
-        update = update_available()
-        update_msg = f'\n{update}\n'if update else ""
-        self.normalPlainTextEditOutput.write( f'Normal Out! ({datetime.datetime.now().strftime("%r")}){update_msg}' )
         self.normalPlainTextEditOutput.customContextMenuRequested.connect(
             self.normalPlainTextEditOutput.contextMenuEvent
         )
         self.normal_out_view = EPICTextViewCachedWrite(text_widget=self.normalPlainTextEditOutput)
 
-        # attach Normal_out and PPS_out output to this window
-        self.normal_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13050)
-        self.normal_out_view_thread.messageReceived.connect(self.normal_out_view.write)
-        self.normal_out_view_thread.start()
+        # Attach relevant output tees to this window
+        for ot in (Normal_out, Debug_out, Device_out, Exception_out, PPS_out):
+            ot.add_py_stream(self.normal_out_view)
+            # ot.add_py_stream(sys.stdout)  # for debug
+
+        update = update_available()
+        update_msg = f'\n{update}\n'if update else ""
+        self.normalPlainTextEditOutput.write( f'Normal Out! ({datetime.datetime.now().strftime("%r")}){update_msg}' )
 
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
         # connect Trace_out now
         self.tracePlainTextEditOutput = LargeTextView(self)
         self.tracePlainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tracePlainTextEditOutput.setObjectName("TraceWindow")
-        self.tracePlainTextEditOutput.write(f'Trace Out! ({datetime.datetime.now().strftime("%r")})\n')
         self.tracePlainTextEditOutput.customContextMenuRequested.connect(
             self.tracePlainTextEditOutput.contextMenuEvent
         )
         self.trace_out_view = EPICTextViewCachedWrite(text_widget=self.tracePlainTextEditOutput)
 
-        # attach TRACE_out output to this window
-        self.trace_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13048)
-        self.trace_out_view_thread.messageReceived.connect(self.trace_out_view.write)
-        self.trace_out_view_thread.start()
+        # Attach relevant output tees to this window
+        Trace_out.add_py_stream(self.trace_out_view)
+        # Trace_out.add_py_stream(sys.stdout)  # for debug
+
+        self.tracePlainTextEditOutput.write(f'Trace Out! ({datetime.datetime.now().strftime("%r")})\n')
+
+        # Also, attach std error to exception out in case information is printed before ui crashes
+        Exception_out.add_py_stream(sys.stderr)
 
         # stats widget
         self.stats_win = StatsWidget(self)
-
-        # NOTE: Keep these commented out lines!
-        # self.debug_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13049)
-        # self.debug_out_view_thread.messageReceived.connect(self.trace_out_view.write)
-        # self.debug_out_view_thread.start()
-        # self.pps_out_view_thread = UdpThread(self, udp_ip="127.0.0.1", udp_port=13053)
-        # self.pps_out_view_thread.messageReceived.connect(self.trace_out_view.write)
-        # self.pps_out_view_thread.start()
-
-        # in order to link epiclib Output_tees to Python, we need to set up py_streamers
-        initialize_py_streamers(
-            enable_normal=True,
-            enable_trace=True,
-            enable_debug=True,
-            enable_pps=True,
-        )
 
         # init output logging
         self.normal_file_output_never_updated = True
@@ -429,7 +379,7 @@ class MainWin(QMainWindow):
         exists = Path(config.app_cfg.last_device_file).is_file()
         device = config.app_cfg.last_device_file if config.app_cfg.last_device_file else "None"
         last_session_notice = f"Last Device Loaded: {device} [{exists=}]"
-        self.write(dedent(last_session_notice))
+        Normal_out(dedent(last_session_notice))
 
         self.update_title()
         self.actionReload_Session.setEnabled(Path(config.device_cfg.device_file).is_file())
@@ -628,11 +578,11 @@ class MainWin(QMainWindow):
             if auto_load_rules and config.device_cfg.rule_files:
                 self.simulation.choose_rules(config.device_cfg.rule_files)
 
-            if os.environ["EPICPY_DEBUG"] == "1":
-                try:
-                    self.simulation.device.show_output_stats()
-                except Exception:
-                    ...
+            # if os.environ["EPICPY_DEBUG"] == "1":
+            try:
+                self.simulation.device.show_output_stats()
+            except Exception:
+                ...
 
             return True
         else:
@@ -653,7 +603,7 @@ class MainWin(QMainWindow):
     def run_all(self):
         self.simulation.current_rule_index = 0
         rule_name = Path(self.simulation.rule_files[self.simulation.current_rule_index].rule_file).name
-        self.write(emoji_box(f"RULE FILE: {rule_name}", line="thick"))
+        Normal_out(emoji_box(f"RULE FILE: {rule_name}", line="thick"))
 
         if not self.simulation.rule_files[self.simulation.current_rule_index].parameter_string:
             # if not running from script, need to set the param string, otherwise it's already
@@ -682,7 +632,7 @@ class MainWin(QMainWindow):
         if Path(config.app_cfg.last_device_file).is_file():
             self.on_load_device(config.app_cfg.last_device_file, quiet)
         else:
-            self.write(
+            Normal_out(
                 emoji_box(
                     f"ERROR: Unable to reload last session: No previous device found in settings.",
                     line="thick",
@@ -691,7 +641,7 @@ class MainWin(QMainWindow):
 
         if self.simulation and self.simulation.device:
             if config.device_cfg.rule_files:
-                self.write(
+                Normal_out(
                     f"{len(config.device_cfg.rule_files)} rule files recovered from " f"previous device session: "
                 )
                 for i, rule_file in enumerate(config.device_cfg.rule_files):
@@ -700,7 +650,7 @@ class MainWin(QMainWindow):
                         status = f"({e_boxed_check} Found)"
                     else:
                         status = f"({e_boxed_x} Missing)"
-                    self.write(f"   {p.name} ({status})")
+                    Normal_out(f"   {p.name} ({status})")
                 config.device_cfg.rule_files = [
                     rule_file for rule_file in config.device_cfg.rule_files if Path(rule_file).is_file()
                 ]
@@ -717,7 +667,7 @@ class MainWin(QMainWindow):
                 self.simulation.current_rule_index = 0
 
             if self.simulation.rule_files:
-                self.write(
+                Normal_out(
                     f"{e_info} Attempting to compile first rule in ruleset list "
                     f'("{Path(self.simulation.rule_files[0].rule_file).name}")'
                 )
@@ -773,9 +723,9 @@ class MainWin(QMainWindow):
 
             try:
                 self.normal_out_view.file_writer.open(Path(config.device_cfg.normal_out_file))
-                self.write(f"{e_boxed_check} Normal Output logging set to " f"{config.device_cfg.normal_out_file}")
+                Normal_out(f"{e_boxed_check} Normal Output logging set to " f"{config.device_cfg.normal_out_file}")
             except Exception as e:
-                self.write(
+                Normal_out(
                     emoji_box(
                         f"ERROR: Unable to set Normal Output logging to\n"
                         f"{config.device_cfg.normal_out_file}:\n"
@@ -792,9 +742,9 @@ class MainWin(QMainWindow):
 
             try:
                 self.trace_out_view.file_writer.open(Path(config.device_cfg.trace_out_file))
-                self.write(f"{e_boxed_check} Trace Output logging set to " f"{config.device_cfg.trace_out_file}")
+                Normal_out(f"{e_boxed_check} Trace Output logging set to " f"{config.device_cfg.trace_out_file}")
             except Exception as e:
-                self.write(
+                Normal_out(
                     emoji_box(
                         f"ERROR: Unable to set Trace Output logging to\n"
                         f"{config.device_cfg.trace_out_file}:\n"
@@ -879,22 +829,6 @@ class MainWin(QMainWindow):
         if self.run_state == RUNNING:
             self.halt_simulation()
 
-        self.normal_out_view_thread.stop()
-        self.normal_out_view_thread.wait()
-
-        self.trace_out_view_thread.stop()
-        self.trace_out_view_thread.wait()
-
-        try:
-            self.debug_out_view_thread.stop()
-            self.debug_out_view_thread.wait()
-        except AttributeError:
-            ...
-        try:
-            self.pps_out_view_thread.stop()
-            self.pps_out_view_thread.wait()
-        except AttributeError:
-            ...
 
         self.remove_file_loggers()
 
@@ -933,10 +867,17 @@ class MainWin(QMainWindow):
         self.simulation.device = None
         self.simulation.instance = None
 
-        try:
-            uninitialize_py_streamers()
-        except Exception as e:
-            log.error(f"got this error in the closeEvent: {e}")
+        ot_info = zip(
+            ('Normal_out', 'Trace_out', 'Exception_out', 'Debug_out', 'Device_out', 'PPS_out'),
+            (Normal_out, Trace_out, Exception_out, Debug_out, Device_out, PPS_out)
+        )
+        log.debug('Shutting down Output_tee instances:')
+        for ot_name, ot in ot_info:
+            log.debug(f'   {ot_name}...')
+            ot.py_flush()
+            ot.clear_py_streams()
+            ot.py_close()
+        log.debug('Output_tee shutdown finished.')
 
         super().closeEvent(event)
 
@@ -1043,12 +984,6 @@ class MainWin(QMainWindow):
         for view in self.auditory_views.values():
             view.current_time = model_time
             view.can_draw = True
-
-    def write(self, text: str, copy_to_trace: bool = False):
-        if text:
-            self.normalPlainTextEditOutput.write(text)
-            if copy_to_trace:
-                self.tracePlainTextEditOutput.write(text)
 
     def clear(self):
         self.normalPlainTextEditOutput.clear()
@@ -1223,7 +1158,7 @@ class MainWin(QMainWindow):
 
     def show_run_settings(self):
         if not self.simulation or not self.simulation.device:
-            self.write(f"{e_boxed_x} Unable to open run settings, load a device first.")
+            Normal_out(f"{e_boxed_x} Unable to open run settings, load a device first.")
             return
 
         # ---- Because of device parameter settings, we're just recreating this every
@@ -1256,7 +1191,7 @@ class MainWin(QMainWindow):
         self.run_settings_dialog.ui.lineEditDeviceParameters.setText("")
         if config.device_cfg.device_params:
             self.run_settings_dialog.ui.lineEditDeviceParameters.setText(config.device_cfg.device_params)
-            self.write(f'Device parameters "{config.device_cfg.device_params}" set from ' f"previous device session.")
+            Normal_out(f'Device parameters "{config.device_cfg.device_params}" set from ' f"previous device session.")
         else:
             device_params = self.simulation.device.get_parameter_string()
             self.run_settings_dialog.ui.lineEditDeviceParameters.setText(device_params)
@@ -1270,11 +1205,11 @@ class MainWin(QMainWindow):
         # ----- Dialog Closed, deal with any changes
 
         if self.run_settings_dialog.ok:
-            self.write(f"{e_info} Settings changes accepted.")
+            Normal_out(f"{e_info} Settings changes accepted.")
             config.device_cfg.device_params = self.run_settings_dialog.ui.lineEditDeviceParameters.text()
             self.simulation.device.set_parameter_string(config.device_cfg.device_params)
         else:
-            self.write(f"{e_info} Settings changes ignored.")
+            Normal_out(f"{e_info} Settings changes ignored.")
             config.device_cfg.rollback()
 
     def show_display_settings_dialogs(self):
@@ -1286,12 +1221,12 @@ class MainWin(QMainWindow):
         self.display_settings_dialog.exec()  # needed to make it modal?!
 
         if self.display_settings_dialog.ok:
-            self.write(f"{e_info} Display controls changes accepted.")
+            Normal_out(f"{e_info} Display controls changes accepted.")
             if self.simulation and self.simulation.device and self.simulation.model:
                 self.update_output_logging()
                 self.simulation.update_model_output_settings()
         else:
-            self.write(f"{e_info} Display controls changes ignored.")
+            Normal_out(f"{e_info} Display controls changes ignored.")
             config.device_cfg.rollback()
 
     def show_trace_settings_dialogs(self):
@@ -1305,11 +1240,11 @@ class MainWin(QMainWindow):
             self.trace_settings_dialog.exec()  # needed to make it modal?!
 
         if self.trace_settings_dialog.ok:
-            self.write(f"{e_info} Trace Settings changes accepted.")
+            Normal_out(f"{e_info} Trace Settings changes accepted.")
             self.simulation.update_model_output_settings()
             self.update_output_logging()
         else:
-            self.write(f"{e_info} Trace Settings changes ignored.")
+            Normal_out(f"{e_info} Trace Settings changes ignored.")
             config.device_cfg.rollback()
 
     def show_log_settings_dialogs(self):
@@ -1324,11 +1259,11 @@ class MainWin(QMainWindow):
             self.log_settings_dialog.exec()  # needed to make it modal?!
 
         if self.log_settings_dialog.ok:
-            self.write(f"{e_info} Log Settings changes saved.")
+            Normal_out(f"{e_info} Log Settings changes saved.")
             self.simulation.update_model_output_settings()
             self.update_output_logging()
         else:
-            self.write(f"{e_info} Log Settings changes ignored.")
+            Normal_out(f"{e_info} Log Settings changes ignored.")
             config.device_cfg.rollback()
 
     def show_rule_break_settings_dialog(self):
@@ -1367,7 +1302,7 @@ class MainWin(QMainWindow):
 
         if self.font_size_dialog.ok:
             config.app_cfg.font_size = self.font_size_dialog.ui.spinBoxFontSize.value()
-            self.write(
+            Normal_out(
                 f"{e_info} Application font size changed to {config.app_cfg.font_size} "
                 f"pt). NOTE: Some font changes may only take place after application restart."
             )
@@ -1381,7 +1316,7 @@ class MainWin(QMainWindow):
                 win.reset_font()
 
         else:
-            self.write(f"{e_info} No changes made to application font size.")
+            Normal_out(f"{e_info} No changes made to application font size.")
             config.app_cfg.rollback()
 
     def clear_output_windows(self):
@@ -1414,9 +1349,9 @@ class MainWin(QMainWindow):
     def open_help_file(self):
         url = "https://travisseymour.github.io/EPICpyDocs/"
         if webbrowser.open(url):
-            self.write(f"Opened {url} in default web browser.")
+            Normal_out(f"Opened {url} in default web browser.")
         else:
-            self.write(f"Error opening {url} in default web browser.")
+            Normal_out(f"Error opening {url} in default web browser.")
 
     @staticmethod
     def choose_log_file(file_type: str, ext: str = ".txt") -> str:
@@ -1485,7 +1420,7 @@ class MainWin(QMainWindow):
 
         out_file = self.choose_log_file(name, ext)
         if not out_file:
-            self.write(f"{e_info} {name.title()} window text export abandoned.")
+            Normal_out(f"{e_info} {name.title()} window text export abandoned.")
             return
 
         formats = {
@@ -1506,9 +1441,9 @@ class MainWin(QMainWindow):
         success = writer.write(source.document())
         if success:
             source.document().setModified(False)
-            self.write(f"{e_boxed_check} {name.title()} Output window text written to {out_file}")
+            Normal_out(f"{e_boxed_check} {name.title()} Output window text written to {out_file}")
         else:
-            self.write(
+            Normal_out(
                 emoji_box(
                     f"ERROR: Unable to write output text from " f"{name.title()} " f"to" f"{out_file})",
                     line="thick",
@@ -1524,7 +1459,7 @@ class MainWin(QMainWindow):
 
         out_file = self.choose_log_file(name, ext)
         if not out_file:
-            self.write(f"{e_info} {name.title()} window text export abandoned.")
+            Normal_out(f"{e_info} {name.title()} window text export abandoned.")
             return
 
         try:
@@ -1536,9 +1471,9 @@ class MainWin(QMainWindow):
             error = str(e)
 
         if success:
-            self.write(f"{e_boxed_check} {name.title()} Output window text written to {out_file}")
+            Normal_out(f"{e_boxed_check} {name.title()} Output window text written to {out_file}")
         else:
-            self.write(
+            Normal_out(
                 emoji_box(
                     f"ERROR: Unable to write output text from '{name.title()}' to '{out_file}' ({error})",
                     line="thick",
@@ -1719,7 +1654,7 @@ class MainWin(QMainWindow):
     #     elif hasattr(self.context_menu, "exec_"):
     #         action = self.context_menu.exec_(self.mapToGlobal(event))
     #     else:
-    #         self.write(f"Error bringing up context-menu (contact maintainer about exec/exe_ bug)")
+    #         Normal_out(f"Error bringing up context-menu (contact maintainer about exec/exe_ bug)")
     #         action = None
     #         return
     #
@@ -1756,10 +1691,10 @@ class MainWin(QMainWindow):
     #         else:
     #             open_cmd = ""
     #             err_msg = f"ERROR: Opening device folder when OS=='{OS}' is not yet implemented!"
-    #             self.write(emoji_box(err_msg, line="thick"))
+    #             Normal_out(emoji_box(err_msg, line="thick"))
     #         if open_cmd:
     #             cmd = [open_cmd, str(Path(device_file).resolve().parent)]
-    #             self.write(f'{" ".join(cmd)}')
+    #             Normal_out(f'{" ".join(cmd)}')
     #             subprocess.run(cmd)
     #
     # def trace_search_context_menu(self, event):
@@ -1802,7 +1737,7 @@ class MainWin(QMainWindow):
                     file_path = Path(self.simulation.rule_files[self.simulation.current_rule_index - 1].rule_file)
             else:
                 file_path = None
-                self.write(
+                Normal_out(
                     emoji_box(
                         f"ERROR: Unable to open production rules in external text\n"
                         f"editor: [There are possibly no rules currently loaded.]",
@@ -1834,7 +1769,7 @@ class MainWin(QMainWindow):
                     f"{e}"
                 )
             if err_msg:
-                self.write(emoji_box(err_msg, line="thick"))
+                Normal_out(emoji_box(err_msg, line="thick"))
         else:
             file_path = None
 
@@ -1871,7 +1806,7 @@ class MainWin(QMainWindow):
                         f"Linux, Darwin, and Windows based operating systems.\n"
                         f"It does not currently support your operating system type ({_os})."
                     )
-                    self.write(emoji_box(err_msg, line="thick"))
+                    Normal_out(emoji_box(err_msg, line="thick"))
                 if open_cmd:
                     if _os == "Windows":
                         os.startfile(str(file_path.resolve()))
@@ -1879,7 +1814,7 @@ class MainWin(QMainWindow):
                         # subprocess.run([open_cmd, str(file_path.resolve())])
                         run_without_waiting(open_cmd, str(file_path.resolve()))
             except Exception as e:
-                self.write(
+                Normal_out(
                     emoji_box(
                         f"ERROR: Unable to open {which_file} file\n" f"{file_path.name} in external text editor\n: {e}",
                         line="thick",

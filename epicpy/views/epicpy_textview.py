@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
+import logging
 from pathlib import Path
 from typing import List, Optional
 
@@ -32,50 +32,49 @@ class EPICTextViewCachedWrite(QWidget):
     """
     Version of EPICTextView that is passed an instance of CachedPlainTextEdit
     to which it posts text output.
-    NOTE: instead of being derivative of View_base, we just need a write_char interface
-          for use with PyStreamer objects (see py_streamer.h)
+    QUESTION: Why Not Just Use A LTV and skip this thing?!
     """
 
-    def __init__(self, text_widget: LargeTextView):
+    def  __init__(self, text_widget: LargeTextView):
         super(EPICTextViewCachedWrite, self).__init__()
-        self.text_widget = text_widget
-        self.buffer = []
+        self._buffer: str = ''
+        self.widget_writer = text_widget
         self.file_writer = EPICTextViewFileWriter()
+        self._rem = ''
 
-    def clear(self):
-        self.text_widget.clear()
+    def write(self, text, /):
+        # Fast path: no newline in this chunk -> just accumulate
+        if '\n' not in text:
+            self._rem += text
+            return
 
-    def write_char(self, char: str):
-        """writes one character to a local buffer, only submitting to attached text_widget after a newline"""
-        if char == "\n":
-            txt = f"".join(self.buffer)
-            extra = "" if txt.endswith("\n") else "\n"
-            self.buffer = []
-            self.text_widget.write(txt)
-            if self.file_writer.enabled:
-                self.file_writer.write(txt + extra)
-        else:
-            self.buffer.append(char)  # NOTE: if this leads to double-spaced output, move this to an else block
+        # One concat, then split in C
+        chunk = self._rem + text
+        parts = chunk.split('\n')   # split removes '\n'
+        self._rem = parts.pop()     # last part may be partial (no newline)
 
-    def write(self, text: str):
-        """writes given text to attached text_widget"""
-        extra = ""  # if text.endswith('\n') else '\n'
-        txt = text + extra
-        self.text_widget.write(txt)
-        if self.file_writer.enabled:
-            self.file_writer.write(txt + extra)
+        if not parts:
+            return
+
+        do_file_write = self.file_writer.enabled
+        widget_writer, file_writer = self.widget_writer.write, self.file_writer.write
+        # Build once; one call per completed line
+        for line in parts:
+            widget_writer(line)
+            if do_file_write:
+                file_writer(line)
 
     def flush(self):
-        self.buffer.clear()
-        self.text_widget.clear()
+        # Finalize any partial line as a full line
+        if self._rem:
+            self.widget_writer.write(self._rem)
+            if self.file_writer.enabled:
+                self.file_writer.write(self._rem)
+            self._rem = ''
 
-    def __getattr__(self, name):
-        def _missing(*args, **kwargs):
-            print("A missing method was called.")
-            print("The object was %r, the method was %r. " % (self, name))
-            print("It was called with %r and %r as arguments" % (args, kwargs))
+    def close(self):
+        self.flush()
 
-        return _missing
 
 
 class EPICTextViewFileWriter:
@@ -152,6 +151,6 @@ class EPICTextViewFileWriter:
     def write(self, text: str):
         """writes given text to attached file"""
         try:
-            self.file_object.write(f"{text}")
+            self.file_object.write(text)
         except:
             ...
