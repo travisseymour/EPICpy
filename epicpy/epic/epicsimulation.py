@@ -744,6 +744,7 @@ class Simulation:
 
         disable_views = config.device_cfg.display_refresh == "none_during_run"
         disable_text = config.device_cfg.text_refresh == "none_during_run"
+
         self.parent.enable_view_updates(not disable_views)
         self.parent.enable_text_updates(not disable_text)
 

@@ -25,7 +25,6 @@ import sys
 from itertools import chain
 from textwrap import dedent
 
-from qtpy.QtGui import QCursor
 from qtpy.QtCore import QRect, QEvent
 from qtpy.QtGui import QHideEvent, QShowEvent, QIcon
 from qtpy.QtWidgets import QDockWidget, QWidget, QSizePolicy
@@ -961,10 +960,7 @@ class MainWin(QMainWindow):
             log.error(f"Unable to set view background image [{e}]")
 
     def enable_view_updates(self, enable: bool = True):
-        for view in self.visual_views.values():
-            view.allow_updates(enable)  # determines whether anything is actually done
-
-        for view in self.auditory_views.values():
+        for view in (*self.visual_views.values(), *self.auditory_views.values()):
             view.allow_updates(enable)  # determines whether anything is actually done
 
         # NOTE: The above seems unnecessary if we're adding/removing views from model.
@@ -973,8 +969,14 @@ class MainWin(QMainWindow):
         #       for max speed. (March 2022 -- is this still the case?)
 
     def enable_text_updates(self, enable: bool = True):
-        self.normalPlainTextEditOutput.enable_updates = enable
-        self.tracePlainTextEditOutput.enable_updates = enable
+        if enable:
+            self.normalPlainTextEditOutput.resume_writes()
+            self.tracePlainTextEditOutput.resume_writes()
+            self.normalPlainTextEditOutput.flush()
+            self.tracePlainTextEditOutput.flush()
+        else:
+            self.normalPlainTextEditOutput.pause_writes()
+            self.tracePlainTextEditOutput.pause_writes()
 
     def clear_ui(
         self,

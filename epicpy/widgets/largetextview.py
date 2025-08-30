@@ -1,8 +1,10 @@
 import platform
 import subprocess
 import re
-from pathlib import Path
 import sys
+from pathlib import Path
+
+from PySide6.QtCore import QTimer
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QWidget,
@@ -17,10 +19,11 @@ from qtpy.QtWidgets import (
     QHBoxLayout as HBox,
     QCheckBox,
     QMessageBox,
+    QApplication,
 )
 from collections import deque
 
-from qtpy.QtCore import Qt, QPoint, QTimer
+from qtpy.QtCore import Qt, QPoint
 from qtpy.QtGui import QPainter, QFontMetrics, QFont, QContextMenuEvent, QKeySequence, QShortcut
 
 from epicpy.constants.stateconstants import PAUSED, RUNNING
@@ -253,6 +256,7 @@ class LargeTextView(QWidget):
             start = max(0, min(self.selection_start_line, self.selection_end_line))
             end = min(len(self.lines) - 1, max(self.selection_start_line, self.selection_end_line))
             selected_text = "\n".join(self.lines[start : end + 1])
+            # QApplication.clipboard().setText(selected_text)
             QApplication.clipboard().setText(selected_text)
 
     def select_all(self):
@@ -316,7 +320,13 @@ class LargeTextView(QWidget):
             self._last_regex = re.compile(pattern)
             return True
         except re.error as e:
-            QMessageBox.warning(self, "Invalid Regex", f"{e}")
+            QMessageBox.warning(
+                self,
+                "Invalid Regex",
+                f"{e}",
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Ok,
+            )
             self._last_regex = None
             return False
 
@@ -493,10 +503,12 @@ class CustomLargeTextView(LargeTextView):
 
 
 if __name__ == "__main__":
-    from qtpy.QtWidgets import QMainWindow, QApplication
-    from qtpy.QtCore import QTimer
+    from qtpy.QtWidgets import QMainWindow
+
+    #     from qtpy.QtCore import QTimer
     import timeit
-    import sys
+
+    #     import sys
 
     class LTTTestMainWindow(QMainWindow):
         def __init__(self):
