@@ -18,7 +18,7 @@ from epicpy.utils.apputils import extract_from_zip
 from epicpy import get_resource
 from epicpy.widgets.largetextview import LargeTextView
 
-from epicpy.epiclib.epiclib.output_tee_globals import (Normal_out, Trace_out, Exception_out)
+from epicpy.epiclib.epiclib.output_tee_globals import Normal_out, Trace_out, Exception_out
 
 """
 Code for testing various EPICpy functionality

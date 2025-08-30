@@ -846,8 +846,10 @@ class Simulation:
 
         duration = timeit.default_timer() - self.run_start_time
 
-        msg = (f"\n{e_info} {self.rule_files[self.current_rule_index].parameter_string} "
-               f"(run took {duration:0.4f} seconds)\n")
+        msg = (
+            f"\n{e_info} {self.rule_files[self.current_rule_index].parameter_string} "
+            f"(run took {duration:0.4f} seconds)\n"
+        )
         Normal_out(msg)
         Trace_out(msg)
 

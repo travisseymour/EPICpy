@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+
 import logging
 from pathlib import Path
 from typing import List, Optional
@@ -35,23 +36,23 @@ class EPICTextViewCachedWrite(QWidget):
     QUESTION: Why Not Just Use A LTV and skip this thing?!
     """
 
-    def  __init__(self, text_widget: LargeTextView):
+    def __init__(self, text_widget: LargeTextView):
         super(EPICTextViewCachedWrite, self).__init__()
-        self._buffer: str = ''
+        self._buffer: str = ""
         self.widget_writer = text_widget
         self.file_writer = EPICTextViewFileWriter()
-        self._rem = ''
+        self._rem = ""
 
     def write(self, text, /):
         # Fast path: no newline in this chunk -> just accumulate
-        if '\n' not in text:
+        if "\n" not in text:
             self._rem += text
             return
 
         # One concat, then split in C
         chunk = self._rem + text
-        parts = chunk.split('\n')   # split removes '\n'
-        self._rem = parts.pop()     # last part may be partial (no newline)
+        parts = chunk.split("\n")  # split removes '\n'
+        self._rem = parts.pop()  # last part may be partial (no newline)
 
         if not parts:
             return
@@ -70,11 +71,10 @@ class EPICTextViewCachedWrite(QWidget):
             self.widget_writer.write(self._rem)
             if self.file_writer.enabled:
                 self.file_writer.write(self._rem)
-            self._rem = ''
+            self._rem = ""
 
     def close(self):
         self.flush()
-
 
 
 class EPICTextViewFileWriter:

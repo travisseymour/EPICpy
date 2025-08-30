@@ -46,8 +46,7 @@ from qtpy.QtGui import QImage, QTextDocument
 from epicpy.utils.config import get_start_dir
 from loguru import logger as log
 
-SPECIAL_MESSAGE = \
-"""
+SPECIAL_MESSAGE = """
 <h3><u><font color="orange">Important Notice</u></h3></font>
 <h4><font color="blue">New version of epicpydevice and models needed!</font></h4>
 
@@ -63,6 +62,7 @@ As of EPICpy version <b>2025.8.18.1</b>, You will need new copies of <span style
   <li>Note that using <span style="white-space: pre; font-family: monospace;"><small><b>self.stats_write</small></b></span> is still the right way for devices to send stats and graph objects to the Stats Ouput Window.</span></li>
 </ul>
 """
+
 
 class CustomStatsTextBrowser(QTextBrowser):
     def __init__(self, parent=None):
@@ -334,7 +334,7 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     win = StatsWidget(parent=None)
-    win.setGeometry(10,100,1024,768)
+    win.setGeometry(10, 100, 1024, 768)
     win.show()
 
     # Example usage:
@@ -354,10 +354,10 @@ if __name__ == "__main__":
 
     check_icon_html = (
         "<img src='data:image/svg+xml;utf8,"
-        "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 16 16\">"
-        "<circle cx=\"8\" cy=\"8\" r=\"7\" fill=\"%2308c\"/>"
-        "<path d=\"M4 8l2 2 6-6\" stroke=\"%23fff\" stroke-width=\"2\" fill=\"none\" "
-        "stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">'
+        '<circle cx="8" cy="8" r="7" fill="%2308c"/>'
+        '<path d="M4 8l2 2 6-6" stroke="%23fff" stroke-width="2" fill="none" '
+        'stroke-linecap="round" stroke-linejoin="round"/>'
         "</svg>' alt='ok'/>"
     )
 

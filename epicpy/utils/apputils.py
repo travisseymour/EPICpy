@@ -26,6 +26,7 @@ import tempfile
 import time
 import zipfile
 from collections import OrderedDict
+from contextlib import contextmanager
 from pathlib import Path
 from threading import Lock
 from weakref import WeakKeyDictionary
@@ -293,6 +294,13 @@ def memoize_class_method(max_items=250):
 
     return decorator
 
+@contextmanager
+def loading_cursor_context():
+    QApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
+    try:
+        yield
+    finally:
+        QApplication.restoreOverrideCursor()
 
 def loading_cursor(normal_function):
     def decorated_function(*args, **kwargs):

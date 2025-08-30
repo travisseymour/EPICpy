@@ -1,6 +1,6 @@
 
 # NOTES:
-# - Currently using Python 3.10 on linux and macos, but Python 3.9 on Win10
+# - Currently using Python 3.10 for development
 # - Currently, the devices in fullbindings are the ones that work
 # - Fix PyQt6/PySide6 xcb plugin error on Linux by installing:
 #  sudo apt install libxcb-cursor0
@@ -17,12 +17,11 @@ authors = [
 ]
 description = "Python interface to the EPIC computational cognitive architecture simulation environment."
 readme = "ReadMe.md"
-requires-python = ">=3.9,<3.14"
+requires-python = ">=3.10,<3.14"
 license = { text = "GNU General Public License v3 or later (GPLv3+)" }
 classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -48,6 +47,7 @@ dependencies = [
   "plum-dispatch==1.5.2; sys_platform == 'win32'",
   "ascii_frame>=0.0.1,<1.0",
   "pandas>=2.0,<3.0",
+  "polars>=1.32.3,<2.0",
   "pyqtdarktheme", # ">=2.1.0,<3.0",
   "fastnumbers>=5.0.0,<6.0",
   "qdarkstyle>=3.1.0,<4.0",

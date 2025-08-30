@@ -28,6 +28,7 @@ from epicpy.utils import config
 
 from epicpy.epiclib.epiclib.output_tee_globals import Exception_out
 
+
 class SearchDialog(QDialog):
     def __init__(self, parent=None, start_text: str = "", start_is_regex: bool = False):
         super().__init__(parent)
@@ -415,7 +416,7 @@ class CustomLargeTextView(LargeTextView):
         device_file_exists = bool(config.device_cfg.device_file) and Path(config.device_cfg.device_file).is_file()
         rule_file_exists = bool(config.device_cfg.rule_files) and Path(config.device_cfg.rule_files[0]).is_file()
         sim_setup = device_file_exists and rule_file_exists
-        #running = COORDINATOR.state in (SimState.running, SimState.timed_out)
+        # running = COORDINATOR.state in (SimState.running, SimState.timed_out)
         running = (self._parent.run_state == RUNNING) and (not self._parent.run_state == PAUSED)
 
         # define context menu

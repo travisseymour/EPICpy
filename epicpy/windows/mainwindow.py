@@ -25,7 +25,7 @@ import sys
 from itertools import chain
 from textwrap import dedent
 
-from PySide6.QtGui import QCursor
+from qtpy.QtGui import QCursor
 from qtpy.QtCore import QRect, QEvent
 from qtpy.QtGui import QHideEvent, QShowEvent, QIcon
 from qtpy.QtWidgets import QDockWidget, QWidget, QSizePolicy
@@ -93,7 +93,14 @@ from epicpy.views.epicpy_visualview import EPICVisualView
 from epicpy.views.epicpy_auditoryview import EPICAuditoryView
 
 from epicpy.epiclib.epiclib.pps_globals import PPS_out
-from epicpy.epiclib.epiclib.output_tee_globals import (Normal_out, Trace_out, Exception_out, Debug_out, Device_out, Stats_out)
+from epicpy.epiclib.epiclib.output_tee_globals import (
+    Normal_out,
+    Trace_out,
+    Exception_out,
+    Debug_out,
+    Device_out,
+    Stats_out,
+)
 
 
 class HorizontalDockArea(QMainWindow):
@@ -243,17 +250,15 @@ class MainWin(QMainWindow):
             # ot.add_py_stream(sys.stdout)  # for debug
 
         update = update_available()
-        update_msg = f'\n{update}\n'if update else ""
-        self.normalPlainTextEditOutput.write( f'Normal Out! ({datetime.datetime.now().strftime("%r")}){update_msg}' )
+        update_msg = f"\n{update}\n" if update else ""
+        self.normalPlainTextEditOutput.write(f'Normal Out! ({datetime.datetime.now().strftime("%r")}){update_msg}')
 
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
         # connect Trace_out now
         self.tracePlainTextEditOutput = LargeTextView(self)
         self.tracePlainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.tracePlainTextEditOutput.setObjectName("TraceWindow")
-        self.tracePlainTextEditOutput.customContextMenuRequested.connect(
-            self.tracePlainTextEditOutput.contextMenuEvent
-        )
+        self.tracePlainTextEditOutput.customContextMenuRequested.connect(self.tracePlainTextEditOutput.contextMenuEvent)
         self.trace_out_view = EPICTextViewCachedWrite(text_widget=self.tracePlainTextEditOutput)
 
         # Attach relevant output tees to this window
@@ -521,80 +526,74 @@ class MainWin(QMainWindow):
     # ==============================================================================
 
     def on_load_device(self, file: str = "", quiet: bool = False, auto_load_rules: bool = True) -> bool:
+        self.layout_save()
+
         try:
-            QApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
+            self.simulation.remove_views_from_model(
+                self.visual_physical_view,
+                self.visual_sensory_view,
+                self.visual_perceptual_view,
+                self.auditory_physical_view,
+                self.auditory_sensory_view,
+                self.auditory_perceptual_view,
+            )
+        except Exception:  # broad on purpose!
+            ...
 
-            self.layout_save()
+        self.clear_output_windows()
 
+        if not file:
+            if Path(config.device_cfg.device_file).is_file():
+                start_dir = Path(config.device_cfg.device_file).parent
+            elif Path(config.app_cfg.last_device_file).is_file():
+                start_dir = Path(config.app_cfg.last_device_file).parent
+            else:
+                start_dir = str(Path.home())
+            device_file, _ = QFileDialog.getOpenFileName(
+                self,
+                "Choose EPICpy Device File",
+                str(start_dir),
+                "Python Files (*.py)",
+            )
+        else:
+            device_file = file
+
+        self.simulation.on_load_device(device_file, quiet)
+
+        # Model was reset, so we have to reconnect views and such
+        if self.simulation and self.simulation.device and self.simulation.model:
+            self.simulation.add_views_to_model(
+                self.visual_physical_view,
+                self.visual_sensory_view,
+                self.visual_perceptual_view,
+                self.auditory_physical_view,
+                self.auditory_sensory_view,
+                self.auditory_perceptual_view,
+            )
+            self.simulation.update_model_output_settings()
+            self.update_output_logging()
+            self.clear_ui(
+                visual_views=True,
+                auditory_views=True,
+                normal_output=False,
+                trace_output=True,
+            )
+
+            self.context = "".join([c for c in self.simulation.device.device_name if c.isalnum()]).title()
+            self.layout_load()
+
+            if auto_load_rules and config.device_cfg.rule_files:
+                self.simulation.choose_rules(config.device_cfg.rule_files)
+
+            # if os.environ["EPICPY_DEBUG"] == "1":
             try:
-                self.simulation.remove_views_from_model(
-                    self.visual_physical_view,
-                    self.visual_sensory_view,
-                    self.visual_perceptual_view,
-                    self.auditory_physical_view,
-                    self.auditory_sensory_view,
-                    self.auditory_perceptual_view,
-                )
-            except Exception:  # broad on purpose!
+                self.simulation.device.show_output_stats()
+            except Exception:
                 ...
 
-            self.clear_output_windows()
-
-            if not file:
-                if Path(config.device_cfg.device_file).is_file():
-                    start_dir = Path(config.device_cfg.device_file).parent
-                elif Path(config.app_cfg.last_device_file).is_file():
-                    start_dir = Path(config.app_cfg.last_device_file).parent
-                else:
-                    start_dir = str(Path.home())
-                device_file, _ = QFileDialog.getOpenFileName(
-                    self,
-                    "Choose EPICpy Device File",
-                    str(start_dir),
-                    "Python Files (*.py)",
-                )
-            else:
-                device_file = file
-
-            self.simulation.on_load_device(device_file, quiet)
-
-            # Model was reset, so we have to reconnect views and such
-            if self.simulation and self.simulation.device and self.simulation.model:
-                self.simulation.add_views_to_model(
-                    self.visual_physical_view,
-                    self.visual_sensory_view,
-                    self.visual_perceptual_view,
-                    self.auditory_physical_view,
-                    self.auditory_sensory_view,
-                    self.auditory_perceptual_view,
-                )
-                self.simulation.update_model_output_settings()
-                self.update_output_logging()
-                self.clear_ui(
-                    visual_views=True,
-                    auditory_views=True,
-                    normal_output=False,
-                    trace_output=True,
-                )
-
-                self.context = "".join([c for c in self.simulation.device.device_name if c.isalnum()]).title()
-                self.layout_load()
-
-                if auto_load_rules and config.device_cfg.rule_files:
-                    self.simulation.choose_rules(config.device_cfg.rule_files)
-
-                # if os.environ["EPICPY_DEBUG"] == "1":
-                try:
-                    self.simulation.device.show_output_stats()
-                except Exception:
-                    ...
-
-                return True
-            else:
-                return False
-        finally:
-            QApplication.restoreOverrideCursor()
-            self.update_title()
+            return True
+        else:
+            return False
 
     def choose_rules(self, rules: Optional[list] = None) -> bool:
         return self.simulation.choose_rules(rules)
@@ -829,41 +828,41 @@ class MainWin(QMainWindow):
 
     def closeEvent(self, event: QCloseEvent):
         if self.closing:
-            print('0. got duplicate close event')
+            print("0. got duplicate close event")
             event.ignore()
             return
 
         self.closing = True
 
-        print('[DEBUG] Shutting Down EPICpy:')
-        print('---------------------')
+        print("[DEBUG] Shutting Down EPICpy:")
+        print("---------------------")
 
-        print('1. Stopping sim')
+        print("1. Stopping sim")
         if self.run_state == RUNNING:
             self.halt_simulation()
 
-        print('2. Removing file loggers')
+        print("2. Removing file loggers")
         self.remove_file_loggers()
 
-        print('3. Saving layout')
+        print("3. Saving layout")
         self.layout_save()  # regular and custom
 
-        print('4. Close stats win')
+        print("4. Close stats win")
         self.stats_win.can_close = True
         self.stats_win.close()  # destroy()
 
-        print('5. Close views')
+        print("5. Close views")
         try:
             for view in chain(self.visual_views.values(), self.auditory_views.values()):
                 view.can_close = True
                 view.close()  # destroy()
         except Exception as e:
-            print(f'\tWARNING: Unable to successfully close all views.')
+            print(f"\tWARNING: Unable to successfully close all views.")
 
-        print('6. Close output files')
+        print("6. Close output files")
         self.close_output_files()
 
-        print('7. Remove views from model')
+        print("7. Remove views from model")
         try:
             self.simulation.remove_views_from_model(
                 self.visual_physical_view,
@@ -874,9 +873,9 @@ class MainWin(QMainWindow):
                 self.auditory_perceptual_view,
             )
         except Exception as e:
-            print(f'\tWARNING: Unable to cleanly release views from model.')
+            print(f"\tWARNING: Unable to cleanly release views from model.")
 
-        print('8. Pausing and stopping simulation -- seems redundant, halted above')
+        print("8. Pausing and stopping simulation -- seems redundant, halted above")
         if self.simulation:
             try:
                 self.simulation.pause_simulation()
@@ -886,22 +885,22 @@ class MainWin(QMainWindow):
                     self.simulation.device.stop_simulation()
                 self.simulation.instance.shutdown_simulation()
             except Exception as e:
-                log.warning(f'Unable to stop and shutdown simulation: {e}')
+                log.warning(f"Unable to stop and shutdown simulation: {e}")
 
-        print('9. Shutting down output tee instances')
+        print("9. Shutting down output tee instances")
         ot_info = zip(
-            ('Normal_out', 'Trace_out', 'Exception_out', 'Debug_out', 'Device_out', 'PPS_out', 'Stats_out'),
-            (Normal_out, Trace_out, Exception_out, Debug_out, Device_out, PPS_out, Stats_out)
+            ("Normal_out", "Trace_out", "Exception_out", "Debug_out", "Device_out", "PPS_out", "Stats_out"),
+            (Normal_out, Trace_out, Exception_out, Debug_out, Device_out, PPS_out, Stats_out),
         )
 
         for ot_name, ot in ot_info:
-            print(f'\t{ot_name}...')
+            print(f"\t{ot_name}...")
             ot.py_flush()
             ot.clear_py_streams()
             ot.py_close()
-        print('10. Output_tee shutdown finished.')
+        print("10. Output_tee shutdown finished.")
 
-        print('11. Closing application window.')
+        print("11. Closing application window.")
         super().closeEvent(event)
 
     @staticmethod

@@ -18,10 +18,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-
 import requests
 from epicpy.constants.version import __version__
 import ast
+
 
 def extract_version(source: str) -> str:
     tree = ast.parse(source)
@@ -40,7 +40,7 @@ def get_remote_version(owner: str, repo: str, branch: str = "main", path: str = 
     try:
         return extract_version(response.text)
     except:
-        return ''
+        return ""
 
 
 def update_available() -> str:
