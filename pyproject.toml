@@ -36,7 +36,8 @@ dynamic = ["version"]
 dependencies = [
   "loguru>=0.6.0,<0.8",
   "qtpy>=2.3,<3.0",
-  "PySide6>=6.8.1.1,<7.0",
+  # "PySide6==6.5.2",  # Catalina
+  "PySide6>=6.8.2,<7.0",
   "python-dateutil>=2.8.2,<3.0",
   "ulid>=1.1,<2.0",
   "ulid2>=0.3.0,<1.0",
@@ -54,7 +55,8 @@ dependencies = [
   "requests>=2.28,<3.0",
   "fastparquet>=2024.11.0",
   "pyarrow>=21.0.0",
-  "pywin32; sys_platform == 'win32'"
+  "pywin32; sys_platform == 'win32'",
+  "rich",
 ]
 
 [project.optional-dependencies]

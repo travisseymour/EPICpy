@@ -58,7 +58,6 @@ import signal
 import re
 import subprocess
 from pathlib import Path
-from shutil import copyfile
 from loguru import logger as log
 
 from epicpy.launcher.linux_launcher import (

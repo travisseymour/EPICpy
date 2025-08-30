@@ -1,12 +1,36 @@
 from epicpy.utils.resource_utils import get_resource
 
-
 import importlib
 import platform
 import sys
+from rich.console import Console
+from rich.markdown import Markdown
 
 from epicpy.utils.resource_utils import get_resource
 
+SUPPORTED_PYTHONS = ">=3.10;<3.14"
+
+_py_ver_err_msg = \
+'''
+## EPICpy Installation Error
+
+There was an error loading EPICpy's epiclib library for Python {}. 
+Only Python versions {} are supported. If you already have
+EPICpy installed using an unsupported version of python,
+you can uninstall it using uv, e.g.:
+
+```bash
+uv tool uninstall epicpy
+```
+
+Ultimately, you can (re)install EPICpy using uv:
+
+```bash
+uv tool install git+https://github.com/travisseymour/epicpy.git --python 3.13
+```
+'''
+
+_console = Console()
 
 def _load_platform_module():
     major = sys.version_info.major
@@ -15,7 +39,17 @@ def _load_platform_module():
     system = platform.system().lower()
 
     if system == "windows":
-        modname = "epiclib.pyd"
+        if py_ver == '3.10':
+            modname = "epiclib_windows_310.pyd"
+        elif py_ver == '3.11':
+            modname = "epiclib_windows_311.pyd"
+        elif py_ver == '3.12':
+            modname = "epiclib_windows_312.pyd"
+        elif py_ver == '3.13':
+            modname = "epiclib_windows_313.pyd"
+        else:
+            _console.print(Markdown(_py_ver_err_msg.format(py_ver, SUPPORTED_PYTHONS)))
+            sys.exit(1)
     elif system == "linux":
         if py_ver == '3.10':
             modname = "epiclib_linux_310.so"
@@ -26,21 +60,30 @@ def _load_platform_module():
         elif py_ver == '3.13':
             modname = "epiclib_linux_313.so"
         else:
-            modname = "epiclib_linux_310.so"
+            _console.print(Markdown(_py_ver_err_msg.format(py_ver, SUPPORTED_PYTHONS)))
+            sys.exit(1)
     elif system == "darwin":
-        extra = "_arm" if "ARM" in platform.uname().version.upper() else ""
         if py_ver == '3.10':
-            modname = f"epiclib_macos{extra}_310.so"
+            modname = f"epiclib_macos_310.so"
         elif py_ver == '3.11':
-            modname = f"epiclib_macos{extra}_311.so"
+            modname = f"epiclib_macos_311.so"
         elif py_ver == '3.12':
-            modname = f"epiclib_macos{extra}_312.so"
+            modname = f"epiclib_macos_312.so"
         elif py_ver == '3.13':
-            modname = f"epiclib_macos{extra}_313.so"
+            modname = f"epiclib_macos_313.so"
         else:
-            modname = f"epiclib_macos{extra}_310.so"
+            _console.print(Markdown(_py_ver_err_msg.format(py_ver, SUPPORTED_PYTHONS)))
+            sys.exit(1)
     else:
-        raise NotImplementedError(f"Unsupported platform: {system}")
+        _console.print(Markdown(
+                       f'## EPICpy Installation Error\n'
+                       f'\n'
+                       f'EPICpy is not supported on "{system}". '
+                       f'It is only supported on Linux, MacOS, and Windows.'
+        ))
+        sys.exit(1)
+
+    _console.print(f'[green]Using {modname}[/green]')
 
     # Get the full path to the correct binary from resources
     module_path = get_resource("epiclib", modname)

@@ -1,2 +1,7 @@
-recursive-include epicpy/resources *
-recursive-include epicpy/epiclib *.so *.pyd
+recursive-include epicpy/resources __init__.py
+recursive-include epicpy/resources/css *
+recursive-include epicpy/resources/epiclib *.py *.so *.pyd
+recursive-include epicpy/resources/fonts *
+recursive-include epicpy/resources/images *.py *.jpg *.gif *.png
+recursive-include epicpy/resources/other devices.zip
+recursive-include epicpy/resources/uiicons *.py *.svg *.icns *.ico *.png
