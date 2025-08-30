@@ -35,7 +35,7 @@ from epicpy.dialogs.aboutwindow import AboutWin
 from epicpy.dialogs.fontsizewindow import FontSizeDialog
 from epicpy.epic.runinfo import RunInfo
 from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
-from epicpy.utils.apputils import clear_font, run_without_waiting, has_epiccoder
+from epicpy.utils.apputils import clear_font, run_without_waiting, has_epiccoder, loading_cursor_context
 from epicpy import get_resource
 from epicpy.utils.defaultfont import get_default_font
 from epicpy.utils.update_utils import update_available
@@ -558,42 +558,43 @@ class MainWin(QMainWindow):
         else:
             device_file = file
 
-        self.simulation.on_load_device(device_file, quiet)
+        with loading_cursor_context():
+            self.simulation.on_load_device(device_file, quiet)
 
-        # Model was reset, so we have to reconnect views and such
-        if self.simulation and self.simulation.device and self.simulation.model:
-            self.simulation.add_views_to_model(
-                self.visual_physical_view,
-                self.visual_sensory_view,
-                self.visual_perceptual_view,
-                self.auditory_physical_view,
-                self.auditory_sensory_view,
-                self.auditory_perceptual_view,
-            )
-            self.simulation.update_model_output_settings()
-            self.update_output_logging()
-            self.clear_ui(
-                visual_views=True,
-                auditory_views=True,
-                normal_output=False,
-                trace_output=True,
-            )
+            # Model was reset, so we have to reconnect views and such
+            if self.simulation and self.simulation.device and self.simulation.model:
+                self.simulation.add_views_to_model(
+                    self.visual_physical_view,
+                    self.visual_sensory_view,
+                    self.visual_perceptual_view,
+                    self.auditory_physical_view,
+                    self.auditory_sensory_view,
+                    self.auditory_perceptual_view,
+                )
+                self.simulation.update_model_output_settings()
+                self.update_output_logging()
+                self.clear_ui(
+                    visual_views=True,
+                    auditory_views=True,
+                    normal_output=False,
+                    trace_output=True,
+                )
 
-            self.context = "".join([c for c in self.simulation.device.device_name if c.isalnum()]).title()
-            self.layout_load()
+                self.context = "".join([c for c in self.simulation.device.device_name if c.isalnum()]).title()
+                self.layout_load()
 
-            if auto_load_rules and config.device_cfg.rule_files:
-                self.simulation.choose_rules(config.device_cfg.rule_files)
+                if auto_load_rules and config.device_cfg.rule_files:
+                    self.simulation.choose_rules(config.device_cfg.rule_files)
 
-            # if os.environ["EPICPY_DEBUG"] == "1":
-            try:
-                self.simulation.device.show_output_stats()
-            except Exception:
-                ...
+                # if os.environ["EPICPY_DEBUG"] == "1":
+                try:
+                    self.simulation.device.show_output_stats()
+                except Exception:
+                    ...
 
-            return True
-        else:
-            return False
+                return True
+            else:
+                return False
 
     def choose_rules(self, rules: Optional[list] = None) -> bool:
         return self.simulation.choose_rules(rules)

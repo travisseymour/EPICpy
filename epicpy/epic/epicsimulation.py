@@ -29,7 +29,7 @@ import timeit
 from qtpy.QtCore import QTimer
 from qtpy.QtWidgets import QFileDialog
 
-from epicpy.utils.apputils import unpack_param_string, loading_cursor
+from epicpy.utils.apputils import unpack_param_string
 
 from epicpy.epic.encoderpassthru import NullVisualEncoder, NullAuditoryEncoder
 from epicpy.epic.epicpyexception import EPICpyException
@@ -130,7 +130,6 @@ class Simulation:
         except Exception as e:
             Normal_out(f"\n❌ ERROR: Failed to update EPIC output or trace settings:\n{e}\n")
 
-    @loading_cursor
     def on_load_device(self, device_file: str = "", quiet: bool = False):
 
         # load config for this device, or create new device on if none exists already
@@ -566,7 +565,6 @@ class Simulation:
 
         return False
 
-    @loading_cursor
     def compile_rule(self, file: str = "", calm: bool = False) -> bool:
         rule_path = Path(file)
 
