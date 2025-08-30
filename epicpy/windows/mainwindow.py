@@ -838,21 +838,21 @@ class MainWin(QMainWindow):
         print("[DEBUG] Shutting Down EPICpy:")
         print("---------------------")
 
-        print("1. Stopping sim")
+        print("1. Stopping simulation...")
         if self.run_state == RUNNING:
             self.halt_simulation()
 
-        print("2. Removing file loggers")
+        print("2. Removing file loggers...")
         self.remove_file_loggers()
 
-        print("3. Saving layout")
+        print("3. Saving layout...")
         self.layout_save()  # regular and custom
 
-        print("4. Close stats win")
+        print("4. Closing stats window...")
         self.stats_win.can_close = True
         self.stats_win.close()  # destroy()
 
-        print("5. Close views")
+        print("5. Closing views...")
         try:
             for view in chain(self.visual_views.values(), self.auditory_views.values()):
                 view.can_close = True
@@ -860,10 +860,10 @@ class MainWin(QMainWindow):
         except Exception as e:
             print(f"\tWARNING: Unable to successfully close all views.")
 
-        print("6. Close output files")
+        print("6. Closing output files...")
         self.close_output_files()
 
-        print("7. Remove views from model")
+        print("7. Removing views from model...")
         try:
             self.simulation.remove_views_from_model(
                 self.visual_physical_view,
@@ -876,7 +876,7 @@ class MainWin(QMainWindow):
         except Exception as e:
             print(f"\tWARNING: Unable to cleanly release views from model.")
 
-        print("8. Pausing and stopping simulation -- seems redundant, halted above")
+        print("8. Pausing and stopping simulation -- seems redundant, halted above...")
         if self.simulation:
             try:
                 self.simulation.pause_simulation()
@@ -888,7 +888,7 @@ class MainWin(QMainWindow):
             except Exception as e:
                 log.warning(f"Unable to stop and shutdown simulation: {e}")
 
-        print("9. Shutting down output tee instances")
+        print("9. Shutting down Output_tee instances...")
         ot_info = zip(
             ("Normal_out", "Trace_out", "Exception_out", "Debug_out", "Device_out", "PPS_out", "Stats_out"),
             (Normal_out, Trace_out, Exception_out, Debug_out, Device_out, PPS_out, Stats_out),
@@ -899,9 +899,8 @@ class MainWin(QMainWindow):
             ot.py_flush()
             ot.clear_py_streams()
             ot.py_close()
-        print("10. Output_tee shutdown finished.")
 
-        print("11. Closing application window.")
+        print("10. Closing application window.")
         super().closeEvent(event)
 
     @staticmethod
