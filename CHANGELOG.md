@@ -3,6 +3,19 @@
 
 ---
 
+## VERSION: 2025.8.30.1
+
+1. **UPDATED**: Text outputs are reverted back to regular text-edits, but are faster. Previous solution was fast, but lacked needed functionality.
+2. **FIXED**: Upgraded Output_tee class to use direct connections (as it used in c++) instead of sockets, but using threading to avoid blocking.
+3. **ADDED**: Support for polars, pyarrow, and fastparquet for more modern stats workflows, but this has not yet been tested.
+4. **FIXED**: Issue with device load cursor spinner -- works now.
+5. **UPDATED**: After device is loaded, and there is a method called show_output_stats() exists, it will be called. Any errors are suppressed. This way, it can be possible to see the previous fit before you run any new models.
+6. **ADDED**: EPICPy can now be installed under python 3.10, 3.11, 3.12, and 3.13 on all operating systems! Python 3.14 will be added after it is released and can be fully tested with EPICpy.
+7. **FIXED**: Fixed (so far as I can tell on windows and mac VMs) seg fault on shutdown for mac and windows operating systems.
+8. **FIXED**: Strange menu displacement that happened when right-clicking on output windows.
+
+---
+
 ## VERSION: 2025.8.16.1
 
 1. **ADDED**: commandline "debug" flag for dev testing. E.g., `epicpy debug`.
