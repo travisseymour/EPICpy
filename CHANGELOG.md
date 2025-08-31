@@ -3,6 +3,12 @@
 
 ---
 
+## VERSION: 2025.8.30.2
+
+1. **UPDATED**: Added python interpreter name and version to Normal Output Window
+
+---
+
 ## VERSION: 2025.8.30.1
 
 1. **UPDATED**: Text outputs are reverted back to regular text-edits, but are faster. Previous solution was fast, but lacked needed functionality.

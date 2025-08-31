@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os
+import platform
 import sys
 
 from itertools import chain
@@ -250,7 +251,11 @@ class MainWin(QMainWindow):
 
         update = update_available()
         update_msg = f"\n{update}\n" if update else ""
-        self.normalPlainTextEditOutput.write(f'Normal Out! ({datetime.datetime.now().strftime("%r")}){update_msg}')
+        self.normalPlainTextEditOutput.write(
+            f'Normal Out! ({datetime.datetime.now().strftime("%r")} - '
+            f'Running on {platform.python_implementation()} {platform.python_version()})'
+            f'{update_msg}'
+        )
 
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
         # connect Trace_out now
