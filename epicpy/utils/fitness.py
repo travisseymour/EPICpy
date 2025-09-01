@@ -106,7 +106,7 @@ def setup_test_device_folder(window: QMainWindow):
     try:
         extract_from_zip(
             zip_path=Path(devices),
-            target_path=DEVICE_BASE_FOLDER,
+            target_path=Path(DEVICE_BASE_FOLDER, "devices"),
             start_path="devices",  # Start extraction at this folder inside the archive
         )
 

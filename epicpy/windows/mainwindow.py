@@ -378,9 +378,9 @@ class MainWin(QMainWindow):
 
         # FIXME: TEMP: Been having issues with tests.
         #        For now, disable tests, but this needs to be addressed
-        for menu_item in (self.actionStandardRun, self.actionEncoderRun, self.actionAllRuns):
-            menu_item.setEnabled(False)
-            menu_item.setToolTip('Tests are currently disabled -- they are being reworked')
+        # for menu_item in (self.actionStandardRun, self.actionEncoderRun, self.actionAllRuns):
+        #     menu_item.setEnabled(False)
+        #     menu_item.setToolTip('Tests are currently disabled -- they are being reworked')
 
         self.context_menu = QMenu(self)
         self.context_items = {}
