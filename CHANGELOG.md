@@ -3,6 +3,12 @@
 
 ---
 
+## VERSION: 2025.9.1.2
+
+1. **FIXED**: The tests under the Help menu are fixed and re-enabled.
+
+---
+
 ## VERSION: 2025.8.30.2
 
 1. **UPDATED**: Added python interpreter name and version to Normal Output Window
