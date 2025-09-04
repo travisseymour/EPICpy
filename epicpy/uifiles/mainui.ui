@@ -36,7 +36,7 @@
      <x>0</x>
      <y>0</y>
      <width>638</width>
-     <height>25</height>
+     <height>34</height>
     </rect>
    </property>
    <property name="font">
@@ -173,11 +173,24 @@
     <addaction name="actionFindNext"/>
     <addaction name="actionFindPrevious"/>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="title">
+     <string>SimTools</string>
+    </property>
+    <addaction name="actionSchematicTool"/>
+    <addaction name="actionBrainTool"/>
+    <addaction name="actionRuleFlowTool"/>
+    <addaction name="actionProcessGraphTool"/>
+   </widget>
    <addaction name="menuFiles"/>
    <addaction name="menuSearch"/>
    <addaction name="menuSettings"/>
    <addaction name="menuRun"/>
    <addaction name="menuWindows"/>
+   <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar">
@@ -840,6 +853,38 @@
      <family>Fira Mono</family>
      <pointsize>12</pointsize>
     </font>
+   </property>
+  </action>
+  <action name="actionRuleFlowTool">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>RuleFlow</string>
+   </property>
+  </action>
+  <action name="actionSchematicTool">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Schematic</string>
+   </property>
+  </action>
+  <action name="actionProcessGraphTool">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>ProcessGraph</string>
+   </property>
+  </action>
+  <action name="actionBrainTool">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Brain</string>
    </property>
   </action>
  </widget>

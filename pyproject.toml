@@ -57,6 +57,8 @@ dependencies = [
   "pyarrow>=21.0.0",
   "pywin32; sys_platform == 'win32'",
   "rich",
+  "networkx",
+  "graphviz"
 ]
 
 [project.optional-dependencies]

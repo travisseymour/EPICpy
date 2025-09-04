@@ -30,6 +30,7 @@ from qtpy.QtCore import QRect, QEvent
 from qtpy.QtGui import QHideEvent, QShowEvent, QIcon
 from qtpy.QtWidgets import QDockWidget, QWidget, QSizePolicy
 
+from epicpy.tools.rule_flow.rule_flow import RuleFlowWindow
 from epicpy.utils import fitness, config
 from epicpy.dialogs.aboutwindow import AboutWin
 from epicpy.dialogs.fontsizewindow import FontSizeDialog
@@ -86,7 +87,7 @@ from loguru import logger as log
 from epicpy.epic.epicsimulation import Simulation
 from epicpy.constants.stateconstants import *
 from epicpy.constants.emoji import *
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 
 from epicpy.views.epicpy_textview import EPICTextViewCachedWrite
 from epicpy.views.epicpy_visualview import EPICVisualView
@@ -253,8 +254,8 @@ class MainWin(QMainWindow):
         update_msg = f"\n{update}\n" if update else ""
         self.normalPlainTextEditOutput.write(
             f'Normal Out! ({datetime.datetime.now().strftime("%r")} - '
-            f'Running on {platform.python_implementation()} {platform.python_version()})'
-            f'{update_msg}'
+            f"Running on {platform.python_implementation()} {platform.python_version()})"
+            f"{update_msg}"
         )
 
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
@@ -372,6 +373,17 @@ class MainWin(QMainWindow):
         self.actionFind: Optional[QAction] = None
         self.actionFindNext: Optional[QAction] = None
         self.actionFindPrevious: Optional[QAction] = None
+
+        # Tools Menu Actions
+        self.actionRuleFlowTool: Optional[QAction] = None
+        self.actionSchematicTool: Optional[QAction] = None
+        self.actionProcessGraphTool: Optional[QAction] = None
+        self.actionBrainTool: Optional[QAction] = None
+
+        self.rule_flow_window: QMainWindow | None = None
+        self.schematic_window: QMainWindow | None = None
+        self.process_graph_window: QMainWindow | None = None
+        self.brain_tool: QMainWindow | None = None
 
         mainwindow_menu.setup_menu(self)
         mainwindow_menu.setup_menu_connections(self)
@@ -1848,6 +1860,20 @@ class MainWin(QMainWindow):
                         line="thick",
                     )
                 )
+
+    def start_tool(self, tool_name: Literal["rule_flow", "schematic", "process_graph", "brain"]):
+        match tool_name:
+            case "rule_flow":
+                try:
+                    self.rule_flow_window.close()
+                except:
+                    ...
+                self.rule_flow_window = RuleFlowWindow(trace_textedit=self.normalPlainTextEditOutput)
+                self.rule_flow_window.show()
+                self.rule_flow_window.update_graph_edges()
+                self.rule_flow_window.update_graph()
+            case _:
+                Exception_out(f'Tool "{tool_name}" has not been implemented')
 
     # =============================================
     # Keyboard Button Handler

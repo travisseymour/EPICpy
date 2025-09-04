@@ -16,7 +16,7 @@ I only want to process ui files that actually changed.
 # except:
 #     qt_type = ""
 
-qt_type = "pyqt6"  # required for current designer built windows.
+qt_type = "pyside6"  # required for current designer built windows.
 
 if not qt_type:
     try:

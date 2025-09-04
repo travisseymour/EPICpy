@@ -179,6 +179,26 @@ def setup_menu(window):
     window.actionReset_Layout = QAction("Restore Default Layout", window)
     windows_menu.addAction(window.actionReset_Layout)
 
+    # window.actionRuleFlowTool.setEnabled(True)
+    # window.actionSchematicTool.setEnabled(True)
+    # window.actionProcessGraphTool.setEnabled(True)
+    # window.actionBrainTool.setEnabled(True)
+
+    # --- Tool Menu --
+    tool_menu = menubar.addMenu("SimTools")
+
+    window.actionSchematicTool = QAction("Schematic", window)
+    tool_menu.addAction(window.actionSchematicTool)
+
+    window.actionBrainTool = QAction("Brain", window)
+    tool_menu.addAction(window.actionBrainTool)
+
+    window.actionRuleFlowTool = QAction("RuleFlow", window)
+    tool_menu.addAction(window.actionRuleFlowTool)
+
+    window.actionProcessGraphTool = QAction("ProcessGraph", window)
+    tool_menu.addAction(window.actionProcessGraphTool)
+
     # --- Help Menu ---
     help_menu = menubar.addMenu("Help")
     window.actionAbout = QAction("About", window)
@@ -256,3 +276,14 @@ def setup_menu_connections(window):
     window.actionRestore_Normal_Output.triggered.connect(partial(window.restore_ui_component, component="normal"))
     window.actionRestore_Trace_Output.triggered.connect(partial(window.restore_ui_component, component="trace"))
     window.actionRestore_Stats_Output.triggered.connect(partial(window.restore_ui_component, component="stats"))
+
+    # Tools menu
+    window.actionRuleFlowTool.setEnabled(True)
+    window.actionSchematicTool.setEnabled(False)
+    window.actionProcessGraphTool.setEnabled(False)
+    window.actionBrainTool.setEnabled(False)
+
+    window.actionRuleFlowTool.triggered.connect(partial(window.start_tool, tool_name="rule_flow"))
+    window.actionSchematicTool.triggered.connect(partial(window.start_tool, tool_name="schematic"))
+    window.actionProcessGraphTool.triggered.connect(partial(window.start_tool, tool_name="process_graph"))
+    window.actionBrainTool.triggered.connect(partial(window.start_tool, tool_name="brain"))
