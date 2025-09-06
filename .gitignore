@@ -173,6 +173,7 @@ freeze_and_run.sh
 freeze_and_run_macos.sh
 update_version.py
 devices/
+epicpy/resources/epiclib/epiclib_versions/
 
 # stuff put in by pipx, both already in default python .gitignore
 # build/
