@@ -1,3 +1,5 @@
+import subprocess
+
 from epicpy.utils.resource_utils import get_resource
 
 import importlib
@@ -31,6 +33,15 @@ uv tool install git+https://github.com/travisseymour/epicpy.git --python 3.13
 
 _console = Console()
 
+def _sysctl(name: str) -> str | None:
+    try:
+        out = subprocess.run(
+            ["sysctl", "-n", name],
+            capture_output=True, text=True, check=False
+        )
+        return out.stdout.strip() if out.returncode == 0 else None
+    except Exception:
+        return None
 
 def _load_platform_module():
     major = sys.version_info.major
@@ -63,14 +74,21 @@ def _load_platform_module():
             _console.print(Markdown(_py_ver_err_msg.format(py_ver, SUPPORTED_PYTHONS)))
             sys.exit(1)
     elif system == "darwin":
+        if _sysctl("hw.optional.arm64") == "0":
+            extra = ''
+        elif _sysctl("hw.optional.arm64") == "1":
+            extra = '_arm'
+        else:
+            extra = ''
+
         if py_ver == "3.10":
-            modname = f"epiclib_macos_310.so"
+            modname = f"epiclib_macos{extra}_310"
         elif py_ver == "3.11":
-            modname = f"epiclib_macos_311.so"
+            modname = f"epiclib_macos{extra}_311"
         elif py_ver == "3.12":
-            modname = f"epiclib_macos_312.so"
+            modname = f"epiclib_macos{extra}_312"
         elif py_ver == "3.13":
-            modname = f"epiclib_macos_313.so"
+            modname = f"epiclib_macos{extra}_313"
         else:
             _console.print(Markdown(_py_ver_err_msg.format(py_ver, SUPPORTED_PYTHONS)))
             sys.exit(1)
@@ -88,7 +106,8 @@ def _load_platform_module():
     _console.print(f"[green]Using {modname}[/green]")
 
     # Get the full path to the correct binary from resources
-    module_path = get_resource("epiclib", modname)
+    module_path = get_resource("epiclib", "epiclib_versions", modname)
+    # _console.print(f"[green]{str(module_path.resolve())=}[/green]")
 
     # Load it as a module named 'epiclib'
     spec = importlib.util.spec_from_file_location("epicpy.epiclib.epiclib", str(module_path))

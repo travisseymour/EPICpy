@@ -50,17 +50,19 @@ SPECIAL_MESSAGE = """
 <h3><u><font color="orange">Important Notice</u></h3></font>
 <h4><font color="blue">New version of epicpydevice and models needed!</font></h4>
 
-As of EPICpy version <b>2025.8.18.1</b>, You will need new copies of <span style="white-space: pre; font-family: monospace;"><small><b>epicpydevice</small></b></span> and all demo devices.
+As of EPICpy version <b>2025.9.1.2</b>, You will need new copies of <span style="white-space: pre; font-family: monospace;"><small><b>epicpydevice</small></b></span> and all demo devices.
 
-<br><br><b>If you have custom devices, make these changes</b>:
+<br><br><b>You can download the default demo devices from here:</b>:
 
-<ul>
-  <li>Add this to imports: 
-  <span style="white-space: pre; font-family: monospace;"><br><small><b>from epicpydevice.output_tee_globals import (Device_out, Exception_out, Debug_out)</small></b></span>
-  </li>
-  <li>Replace any instances of <span style="white-space: pre; font-family: monospace;"><small><b>self.write</small></b></span> or <span style="white-space: pre; font-family: monospace;"><small><b>parent.write</small></b></span> with <span style="white-space: pre; font-family: monospace;"><small><b>Device_out</small></b></span><li>
-  <li>Note that using <span style="white-space: pre; font-family: monospace;"><small><b>self.stats_write</small></b></span> is still the right way for devices to send stats and graph objects to the Stats Ouput Window.</span></li>
-</ul>
+<pre>https://github.com/travisseymour/EPICpyDevices</pre>
+<br>
+E.g.,
+<br>
+<pre>
+clone https://github.com/travisseymour/EPICpyDevices
+</pre>
+<br>
+To obtain research devices, contact Professor Seymour.
 """
 
 

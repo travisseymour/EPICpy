@@ -3,6 +3,13 @@
 
 ---
 
+## VERSION: 2025.9.3.1
+
+1. **ADDED**: New SimTools Menu item that contains optional ways to view an EPICpy simulation (after running a model). Currently the RuleFlow tool allows you to diagram how rules were sequenced during the most recent simulation run.
+2. **FIXED**: Selection of correct epiclib instance on MacOs.
+
+---
+
 ## VERSION: 2025.9.1.2
 
 1. **FIXED**: The tests under the Help menu are fixed and re-enabled.
