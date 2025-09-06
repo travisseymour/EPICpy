@@ -3,6 +3,13 @@
 
 ---
 
+## VERSION: 2025.9.6.1
+
+1. **FIXED**: Module loading on macos MX chips.
+2. **CHANGED**: Raw modules now come compressed to save significant harddrive space.
+
+---
+
 ## VERSION: 2025.9.3.1
 
 1. **ADDED**: New SimTools Menu item that contains optional ways to view an EPICpy simulation (after running a model). Currently the RuleFlow tool allows you to diagram how rules were sequenced during the most recent simulation run.
