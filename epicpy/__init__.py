@@ -179,6 +179,7 @@ def _load_platform_module():
     spec = importlib.util.spec_from_file_location("epicpy.epiclib.epiclib", str(module_path))
     if spec is None or spec.loader is None:
         raise ImportError(f"Could not load spec for {modname} from {module_path}")
+    print(f"Loading model '{modname}' from path '{module_path}'")
     module = importlib.util.module_from_spec(spec)
     sys.modules["epicpy.epiclib.epiclib"] = module
     spec.loader.exec_module(module)
