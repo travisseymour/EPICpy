@@ -12,7 +12,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "epicpy"
-version = "2025.9.7.1"
+version = "2025.9.7.2"
 authors = [
   { name = "Travis L. Seymour, PhD", email = "nogard@ucsc.edu" }
 ]
@@ -32,7 +32,7 @@ classifiers = [
   "Topic :: Education",
   "Topic :: Scientific/Engineering",
 ]
-dynamic = ["version"]
+#dynamic = ["version"]
 dependencies = [
   "loguru>=0.6.0,<0.8",
   "qtpy>=2.3,<3.0",
