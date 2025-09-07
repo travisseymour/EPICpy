@@ -23,15 +23,11 @@ Only Python versions {} are supported. If you already have
 EPICpy installed using an unsupported version of python,
 you can uninstall it using uv, e.g.:
 
-```bash
 uv tool uninstall epicpy
-```
 
 Ultimately, you can (re)install EPICpy using uv (replace 3.13 which any supported version):
 
-```bash
 uv tool install git+https://github.com/travisseymour/epicpy.git --python 3.13
-```
 """
 
 _console = Console()
@@ -63,7 +59,7 @@ def _user_cache_dir() -> Path:
 
 def _find_member_in_zip(zf: zipfile.ZipFile, basename: str) -> str | None:
     """
-    Return the first member path in the zip whose basename matches `basename`.
+    Return the first member path in the zip whose basename matches "basename".
     """
     for name in zf.namelist():
         if Path(name).name == basename:
@@ -174,6 +170,32 @@ def _load_platform_module():
                 f"'{modname}' not found inside {zip_path.name}. " "Verify the zip contains the expected binary."
             )
         module_path = _extract_member(zf, member, cache_dir)
+
+    cache_dir = _user_cache_dir()
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        member = _find_member_in_zip(zf, modname)
+        if not member:
+            raise FileNotFoundError(
+                f"'{modname}' not found inside {zip_path.name}. " "Verify the zip contains the expected binary."
+            )
+        module_path = _extract_member(zf, member, cache_dir)
+
+        # --- NEW: On Windows, also extract all sibling DLLs next to the .pyd ---
+        if system == "windows":
+            member_parent = Path(member).parent  # folder inside the zip ('' if at root)
+            for name in zf.namelist():
+                p = Path(name)
+                if p.parent == member_parent and p.suffix.lower() == ".dll":
+                    _extract_member(zf, name, cache_dir)
+
+            # Ensure the Windows loader will search this directory for deps
+            try:
+                os.add_dll_directory(str(cache_dir))
+            except Exception:
+                pass
+
+    # Load it as a module named 'epicpy.epiclib.epiclib'
+    spec = importlib.util.spec_from_file_location("epicpy.epiclib.epiclib", str(module_path))
 
     # Load it as a module named 'epicpy.epiclib.epiclib'
     spec = importlib.util.spec_from_file_location("epicpy.epiclib.epiclib", str(module_path))
