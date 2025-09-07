@@ -172,6 +172,7 @@ def _load_platform_module():
         module_path = _extract_member(zf, member, cache_dir)
 
     cache_dir = _user_cache_dir()
+    print(f'library cache_dir: {str(cache_dir)}')
     with zipfile.ZipFile(zip_path, "r") as zf:
         member = _find_member_in_zip(zf, modname)
         if not member:
@@ -193,9 +194,6 @@ def _load_platform_module():
                 os.add_dll_directory(str(cache_dir))
             except Exception:
                 pass
-
-    # Load it as a module named 'epicpy.epiclib.epiclib'
-    spec = importlib.util.spec_from_file_location("epicpy.epiclib.epiclib", str(module_path))
 
     # Load it as a module named 'epicpy.epiclib.epiclib'
     spec = importlib.util.spec_from_file_location("epicpy.epiclib.epiclib", str(module_path))

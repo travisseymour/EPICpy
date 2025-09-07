@@ -146,11 +146,14 @@ class Simulation:
         config.app_cfg.last_device_file = device_file
 
         if not config.device_cfg.normal_out_file:
-            config.device_cfg.normal_out_file = LoggingSettingsWin.default_log_filename("normal")
+            logfile = LoggingSettingsWin.default_log_filename("normal")
+            config.device_cfg.normal_out_file = logfile if logfile else ''
         if not config.device_cfg.trace_out_file:
-            config.device_cfg.trace_out_file = LoggingSettingsWin.default_log_filename("trace")
+            logfile = LoggingSettingsWin.default_log_filename("trace")
+            config.device_cfg.trace_out_file = logfile if logfile else ''
         if not config.device_cfg.stats_out_file:
-            config.device_cfg.stats_out_file = LoggingSettingsWin.default_log_filename("stats")
+            logfile = LoggingSettingsWin.default_log_filename("stats")
+            config.device_cfg.stats_out_file = logfile if logfile else ''
 
         if self.device:
             # make sure device data output gets flushed and saved no matter how
