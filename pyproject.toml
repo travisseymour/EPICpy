@@ -36,7 +36,8 @@ dependencies = [
   "loguru>=0.6.0,<0.8",
   "qtpy>=2.3,<3.0",
   # "PySide6==6.5.2",  # Catalina
-  "PySide6>=6.8.2,<7.0",
+  #"PySide6>=6.8.2,<7.0",
+  "PySide6-Essentials>=6.8.3",
   "python-dateutil>=2.8.2,<3.0",
   "ulid>=1.1,<2.0",
   "ulid2>=0.3.0,<1.0",
