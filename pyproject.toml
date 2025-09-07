@@ -12,6 +12,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "epicpy"
+version = "2025.9.7.1"
 authors = [
   { name = "Travis L. Seymour, PhD", email = "nogard@ucsc.edu" }
 ]
@@ -61,7 +62,8 @@ dependencies = [
   "pywin32; sys_platform == 'win32'",
   "rich",
   "networkx",
-  "graphviz"
+  "graphviz",
+  "tomli"
 ]
 
 [project.optional-dependencies]

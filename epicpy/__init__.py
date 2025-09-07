@@ -1,5 +1,10 @@
+from __future__ import annotations
+
 import importlib
 import importlib.util
+from importlib.metadata import version as _dist_version, PackageNotFoundError, packages_distributions
+
+from typing import Optional
 import os
 import platform
 import stat
@@ -12,6 +17,53 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from epicpy.utils.resource_utils import get_resource
+
+_console = Console()
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# @@@@@@@@@@@@@@@@@@@  SETUP VERSION ACCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+def _dist_name_for(package: str) -> str:
+    # Map import package -> distribution name (handles dash/underscore differences)
+    top = package.split(".")[0]
+    return packages_distributions().get(top, [top])[0]
+
+
+def _read_pyproject_version(start: Path) -> Optional[str]:
+    cand = Path(__file__).parent.parent / "pyproject.toml"
+    if cand.is_file():
+        try:
+            try:
+                import tomllib as toml  # Python 3.11+
+            except ModuleNotFoundError:  # Python 3.10
+                import tomli as toml  # pip install tomli for dev/runtime
+            with cand.open("rb") as fh:
+                data = toml.load(fh)
+            v = (data.get("project") or {}).get("version")
+            if isinstance(v, str) and v.strip():
+                return v.strip()
+        except Exception:
+            # Ignore and fall through
+            pass
+    _console.print(f"[red]UNABLE TO READ PYPROJECT VERSION![/red]")
+    return None
+
+
+def get_version(package: str) -> str:
+    try:
+        return _dist_version(_dist_name_for(package))
+    except PackageNotFoundError:
+        v = _read_pyproject_version(Path(__file__).resolve())
+        return v or "0.0.0+local"
+
+
+__version__ = get_version(__package__)
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# @@@@@@@@@@@@@@@@@@@  SETUP EPICLIB VERSION @@@@@@@@@@@@@@@@@@@@@@@@@@@
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 SUPPORTED_PYTHONS = ">=3.10;<3.14"
 
@@ -29,8 +81,6 @@ Ultimately, you can (re)install EPICpy using uv (replace 3.13 which any supporte
 
 uv tool install git+https://github.com/travisseymour/epicpy.git --python 3.13
 """
-
-_console = Console()
 
 
 def _sysctl(name: str) -> str | None:
@@ -172,7 +222,7 @@ def _load_platform_module():
         module_path = _extract_member(zf, member, cache_dir)
 
     cache_dir = _user_cache_dir()
-    print(f'library cache_dir: {str(cache_dir)}')
+    print(f"library cache_dir: {str(cache_dir)}")
     with zipfile.ZipFile(zip_path, "r") as zf:
         member = _find_member_in_zip(zf, modname)
         if not member:

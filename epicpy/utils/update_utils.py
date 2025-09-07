@@ -18,27 +18,46 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from pathlib import Path
+from typing import Optional
+
 import requests
-from epicpy.constants.version import __version__
+from epicpy import __version__
 import ast
 
 
-def extract_version(source: str) -> str:
-    tree = ast.parse(source)
-    for node in tree.body:
-        if isinstance(node, ast.Assign):
-            if any(isinstance(t, ast.Name) and t.id == "__version__" for t in node.targets):
-                val = node.value
-                if isinstance(val, ast.Constant) and isinstance(val.value, str):
-                    return val.value
-    raise ValueError("Could not find __version__ string literal")
+def extract_version_from_toml(path: str | Path) -> Optional[str]:
+    """Return the project version from pyproject.toml (or None).
+    Checks PEP 621 [project].version, then common tool sections (Poetry, Flit).
+    """
+    try:
+        import tomllib as toml  # 3.11+
+    except ModuleNotFoundError:  # 3.10
+        import tomli as toml  # pip install tomli
+
+    data = toml.loads(Path(path).read_text(encoding="utf-8"))
+
+    def _pick(v):
+        return v.strip() if isinstance(v, str) and v.strip() else None
+
+    # PEP 621
+    v = _pick((data.get("project") or {}).get("version"))
+    if v:
+        return v
+    # Poetry
+    v = _pick(((data.get("tool") or {}).get("poetry") or {}).get("version"))
+    if v:
+        return v
+    # Flit
+    v = _pick((((data.get("tool") or {}).get("flit") or {}).get("metadata") or {}).get("version"))
+    return v
 
 
-def get_remote_version(owner: str, repo: str, branch: str = "main", path: str = "epicpy/constants/version.py") -> str:
+def get_remote_version(owner: str, repo: str, branch: str = "main", path: str = "pyproject.toml") -> str:
     url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}"
     response = requests.get(url)
     try:
-        return extract_version(response.text)
+        return extract_version_from_toml(response.text)
     except:
         return ""
 

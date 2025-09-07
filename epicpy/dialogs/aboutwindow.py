@@ -23,7 +23,7 @@ from qtpy.QtGui import QPixmap
 from epicpy import get_resource
 from epicpy.uifiles.aboutui import Ui_aboutDialog
 from qtpy.QtWidgets import QDialog
-from epicpy.constants import version
+from epicpy import __version__
 
 
 class AboutWin(QDialog):
@@ -36,7 +36,7 @@ class AboutWin(QDialog):
         self.ui.pushButtonClose.clicked.connect(self.close)
 
         html = self.ui.textBrowser.toHtml()
-        html = html.replace("** EPICpy **", f"EPICpy v{version.__version__}")
+        html = html.replace("** EPICpy **", f"EPICpy v{__version__}")
         self.ui.textBrowser.setHtml(html)
 
         pic_file = str(get_resource("images", "EPIC_TINY.png"))

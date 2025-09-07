@@ -22,6 +22,12 @@ import os
 import sys
 import platform
 
+from rich.console import Console
+
+from epicpy.cli import build_parser, do_cleanup
+
+_console = Console()
+
 
 # Function to determine the available display server
 def set_qt_platform():
@@ -224,35 +230,28 @@ def shut_it_down():
     sys.exit()
 
 
-def main():
+def main(argv: list[str] | None = None) -> int:
     application = QApplication([])
     application.setWindowIcon(QIcon(str(get_resource("uiicons", "Icon.png"))))
 
     print("Loading EPICpy, please wait...")
 
     try:
-        cmd = sys.argv[1].lower()
-    except IndexError:
-        cmd = ""
+        from epicpy import __version__
+    except Exception:
+        __version__ = "Unknown!"
 
-    # allow user to clean up epicpy application launcher from the commandline
-    if cmd == "cleanup":
-        print("Attempting to cleanup EPICpy application launcher.")
-        try:
-            if platform.system() == "Linux":
-                if linux_desktop_entry_exists("epicpy"):
-                    remove_linux_desktop_entry("epicpy")
-            elif platform.system() == "Darwin":
-                if macos_launcher_exists("epicpy"):
-                    remove_macos_app_launcher("epicpy")
-            elif platform.system() == "Linux":
-                if windows_shortcut_exists("epicpy"):
-                    remove_windows_shortcut("epicpy")
-        except Exception as e:
-            print(f"Unable to cleanup application launcher: {e}")
-        sys.exit()
-    elif cmd == "debug":
+    parser = build_parser(__version__)
+    args = parser.parse_args(argv)
+
+    # Global flags
+    if args.debug:
         os.environ["EPICPY_DEBUG"] = "1"
+        _console.print("[blue]Debug mode enabled (EPICPY_DEBUG=1).[/blue]")
+
+    # Commands
+    if args.command == "cleanup":
+        return do_cleanup(args.name)
 
         # create launcher on first launch of epicpy
     print(f"{platform.system()=}")

@@ -54,8 +54,8 @@ class LoggingSettingsWin(QDialog):
         try:
             assert config.device_cfg.device_file
         except AssertionError:
-            print('WARNING: default_log_filename found config.device_cfg.device_file to be uninitialized')
-            return ''
+            print("WARNING: default_log_filename found config.device_cfg.device_file to be uninitialized")
+            return ""
 
         device_path = Path(config.device_cfg.device_file).resolve()
 

@@ -80,7 +80,7 @@ from epicpy.views.visualviewwindow import VisualViewWin
 from epicpy.views.auditoryviewwindow import AuditoryViewWin
 from epicpy.epic.encoderpassthru import NullVisualEncoder, NullAuditoryEncoder
 import datetime
-from epicpy.constants.version import __version__
+from epicpy import __version__
 import tempfile
 import webbrowser
 from loguru import logger as log
