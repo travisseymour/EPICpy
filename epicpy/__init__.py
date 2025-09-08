@@ -29,11 +29,14 @@ _console = Console()
 # Crash/exception logging (Windows native crashes included)
 import faulthandler, signal
 
+
 def _install_crash_logging(log_path: str = None) -> None:
     if log_path is None:
         # per-Python/per-version log inside cache root
         base = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~\\AppData\\Local")
-        log_path = str(Path(base) / "epicpy" / "epiclib" / f"crash-py{sys.version_info.major}{sys.version_info.minor}.log")
+        log_path = str(
+            Path(base) / "epicpy" / "epiclib" / f"crash-py{sys.version_info.major}{sys.version_info.minor}.log"
+        )
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
     f = open(log_path, "w", buffering=1, encoding="utf-8")
     faulthandler.enable(file=f, all_threads=True)
@@ -42,11 +45,15 @@ def _install_crash_logging(log_path: str = None) -> None:
         faulthandler.register(getattr(signal, "SIGBREAK"), file=f, all_threads=True)
     except Exception:
         pass
+
     # Also capture uncaught Python exceptions
     def _excepthook(t, e, tb):
         import traceback
+
         traceback.print_exception(t, e, tb, file=f)
+
     sys.excepthook = _excepthook
+
 
 _install_crash_logging()
 
@@ -215,6 +222,7 @@ def _extract_member(zf: zipfile.ZipFile, member: str, dest_dir: Path) -> Path:
 
     return dest_path
 
+
 def _probe_import_in_subprocess(module_path: Path, fqname: str) -> None:
     """
     Try importing the extension in a fresh Python process.
@@ -244,14 +252,10 @@ except Exception:
     traceback.print_exc()
     sys.exit(1)
 """
-    r = subprocess.run(
-        [sys.executable, "-X", "faulthandler", "-c", code],
-        capture_output=True, text=True
-    )
+    r = subprocess.run([sys.executable, "-X", "faulthandler", "-c", code], capture_output=True, text=True)
     if r.returncode != 0 or "SUBPROCESS_IMPORT_OK" not in r.stdout:
         raise ImportError(
-            "Subprocess import of epiclib failed on this Python version.\n"
-            f"STDOUT:\n{r.stdout}\nSTDERR:\n{r.stderr}"
+            "Subprocess import of epiclib failed on this Python version.\n" f"STDOUT:\n{r.stdout}\nSTDERR:\n{r.stderr}"
         )
 
 
@@ -357,11 +361,13 @@ def _load_platform_module():
 
     # Make it a real attribute of the parent module
     import epicpy.epiclib
+
     epicpy.epiclib.epiclib = module
 
     # Test the dynamic import
     try:
         from epicpy.epiclib.epiclib import geometric_utilities as GU  # noqa: F401
+
         print("Test import from epicpy.epiclib.epiclib successful!")
     except Exception as e:
         raise ImportError(f"Test import from epicpy.epiclib.epiclib failed: {e}")
