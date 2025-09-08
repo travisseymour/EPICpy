@@ -174,10 +174,12 @@ freeze_and_run_macos.sh
 update_version.py
 devices/
 epicpy/resources/epiclib/epiclib_versions/
+/epicpy/resources/epiclib/old_dlls_not_needed/
 
 # stuff put in by pipx, both already in default python .gitignore
 # build/
 # *.egg-info/
 
 # Pycharm config files
+
 
