@@ -215,6 +215,45 @@ def _extract_member(zf: zipfile.ZipFile, member: str, dest_dir: Path) -> Path:
 
     return dest_path
 
+def _probe_import_in_subprocess(module_path: Path, fqname: str) -> None:
+    """
+    Try importing the extension in a fresh Python process.
+    Captures crashes and surfaces the real error to the parent.
+    """
+    code = f"""
+import os, sys, ctypes, importlib.util, traceback, faulthandler
+faulthandler.enable(all_threads=True)
+try:
+    os.add_dll_directory(r"{module_path.parent.resolve()}")
+except Exception:
+    pass
+# Preload all DLLs to surface dependency errors
+for name in sorted(os.listdir(r"{module_path.parent.resolve()}")):
+    if name.lower().endswith(".dll"):
+        try:
+            ctypes.WinDLL(os.path.join(r"{module_path.parent.resolve()}", name))
+        except OSError as e:
+            traceback.print_exc()
+            sys.exit(1)
+try:
+    spec = importlib.util.spec_from_file_location("{fqname}", r"{module_path.resolve()}")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    print("SUBPROCESS_IMPORT_OK")
+except Exception:
+    traceback.print_exc()
+    sys.exit(1)
+"""
+    r = subprocess.run(
+        [sys.executable, "-X", "faulthandler", "-c", code],
+        capture_output=True, text=True
+    )
+    if r.returncode != 0 or "SUBPROCESS_IMPORT_OK" not in r.stdout:
+        raise ImportError(
+            "Subprocess import of epiclib failed on this Python version.\n"
+            f"STDOUT:\n{r.stdout}\nSTDERR:\n{r.stderr}"
+        )
+
 
 def _load_platform_module():
     major = sys.version_info.major
@@ -338,6 +377,8 @@ def _load_platform_module():
                     ctypes.WinDLL(str(dll))
                 except OSError as e:
                     raise ImportError(f"Failed to load dependency {dll.name}: {e}") from e
+
+    _probe_import_in_subprocess(module_path, "epicpy.epiclib.epiclib")
 
     # Load it as a module named 'epicpy.epiclib.epiclib'
     spec = importlib.util.spec_from_file_location("epicpy.epiclib.epiclib", str(module_path))
