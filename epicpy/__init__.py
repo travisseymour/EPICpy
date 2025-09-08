@@ -23,6 +23,35 @@ from epicpy.utils.resource_utils import get_resource
 _console = Console()
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# @@@@@@@@@@@@@@@@@@@  PREVENT SILENT CRASH @@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# Crash/exception logging (Windows native crashes included)
+import faulthandler, signal
+
+def _install_crash_logging(log_path: str = None) -> None:
+    if log_path is None:
+        # per-Python/per-version log inside cache root
+        base = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~\\AppData\\Local")
+        log_path = str(Path(base) / "epicpy" / "epiclib" / f"crash-py{sys.version_info.major}{sys.version_info.minor}.log")
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    f = open(log_path, "w", buffering=1, encoding="utf-8")
+    faulthandler.enable(file=f, all_threads=True)
+    # Ctrl+Break prints stacks on Windows
+    try:
+        faulthandler.register(getattr(signal, "SIGBREAK"), file=f, all_threads=True)
+    except Exception:
+        pass
+    # Also capture uncaught Python exceptions
+    def _excepthook(t, e, tb):
+        import traceback
+        traceback.print_exception(t, e, tb, file=f)
+    sys.excepthook = _excepthook
+
+_install_crash_logging()
+
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # @@@@@@@@@@@@@@@@@@@  SETUP VERSION ACCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -284,6 +313,18 @@ def _load_platform_module():
                 p = Path(name)
                 if p.parent == member_parent and p.suffix.lower() == ".dll":
                     _extract_member(zf, name, cache_dir)
+
+            # The MinGW runtime often needs these (transitively from libwinpthread-1.dll).
+            required = {"libwinpthread-1.dll", "libgcc_s_seh-1.dll", "libstdc++-6.dll"}
+            present = {p.name.lower() for p in module_path.parent.glob("*.dll")}
+            missing = sorted(required - present)
+            if missing:
+                raise ImportError(
+                    "Missing Windows runtime DLLs next to epiclib: "
+                    + ", ".join(missing)
+                    + ". Add them to epiclib_versions.zip in the same folder as the .pyd, "
+                      "or rebuild with -static-libstdc++ -static-libgcc."
+                )
 
             # Ensure Windows loader searches this directory
             try:
