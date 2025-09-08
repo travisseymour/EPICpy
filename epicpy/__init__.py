@@ -260,6 +260,7 @@ def _load_platform_module():
     minor = sys.version_info.minor
     py_ver = f"{major}.{minor}"
     system = platform.system().lower()
+    extra = ""
 
     if system == "windows":
         if py_ver == "3.10":
@@ -317,7 +318,7 @@ def _load_platform_module():
         )
         sys.exit(1)
 
-    _console.print(f"[green]Using {modname}[/green]")
+    _console.print(f"[green]Using {modname} ({py_ver}, {system}{extra})[/green]")
 
     # Locate the zip in package resources
     try:
@@ -344,41 +345,6 @@ def _load_platform_module():
 
         # Extract the module
         module_path = _extract_member(zf, member, cache_dir)
-
-        if system == "windows":
-            member_parent = Path(member).parent  # zip subfolder ('' if root)
-            # Extract all sibling DLLs next to the .pyd
-            for name in zf.namelist():
-                p = Path(name)
-                if p.parent == member_parent and p.suffix.lower() == ".dll":
-                    _extract_member(zf, name, cache_dir)
-
-            # The MinGW runtime often needs these (transitively from libwinpthread-1.dll).
-            required = {"libwinpthread-1.dll", "libgcc_s_seh-1.dll", "libstdc++-6.dll"}
-            present = {p.name.lower() for p in module_path.parent.glob("*.dll")}
-            missing = sorted(required - present)
-            if missing:
-                raise ImportError(
-                    "Missing Windows runtime DLLs next to epiclib: "
-                    + ", ".join(missing)
-                    + ". Add them to epiclib_versions.zip in the same folder as the .pyd, "
-                      "or rebuild with -static-libstdc++ -static-libgcc."
-                )
-
-            # Ensure Windows loader searches this directory
-            try:
-                os.add_dll_directory(str(module_path.parent.resolve()))
-            except Exception:
-                pass
-
-            # Preload DLLs to surface missing dependencies early
-            for dll in sorted(module_path.parent.glob("*.dll")):
-                try:
-                    ctypes.WinDLL(str(dll))
-                except OSError as e:
-                    raise ImportError(f"Failed to load dependency {dll.name}: {e}") from e
-
-    _probe_import_in_subprocess(module_path, "epicpy.epiclib.epiclib")
 
     # Load it as a module named 'epicpy.epiclib.epiclib'
     spec = importlib.util.spec_from_file_location("epicpy.epiclib.epiclib", str(module_path))
