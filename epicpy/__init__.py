@@ -5,11 +5,13 @@ import importlib.util
 from importlib.metadata import version as _dist_version, PackageNotFoundError, packages_distributions
 
 from typing import Optional
+import ctypes
 import os
 import platform
 import stat
 import subprocess
 import sys
+import time
 import zipfile
 from pathlib import Path
 
@@ -91,9 +93,9 @@ def _sysctl(name: str) -> str | None:
         return None
 
 
-def _user_cache_dir() -> Path:
+def _cache_root() -> Path:
     """
-    Cross-platform per-user cache dir for EPICpy.
+    Cross-platform per-user cache root for EPICpy.
     Linux/macOS: ~/.cache/epicpy/epiclib
     Windows: %LOCALAPPDATA%\\epicpy\\epiclib
     """
@@ -102,9 +104,22 @@ def _user_cache_dir() -> Path:
         base = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~\\AppData\\Local")
     else:
         base = os.path.expanduser("~/.cache")
-    p = Path(base) / "epicpy" / "epiclib"
-    p.mkdir(parents=True, exist_ok=True)
-    return p
+    root = Path(base) / "epicpy" / "epiclib"
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+def _versioned_cache_dir(zip_path: Path) -> Path:
+    """Make a per-python, per-app-version, per-zip-mtime cache directory."""
+    py_tag = f"py{sys.version_info.major}{sys.version_info.minor}"
+    app_ver = __version__ if isinstance(__version__, str) else "0.0.0"
+    try:
+        mtime_ns = zip_path.stat().st_mtime_ns
+    except Exception:
+        mtime_ns = 0
+    d = _cache_root() / f"{py_tag}-{app_ver}-{mtime_ns:x}"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
 
 
 def _find_member_in_zip(zf: zipfile.ZipFile, basename: str) -> str | None:
@@ -120,12 +135,46 @@ def _find_member_in_zip(zf: zipfile.ZipFile, basename: str) -> str | None:
 def _extract_member(zf: zipfile.ZipFile, member: str, dest_dir: Path) -> Path:
     """
     Extract a single member to dest_dir, preserving basename.
-    Always overwrite to avoid stale copies.
+    - Skip writing if identical size already exists.
+    - If overwrite is blocked (locked DLL), fall back to a per-process subdir.
+    - Retry briefly to dodge transient locks (e.g., AV scanners).
     """
-    dest_path = dest_dir / Path(member).name
     dest_dir.mkdir(parents=True, exist_ok=True)
-    with zf.open(member) as src, open(dest_path, "wb") as dst:
-        dst.write(src.read())
+    target_name = Path(member).name
+    dest_path = dest_dir / target_name
+
+    # Skip if same size (cheap identical check)
+    try:
+        info = zf.getinfo(member)
+        if dest_path.exists() and dest_path.stat().st_size == info.file_size:
+            return dest_path
+    except KeyError:
+        pass
+
+    # Try to remove existing file if present
+    if dest_path.exists():
+        try:
+            os.chmod(dest_path, stat.S_IWRITE | stat.S_IREAD)
+            dest_path.unlink()
+        except PermissionError:
+            # Fall back to unique per-process subdir to avoid locked files
+            alt_dir = dest_dir / f"run-{os.getpid()}"
+            alt_dir.mkdir(parents=True, exist_ok=True)
+            dest_path = alt_dir / target_name
+
+    # Small retry loop for transient PermissionError
+    last_exc = None
+    for _ in range(3):
+        try:
+            with zf.open(member) as src, open(dest_path, "wb") as dst:
+                dst.write(src.read())
+            last_exc = None
+            break
+        except PermissionError as e:
+            last_exc = e
+            time.sleep(0.25)
+    if last_exc:
+        raise last_exc
 
     # On POSIX, ensure the .so is executable by the user
     if os.name == "posix":
@@ -202,6 +251,7 @@ def _load_platform_module():
 
     _console.print(f"[green]Using {modname}[/green]")
 
+    # Locate the zip in package resources
     try:
         zip_path = get_resource("epiclib", "", "epiclib_versions.zip")
     except Exception:
@@ -209,41 +259,44 @@ def _load_platform_module():
 
     if not isinstance(zip_path, Path):
         raise FileNotFoundError(
-            "Could not locate 'epiclib_versions.zip' via get_resource. " "Ensure it is included in your package data."
+            "Could not locate 'epiclib_versions.zip' via get_resource. Ensure it is included in your package data."
         )
 
-    cache_dir = _user_cache_dir()
-    with zipfile.ZipFile(zip_path, "r") as zf:
-        member = _find_member_in_zip(zf, modname)
-        if not member:
-            raise FileNotFoundError(
-                f"'{modname}' not found inside {zip_path.name}. " "Verify the zip contains the expected binary."
-            )
-        module_path = _extract_member(zf, member, cache_dir)
-
-    cache_dir = _user_cache_dir()
+    # Build a versioned cache dir (prevents overwriting in-use DLLs)
+    cache_dir = _versioned_cache_dir(zip_path)
     print(f"library cache_dir: {str(cache_dir)}")
+
+    # Extract the chosen module and (on Windows) sibling DLLs
     with zipfile.ZipFile(zip_path, "r") as zf:
         member = _find_member_in_zip(zf, modname)
         if not member:
             raise FileNotFoundError(
-                f"'{modname}' not found inside {zip_path.name}. " "Verify the zip contains the expected binary."
+                f"'{modname}' not found inside {zip_path.name}. Verify the zip contains the expected binary."
             )
+
+        # Extract the module
         module_path = _extract_member(zf, member, cache_dir)
 
-        # --- NEW: On Windows, also extract all sibling DLLs next to the .pyd ---
         if system == "windows":
-            member_parent = Path(member).parent  # folder inside the zip ('' if at root)
+            member_parent = Path(member).parent  # zip subfolder ('' if root)
+            # Extract all sibling DLLs next to the .pyd
             for name in zf.namelist():
                 p = Path(name)
                 if p.parent == member_parent and p.suffix.lower() == ".dll":
                     _extract_member(zf, name, cache_dir)
 
-            # Ensure the Windows loader will search this directory for deps
+            # Ensure Windows loader searches this directory
             try:
-                os.add_dll_directory(str(cache_dir))
+                os.add_dll_directory(str(module_path.parent.resolve()))
             except Exception:
                 pass
+
+            # Preload DLLs to surface missing dependencies early
+            for dll in sorted(module_path.parent.glob("*.dll")):
+                try:
+                    ctypes.WinDLL(str(dll))
+                except OSError as e:
+                    raise ImportError(f"Failed to load dependency {dll.name}: {e}") from e
 
     # Load it as a module named 'epicpy.epiclib.epiclib'
     spec = importlib.util.spec_from_file_location("epicpy.epiclib.epiclib", str(module_path))
@@ -256,13 +309,11 @@ def _load_platform_module():
 
     # Make it a real attribute of the parent module
     import epicpy.epiclib
-
     epicpy.epiclib.epiclib = module
 
     # Test the dynamic import
     try:
         from epicpy.epiclib.epiclib import geometric_utilities as GU  # noqa: F401
-
         print("Test import from epicpy.epiclib.epiclib successful!")
     except Exception as e:
         raise ImportError(f"Test import from epicpy.epiclib.epiclib failed: {e}")
