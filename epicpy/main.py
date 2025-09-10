@@ -53,7 +53,6 @@ def set_qt_platform():
 # Set the appropriate platform before importing QApplication
 set_qt_platform()
 
-from importlib.resources import files, as_file
 
 from qtpy.QtGui import QIcon
 from fastnumbers import check_int
@@ -68,18 +67,25 @@ from loguru import logger as log
 
 from epicpy.launcher.linux_launcher import (
     linux_desktop_entry_exists,
-    remove_linux_desktop_entry,
     create_linux_desktop_entry,
 )
-from epicpy.launcher.macos_launcher import macos_launcher_exists, remove_macos_app_launcher, create_macos_app_launcher
-from epicpy.launcher.windows_launcher import windows_shortcut_exists, remove_windows_shortcut, create_windows_shortcut
+from epicpy.launcher.macos_launcher import (
+    macos_launcher_exists,
+    create_macos_app_launcher,
+)
+from epicpy.launcher.windows_launcher import (
+    windows_shortcut_exists,
+    create_windows_shortcut,
+)
 from epicpy.utils.defaultfont import get_default_font
 from epicpy.utils.splashscreen import SplashScreen
 
 os.environ["OUTDATED_IGNORE"] = "1"
 if platform.platform().split("-")[1].startswith("10."):
     os.environ["QT_MAC_WANTS_LAYER"] = "1"
-os.environ["EPICPY_DEBUG"] = "0"  # off by default, set by passing "debug" on commandline
+os.environ["EPICPY_DEBUG"] = (
+    "0"  # off by default, set by passing "debug" on commandline
+)
 
 # os.environ["QT_DEBUG_PLUGINS"] = "1" # for more info when there are plugin load errors
 
@@ -87,7 +93,7 @@ from qtpy.QtWidgets import QApplication
 from qtpy.QtCore import qInstallMessageHandler, QCoreApplication
 
 from epicpy.utils.apputils import frozen
-from epicpy import get_resource
+from epicpy.utils.resource_utils import get_resource
 from epicpy.utils import config
 
 DONE = False
@@ -150,7 +156,9 @@ if OS in ("Linux", "Darwin"):
                 )
         else:
             libc_path = ""
-            log.warning("ERROR: Cannot find libc path. Unable to install SIGSEGV handler.")
+            log.warning(
+                "ERROR: Cannot find libc path. Unable to install SIGSEGV handler."
+            )
     elif OS == "Darwin":
         libc_path = "/usr/lib/libc.dylib"  # Update with the correct path on macOS
     else:
@@ -257,7 +265,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"{platform.system()=}")
     if os.environ.get("PYCHARM_HOSTED") != "1":
         try:
-            print("Making sure EPICpy application launcher exists (otherwise, create one).")
+            print(
+                "Making sure EPICpy application launcher exists (otherwise, create one)."
+            )
             if platform.system() == "Linux":
                 if not linux_desktop_entry_exists("epicpy"):
                     create_linux_desktop_entry("epicpy", "EPICpy")
@@ -291,7 +301,10 @@ def main(argv: list[str] | None = None) -> int:
 
         log_file = Path(config_dir, "epicpy.log")
         log.add(log_file, level="ERROR")
-        print(f"NOTE: Logging errors to file ({log_file.name}) " f"in config_dir ({str(config_dir.resolve())})")
+        print(
+            f"NOTE: Logging errors to file ({log_file.name}) "
+            f"in config_dir ({str(config_dir.resolve())})"
+        )
         # Disable pyqt warnings when not developing
         qInstallMessageHandler(pyqt_warning_handler)
 

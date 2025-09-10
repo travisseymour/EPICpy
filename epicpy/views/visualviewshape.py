@@ -6,7 +6,16 @@ from timeit import default_timer
 from typing import Union
 
 from qtpy.QtCore import QRectF, Qt, QTimer
-from qtpy.QtGui import QPainter, QPainterPath, QTransform, QColor, QPen, QBrush, QStaticText, QFont
+from qtpy.QtGui import (
+    QPainter,
+    QPainterPath,
+    QTransform,
+    QColor,
+    QPen,
+    QBrush,
+    QStaticText,
+    QFont,
+)
 from qtpy.QtWidgets import QApplication, QWidget
 
 from itertools import count
@@ -28,7 +37,13 @@ class Rect:
 
     __slots__ = "x", "y", "w", "h"
 
-    def __init__(self, x: Union[float, int], y: Union[float, int], w: Union[float, int], h: Union[float, int]):
+    def __init__(
+        self,
+        x: Union[float, int],
+        y: Union[float, int],
+        w: Union[float, int],
+        h: Union[float, int],
+    ):
         self.x = x
         self.y = y
         self.w = w
@@ -66,7 +81,9 @@ def normalized_triangle() -> QPainterPath:
 # --------------------------------------------------
 # Function to Scale, Transform, and Draw Normalized Shapes
 # --------------------------------------------------
-def draw_normalized_shape(shape: str, rect: Rect, painter: QPainter, color: Union[QColor, None] = None):
+def draw_normalized_shape(
+    shape: str, rect: Rect, painter: QPainter, color: Union[QColor, None] = None
+):
     """
     Draws a normalized shape (either 'Circle' or 'Triangle') into the given rect.
     If color is provided, the pen (thickness 2) and brush are set to that color (filled shape);
@@ -164,7 +181,11 @@ class ShapeWidget(QWidget):
             h = random.uniform(20, 100)
             # 50% chance to use a random color; otherwise, None for unfilled.
             if random.choice([True, False]):
-                color = QColor(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+                color = QColor(
+                    random.randint(0, 255),
+                    random.randint(0, 255),
+                    random.randint(0, 255),
+                )
             else:
                 color = None
             self.shapes.append((shape_type, Rect(x, y, w, h), color))
@@ -179,7 +200,15 @@ class ShapeWidget(QWidget):
             draw_normalized_shape(shape_type, rect, painter, color)
         # Draw the iteration and current time at the top left.
         info_text = f"Iteration Number = {self.iteration} | time = {time.ctime()}"
-        draw_optimized_text(painter, info_text, 10, 10, bold=True, color=QColor("darkblue"), font=self.bold_font)
+        draw_optimized_text(
+            painter,
+            info_text,
+            10,
+            10,
+            bold=True,
+            color=QColor("darkblue"),
+            font=self.bold_font,
+        )
         painter.end()
         print(f"paint_event #{next(endless_ints)}")
 
@@ -200,7 +229,9 @@ class ShapeWidget(QWidget):
             finish_time = default_timer()
             total_time = finish_time - self.start_time
             iteration_time = total_time / NUM_ITERATIONS
-            print(f"Total Time = {total_time:0.4f} sec. | Iteration Time = {iteration_time:0.4f} sec.")
+            print(
+                f"Total Time = {total_time:0.4f} sec. | Iteration Time = {iteration_time:0.4f} sec."
+            )
 
     def showEvent(self, event):
         """

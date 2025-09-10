@@ -55,13 +55,16 @@ class Ui_DialogLoggingSettings(object):
         self.toolButtonNormalOut.setObjectName("toolButtonNormalOut")
         self.horizontalLayout_2.addWidget(self.toolButtonNormalOut)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
-        self.plainTextEditNormalOutFile = QtWidgets.QPlainTextEdit(parent=self.layoutWidget)
+        self.plainTextEditNormalOutFile = QtWidgets.QPlainTextEdit(
+            parent=self.layoutWidget
+        )
         font = QtGui.QFont()
         font.setFamily("Fira Mono")
         font.setPointSize(12)
         self.plainTextEditNormalOutFile.setFont(font)
         self.plainTextEditNormalOutFile.setInputMethodHints(
-            QtCore.Qt.InputMethodHint.ImhMultiLine | QtCore.Qt.InputMethodHint.ImhNoAutoUppercase
+            QtCore.Qt.InputMethodHint.ImhMultiLine
+            | QtCore.Qt.InputMethodHint.ImhNoAutoUppercase
         )
         self.plainTextEditNormalOutFile.setPlainText("")
         self.plainTextEditNormalOutFile.setObjectName("plainTextEditNormalOutFile")
@@ -92,13 +95,16 @@ class Ui_DialogLoggingSettings(object):
         self.toolButtonTraceOut.setObjectName("toolButtonTraceOut")
         self.horizontalLayout_3.addWidget(self.toolButtonTraceOut)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
-        self.plainTextEditTraceOutFile = QtWidgets.QPlainTextEdit(parent=self.layoutWidget)
+        self.plainTextEditTraceOutFile = QtWidgets.QPlainTextEdit(
+            parent=self.layoutWidget
+        )
         font = QtGui.QFont()
         font.setFamily("Fira Mono")
         font.setPointSize(12)
         self.plainTextEditTraceOutFile.setFont(font)
         self.plainTextEditTraceOutFile.setInputMethodHints(
-            QtCore.Qt.InputMethodHint.ImhMultiLine | QtCore.Qt.InputMethodHint.ImhNoAutoUppercase
+            QtCore.Qt.InputMethodHint.ImhMultiLine
+            | QtCore.Qt.InputMethodHint.ImhNoAutoUppercase
         )
         self.plainTextEditTraceOutFile.setPlainText("")
         self.plainTextEditTraceOutFile.setObjectName("plainTextEditTraceOutFile")
@@ -121,7 +127,9 @@ class Ui_DialogLoggingSettings(object):
         font.setBold(True)
         self.pushButtonCancel.setFont(font)
         self.pushButtonCancel.setObjectName("pushButtonCancel")
-        self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.pushButtonCancel)
+        self.formLayout.setWidget(
+            0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.pushButtonCancel
+        )
         self.pushButtonOK = QtWidgets.QPushButton(parent=self.layoutWidget)
         font = QtGui.QFont()
         font.setFamily("Fira Mono")
@@ -129,7 +137,9 @@ class Ui_DialogLoggingSettings(object):
         font.setBold(True)
         self.pushButtonOK.setFont(font)
         self.pushButtonOK.setObjectName("pushButtonOK")
-        self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.pushButtonOK)
+        self.formLayout.setWidget(
+            0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.pushButtonOK
+        )
         self.horizontalLayout.addLayout(self.formLayout)
         self.verticalLayout.addLayout(self.horizontalLayout)
 
@@ -138,10 +148,16 @@ class Ui_DialogLoggingSettings(object):
 
     def retranslateUi(self, DialogLoggingSettings):
         _translate = QtCore.QCoreApplication.translate
-        DialogLoggingSettings.setWindowTitle(_translate("DialogLoggingSettings", "Output Logging Settings"))
-        self.checkBoxLogNormalOut.setText(_translate("DialogLoggingSettings", "Log Normal Output?"))
+        DialogLoggingSettings.setWindowTitle(
+            _translate("DialogLoggingSettings", "Output Logging Settings")
+        )
+        self.checkBoxLogNormalOut.setText(
+            _translate("DialogLoggingSettings", "Log Normal Output?")
+        )
         self.toolButtonNormalOut.setText(_translate("DialogLoggingSettings", "..."))
-        self.checkBoxLogTraceOut.setText(_translate("DialogLoggingSettings", "Log Trace Output?"))
+        self.checkBoxLogTraceOut.setText(
+            _translate("DialogLoggingSettings", "Log Trace Output?")
+        )
         self.toolButtonTraceOut.setText(_translate("DialogLoggingSettings", "..."))
         self.pushButtonCancel.setText(_translate("DialogLoggingSettings", "Cancel"))
         self.pushButtonOK.setText(_translate("DialogLoggingSettings", "OK"))

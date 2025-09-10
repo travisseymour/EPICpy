@@ -91,7 +91,9 @@ class FontSizeDialog(QDialog):
             #     + str(int(config.app_cfg.font_size))
             #     + "pt}"
             # )
-            font = get_default_font(config.app_cfg.font_family, config.app_cfg.font_size)
+            font = get_default_font(
+                config.app_cfg.font_family, config.app_cfg.font_size
+            )
             self.ui.plainTextEditFontSample.setFont(font)
         else:
             # usually called when spinbox changes (pulls size from widget)
@@ -102,7 +104,9 @@ class FontSizeDialog(QDialog):
             #     + str(int(self.ui.spinBoxFontSize.value()))
             #     + "pt}"
             # )
-            font = get_default_font(config.app_cfg.font_family, int(self.ui.spinBoxFontSize.value()))
+            font = get_default_font(
+                config.app_cfg.font_family, int(self.ui.spinBoxFontSize.value())
+            )
             self.ui.plainTextEditFontSample.setFont(font)
             self.ui.plainTextEditFontSample.update()
 

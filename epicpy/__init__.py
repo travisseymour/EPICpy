@@ -1,25 +1,20 @@
 from __future__ import annotations
 
-import importlib
-import importlib.util
-from importlib.metadata import version as _dist_version, PackageNotFoundError, packages_distributions
+from importlib.metadata import (
+    version as _dist_version,
+    PackageNotFoundError,
+    packages_distributions,
+)
 
 from typing import Optional
-import ctypes
 import os
-import platform
-import stat
-import subprocess
 import sys
-import time
-import zipfile
 from pathlib import Path
-import faulthandler, signal
+import faulthandler
+import signal
 
 from rich.console import Console
-from rich.markdown import Markdown
 
-from epicpy.utils.resource_utils import get_resource
 
 _console = Console()
 
@@ -35,7 +30,10 @@ def _install_crash_logging(log_path: str = None) -> None:
         # per-Python/per-version log inside cache root
         base = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~\\AppData\\Local")
         log_path = str(
-            Path(base) / "epicpy" / "epiclib" / f"crash-py{sys.version_info.major}{sys.version_info.minor}.log"
+            Path(base)
+            / "epicpy"
+            / "epiclib"
+            / f"crash-py{sys.version_info.major}{sys.version_info.minor}.log"
         )
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
     f = open(log_path, "w", buffering=1, encoding="utf-8")
@@ -85,7 +83,7 @@ def _read_pyproject_version(start: Path) -> Optional[str]:
         except Exception:
             # Ignore and fall through
             pass
-    _console.print(f"[red]UNABLE TO READ PYPROJECT VERSION![/red]")
+    _console.print("[red]UNABLE TO READ PYPROJECT VERSION![/red]")
     return None
 
 

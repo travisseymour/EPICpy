@@ -99,10 +99,18 @@ class Ui_DialogSearch(object):
 
     def retranslateUi(self, DialogSearch):
         _translate = QtCore.QCoreApplication.translate
-        DialogSearch.setWindowTitle(_translate("DialogSearch", "Specify Which Text To Search For"))
+        DialogSearch.setWindowTitle(
+            _translate("DialogSearch", "Specify Which Text To Search For")
+        )
         self.label.setText(_translate("DialogSearch", "Search For:"))
-        self.checkBoxRegEx.setText(_translate("DialogSearch", "Treat as Regular Expression?"))
+        self.checkBoxRegEx.setText(
+            _translate("DialogSearch", "Treat as Regular Expression?")
+        )
         self.checkBoxIgnoreCase.setText(_translate("DialogSearch", "Ignore Case?"))
         self.pushButtonCancel.setText(_translate("DialogSearch", "Cancel"))
-        self.pushButtonSearchBackward.setText(_translate("DialogSearch", "Search\n" "Backward"))
-        self.pushButtonSearchForward.setText(_translate("DialogSearch", "Search\n" "Forward"))
+        self.pushButtonSearchBackward.setText(
+            _translate("DialogSearch", "Search\nBackward")
+        )
+        self.pushButtonSearchForward.setText(
+            _translate("DialogSearch", "Search\nForward")
+        )

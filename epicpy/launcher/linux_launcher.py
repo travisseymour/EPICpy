@@ -67,7 +67,9 @@ Categories=Utility;
 
 def remove_linux_desktop_entry(app_name: str):
     """Removes the .desktop file when the app is uninstalled."""
-    desktop_file = Path.home() / ".local/share/applications" / f"{app_name.lower()}.desktop"
+    desktop_file = (
+        Path.home() / ".local/share/applications" / f"{app_name.lower()}.desktop"
+    )
 
     if desktop_file.exists():
         desktop_file.unlink()

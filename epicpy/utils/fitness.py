@@ -15,10 +15,10 @@ from qtpy.QtWidgets import QMainWindow
 
 import epicpy.utils.config as config
 from epicpy.utils.apputils import extract_from_zip
-from epicpy import get_resource
+from epicpy.utils.resource_utils import get_resource
 from epicpy.widgets.largetextview import LargeTextView
 
-from epiclibcpp.epiclib.output_tee_globals import Normal_out, Trace_out, Exception_out
+from epiclibcpp.epiclib.output_tee_globals import Normal_out
 
 """
 Code for testing various EPICpy functionality
@@ -110,9 +110,9 @@ def setup_test_device_folder(window: QMainWindow):
             start_path="devices",  # Start extraction at this folder inside the archive
         )
 
-        assert Path(
-            DEVICE_BASE_FOLDER, "devices"
-        ).is_dir(), "Uncompressed folder devices could not be located in Documents folder."
+        assert Path(DEVICE_BASE_FOLDER, "devices").is_dir(), (
+            "Uncompressed folder devices could not be located in Documents folder."
+        )
     except Exception as e:
         Normal_out(f"ERROR: {e}")
         return False
@@ -200,7 +200,9 @@ def show_results():
 
 def add_string(name: str):
     global TEST_RESULTS
-    TEST_RESULTS.append({"Name": f"<b>{name}</b>", "Worked": "", "Outcome": "", "Kind": "String"})
+    TEST_RESULTS.append(
+        {"Name": f"<b>{name}</b>", "Worked": "", "Outcome": "", "Kind": "String"}
+    )
 
 
 def clear_results():
@@ -327,9 +329,13 @@ def run_model_test(
                                 break
                             QCoreApplication.processEvents()
                         if text:
-                            print(f"\n\nGot access to stats window text after {time.time()-start:0.4f} sec:\n{text}\n")
+                            print(
+                                f"\n\nGot access to stats window text after {time.time() - start:0.4f} sec:\n{text}\n"
+                            )
                         else:
-                            print(f"\n\nFAILED to retrieve text from stats window after test!!\n\n")
+                            print(
+                                "\n\nFAILED to retrieve text from stats window after test!!\n\n"
+                            )
 
                         correct_N = "N=40" in text  # 10 trials for 4 runs
                         correct_ACCURACY = "ACCURACY=100.00" in text
@@ -376,13 +382,15 @@ def run_model_test(
                                     "INCORRECT",
                                 ]
                             else:
-                                correct_accuracy_range = sorted(set(data.Accuracy)) == ["CORRECT"]
-                        except:
+                                correct_accuracy_range = sorted(set(data.Accuracy)) == [
+                                    "CORRECT"
+                                ]
+                        except Exception:
                             can_read_data = False
                             correct_header = False
                             correct_accuracy_range = False
                         add_result(
-                            f"DataFile: Able To Read Data",
+                            "DataFile: Able To Read Data",
                             can_read_data,
                             "Success" if can_read_data else "Failed",
                         )
@@ -393,7 +401,8 @@ def run_model_test(
                         )
 
                         add_result(
-                            f"DataFile: {'NOT' if encoder_loaded else ''} " f"All trial 'CORRECT'",
+                            f"DataFile: {'NOT' if encoder_loaded else ''} "
+                            f"All trial 'CORRECT'",
                             correct_accuracy_range,
                             "Success" if correct_accuracy_range else "Failed",
                         )
@@ -414,13 +423,19 @@ def run_model_test(
     return model_run
 
 
-def run_all_model_tests(window: QMainWindow, close_on_finish: bool = True, see_results: bool = True):
+def run_all_model_tests(
+    window: QMainWindow, close_on_finish: bool = True, see_results: bool = True
+):
     add_string("RUNNING MODEL WITHOUT ENCODER (Expecting 100% Accuracy)")
-    _ = run_model_test(window, load_encoders=False, close_on_finish=False, see_results=False)
+    _ = run_model_test(
+        window, load_encoders=False, close_on_finish=False, see_results=False
+    )
 
     wait(window, 2)
     add_string("RUNNING MODEL WITH VISUAL ENCODER (Expecting < 100% Accuracy)")
-    _ = run_model_test(window, load_encoders=True, close_on_finish=False, see_results=False)
+    _ = run_model_test(
+        window, load_encoders=True, close_on_finish=False, see_results=False
+    )
 
     if see_results:
         wait(window, 2, "\nCreating Results Output, Please wait...")
@@ -464,7 +479,9 @@ def test_compile_rules(window: QMainWindow) -> Tuple[bool, str]:
 
 
 def test_load_encoder(window: QMainWindow) -> Tuple[bool, str]:
-    encoder_path = Path(TEST_DEVICE_FOLDER, "choice", "encoders", "donders_visual_encoder.py")
+    encoder_path = Path(
+        TEST_DEVICE_FOLDER, "choice", "encoders", "donders_visual_encoder.py"
+    )
     window.simulation.on_load_encoder(kind="Visual", file=str(encoder_path.resolve()))
 
     return wait_for_output(

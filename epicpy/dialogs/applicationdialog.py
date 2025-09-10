@@ -23,7 +23,7 @@ from qtpy.QtGui import QFont, QIcon
 from qtpy.QtCore import QSize, Qt
 
 from epicpy.utils.apputils import has_epiccoder
-from epicpy import get_resource
+from epicpy.utils.resource_utils import get_resource
 from epicpy.utils.defaultfont import get_default_font
 
 
@@ -109,22 +109,34 @@ class EPICpyDialog(QDialog):
         self.button_epiccoder = QToolButton(self)
 
         # Set tool button style to show text under the icon.
-        self.button_text_browse.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        self.button_text_default.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        self.button_epiccoder.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        self.button_text_browse.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextUnderIcon
+        )
+        self.button_text_default.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextUnderIcon
+        )
+        self.button_epiccoder.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextUnderIcon
+        )
 
         # Set icons, texts, and tooltips for text field buttons.
-        self.button_text_browse.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DirOpenIcon))
+        self.button_text_browse.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DirOpenIcon)
+        )
         self.button_text_browse.setText("Select")
         self.button_text_browse.setToolTip("Select an application for editing text")
 
         # Update the default (now clear) button.
-        self.button_text_default.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogResetButton))
+        self.button_text_default.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DialogResetButton)
+        )
         self.button_text_default.setText("Clear")
         self.button_text_default.setToolTip("Clear the text field")
 
         # For the EPICcoder button, use epiccoder.png.
-        self.button_epiccoder.setIcon(QIcon(str(get_resource("images", "epiccoder.png"))))
+        self.button_epiccoder.setIcon(
+            QIcon(str(get_resource("images", "epiccoder.png")))
+        )
         self.button_epiccoder.setText("EPICcoder")
         self.button_epiccoder.setToolTip("Launch EPICcoder")
 
@@ -142,18 +154,30 @@ class EPICpyDialog(QDialog):
         # Create a placeholder button for alignment.
         self.button_data_placeholder = QToolButton(self)
 
-        self.button_data_browse.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        self.button_data_default.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        self.button_data_placeholder.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        self.button_data_browse.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextUnderIcon
+        )
+        self.button_data_default.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextUnderIcon
+        )
+        self.button_data_placeholder.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextUnderIcon
+        )
         self.button_data_placeholder.setAutoRaise(True)
-        self.button_data_placeholder.setStyleSheet("QToolButton { border: none; background: none; }")
+        self.button_data_placeholder.setStyleSheet(
+            "QToolButton { border: none; background: none; }"
+        )
 
-        self.button_data_browse.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DirOpenIcon))
+        self.button_data_browse.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DirOpenIcon)
+        )
         self.button_data_browse.setText("Select")
         self.button_data_browse.setToolTip("Select an application for editing rules")
 
         # Update the default (now clear) button for the data field.
-        self.button_data_default.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogResetButton))
+        self.button_data_default.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DialogResetButton)
+        )
         self.button_data_default.setText("Clear")
         self.button_data_default.setToolTip("Clear the data field")
 
@@ -163,7 +187,9 @@ class EPICpyDialog(QDialog):
         self.button_data_placeholder.setEnabled(False)
 
         # Make the SP_DirOpenIcon and SP_DialogResetButton buttons 3 times larger.
-        default_icon_size = self.style().pixelMetric(QStyle.PixelMetric.PM_ButtonIconSize)
+        default_icon_size = self.style().pixelMetric(
+            QStyle.PixelMetric.PM_ButtonIconSize
+        )
         large_icon_size = QSize(default_icon_size * 3, default_icon_size * 3)
         for btn in (
             self.button_text_browse,
@@ -183,13 +209,19 @@ class EPICpyDialog(QDialog):
         # Bottom Buttons: Cancel and OK
         # ------------------------------------------
         self.button_cancel = QPushButton("Cancel")
-        self.button_cancel.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton))
+        self.button_cancel.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton)
+        )
         self.button_ok = QPushButton("OK")
-        self.button_ok.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogApplyButton))
+        self.button_ok.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DialogApplyButton)
+        )
 
         # Make the QTextEdits horizontally and vertically expandable.
         for edit in (self.edit_text, self.edit_data):
-            edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            edit.setSizePolicy(
+                QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            )
             edit.setMinimumHeight(40)
 
         # Layout for the two rows.
@@ -233,14 +265,20 @@ class EPICpyDialog(QDialog):
 
     def create_connections(self):
         # When the browse buttons are clicked, open a file dialog.
-        self.button_text_browse.clicked.connect(lambda: self.browse_file(self.edit_text))
-        self.button_data_browse.clicked.connect(lambda: self.browse_file(self.edit_data))
+        self.button_text_browse.clicked.connect(
+            lambda: self.browse_file(self.edit_text)
+        )
+        self.button_data_browse.clicked.connect(
+            lambda: self.browse_file(self.edit_data)
+        )
 
         # The clear buttons now clear the text fields.
         self.button_text_default.clicked.connect(self.edit_text.clear)
         self.button_data_default.clicked.connect(self.edit_data.clear)
         # The EPICcoder button sets the text field to the output of has_epiccoder().
-        self.button_epiccoder.clicked.connect(lambda: self.edit_text.setPlainText(has_epiccoder()))
+        self.button_epiccoder.clicked.connect(
+            lambda: self.edit_text.setPlainText(has_epiccoder())
+        )
 
         # Validate file paths whenever text changes.
         self.edit_text.textChanged.connect(self.validate_fields)
@@ -272,7 +310,6 @@ class EPICpyDialog(QDialog):
             if system == "Windows":
                 # On Windows, ensure the file ends with ".exe"
                 if not file_path.lower().endswith(".exe"):
-
                     QMessageBox.information(
                         self,  # Parent widget (if inside a class, otherwise use None)
                         "Invalid Executable",  # Title
@@ -288,7 +325,6 @@ class EPICpyDialog(QDialog):
                     pass
                 else:
                     if not os.access(file_path, os.X_OK):
-
                         QMessageBox.information(
                             self,  # Parent widget (use None if not inside a class)
                             "Invalid Executable",  # Title

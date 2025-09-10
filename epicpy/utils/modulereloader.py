@@ -88,7 +88,8 @@ def reset_module(module, inner_modules_also=True):
         submods = {
             submod
             for _, submod in inspect.getmembers(module)
-            if (type(submod).__name__ == "module") and (submod.__package__.startswith(module.__name__))
+            if (type(submod).__name__ == "module")
+            and (submod.__package__.startswith(module.__name__))
         }
         for submod in submods:
             reset_module(submod, True)
@@ -106,9 +107,9 @@ def _update_referrers(item, new_item):
 
     weak_ref_item = ref(item)
     for coll in refs:
-        if type(coll) == dict:
+        if isinstance(coll, dict):
             enumerator = coll.keys()
-        elif type(coll) == list:
+        elif isinstance(coll, list):
             enumerator = range(len(coll))
         else:
             continue
@@ -122,7 +123,9 @@ def _update_referrers(item, new_item):
                 coll[key] = new_item
 
 
-def _get_tree_references_to_reset_recursively(item, module_name, grayed_out_item_ids=None):
+def _get_tree_references_to_reset_recursively(
+    item, module_name, grayed_out_item_ids=None
+):
     if grayed_out_item_ids is None:
         grayed_out_item_ids = set()
 
@@ -168,7 +171,7 @@ def _reset_item_recursively(item, item_subtree, new_item):
             try:
                 # Set the item
                 _reset_item_recursively(sub_item, sub_item_tree, new_sub_item)
-            except Exception as ex:
+            except Exception:
                 pass
 
     _update_referrers(item, new_item)

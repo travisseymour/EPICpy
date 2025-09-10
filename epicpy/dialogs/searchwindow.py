@@ -44,10 +44,15 @@ class SearchWin(QDialog):
 
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonSearchForward.clicked.connect(self.clicked_ok_button)
-        self.ui.pushButtonSearchBackward.clicked.connect(partial(self.clicked_ok_button, backwards=True))
+        self.ui.pushButtonSearchBackward.clicked.connect(
+            partial(self.clicked_ok_button, backwards=True)
+        )
         self.ui.lineEditSearchText.editingFinished.connect(self.clicked_ok_button)
 
-        if hasattr(config.app_cfg, "dialog_size") and "searchwindow" in config.app_cfg.dialog_size:
+        if (
+            hasattr(config.app_cfg, "dialog_size")
+            and "searchwindow" in config.app_cfg.dialog_size
+        ):
             w, h = config.app_cfg.dialog_size["searchwindow"]
             w = max(w, self.minimumWidth())
             w = min(w, self.maximumWidth())

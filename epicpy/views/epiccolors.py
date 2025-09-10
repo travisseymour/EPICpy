@@ -28,7 +28,9 @@ For more colors, consult https://cloford.com/resources/colours/500col.htm
 
 epic_colors = Munch(
     {
-        "Aqua": QColor(0, 255, 255, 255),  # aqua and cyan are synonymous? going with aquamarine
+        "Aqua": QColor(
+            0, 255, 255, 255
+        ),  # aqua and cyan are synonymous? going with aquamarine
         "Black": QColorConstants.Black,
         "Blue": QColorConstants.Blue,
         "Brown": QColor(139, 69, 19, 255),

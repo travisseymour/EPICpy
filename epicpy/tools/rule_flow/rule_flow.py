@@ -18,7 +18,6 @@ from PySide6.QtWidgets import (
 
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
 
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtCore import QByteArray
@@ -30,15 +29,16 @@ from epiclibcpp.epiclib.output_tee_globals import Exception_out
 # Global flag: is Graphviz available?
 HAVE_GRAPHVIZ = False
 
-try:
-    # Check if the Python binding is importable
-    import graphviz
+import importlib.util
+
+if importlib.util.find_spec("graphviz") is not None:
     from graphviz import Digraph
 
     # Also check if the 'dot' executable is on PATH
     if shutil.which("dot"):
         HAVE_GRAPHVIZ = True
-except ImportError:
+else:
+    Digraph = None
     HAVE_GRAPHVIZ = False
 
 WHICH_NETWORKX = 0  # in (0=directed_one_level, 1=directed_multi_level)
@@ -48,7 +48,7 @@ Create an EPIC rule graph that updates as you run the simulation.
 """
 
 import re
-from typing import Set, Dict, Tuple
+from typing import Dict, Tuple
 
 
 # ~.08 sec
@@ -114,7 +114,6 @@ class OrigScheduler(object):
         for event_text in (aline.strip() for aline in text.splitlines()):
             _event_text = event_text.strip()
             if _event_text.startswith("*** Fire: "):
-
                 rule = _event_text.split(": ")[-1]
                 rule = rule.replace("_", "\n")
                 rule = rule.replace("visualresponse", "visual\nresponse")
@@ -136,7 +135,7 @@ class OrigScheduler(object):
                     edge = (self.last_rule, rule)
                     self.edges.add(edge)
                     self.last_rule = rule
-        print(f"Finished text process in {timeit.default_timer()-start:0.5f} sec.")
+        print(f"Finished text process in {timeit.default_timer() - start:0.5f} sec.")
         self.redraw = True
 
     def display(self):
@@ -156,7 +155,7 @@ class RuleFlowWindow(QMainWindow):
         self.pen = QPen(QColor("black"))
         self.scheduler = RegexScheduler()
 
-        self.setWindowTitle(f"EPICViewRuleFlow")
+        self.setWindowTitle("EPICViewRuleFlow")
         self.setGeometry(100, 100, 1024, 768)
 
         self.figure = plt.figure(dpi=125)
@@ -210,7 +209,7 @@ class RuleFlowWindow(QMainWindow):
         self.canvas.draw()
 
     def create_directed_graph(self, node_dict: dict, edge_set: set):
-        min_width_inch, min_height_inch = 10, 8
+        # min_width_inch, min_height_inch = 10, 8
 
         def pixels_to_inches(width_px, height_px, dpi=100):
             width_in = width_px / dpi
@@ -218,7 +217,6 @@ class RuleFlowWindow(QMainWindow):
             return width_in, height_in
 
         try:
-
             self.figure.clear()
 
             # Create a NextworkX directed graph
@@ -237,18 +235,18 @@ class RuleFlowWindow(QMainWindow):
             # fig = Figure(figsize=(10, 8), dpi=96)
 
             # set figure size based on window size so user can freely adjust
-            screen = QGuiApplication.primaryScreen()
-            logical_dpi = screen.logicalDotsPerInch()
+            # screen = QGuiApplication.primaryScreen()
+            # logical_dpi = screen.logicalDotsPerInch()
 
-            f_width, f_height = pixels_to_inches(self.width(), self.height(), logical_dpi)
-            f_width = min(max(f_width, min_width_inch), 10)  # 20.0)
-            f_height = min(max(f_height, min_height_inch), 8)  # 11.25)
+            # f_width, f_height = pixels_to_inches(self.width(), self.height(), logical_dpi)
+            # f_width = min(max(f_width, min_width_inch), 10)  # 20.0)
+            # f_height = min(max(f_height, min_height_inch), 8)  # 11.25)
 
-            figure_size = (f_width, f_height)
+            # figure_size = (f_width, f_height)
 
-            fig = Figure(figsize=figure_size, dpi=logical_dpi)
+            # fig = Figure(figsize=figure_size, dpi=logical_dpi)
 
-            ax = fig.add_subplot(111)
+            # ax = fig.add_subplot(111)
 
             pos = nx.multipartite_layout(graph, align="vertical")
 
@@ -309,7 +307,9 @@ class RuleFlowWindow(QMainWindow):
             screen = QGuiApplication.primaryScreen()
             logical_dpi = screen.logicalDotsPerInch()
 
-            f_width, f_height = pixels_to_inches(self.width(), self.height(), logical_dpi)
+            f_width, f_height = pixels_to_inches(
+                self.width(), self.height(), logical_dpi
+            )
             f_width = min(max(f_width, min_width_inch), 10)
             f_height = min(max(f_height, min_height_inch), 8)
 
@@ -426,29 +426,34 @@ class RuleFlowWindow(QMainWindow):
         self.setWindowTitle(self.get_info())
 
     def get_info(self) -> str:
-        extra_space = "\n" * 25
+        # extra_space = "\n" * 25
         try:
             info = (
                 f"Rule Nodes: {len(self.scheduler.nodes)} | "
                 f"Rule Edges: {len(self.scheduler.edges)}) | "
                 f"{'Using GraphVis' if HAVE_GRAPHVIZ else 'Using NetworkX'}"
             )
-        except:
-            info = "Unknown!"
+        except Exception as e:
+            info = f"Unknown! ({e})"
         return dedent(info)
 
     def update_graph(self):
-
         # reset background image
         if HAVE_GRAPHVIZ:
-            self.create_directed_graph_graphviz(self.scheduler.nodes, self.scheduler.edges)
+            self.create_directed_graph_graphviz(
+                self.scheduler.nodes, self.scheduler.edges
+            )
         else:
             if WHICH_NETWORKX == 0:
                 self.create_directed_graph(self.scheduler.nodes, self.scheduler.edges)
             elif WHICH_NETWORKX == 1:
-                self.create_directed_graph_separated(self.scheduler.nodes, self.scheduler.edges)
+                self.create_directed_graph_separated(
+                    self.scheduler.nodes, self.scheduler.edges
+                )
             else:
-                raise ValueError(f"{WHICH_NETWORKX=} is not a valid NETWORKX method reference")
+                raise ValueError(
+                    f"{WHICH_NETWORKX=} is not a valid NETWORKX method reference"
+                )
 
     def showEvent(self, event):
         super().showEvent(event)

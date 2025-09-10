@@ -77,7 +77,11 @@ class Ui_DialogRuleBreak(object):
 
     def retranslateUi(self, DialogRuleBreak):
         _translate = QtCore.QCoreApplication.translate
-        DialogRuleBreak.setWindowTitle(_translate("DialogRuleBreak", "Rule Break Settings"))
-        self.checkBoxEnableRuleBreaks.setText(_translate("DialogRuleBreak", "Enable Rule Breaks?"))
+        DialogRuleBreak.setWindowTitle(
+            _translate("DialogRuleBreak", "Rule Break Settings")
+        )
+        self.checkBoxEnableRuleBreaks.setText(
+            _translate("DialogRuleBreak", "Enable Rule Breaks?")
+        )
         self.pushButtonCancel.setText(_translate("DialogRuleBreak", "Cancel"))
         self.pushButtonOK.setText(_translate("DialogRuleBreak", "OK"))

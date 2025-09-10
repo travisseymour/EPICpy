@@ -10,4 +10,6 @@ clean:
 	rm -rf build/ dist/ *.egg-info
 
 format:
-    black epicpy
+	ruff check epicpy --fix
+	ruff format epicpy
+

@@ -54,12 +54,16 @@ class AppConfig:
     last_device_file: str = ""  # for reloading last session
     last_script_file: str = ""
     dark_mode: Literal["Light", "Dark", "Auto"] = "Light"
-    epiclib_version: str = ""  # if not "", passes this value to DeviceConfig on app init
+    epiclib_version: str = (
+        ""  # if not "", passes this value to DeviceConfig on app init
+    )
     font_family: Literal["sans-serif", "serif", "monospace"] = "monospace"
     font_size: int = 14
     dialog_size: dict = field(default_factory=dict)  # hold dialog sizes if changed
     main_geom: list = field(default_factory=list)  # does nothing yet
-    auto_load_last_device: bool = False  # only True when changing epiclib_version from UI
+    auto_load_last_device: bool = (
+        False  # only True when changing epiclib_version from UI
+    )
     text_editor: str = ""  # defaults to BUILT-IN editor
     config_file: str = ""
 
@@ -81,18 +85,24 @@ class AppConfig:
             config_dir = get_config_dir()
             self.config_file = str(Path(config_dir, "global_config.json").resolve())
 
-        cfg = {key: value for key, value in app_cfg.__dict__.items() if not key == "current"}
+        cfg = {
+            key: value
+            for key, value in app_cfg.__dict__.items()
+            if not key == "current"
+        }
 
         try:
             self.current["last_config"] = cfg
-        except:
+        except KeyError:
             ...
 
         try:
             Path(self.config_file).write_text(json.dumps(cfg, indent=4))
             return True
         except Exception as e:
-            log.error(f'ERROR attempting to write to app configuration file @ "{str(self.config_file)}": {e}')
+            log.error(
+                f'ERROR attempting to write to app configuration file @ "{str(self.config_file)}": {e}'
+            )
             return False
 
     def rollback(self) -> bool:
@@ -199,19 +209,26 @@ class DeviceConfig:
         device_name = device.stem.strip().replace(" ", "_")
         device_config_file = f"{device_name}_config.json"
 
-        cfg = {key: value for key, value in device_cfg.__dict__.items() if not key == "current"}
+        cfg = {
+            key: value
+            for key, value in device_cfg.__dict__.items()
+            if not key == "current"
+        }
 
         try:
             self.current["last_config"] = cfg
-        except:
+        except KeyError:
             ...
 
         try:
-            Path(device_folder, device_config_file).write_text(json.dumps(cfg, indent=4))
+            Path(device_folder, device_config_file).write_text(
+                json.dumps(cfg, indent=4)
+            )
             return True
         except Exception as e:
             log.error(
-                f"Unable to write updated config file to " f"{str(Path(device_folder, device_config_file))}:\n{e}"
+                f"Unable to write updated config file to "
+                f"{str(Path(device_folder, device_config_file))}:\n{e}"
             )
             return False
 
@@ -320,7 +337,10 @@ def get_app_config():
 
     except FileNotFoundError:
         # Problem? Just use the defaults.
-        log.info(f'Unable to find global app file "global_config.json" in {str(config_dir)}, ' f"using defaults.")
+        log.info(
+            f'Unable to find global app file "global_config.json" in {str(config_dir)}, '
+            f"using defaults."
+        )
         app_cfg = AppConfig()
 
 
@@ -365,7 +385,10 @@ def get_device_config(device: Optional[Path]):
 
 
 def get_start_dir() -> Path:
-    if hasattr(app_cfg, "last_script_file") and Path(app_cfg.last_script_file).is_file():
+    if (
+        hasattr(app_cfg, "last_script_file")
+        and Path(app_cfg.last_script_file).is_file()
+    ):
         start_dir = Path(app_cfg.last_script_file)
     elif Path(device_cfg.device_file).is_file():
         start_dir = Path(device_cfg.device_file).parent

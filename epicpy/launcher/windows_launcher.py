@@ -9,7 +9,9 @@ if platform.system() == "Windows":
     try:
         import win32com.client
     except ImportError:
-        print("Please install the 'pywin32' package to enable Windows shortcut creation.")
+        print(
+            "Please install the 'pywin32' package to enable Windows shortcut creation."
+        )
         sys.exit(1)
 
 
@@ -17,7 +19,9 @@ def get_app_path(app_name: str) -> str:
     """Finds the installed application path using shutil.which()."""
     app_path = shutil.which(app_name)
     if not app_path:
-        print(f"Post-Install Error: '{app_name}' not found. The command 'uv tool install {app_name}' may have failed.")
+        print(
+            f"Post-Install Error: '{app_name}' not found. The command 'uv tool install {app_name}' may have failed."
+        )
         sys.exit(1)
     return app_path
 
@@ -49,7 +53,9 @@ def find_app_icon(app_name: str) -> Optional[Path]:
 
 def windows_shortcut_exists(app_name: str) -> bool:
     """Checks if a Windows shortcut already exists in the Start Menu."""
-    start_menu_path = Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs"
+    start_menu_path = (
+        Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs"
+    )
     shortcut_file = start_menu_path / f"{app_name}.lnk"
     return shortcut_file.exists()
 
@@ -65,7 +71,9 @@ def create_windows_shortcut(app_name: str, app_title: Optional[str] = ""):
     if not app_path:
         return
 
-    start_menu_path = Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs"
+    start_menu_path = (
+        Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs"
+    )
     start_menu_path.mkdir(parents=True, exist_ok=True)
     shortcut_file = start_menu_path / f"{app_name}.lnk"
 
@@ -88,7 +96,9 @@ def create_windows_shortcut(app_name: str, app_title: Optional[str] = ""):
 
 def remove_windows_shortcut(app_name: str):
     """Removes the Windows shortcut (.lnk) from the Start Menu when the app is uninstalled."""
-    start_menu_path = Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs"
+    start_menu_path = (
+        Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs"
+    )
     shortcut_file = start_menu_path / f"{app_name}.lnk"
 
     if shortcut_file.exists():

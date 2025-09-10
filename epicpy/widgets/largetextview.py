@@ -24,9 +24,16 @@ from qtpy.QtWidgets import (
 from collections import deque
 
 from qtpy.QtCore import Qt, QPoint
-from qtpy.QtGui import QPainter, QFontMetrics, QFont, QContextMenuEvent, QKeySequence, QShortcut
+from qtpy.QtGui import (
+    QPainter,
+    QFontMetrics,
+    QFont,
+    QContextMenuEvent,
+    QKeySequence,
+    QShortcut,
+)
 
-from epicpy.constants.stateconstants import PAUSED, RUNNING
+from epicpy.constants.stateconstants import RUNNING, PAUSED
 from epicpy.utils import config
 
 from epiclibcpp.epiclib.output_tee_globals import Exception_out
@@ -124,7 +131,9 @@ class LargeTextView(QWidget):
             self.copy_sc.setContext(Qt.ShortcutContext.WindowShortcut)
             self.copy_sc.activated.connect(self.copy_selected_text)
 
-            self.selall_sc = QShortcut(QKeySequence(QKeySequence.StandardKey.SelectAll), self)
+            self.selall_sc = QShortcut(
+                QKeySequence(QKeySequence.StandardKey.SelectAll), self
+            )
             self.selall_sc.setContext(Qt.ShortcutContext.WindowShortcut)
             self.selall_sc.activated.connect(self.select_all)
 
@@ -132,11 +141,15 @@ class LargeTextView(QWidget):
             self.find_sc.setContext(Qt.ShortcutContext.WindowShortcut)
             self.find_sc.activated.connect(self.show_search_dialog)
 
-            self.find_next_sc = QShortcut(QKeySequence(QKeySequence.StandardKey.FindNext), self)
+            self.find_next_sc = QShortcut(
+                QKeySequence(QKeySequence.StandardKey.FindNext), self
+            )
             self.find_next_sc.setContext(Qt.ShortcutContext.WindowShortcut)
             self.find_next_sc.activated.connect(self.find_next)
 
-            self.find_prev_sc = QShortcut(QKeySequence(QKeySequence.StandardKey.FindPrevious), self)
+            self.find_prev_sc = QShortcut(
+                QKeySequence(QKeySequence.StandardKey.FindPrevious), self
+            )
             self.find_prev_sc.setContext(Qt.ShortcutContext.WindowShortcut)
             self.find_prev_sc.activated.connect(self.find_prev)
 
@@ -218,7 +231,10 @@ class LargeTextView(QWidget):
         highlight_color = self.palette().highlight().color()
         text_color = self.palette().text().color()
 
-        if self.selection_start_line is not None and self.selection_end_line is not None:
+        if (
+            self.selection_start_line is not None
+            and self.selection_end_line is not None
+        ):
             sel_start = min(self.selection_start_line, self.selection_end_line)
             sel_end = max(self.selection_start_line, self.selection_end_line)
         else:
@@ -233,28 +249,49 @@ class LargeTextView(QWidget):
                 painter.fillRect(0, y, text_area_width, line_height, highlight_color)
 
             painter.setPen(text_color)
-            flags = Qt.TextFlag.TextWordWrap if self.word_wrap else Qt.TextFlag.TextSingleLine
+            flags = (
+                Qt.TextFlag.TextWordWrap
+                if self.word_wrap
+                else Qt.TextFlag.TextSingleLine
+            )
             painter.drawText(
-                0, y, text_area_width, line_height, flags | Qt.AlignmentFlag.AlignLeft, self.lines[line_number]
+                0,
+                y,
+                text_area_width,
+                line_height,
+                flags | Qt.AlignmentFlag.AlignLeft,
+                self.lines[line_number],
             )
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
-            clicked_line = self.scroll_bar.value() + int(event.position().y()) // self.line_height()
+            clicked_line = (
+                self.scroll_bar.value()
+                + int(event.position().y()) // self.line_height()
+            )
             self.selection_start_line = clicked_line
             self.selection_end_line = clicked_line
             self.update()
 
     def mouseMoveEvent(self, event):
         if event.buttons() & Qt.MouseButton.LeftButton:
-            current_line = self.scroll_bar.value() + int(event.position().y()) // self.line_height()
+            current_line = (
+                self.scroll_bar.value()
+                + int(event.position().y()) // self.line_height()
+            )
             self.selection_end_line = current_line
             self.update()
 
     def copy_selected_text(self):
-        if self.selection_start_line is not None and self.selection_end_line is not None:
+        if (
+            self.selection_start_line is not None
+            and self.selection_end_line is not None
+        ):
             start = max(0, min(self.selection_start_line, self.selection_end_line))
-            end = min(len(self.lines) - 1, max(self.selection_start_line, self.selection_end_line))
+            end = min(
+                len(self.lines) - 1,
+                max(self.selection_start_line, self.selection_end_line),
+            )
             selected_text = "\n".join(self.lines[start : end + 1])
             # QApplication.clipboard().setText(selected_text)
             QApplication.clipboard().setText(selected_text)
@@ -274,7 +311,9 @@ class LargeTextView(QWidget):
         if dy == 0:
             return
         steps = dy // 120  # 120 units per notch
-        self.scroll_bar.setValue(self.scroll_bar.value() - steps * self.scroll_bar.singleStep())
+        self.scroll_bar.setValue(
+            self.scroll_bar.value() - steps * self.scroll_bar.singleStep()
+        )
         self.update()
 
     def keyPressEvent(self, event):
@@ -304,7 +343,11 @@ class LargeTextView(QWidget):
         clear_action = menu.addAction("Clear")
 
         # action = menu.exec(event.globalPos())
-        action = menu.exec(self.parent().mapToGlobal(event if isinstance(event, QPoint) else event.pos()))
+        action = menu.exec(
+            self.parent().mapToGlobal(
+                event if isinstance(event, QPoint) else event.pos()
+            )
+        )
         if action == copy_action:
             self.copy_selected_text()
         elif action == select_all_action:
@@ -359,7 +402,10 @@ class LargeTextView(QWidget):
         if not self.last_search_pattern:
             return -1
         # ensure compiled if regex
-        if self.last_is_regex and (self._last_regex is None or self._last_regex.pattern != self.last_search_pattern):
+        if self.last_is_regex and (
+            self._last_regex is None
+            or self._last_regex.pattern != self.last_search_pattern
+        ):
             if not self._compile_regex(self.last_search_pattern):
                 return -1
 
@@ -382,7 +428,10 @@ class LargeTextView(QWidget):
         if not self.last_search_pattern:
             return -1
         # ensure compiled if regex
-        if self.last_is_regex and (self._last_regex is None or self._last_regex.pattern != self.last_search_pattern):
+        if self.last_is_regex and (
+            self._last_regex is None
+            or self._last_regex.pattern != self.last_search_pattern
+        ):
             if not self._compile_regex(self.last_search_pattern):
                 return -1
 
@@ -423,11 +472,19 @@ class CustomLargeTextView(LargeTextView):
     """
 
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent):
-        device_file_exists = bool(config.device_cfg.device_file) and Path(config.device_cfg.device_file).is_file()
-        rule_file_exists = bool(config.device_cfg.rule_files) and Path(config.device_cfg.rule_files[0]).is_file()
+        device_file_exists = (
+            bool(config.device_cfg.device_file)
+            and Path(config.device_cfg.device_file).is_file()
+        )
+        rule_file_exists = (
+            bool(config.device_cfg.rule_files)
+            and Path(config.device_cfg.rule_files[0]).is_file()
+        )
         sim_setup = device_file_exists and rule_file_exists
         # running = COORDINATOR.state in (SimState.running, SimState.timed_out)
-        running = (self._parent.run_state == RUNNING) and (not self._parent.run_state == PAUSED)
+        running = (self._parent.run_state == RUNNING) and (
+            not self._parent.run_state == PAUSED
+        )
 
         # define context menu
 
@@ -456,12 +513,20 @@ class CustomLargeTextView(LargeTextView):
         edit_data_action.setEnabled(sim_setup and not running)
         edit_rules_action.setEnabled(sim_setup and not running)
 
-        copy_action.setEnabled(bool(self.selection_start_line or self.selection_end_line) and not running)
+        copy_action.setEnabled(
+            bool(self.selection_start_line or self.selection_end_line) and not running
+        )
 
-        stop_action.setEnabled(sim_setup and (running or self._parent.run_state == PAUSED))
+        stop_action.setEnabled(
+            sim_setup and (running or self._parent.run_state == PAUSED)
+        )
 
         # process menu
-        action = menu.exec(self.parent().mapToGlobal(event if isinstance(event, QPoint) else event.pos()))
+        action = menu.exec(
+            self.parent().mapToGlobal(
+                event if isinstance(event, QPoint) else event.pos()
+            )
+        )
 
         if action == copy_action:
             self.copy_selected_text()
@@ -495,7 +560,10 @@ class CustomLargeTextView(LargeTextView):
                 except Exception:
                     print(msg)
             if open_cmd and config.device_cfg.device_file:
-                cmd = [open_cmd, str(Path(config.device_cfg.device_file).resolve().parent)]
+                cmd = [
+                    open_cmd,
+                    str(Path(config.device_cfg.device_file).resolve().parent),
+                ]
                 subprocess.run(args=cmd)
         elif action == quit_action:
             # self._parent.halt_simulation()
@@ -540,7 +608,9 @@ if __name__ == "__main__":
             if buffer:
                 self.viewer.write("\n".join(buffer))
             self.viewer.cache_writes = False
-            print(f"populate_text added {n} lines in {timeit.default_timer() - start} sec.")
+            print(
+                f"populate_text added {n} lines in {timeit.default_timer() - start} sec."
+            )
 
     app = QApplication(sys.argv)
     window = LTTTestMainWindow()

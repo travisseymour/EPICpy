@@ -186,7 +186,9 @@ class StatsWidget(QWidget):
         self.vlayout = QVBoxLayout(self.container)
         self.vlayout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.vlayout.setSpacing(0)  # Remove any spacing between widgets.
-        self.vlayout.setContentsMargins(QMargins(0, 0, 0, 0))  # Remove any margins (ltrb).
+        self.vlayout.setContentsMargins(
+            QMargins(0, 0, 0, 0)
+        )  # Remove any margins (ltrb).
         self.container.setLayout(self.vlayout)
         scroll_area.setWidget(self.container)
 
@@ -201,7 +203,7 @@ class StatsWidget(QWidget):
         self.can_close = False
         self.clearing: bool = False
 
-        self.write(f"""{f'Stats Out! ({datetime.now().strftime("%r")})'}""")
+        self.write(f"""{f"Stats Out! ({datetime.now().strftime('%r')})"}""")
         if SPECIAL_MESSAGE:
             self.write(SPECIAL_MESSAGE)
 
@@ -234,7 +236,9 @@ class StatsWidget(QWidget):
 
         # Start building an HTML document.
         export_html = (
-            "<html>" f"<head><meta charset='utf-8'><title>EPICpy Stats Export {time.ctime()}</title></head>" "<body>"
+            "<html>"
+            f"<head><meta charset='utf-8'><title>EPICpy Stats Export {time.ctime()}</title></head>"
+            "<body>"
         )
 
         # Iterate through all widgets in the layout.
@@ -282,7 +286,10 @@ class StatsWidget(QWidget):
                 html = widget.toHtml().lower()
 
                 # Skip widgets that contain complex structures
-                if any(tag in html for tag in ("<table", "<img", "<svg", "<canvas", "<iframe")):
+                if any(
+                    tag in html
+                    for tag in ("<table", "<img", "<svg", "<canvas", "<iframe")
+                ):
                     continue
 
                 plain_text = widget.toPlainText().strip()
@@ -299,7 +306,6 @@ class StatsWidget(QWidget):
             return
 
         try:
-
             self.clearing = True
 
             while layout.count():
@@ -317,7 +323,6 @@ class StatsWidget(QWidget):
                         self.clear_layout(child_layout)
 
         finally:
-
             self.clearing = False
 
     def clear(self):

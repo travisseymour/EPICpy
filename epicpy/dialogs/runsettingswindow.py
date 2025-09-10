@@ -79,7 +79,9 @@ class RunSettingsWin(QDialog):
 
         self.ui.pushButtonCancel.clicked.connect(self.clicked_cancel_button)
         self.ui.pushButtonOK.clicked.connect(self.clicked_ok_button)
-        self.ui.pushButtonRunContinuously.clicked.connect(self.clicked_continuous_button)
+        self.ui.pushButtonRunContinuously.clicked.connect(
+            self.clicked_continuous_button
+        )
         self.ui.pushButtonDeleteData.clicked.connect(self.delete_device_data)
 
         self.ui.pushButtonDeleteData.setVisible(self.data_delete_func is not None)
@@ -96,7 +98,9 @@ class RunSettingsWin(QDialog):
 
     def showEvent(self, event: QShowEvent):
         try:
-            self.ui.lineEditDeviceParameters.setToolTip(self.simulation.device.condition_hint)
+            self.ui.lineEditDeviceParameters.setToolTip(
+                self.simulation.device.condition_hint
+            )
         except Exception:
             ...
 
@@ -109,7 +113,9 @@ class RunSettingsWin(QDialog):
         self.ui.spinBoxRunRealSecs.setValue(config.device_cfg.setting_run_for_real_secs)
         self.ui.spinBoxRunSimMsecs.setValue(config.device_cfg.setting_run_until_msecs)
         self.ui.spinBoxRunSimCycles.setValue(config.device_cfg.setting_run_cycles)
-        self.ui.doubleSpinBoxRefreshSecs.setValue(config.device_cfg.setting_refresh_secs)
+        self.ui.doubleSpinBoxRefreshSecs.setValue(
+            config.device_cfg.setting_refresh_secs
+        )
 
         if config.device_cfg.run_command == "run_for":
             self.ui.radioButtonRunForSecs.setChecked(True)
@@ -146,12 +152,16 @@ class RunSettingsWin(QDialog):
         else:
             self.ui.radioButtonRefreshNoneText.setChecked(True)
 
-        self.ui.spinBoxTextRefreshSteps.setValue(int(config.device_cfg.text_refresh_value))
+        self.ui.spinBoxTextRefreshSteps.setValue(
+            int(config.device_cfg.text_refresh_value)
+        )
 
         self.ui.spinBoxTimeDelay.setValue(int(config.device_cfg.step_time_delay))
 
         if config.device_cfg.device_params.strip():
-            self.ui.lineEditDeviceParameters.setText(config.device_cfg.device_params.strip())
+            self.ui.lineEditDeviceParameters.setText(
+                config.device_cfg.device_params.strip()
+            )
         else:
             self.reset_device_params()
 
@@ -225,7 +235,9 @@ class RunSettingsWin(QDialog):
         config.device_cfg.setting_run_for_real_secs = self.ui.spinBoxRunRealSecs.value()
         config.device_cfg.setting_run_until_msecs = self.ui.spinBoxRunSimMsecs.value()
         config.device_cfg.setting_run_cycles = self.ui.spinBoxRunSimCycles.value()
-        config.device_cfg.setting_refresh_secs = self.ui.doubleSpinBoxRefreshSecs.value()
+        config.device_cfg.setting_refresh_secs = (
+            self.ui.doubleSpinBoxRefreshSecs.value()
+        )
 
         self.hide()
 

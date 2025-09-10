@@ -8,7 +8,9 @@ def get_app_path(app_name: str) -> str:
     """Finds the installed application path using shutil.which()."""
     app_path = shutil.which(app_name)
     if not app_path:
-        print(f"Post-Install Error: '{app_name}' not found. The command 'uv tool install {app_name}' may have failed.")
+        print(
+            f"Post-Install Error: '{app_name}' not found. The command 'uv tool install {app_name}' may have failed."
+        )
         sys.exit(1)
     return app_path
 
@@ -26,7 +28,10 @@ def find_app_icon(app_name: str) -> Optional[Path]:
 
 def macos_launcher_exists(app_name: str) -> bool:
     """Checks if a macOS app bundle already exists in the Applications or user Desktop folder."""
-    app_bundles = (Path.home() / "Desktop" / f"{app_name}.app", Path("/Applications") / f"{app_name}.app")
+    app_bundles = (
+        Path.home() / "Desktop" / f"{app_name}.app",
+        Path("/Applications") / f"{app_name}.app",
+    )
     return any(bundle.exists() for bundle in app_bundles)
 
 
@@ -123,7 +128,7 @@ def remove_macos_app_launcher(app_name: str):
     for app_bundle in app_bundles:
         try:
             shutil.rmtree(app_bundle)
-        except:
+        except Exception:
             ...
 
     if macos_launcher_exists(app_name):
@@ -135,7 +140,7 @@ def remove_macos_app_launcher(app_name: str):
         #     QMessageBox.StandardButton.Ok,
         # )
         print(
-            f"\n\nLauncher Application Removal Failed. You can remove EPICpy.app manually by dragging it to the Trash."
+            "\n\nLauncher Application Removal Failed. You can remove EPICpy.app manually by dragging it to the Trash."
         )
 
     # else:

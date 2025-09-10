@@ -48,7 +48,7 @@ import itertools
 import warnings
 from functools import wraps
 
-from epicpy import get_resource
+from epicpy.utils.resource_utils import get_resource
 
 OS = platform.system()
 from dataclasses import dataclass as base_dataclass
@@ -152,7 +152,7 @@ def is_listy(value: str) -> bool:
         candidate = eval(value)
         isinstance(candidate, (tuple, list))
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -198,21 +198,25 @@ class FancyTimer:
 
     def __enter__(self):
         if self.msg:
-            l = len(self.msg)
-            print(f'\n{self.msg}\n{"=" * l if l < 50 else 50}')
+            msg_len = len(self.msg)
+            print(f"\n{self.msg}\n{'=' * msg_len if msg_len < 50 else 50}")
         if self.verbose:
-            print(f'Timer Started at {datetime.datetime.now().strftime("%H:%M:%S")}')  # add %f for microseconds
+            print(
+                f"Timer Started at {datetime.datetime.now().strftime('%H:%M:%S')}"
+            )  # add %f for microseconds
         self.start = timeit.default_timer()
 
     def __exit__(self, *args):
         self.stop = timeit.default_timer()
         self.duration = self.stop - self.start
         if self.verbose:
-            print(f'Timer Ended at {datetime.datetime.now().strftime("%H:%M:%S")}')
+            print(f"Timer Ended at {datetime.datetime.now().strftime('%H:%M:%S')}")
         print(f"Duration: {self.duration:0.4f} sec ({self.duration * 1000:0.4f} msec)")
 
 
-def unpack_param_string(pattern: str, delimiter: str = "|", left: str = "[", right: str = "]") -> List[str]:
+def unpack_param_string(
+    pattern: str, delimiter: str = "|", left: str = "[", right: str = "]"
+) -> List[str]:
     """
     Expand the bracket-delimited possibilities in a string.
     E.g.: "10 Easy Dash" or "10 [Easy|Hard] Dash" or "10 [Easy|Hard] [Dash|HUD]"
@@ -227,7 +231,10 @@ def unpack_param_string(pattern: str, delimiter: str = "|", left: str = "[", rig
     segments = re.split(rf"({left_escaped}.*?{right_escaped})", pattern)
 
     # Process each segment
-    seg_choices = [seg.strip(left + right).split(delimiter) if seg.startswith(left) else [seg] for seg in segments]
+    seg_choices = [
+        seg.strip(left + right).split(delimiter) if seg.startswith(left) else [seg]
+        for seg in segments
+    ]
 
     # Generate all possible combinations
     return ["".join(parts) for parts in itertools.product(*seg_choices)]
@@ -237,7 +244,7 @@ def ignore_warnings(f):
     # https://stackoverflow.com/questions/879173
     @wraps(f)
     def inner(*args, **kwargs):
-        with warnings.catch_warnings(record=True) as w:
+        with warnings.catch_warnings(record=True) as _warn_context:
             warnings.simplefilter("ignore")
             response = f(*args, **kwargs)
         return response
@@ -363,7 +370,9 @@ def run_without_waiting(exe_path: str, filename: str):
         if sys.platform == "win32":
             # Windows: Use `creationflags=subprocess.DETACHED_PROCESS` to detach
             subprocess.Popen(
-                [exe_path, filename], creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+                [exe_path, filename],
+                creationflags=subprocess.DETACHED_PROCESS
+                | subprocess.CREATE_NEW_PROCESS_GROUP,
             )
         else:
             # macOS/Linux: Use `start_new_session=True` to detach
@@ -395,10 +404,18 @@ def default_run(file_path: Union[str, Path]) -> bool:
             os.startfile(file_path)
         elif system == "Darwin":
             # On macOS, use the 'open' command.
-            subprocess.Popen(["open", file_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.Popen(
+                ["open", file_path],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
         elif system == "Linux":
             # On Linux, use 'xdg-open' which is desktop-environment agnostic.
-            subprocess.Popen(["xdg-open", file_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.Popen(
+                ["xdg-open", file_path],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
         else:
             # Unsupported operating system.
             return False
@@ -432,7 +449,9 @@ def is_dark_mode():
     # Get the window background color from the palette.
     bg = palette.color(QPalette.ColorRole.Window)
     # Compute brightness using a standard luminance formula.
-    brightness = math.sqrt(0.299 * bg.red() ** 2 + 0.587 * bg.green() ** 2 + 0.114 * bg.blue() ** 2)
+    brightness = math.sqrt(
+        0.299 * bg.red() ** 2 + 0.587 * bg.green() ** 2 + 0.114 * bg.blue() ** 2
+    )
     # Return True if brightness is below a threshold (e.g. 128)
     return brightness < 128
 
@@ -448,7 +467,9 @@ def print_tree(path: Path, prefix: str = ""):
             print_tree(item, prefix + extension)
 
 
-def extract_from_zip(zip_path: Path, target_path: Path, start_path: Optional[str] = None):
+def extract_from_zip(
+    zip_path: Path, target_path: Path, start_path: Optional[str] = None
+):
     """
     Extract files from a zip archive.
 
@@ -509,7 +530,9 @@ if __name__ == "__main__":
 
     print(f"""{unpack_param_string("10 Easy Dash")=}\n\t➝ ['10 Easy Dash']""")
 
-    print(f"""{unpack_param_string("10 [Easy|Hard] Dash")=}\n\t➝ ['10 Easy Dash', '10 Hard Dash']""")
+    print(
+        f"""{unpack_param_string("10 [Easy|Hard] Dash")=}\n\t➝ ['10 Easy Dash', '10 Hard Dash']"""
+    )
 
     print(
         f"""{unpack_param_string("10 [Easy|Hard] [Dash|HUD]")=}\n\t➝ ['10 Easy Dash', '10 Easy HUD', '10 Hard Dash', '10 Hard HUD']"""

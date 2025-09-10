@@ -10,38 +10,14 @@
 
 from PySide6.QtCore import (
     QCoreApplication,
-    QDate,
-    QDateTime,
-    QLocale,
     QMetaObject,
-    QObject,
-    QPoint,
     QRect,
-    QSize,
-    QTime,
-    QUrl,
-    Qt,
 )
 from PySide6.QtGui import (
     QAction,
-    QBrush,
-    QColor,
-    QConicalGradient,
-    QCursor,
     QFont,
-    QFontDatabase,
-    QGradient,
-    QIcon,
-    QImage,
-    QKeySequence,
-    QLinearGradient,
-    QPainter,
-    QPalette,
-    QPixmap,
-    QRadialGradient,
-    QTransform,
 )
-from PySide6.QtWidgets import QApplication, QGridLayout, QMainWindow, QMenu, QMenuBar, QSizePolicy, QStatusBar, QWidget
+from PySide6.QtWidgets import QGridLayout, QMenu, QMenuBar, QStatusBar, QWidget
 
 
 class Ui_MainWindow(object):
@@ -159,7 +135,9 @@ class Ui_MainWindow(object):
         self.actionAudio_Settings.setFont(font2)
         self.actionAudio_Settings.setVisible(False)
         self.actionEPIC_CLI_Debug_Messages = QAction(MainWindow)
-        self.actionEPIC_CLI_Debug_Messages.setObjectName("actionEPIC_CLI_Debug_Messages")
+        self.actionEPIC_CLI_Debug_Messages.setObjectName(
+            "actionEPIC_CLI_Debug_Messages"
+        )
         self.actionEPIC_CLI_Debug_Messages.setCheckable(True)
         self.actionFind = QAction(MainWindow)
         self.actionFind.setObjectName("actionFind")
@@ -209,7 +187,9 @@ class Ui_MainWindow(object):
         self.actionUnload_Visual_Encoder.setEnabled(False)
         self.actionUnload_Visual_Encoder.setFont(font2)
         self.actionUnload_Auditory_Encoder = QAction(MainWindow)
-        self.actionUnload_Auditory_Encoder.setObjectName("actionUnload_Auditory_Encoder")
+        self.actionUnload_Auditory_Encoder.setObjectName(
+            "actionUnload_Auditory_Encoder"
+        )
         self.actionUnload_Auditory_Encoder.setEnabled(False)
         self.actionUnload_Auditory_Encoder.setFont(font2)
         self.actionStandard_Run = QAction(MainWindow)
@@ -377,84 +357,188 @@ class Ui_MainWindow(object):
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", "EPICpy v2020.1", None))
-        self.actionLoad_Device.setText(QCoreApplication.translate("MainWindow", "Load Device", None))
-        self.actionCompile_Rules.setText(QCoreApplication.translate("MainWindow", "Compile Rules", None))
-        self.actionRecompile_Rules.setText(QCoreApplication.translate("MainWindow", "Recompile Rules", None))
+        MainWindow.setWindowTitle(
+            QCoreApplication.translate("MainWindow", "EPICpy v2020.1", None)
+        )
+        self.actionLoad_Device.setText(
+            QCoreApplication.translate("MainWindow", "Load Device", None)
+        )
+        self.actionCompile_Rules.setText(
+            QCoreApplication.translate("MainWindow", "Compile Rules", None)
+        )
+        self.actionRecompile_Rules.setText(
+            QCoreApplication.translate("MainWindow", "Recompile Rules", None)
+        )
         self.actionQuit.setText(QCoreApplication.translate("MainWindow", "Quit", None))
-        self.actionRun_Settings.setText(QCoreApplication.translate("MainWindow", "Run Settings", None))
-        self.actionDisplay_Controls.setText(QCoreApplication.translate("MainWindow", "Display Controls", None))
-        self.actionTrace_Settings.setText(QCoreApplication.translate("MainWindow", "Trace Settings", None))
-        self.actionRule_Break_Settings.setText(QCoreApplication.translate("MainWindow", "Rule Break Settings", None))
+        self.actionRun_Settings.setText(
+            QCoreApplication.translate("MainWindow", "Run Settings", None)
+        )
+        self.actionDisplay_Controls.setText(
+            QCoreApplication.translate("MainWindow", "Display Controls", None)
+        )
+        self.actionTrace_Settings.setText(
+            QCoreApplication.translate("MainWindow", "Trace Settings", None)
+        )
+        self.actionRule_Break_Settings.setText(
+            QCoreApplication.translate("MainWindow", "Rule Break Settings", None)
+        )
         self.actionRun.setText(QCoreApplication.translate("MainWindow", "Run", None))
         self.actionRunAll.setText(QCoreApplication.translate("MainWindow", "Run", None))
         self.actionStop.setText(QCoreApplication.translate("MainWindow", "Stop", None))
-        self.actionAbout.setText(QCoreApplication.translate("MainWindow", "About", None))
+        self.actionAbout.setText(
+            QCoreApplication.translate("MainWindow", "About", None)
+        )
         self.actionHelp.setText(QCoreApplication.translate("MainWindow", "Help", None))
-        self.actionPause.setText(QCoreApplication.translate("MainWindow", "Pause", None))
-        self.actionLogging.setText(QCoreApplication.translate("MainWindow", "Logging", None))
-        self.actionExport_Normal_Output.setText(QCoreApplication.translate("MainWindow", "Export Normal Output", None))
-        self.actionExport_Trace_Output.setText(QCoreApplication.translate("MainWindow", "Export Trace Output", None))
-        self.actionSave_Layout.setText(QCoreApplication.translate("MainWindow", "Save Layout", None))
-        self.actionLoad_Layout.setText(QCoreApplication.translate("MainWindow", "Load Layout", None))
-        self.actionReset_Layout.setText(QCoreApplication.translate("MainWindow", "Restore Default Layout", None))
-        self.actionReload_Session.setText(QCoreApplication.translate("MainWindow", "Reload Last Session", None))
-        self.actionShow_Trace_Window.setText(QCoreApplication.translate("MainWindow", "Show Trace Window", None))
-        self.actionShow_Visual_Views.setText(QCoreApplication.translate("MainWindow", "Show Visual Views", None))
-        self.actionShow_Auditory_Views.setText(QCoreApplication.translate("MainWindow", "Show Auditory Views", None))
-        self.actionShow_All.setText(QCoreApplication.translate("MainWindow", "Show All", None))
-        self.actionClear_Output_Windows.setText(QCoreApplication.translate("MainWindow", "Clear Output Windows", None))
-        self.actionAudio_Settings.setText(QCoreApplication.translate("MainWindow", "Audio Settings", None))
+        self.actionPause.setText(
+            QCoreApplication.translate("MainWindow", "Pause", None)
+        )
+        self.actionLogging.setText(
+            QCoreApplication.translate("MainWindow", "Logging", None)
+        )
+        self.actionExport_Normal_Output.setText(
+            QCoreApplication.translate("MainWindow", "Export Normal Output", None)
+        )
+        self.actionExport_Trace_Output.setText(
+            QCoreApplication.translate("MainWindow", "Export Trace Output", None)
+        )
+        self.actionSave_Layout.setText(
+            QCoreApplication.translate("MainWindow", "Save Layout", None)
+        )
+        self.actionLoad_Layout.setText(
+            QCoreApplication.translate("MainWindow", "Load Layout", None)
+        )
+        self.actionReset_Layout.setText(
+            QCoreApplication.translate("MainWindow", "Restore Default Layout", None)
+        )
+        self.actionReload_Session.setText(
+            QCoreApplication.translate("MainWindow", "Reload Last Session", None)
+        )
+        self.actionShow_Trace_Window.setText(
+            QCoreApplication.translate("MainWindow", "Show Trace Window", None)
+        )
+        self.actionShow_Visual_Views.setText(
+            QCoreApplication.translate("MainWindow", "Show Visual Views", None)
+        )
+        self.actionShow_Auditory_Views.setText(
+            QCoreApplication.translate("MainWindow", "Show Auditory Views", None)
+        )
+        self.actionShow_All.setText(
+            QCoreApplication.translate("MainWindow", "Show All", None)
+        )
+        self.actionClear_Output_Windows.setText(
+            QCoreApplication.translate("MainWindow", "Clear Output Windows", None)
+        )
+        self.actionAudio_Settings.setText(
+            QCoreApplication.translate("MainWindow", "Audio Settings", None)
+        )
         self.actionEPIC_CLI_Debug_Messages.setText(
-            QCoreApplication.translate("MainWindow", "CLI and Device Debug Messages", None)
+            QCoreApplication.translate(
+                "MainWindow", "CLI and Device Debug Messages", None
+            )
         )
         self.actionFind.setText(QCoreApplication.translate("MainWindow", "Find", None))
-        self.actionFindNext.setText(QCoreApplication.translate("MainWindow", "Find Next", None))
-        self.actionFindPrevious.setText(QCoreApplication.translate("MainWindow", "Find Previous", None))
-        self.actionRun_One_Step.setText(QCoreApplication.translate("MainWindow", "Run One Step", None))
-        self.actionLoad_Visual_Encoder.setText(QCoreApplication.translate("MainWindow", "Load Visual Encoder", None))
+        self.actionFindNext.setText(
+            QCoreApplication.translate("MainWindow", "Find Next", None)
+        )
+        self.actionFindPrevious.setText(
+            QCoreApplication.translate("MainWindow", "Find Previous", None)
+        )
+        self.actionRun_One_Step.setText(
+            QCoreApplication.translate("MainWindow", "Run One Step", None)
+        )
+        self.actionLoad_Visual_Encoder.setText(
+            QCoreApplication.translate("MainWindow", "Load Visual Encoder", None)
+        )
         self.actionLoad_Auditory_Encoder.setText(
             QCoreApplication.translate("MainWindow", "Load Auditory Encoder", None)
         )
-        self.actionMinimize_All.setText(QCoreApplication.translate("MainWindow", "Minimize All", None))
-        self.actionDevice_Options.setText(QCoreApplication.translate("MainWindow", "Device Options", None))
-        self.actionEPICLib_Settings.setText(QCoreApplication.translate("MainWindow", "EPICLib Settings", None))
-        self.actionSet_Application_Font.setText(QCoreApplication.translate("MainWindow", "Set Application Font", None))
-        self.actionShow_Stats_Window.setText(QCoreApplication.translate("MainWindow", "Show Stats Window", None))
-        self.actionSound_Text_Settings.setText(QCoreApplication.translate("MainWindow", "Sound Text Settings", None))
-        self.actionExport_Stats_Output.setText(QCoreApplication.translate("MainWindow", "Export Stats Output", None))
+        self.actionMinimize_All.setText(
+            QCoreApplication.translate("MainWindow", "Minimize All", None)
+        )
+        self.actionDevice_Options.setText(
+            QCoreApplication.translate("MainWindow", "Device Options", None)
+        )
+        self.actionEPICLib_Settings.setText(
+            QCoreApplication.translate("MainWindow", "EPICLib Settings", None)
+        )
+        self.actionSet_Application_Font.setText(
+            QCoreApplication.translate("MainWindow", "Set Application Font", None)
+        )
+        self.actionShow_Stats_Window.setText(
+            QCoreApplication.translate("MainWindow", "Show Stats Window", None)
+        )
+        self.actionSound_Text_Settings.setText(
+            QCoreApplication.translate("MainWindow", "Sound Text Settings", None)
+        )
+        self.actionExport_Stats_Output.setText(
+            QCoreApplication.translate("MainWindow", "Export Stats Output", None)
+        )
         self.actionUnload_Visual_Encoder.setText(
             QCoreApplication.translate("MainWindow", "Unload Visual Encoder", None)
         )
         self.actionUnload_Auditory_Encoder.setText(
             QCoreApplication.translate("MainWindow", "Unload Auditory Encoder", None)
         )
-        self.actionStandard_Run.setText(QCoreApplication.translate("MainWindow", "Standard Run", None))
-        self.actionEncoder_Run.setText(QCoreApplication.translate("MainWindow", "Encoder Run", None))
-        self.actionAll_Runs.setText(QCoreApplication.translate("MainWindow", "All Runs", None))
-        self.actionDelete_Datafile.setText(QCoreApplication.translate("MainWindow", "Delete Datafile", None))
-        self.actionText_Editor.setText(QCoreApplication.translate("MainWindow", "Text Editor: BUILT-IN", None))
-        self.actionStandardRun.setText(QCoreApplication.translate("MainWindow", "Standard Run", None))
-        self.actionEncoderRun.setText(QCoreApplication.translate("MainWindow", "Encoder Run", None))
-        self.actionAllRuns.setText(QCoreApplication.translate("MainWindow", "All Runs", None))
+        self.actionStandard_Run.setText(
+            QCoreApplication.translate("MainWindow", "Standard Run", None)
+        )
+        self.actionEncoder_Run.setText(
+            QCoreApplication.translate("MainWindow", "Encoder Run", None)
+        )
+        self.actionAll_Runs.setText(
+            QCoreApplication.translate("MainWindow", "All Runs", None)
+        )
+        self.actionDelete_Datafile.setText(
+            QCoreApplication.translate("MainWindow", "Delete Datafile", None)
+        )
+        self.actionText_Editor.setText(
+            QCoreApplication.translate("MainWindow", "Text Editor: BUILT-IN", None)
+        )
+        self.actionStandardRun.setText(
+            QCoreApplication.translate("MainWindow", "Standard Run", None)
+        )
+        self.actionEncoderRun.setText(
+            QCoreApplication.translate("MainWindow", "Encoder Run", None)
+        )
+        self.actionAllRuns.setText(
+            QCoreApplication.translate("MainWindow", "All Runs", None)
+        )
         self.actionRun_Simulation_Script.setText(
             QCoreApplication.translate("MainWindow", "Run Simulation Script", None)
         )
-        self.actionLight.setText(QCoreApplication.translate("MainWindow", "Light", None))
+        self.actionLight.setText(
+            QCoreApplication.translate("MainWindow", "Light", None)
+        )
         self.actionDark.setText(QCoreApplication.translate("MainWindow", "Dark", None))
         self.actionAuto.setText(QCoreApplication.translate("MainWindow", "Auto", None))
-        self.actionRuleFlowTool.setText(QCoreApplication.translate("MainWindow", "RuleFlow", None))
-        self.actionSchematicTool.setText(QCoreApplication.translate("MainWindow", "Schematic", None))
-        self.actionProcessGraphTool.setText(QCoreApplication.translate("MainWindow", "ProcessGraph", None))
-        self.actionBrainTool.setText(QCoreApplication.translate("MainWindow", "Brain", None))
+        self.actionRuleFlowTool.setText(
+            QCoreApplication.translate("MainWindow", "RuleFlow", None)
+        )
+        self.actionSchematicTool.setText(
+            QCoreApplication.translate("MainWindow", "Schematic", None)
+        )
+        self.actionProcessGraphTool.setText(
+            QCoreApplication.translate("MainWindow", "ProcessGraph", None)
+        )
+        self.actionBrainTool.setText(
+            QCoreApplication.translate("MainWindow", "Brain", None)
+        )
         self.menuFiles.setTitle(QCoreApplication.translate("MainWindow", "File", None))
-        self.menuSettings.setTitle(QCoreApplication.translate("MainWindow", "Settings", None))
-        self.menuDarkMode.setTitle(QCoreApplication.translate("MainWindow", "Dark Mode: Light", None))
+        self.menuSettings.setTitle(
+            QCoreApplication.translate("MainWindow", "Settings", None)
+        )
+        self.menuDarkMode.setTitle(
+            QCoreApplication.translate("MainWindow", "Dark Mode: Light", None)
+        )
         self.menuRun.setTitle(QCoreApplication.translate("MainWindow", "Run", None))
         self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", "Help", None))
         self.menuTests.setTitle(QCoreApplication.translate("MainWindow", "Tests", None))
-        self.menuWindows.setTitle(QCoreApplication.translate("MainWindow", "Windows", None))
+        self.menuWindows.setTitle(
+            QCoreApplication.translate("MainWindow", "Windows", None)
+        )
         self.menuSearch.setTitle(QCoreApplication.translate("MainWindow", "Find", None))
-        self.menuTools.setTitle(QCoreApplication.translate("MainWindow", "SimTools", None))
+        self.menuTools.setTitle(
+            QCoreApplication.translate("MainWindow", "SimTools", None)
+        )
 
     # retranslateUi

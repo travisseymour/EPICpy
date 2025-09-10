@@ -17,7 +17,12 @@ def search_chunk(params):
 
 
 def find_next_index_with_target_serial(
-    lines, target, start_line, direction="forward", is_regex=False, ignore_case: bool = False
+    lines,
+    target,
+    start_line,
+    direction="forward",
+    is_regex=False,
+    ignore_case: bool = False,
 ):
     # Compile the pattern based on whether the target is a regex
     if ignore_case:
@@ -84,13 +89,29 @@ def find_next_index_with_target_parallel_concurrent(
             for i in range(start_line, len(lines), chunk_size if chunk_size else 1):
                 chunk_end = min(i + chunk_size, len(lines))
                 chunk = lines[i:chunk_end]
-                futures.append(executor.submit(find_next_index_in_chunk, chunk, target, i, ignore_case, direction))
+                futures.append(
+                    executor.submit(
+                        find_next_index_in_chunk,
+                        chunk,
+                        target,
+                        i,
+                        ignore_case,
+                        direction,
+                    )
+                )
         elif direction == "backward":
             for i in range(start_line, -1, -chunk_size if chunk_size else -1):
                 chunk_start = max(i - chunk_size, 0)
                 chunk = lines[chunk_start:i]
                 futures.append(
-                    executor.submit(find_next_index_in_chunk, chunk, target, chunk_start, ignore_case, direction)
+                    executor.submit(
+                        find_next_index_in_chunk,
+                        chunk,
+                        target,
+                        chunk_start,
+                        ignore_case,
+                        direction,
+                    )
                 )
 
         for future in as_completed(futures):

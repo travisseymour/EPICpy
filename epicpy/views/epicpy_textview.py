@@ -18,7 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import logging
 from pathlib import Path
 from typing import List, Optional
 
@@ -105,7 +104,7 @@ class EPICTextViewFileWriter:
         """
         try:
             self.file_object.truncate(0)
-        except:
+        except Exception:
             ...
         self.set_enabled()
 
@@ -129,7 +128,7 @@ class EPICTextViewFileWriter:
         try:
             self.file_object = open(file_path, self.file_mode)
             self.file_path = Path(file_path)
-        except:
+        except Exception:
             self.file_object = None
             self.file_path = None
             raise
@@ -152,5 +151,5 @@ class EPICTextViewFileWriter:
         """writes given text to attached file"""
         try:
             self.file_object.write(text)
-        except:
+        except Exception:
             ...

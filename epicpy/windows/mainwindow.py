@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os
+import platform
 import sys
 
 from itertools import chain
@@ -35,14 +36,22 @@ from epicpy.dialogs.aboutwindow import AboutWin
 from epicpy.dialogs.fontsizewindow import FontSizeDialog
 from epicpy.epic.runinfo import RunInfo
 from epicpy.dialogs.sndtextsettingswindow import SoundTextSettingsWin
-from epicpy.utils.apputils import clear_font, run_without_waiting, has_epiccoder, loading_cursor_context
-from epicpy import get_resource
+from epicpy.utils.apputils import (
+    clear_font,
+    run_without_waiting,
+    has_epiccoder,
+    loading_cursor_context,
+)
+from epicpy.utils.resource_utils import get_resource
 from epicpy.utils.defaultfont import get_default_font
 from epicpy.utils.update_utils import update_available
 from epicpy.widgets.largetextview import LargeTextView, CustomLargeTextView
 from epicpy.windows import mainwindow_menu
 from epicpy.windows.appstyle import set_dark_style, set_light_style
-from epicpy.windows.mainwindow_utils import get_desktop_usable_geometry, get_desktop_geometry
+from epicpy.windows.mainwindow_utils import (
+    get_desktop_usable_geometry,
+    get_desktop_geometry,
+)
 from epicpy.windows.statswidget import StatsWidget
 
 from qtpy.QtGui import (
@@ -84,8 +93,8 @@ import tempfile
 import webbrowser
 from loguru import logger as log
 from epicpy.epic.epicsimulation import Simulation
-from epicpy.constants.stateconstants import *
-from epicpy.constants.emoji import *
+from epicpy.constants.stateconstants import UNREADY, RUNNABLE, RUNNING, PAUSED
+from epicpy.constants.emoji import e_boxed_check, e_boxed_x, e_info, emoji_box
 from typing import Optional, Union, Literal
 
 from epicpy.views.epicpy_textview import EPICTextViewCachedWrite
@@ -117,7 +126,10 @@ class HorizontalDockArea(QMainWindow):
     """
 
     def __init__(
-        self, widgets: dict[str, Union[VisualViewWin, AuditoryViewWin]], minimum_view_size: QSize, parent=None
+        self,
+        widgets: dict[str, Union[VisualViewWin, AuditoryViewWin]],
+        minimum_view_size: QSize,
+        parent=None,
     ):
         super().__init__(parent)
         self.setWindowTitle("Horizontal Dock Area")
@@ -137,7 +149,9 @@ class HorizontalDockArea(QMainWindow):
             # Remove custom title bar styling; use default.
             widget = widgets[widget_name]
             widget.setMinimumSize(minimum_view_size)
-            widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            widget.setSizePolicy(
+                QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            )
             widget.setStyleSheet("border: 1px solid #B9B8B6;")
             dock.setWidget(widget)
             docks.append(dock)
@@ -146,7 +160,9 @@ class HorizontalDockArea(QMainWindow):
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, docks[0])
         self.splitDockWidget(docks[0], docks[1], Qt.Orientation.Horizontal)
         self.splitDockWidget(docks[1], docks[2], Qt.Orientation.Horizontal)
-        self.resizeDocks([docks[0], docks[1], docks[2]], [1, 1, 1], Qt.Orientation.Horizontal)
+        self.resizeDocks(
+            [docks[0], docks[1], docks[2]], [1, 1, 1], Qt.Orientation.Horizontal
+        )
 
         for d in docks:
             d.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
@@ -217,7 +233,9 @@ class MainWin(QMainWindow):
             default_window_size: QSize(2065, 1145)
             QSize(2272, 1260)
             """
-            self.default_window_size = QSize(int(round(2271 / 1.1)), int(round(1260 / 1.1)))
+            self.default_window_size = QSize(
+                int(round(2271 / 1.1)), int(round(1260 / 1.1))
+            )
         elif self.usable_desktop_size.height() >= 960:
             """
             FHD
@@ -225,7 +243,9 @@ class MainWin(QMainWindow):
             self.default_window_size=qtpy.QtCore.QSize(1557, 909)
             qtpy.QtCore.QSize(1713, 1000)
             """
-            self.default_window_size = QSize(int(round(1713 / 1.1)), int(round(1000 / 1.1)))
+            self.default_window_size = QSize(
+                int(round(1713 / 1.1)), int(round(1000 / 1.1))
+            )
         else:
             self.default_window_size = self.usable_desktop_size
 
@@ -241,13 +261,21 @@ class MainWin(QMainWindow):
         self.default_middle_custom_settings: dict = {}
 
         # add central widget and setup
-        self.normalPlainTextEditOutput = CustomLargeTextView(parent=self, enable_shortcuts=False)
-        self.normalPlainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.normalPlainTextEditOutput.setObjectName("MainWindow")  # "plainTextEditOutput"
+        self.normalPlainTextEditOutput = CustomLargeTextView(
+            parent=self, enable_shortcuts=False
+        )
+        self.normalPlainTextEditOutput.setContextMenuPolicy(
+            Qt.ContextMenuPolicy.CustomContextMenu
+        )
+        self.normalPlainTextEditOutput.setObjectName(
+            "MainWindow"
+        )  # "plainTextEditOutput"
         self.normalPlainTextEditOutput.customContextMenuRequested.connect(
             self.normalPlainTextEditOutput.contextMenuEvent
         )
-        self.normal_out_view = EPICTextViewCachedWrite(text_widget=self.normalPlainTextEditOutput)
+        self.normal_out_view = EPICTextViewCachedWrite(
+            text_widget=self.normalPlainTextEditOutput
+        )
 
         # Attach relevant output tees to this window
         for ot in (Normal_out, Debug_out, Device_out, Exception_out, PPS_out):
@@ -257,7 +285,7 @@ class MainWin(QMainWindow):
         update = update_available()
         update_msg = f"\n{update}\n" if update else ""
         self.normalPlainTextEditOutput.write(
-            f'Normal Out! ({datetime.datetime.now().strftime("%r")} - '
+            f"Normal Out! ({datetime.datetime.now().strftime('%r')} - "
             f"Running on {platform.python_implementation()} {platform.python_version()})"
             f"{update_msg}"
         )
@@ -265,16 +293,24 @@ class MainWin(QMainWindow):
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
         # connect Trace_out now
         self.tracePlainTextEditOutput = LargeTextView(self)
-        self.tracePlainTextEditOutput.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tracePlainTextEditOutput.setContextMenuPolicy(
+            Qt.ContextMenuPolicy.CustomContextMenu
+        )
         self.tracePlainTextEditOutput.setObjectName("TraceWindow")
-        self.tracePlainTextEditOutput.customContextMenuRequested.connect(self.tracePlainTextEditOutput.contextMenuEvent)
-        self.trace_out_view = EPICTextViewCachedWrite(text_widget=self.tracePlainTextEditOutput)
+        self.tracePlainTextEditOutput.customContextMenuRequested.connect(
+            self.tracePlainTextEditOutput.contextMenuEvent
+        )
+        self.trace_out_view = EPICTextViewCachedWrite(
+            text_widget=self.tracePlainTextEditOutput
+        )
 
         # Attach relevant output tees to this window
         Trace_out.add_py_stream(self.trace_out_view)
         # Trace_out.add_py_stream(sys.stdout)  # for debug
 
-        self.tracePlainTextEditOutput.write(f'Trace Out! ({datetime.datetime.now().strftime("%r")})\n')
+        self.tracePlainTextEditOutput.write(
+            f"Trace Out! ({datetime.datetime.now().strftime('%r')})\n"
+        )
 
         # Also, attach std error to exception out in case information is printed before ui crashes
         Exception_out.add_py_stream(sys.stderr)
@@ -317,8 +353,12 @@ class MainWin(QMainWindow):
         self.setup_views()
         self.setup_base_ui()
 
-        self.view_updater = QTimer()  # to singleshot view updates that won't slow down main thread
-        self.ui_timer = QTimer()  # for updating status bar and other stuff every second or so
+        self.view_updater = (
+            QTimer()
+        )  # to singleshot view updates that won't slow down main thread
+        self.ui_timer = (
+            QTimer()
+        )  # for updating status bar and other stuff every second or so
 
         # Setup Menus
         # ===========
@@ -404,12 +444,18 @@ class MainWin(QMainWindow):
 
         # notify user if there is a previous session that can be loaded with reload_session?
         exists = Path(config.app_cfg.last_device_file).is_file()
-        device = config.app_cfg.last_device_file if config.app_cfg.last_device_file else "None"
+        device = (
+            config.app_cfg.last_device_file
+            if config.app_cfg.last_device_file
+            else "None"
+        )
         last_session_notice = f"Last Device Loaded: {device} [{exists=}]"
         Normal_out(dedent(last_session_notice))
 
         self.update_title()
-        self.actionReload_Session.setEnabled(Path(config.device_cfg.device_file).is_file())
+        self.actionReload_Session.setEnabled(
+            Path(config.device_cfg.device_file).is_file()
+        )
 
         # setup some ui timers
         self.ui_timer.timeout.connect(self.update_ui_status)
@@ -427,7 +473,9 @@ class MainWin(QMainWindow):
 
         # ----- Left Column Dock Widgets -----
         # Top Dock Area: Contains three inner docks.
-        self.topAreaInner = HorizontalDockArea(self.visual_views, self.minimum_view_size, self)
+        self.topAreaInner = HorizontalDockArea(
+            self.visual_views, self.minimum_view_size, self
+        )
         self.dockTop = QDockWidget("Visual Views", self)
         self.dockTop.setObjectName("dockTop")
         self.dockTop.setWidget(self.topAreaInner)
@@ -439,7 +487,9 @@ class MainWin(QMainWindow):
         )
 
         # Middle Dock Area: Contains three inner docks.
-        self.middleAreaInner = HorizontalDockArea(self.auditory_views, self.minimum_view_size, self)
+        self.middleAreaInner = HorizontalDockArea(
+            self.auditory_views, self.minimum_view_size, self
+        )
         self.dockMiddle = QDockWidget("Auditory Views", self)
         self.dockMiddle.setObjectName("dockMiddle")
         self.dockMiddle.setWidget(self.middleAreaInner)
@@ -513,7 +563,14 @@ class MainWin(QMainWindow):
             # Now call resizeDocks with the vertical orientation.
             self.resizeDocks(
                 [self.dockTop, self.dockMiddle, self.dockBottom],
-                [min_top, min_middle, max(available_for_bottom, self.dockBottom.widget().minimumSizeHint().height())],
+                [
+                    min_top,
+                    min_middle,
+                    max(
+                        available_for_bottom,
+                        self.dockBottom.widget().minimumSizeHint().height(),
+                    ),
+                ],
                 Qt.Orientation.Vertical,
             )
 
@@ -545,7 +602,9 @@ class MainWin(QMainWindow):
     # to nothing.
     # ==============================================================================
 
-    def on_load_device(self, file: str = "", quiet: bool = False, auto_load_rules: bool = True) -> bool:
+    def on_load_device(
+        self, file: str = "", quiet: bool = False, auto_load_rules: bool = True
+    ) -> bool:
         self.layout_save()
 
         try:
@@ -600,7 +659,9 @@ class MainWin(QMainWindow):
                     trace_output=True,
                 )
 
-                self.context = "".join([c for c in self.simulation.device.device_name if c.isalnum()]).title()
+                self.context = "".join(
+                    [c for c in self.simulation.device.device_name if c.isalnum()]
+                ).title()
                 self.layout_load()
 
                 if auto_load_rules and config.device_cfg.rule_files:
@@ -629,10 +690,14 @@ class MainWin(QMainWindow):
 
     def run_all(self):
         self.simulation.current_rule_index = 0
-        rule_name = Path(self.simulation.rule_files[self.simulation.current_rule_index].rule_file).name
+        rule_name = Path(
+            self.simulation.rule_files[self.simulation.current_rule_index].rule_file
+        ).name
         Normal_out(emoji_box(f"RULE FILE: {rule_name}", line="thick"))
 
-        if not self.simulation.rule_files[self.simulation.current_rule_index].parameter_string:
+        if not self.simulation.rule_files[
+            self.simulation.current_rule_index
+        ].parameter_string:
             # if not running from script, need to set the param string, otherwise it's already
             # handled elsewhere
             self.simulation.device.set_parameter_string(
@@ -661,7 +726,7 @@ class MainWin(QMainWindow):
         else:
             Normal_out(
                 emoji_box(
-                    f"ERROR: Unable to reload last session: No previous device found in settings.",
+                    "ERROR: Unable to reload last session: No previous device found in settings.",
                     line="thick",
                 )
             )
@@ -669,7 +734,8 @@ class MainWin(QMainWindow):
         if self.simulation and self.simulation.device:
             if config.device_cfg.rule_files:
                 Normal_out(
-                    f"{len(config.device_cfg.rule_files)} rule files recovered from " f"previous device session: "
+                    f"{len(config.device_cfg.rule_files)} rule files recovered from "
+                    f"previous device session: "
                 )
                 for i, rule_file in enumerate(config.device_cfg.rule_files):
                     p = Path(rule_file)
@@ -679,7 +745,9 @@ class MainWin(QMainWindow):
                         status = f"({e_boxed_x} Missing)"
                     Normal_out(f"   {p.name} ({status})")
                 config.device_cfg.rule_files = [
-                    rule_file for rule_file in config.device_cfg.rule_files if Path(rule_file).is_file()
+                    rule_file
+                    for rule_file in config.device_cfg.rule_files
+                    if Path(rule_file).is_file()
                 ]
                 # self.simulation.rule_files = config.device_cfg.rule_files
 
@@ -749,8 +817,13 @@ class MainWin(QMainWindow):
                 self.normal_file_output_never_updated = False
 
             try:
-                self.normal_out_view.file_writer.open(Path(config.device_cfg.normal_out_file))
-                Normal_out(f"{e_boxed_check} Normal Output logging set to " f"{config.device_cfg.normal_out_file}")
+                self.normal_out_view.file_writer.open(
+                    Path(config.device_cfg.normal_out_file)
+                )
+                Normal_out(
+                    f"{e_boxed_check} Normal Output logging set to "
+                    f"{config.device_cfg.normal_out_file}"
+                )
             except Exception as e:
                 Normal_out(
                     emoji_box(
@@ -768,8 +841,13 @@ class MainWin(QMainWindow):
                 self.trace_file_output_never_updated = False
 
             try:
-                self.trace_out_view.file_writer.open(Path(config.device_cfg.trace_out_file))
-                Normal_out(f"{e_boxed_check} Trace Output logging set to " f"{config.device_cfg.trace_out_file}")
+                self.trace_out_view.file_writer.open(
+                    Path(config.device_cfg.trace_out_file)
+                )
+                Normal_out(
+                    f"{e_boxed_check} Trace Output logging set to "
+                    f"{config.device_cfg.trace_out_file}"
+                )
             except Exception as e:
                 Normal_out(
                     emoji_box(
@@ -797,7 +875,9 @@ class MainWin(QMainWindow):
         }
         self.visual_physical_view = EPICVisualView(self.visual_views["Visual Physical"])
         self.visual_sensory_view = EPICVisualView(self.visual_views["Visual Sensory"])
-        self.visual_perceptual_view = EPICVisualView(self.visual_views["Visual Perceptual"])
+        self.visual_perceptual_view = EPICVisualView(
+            self.visual_views["Visual Perceptual"]
+        )
 
         self.auditory_views = {
             "Auditory Physical": AuditoryViewWin(
@@ -813,9 +893,15 @@ class MainWin(QMainWindow):
                 "Auditory Perceptual",
             ),
         }
-        self.auditory_physical_view = EPICAuditoryView(self.auditory_views["Auditory Physical"])
-        self.auditory_sensory_view = EPICAuditoryView(self.auditory_views["Auditory Sensory"])
-        self.auditory_perceptual_view = EPICAuditoryView(self.auditory_views["Auditory Perceptual"])
+        self.auditory_physical_view = EPICAuditoryView(
+            self.auditory_views["Auditory Physical"]
+        )
+        self.auditory_sensory_view = EPICAuditoryView(
+            self.auditory_views["Auditory Sensory"]
+        )
+        self.auditory_perceptual_view = EPICAuditoryView(
+            self.auditory_views["Auditory Perceptual"]
+        )
 
         for win in (
             self.visual_physical_view,
@@ -837,13 +923,15 @@ class MainWin(QMainWindow):
 
     def update_ui_status(self):
         if self.run_state == RUNNING:
-            self.statusBar().showMessage(f"Run State: Running")
+            self.statusBar().showMessage("Run State: Running")
             self.set_ui_running()
         elif self.run_state == PAUSED:
-            self.statusBar().showMessage(f"Run State: Paused")
+            self.statusBar().showMessage("Run State: Paused")
             self.set_ui_paused()
         else:
-            self.statusBar().showMessage(f'Run State: {"UnReady" if self.run_state == UNREADY else "Runnable"}')
+            self.statusBar().showMessage(
+                f"Run State: {'UnReady' if self.run_state == UNREADY else 'Runnable'}"
+            )
             self.set_ui_not_running()
 
     def closeEvent(self, event: QCloseEvent):
@@ -876,8 +964,8 @@ class MainWin(QMainWindow):
             for view in chain(self.visual_views.values(), self.auditory_views.values()):
                 view.can_close = True
                 view.close()  # destroy()
-        except Exception as e:
-            print(f"\tWARNING: Unable to successfully close all views.")
+        except Exception:
+            print("\tWARNING: Unable to successfully close all views.")
 
         print("6. Closing output files...")
         self.close_output_files()
@@ -892,8 +980,8 @@ class MainWin(QMainWindow):
                 self.auditory_sensory_view,
                 self.auditory_perceptual_view,
             )
-        except Exception as e:
-            print(f"\tWARNING: Unable to cleanly release views from model.")
+        except Exception:
+            print("\tWARNING: Unable to cleanly release views from model.")
 
         print("8. Pausing and stopping simulation -- seems redundant, halted above...")
         if self.simulation:
@@ -909,8 +997,24 @@ class MainWin(QMainWindow):
 
         print("9. Shutting down Output_tee instances...")
         ot_info = zip(
-            ("Normal_out", "Trace_out", "Exception_out", "Debug_out", "Device_out", "PPS_out", "Stats_out"),
-            (Normal_out, Trace_out, Exception_out, Debug_out, Device_out, PPS_out, Stats_out),
+            (
+                "Normal_out",
+                "Trace_out",
+                "Exception_out",
+                "Debug_out",
+                "Device_out",
+                "PPS_out",
+                "Stats_out",
+            ),
+            (
+                Normal_out,
+                Trace_out,
+                Exception_out,
+                Debug_out,
+                Device_out,
+                PPS_out,
+                Stats_out,
+            ),
         )
 
         for ot_name, ot in ot_info:
@@ -954,7 +1058,9 @@ class MainWin(QMainWindow):
         else:
             self.layout_load("Main")  # regular and custom
 
-    def set_view_background_image(self, view_type: str, img_filename: str, scaled: bool = True):
+    def set_view_background_image(
+        self, view_type: str, img_filename: str, scaled: bool = True
+    ):
         if not config.device_cfg.allow_device_images:
             return
 
@@ -964,14 +1070,17 @@ class MainWin(QMainWindow):
                 "visual",
                 "auditory",
             ), "view_type must be in ('visual', 'auditory')"
-            assert Path(img_filename).is_file(), f"{img_filename} is not a valid image file"
+            assert Path(img_filename).is_file(), (
+                f"{img_filename} is not a valid image file"
+            )
             if _view_type == "visual":
                 views = self.visual_views
             elif _view_type == "auditory":
                 views = self.auditory_views
             else:
                 raise ValueError(
-                    f"set_view_background_image: Got bad view_type ({_view_type}), " f"should be in (visual, auditory)"
+                    f"set_view_background_image: Got bad view_type ({_view_type}), "
+                    f"should be in (visual, auditory)"
                 )
 
             for view in views.values():
@@ -1068,10 +1177,14 @@ class MainWin(QMainWindow):
     def set_ui_paused(self):
         has_rules = (
             True
-            if self.simulation and self.simulation.model and self.simulation.model.get_prs_filename() != ""
+            if self.simulation
+            and self.simulation.model
+            and self.simulation.model.get_prs_filename() != ""
             else False
         )
-        has_device = True if self.simulation and self.simulation.device is not None else False
+        has_device = (
+            True if self.simulation and self.simulation.device is not None else False
+        )
 
         has_visual_encoder = (
             self.simulation
@@ -1120,10 +1233,14 @@ class MainWin(QMainWindow):
         runnable = self.run_state == RUNNABLE
         has_rules = (
             True
-            if self.simulation and self.simulation.model and self.simulation.model.get_prs_filename() != ""
+            if self.simulation
+            and self.simulation.model
+            and self.simulation.model.get_prs_filename() != ""
             else False
         )
-        has_device = True if self.simulation and self.simulation.device is not None else False
+        has_device = (
+            True if self.simulation and self.simulation.device is not None else False
+        )
 
         has_visual_encoder = (
             self.simulation
@@ -1174,7 +1291,8 @@ class MainWin(QMainWindow):
         else:
             device_name = "DEVICE: None"
         rule_name = (
-            f"RULES: " f"{Path(self.simulation.rule_files[self.simulation.current_rule_index].rule_file).name}"
+            f"RULES: "
+            f"{Path(self.simulation.rule_files[self.simulation.current_rule_index].rule_file).name}"
             if self.simulation and self.simulation.rule_files
             else "Rules: None"
         )
@@ -1187,17 +1305,22 @@ class MainWin(QMainWindow):
         epiclib_version = "EPICLIB: 06/28/2016"
 
         encoders = []
-        if self.simulation.visual_encoder and not isinstance(self.simulation.visual_encoder, NullVisualEncoder):
+        if self.simulation.visual_encoder and not isinstance(
+            self.simulation.visual_encoder, NullVisualEncoder
+        ):
             encoders.append("Visual")
-        if self.simulation.auditory_encoder and not isinstance(self.simulation.auditory_encoder, NullAuditoryEncoder):
+        if self.simulation.auditory_encoder and not isinstance(
+            self.simulation.auditory_encoder, NullAuditoryEncoder
+        ):
             encoders.append("Auditory")
         if encoders:
-            encoder_info = f'ENCODERS: [{", ".join(encoders)}]'
+            encoder_info = f"ENCODERS: [{', '.join(encoders)}]"
         else:
-            encoder_info = f"ENCODERS: None"
+            encoder_info = "ENCODERS: None"
 
         self.setWindowTitle(
-            f"EPICpy v{__version__} | {device_name} | {rule_name} | {epiclib_version} " f"| {encoder_info}"
+            f"EPICpy v{__version__} | {device_name} | {rule_name} | {epiclib_version} "
+            f"| {encoder_info}"
         )
 
     def show_run_settings(self):
@@ -1228,14 +1351,24 @@ class MainWin(QMainWindow):
             delete_data_func, data_info_func = None, None
 
         self.run_settings_dialog = RunSettingsWin(
-            self.simulation.default_device_parameters, delete_data_func, data_info_func, self.simulation
+            self.simulation.default_device_parameters,
+            delete_data_func,
+            data_info_func,
+            self.simulation,
         )
-        self.run_settings_dialog.ui.pushButtonDeleteData.setEnabled(delete_data_func is not None)
+        self.run_settings_dialog.ui.pushButtonDeleteData.setEnabled(
+            delete_data_func is not None
+        )
 
         self.run_settings_dialog.ui.lineEditDeviceParameters.setText("")
         if config.device_cfg.device_params:
-            self.run_settings_dialog.ui.lineEditDeviceParameters.setText(config.device_cfg.device_params)
-            Normal_out(f'Device parameters "{config.device_cfg.device_params}" set from ' f"previous device session.")
+            self.run_settings_dialog.ui.lineEditDeviceParameters.setText(
+                config.device_cfg.device_params
+            )
+            Normal_out(
+                f'Device parameters "{config.device_cfg.device_params}" set from '
+                f"previous device session."
+            )
         else:
             device_params = self.simulation.device.get_parameter_string()
             self.run_settings_dialog.ui.lineEditDeviceParameters.setText(device_params)
@@ -1250,7 +1383,9 @@ class MainWin(QMainWindow):
 
         if self.run_settings_dialog.ok:
             Normal_out(f"{e_info} Settings changes accepted.")
-            config.device_cfg.device_params = self.run_settings_dialog.ui.lineEditDeviceParameters.text()
+            config.device_cfg.device_params = (
+                self.run_settings_dialog.ui.lineEditDeviceParameters.text()
+            )
             self.simulation.device.set_parameter_string(config.device_cfg.device_params)
         else:
             Normal_out(f"{e_info} Settings changes ignored.")
@@ -1351,7 +1486,9 @@ class MainWin(QMainWindow):
                 f"pt). NOTE: Some font changes may only take place after application restart."
             )
 
-            new_font = get_default_font(family=config.app_cfg.font_family, size=config.app_cfg.font_size)
+            new_font = get_default_font(
+                family=config.app_cfg.font_family, size=config.app_cfg.font_size
+            )
             QApplication.instance().setFont(new_font)
             clear_font(self)
             for win in self.visual_views.values():
@@ -1378,11 +1515,15 @@ class MainWin(QMainWindow):
             if kind == "StandardRun":
                 if fitness.setup_test_device_folder(self):
                     fitness.clear_results()
-                    fitness.run_model_test(self, load_encoders=False, close_on_finish=False)
+                    fitness.run_model_test(
+                        self, load_encoders=False, close_on_finish=False
+                    )
             elif kind == "EncoderRun":
                 if fitness.setup_test_device_folder(self):
                     fitness.clear_results()
-                    fitness.run_model_test(self, load_encoders=True, close_on_finish=False)
+                    fitness.run_model_test(
+                        self, load_encoders=True, close_on_finish=False
+                    )
             elif kind == "AllRuns":
                 if fitness.setup_test_device_folder(self):
                     fitness.clear_results()
@@ -1419,18 +1560,22 @@ class MainWin(QMainWindow):
             else:
                 start_dir = Path().home().expanduser()
             start_file = (
-                f"{start_dir.stem}_{kind}_output.html" if kind == "Stats" else f"{start_dir.stem}_{kind}_output.txt"
+                f"{start_dir.stem}_{kind}_output.html"
+                if kind == "Stats"
+                else f"{start_dir.stem}_{kind}_output.txt"
             )
             start_file = str(Path(start_dir, start_file).with_suffix(ext).resolve())
 
         if kind == "Stats":
             _filter = (
-                "HTML-Files (*.html);;Text files (*.txt);;" "Markdown files (*.md);;ODF files (*.odt);;All Files (*)"
+                "HTML-Files (*.html);;Text files (*.txt);;"
+                "Markdown files (*.md);;ODF files (*.odt);;All Files (*)"
             )
             initial_filter = "HTML-Files (*.html)"
         else:
             _filter = (
-                "Text files (*.txt);;HTML-Files (*.html);;" "Markdown files (*.md);;ODF files (*.odt);;All Files (*)"
+                "Text files (*.txt);;HTML-Files (*.html);;"
+                "Markdown files (*.md);;ODF files (*.odt);;All Files (*)"
             )
             initial_filter = "Text files (*.txt)"
 
@@ -1485,11 +1630,16 @@ class MainWin(QMainWindow):
         success = writer.write(source.document())
         if success:
             source.document().setModified(False)
-            Normal_out(f"{e_boxed_check} {name.title()} Output window text written to {out_file}")
+            Normal_out(
+                f"{e_boxed_check} {name.title()} Output window text written to {out_file}"
+            )
         else:
             Normal_out(
                 emoji_box(
-                    f"ERROR: Unable to write output text from " f"{name.title()} " f"to" f"{out_file})",
+                    f"ERROR: Unable to write output text from "
+                    f"{name.title()} "
+                    f"to"
+                    f"{out_file})",
                     line="thick",
                 )
             )
@@ -1515,7 +1665,9 @@ class MainWin(QMainWindow):
             error = str(e)
 
         if success:
-            Normal_out(f"{e_boxed_check} {name.title()} Output window text written to {out_file}")
+            Normal_out(
+                f"{e_boxed_check} {name.title()} Output window text written to {out_file}"
+            )
         else:
             Normal_out(
                 emoji_box(
@@ -1588,7 +1740,11 @@ class MainWin(QMainWindow):
                         dock.hide()
                     else:
                         dock.show()
-                    self.resizeDocks([dock], [info.get("width", dock.width())], Qt.Orientation.Horizontal)
+                    self.resizeDocks(
+                        [dock],
+                        [info.get("width", dock.width())],
+                        Qt.Orientation.Horizontal,
+                    )
         if "topAreaInner" in custom:
             self.topAreaInner.apply_custom_settings(custom["topAreaInner"])
         if "middleAreaInner" in custom:
@@ -1626,8 +1782,12 @@ class MainWin(QMainWindow):
                 new_dict[key] = new_info
             return new_dict
 
-        self.topAreaInner.apply_custom_settings(force_visible(self.default_top_custom_settings))
-        self.middleAreaInner.apply_custom_settings(force_visible(self.default_middle_custom_settings))
+        self.topAreaInner.apply_custom_settings(
+            force_visible(self.default_top_custom_settings)
+        )
+        self.middleAreaInner.apply_custom_settings(
+            force_visible(self.default_middle_custom_settings)
+        )
 
     # =============================================
     # Context Menu Behavior
@@ -1646,16 +1806,24 @@ class MainWin(QMainWindow):
         # self.context_items['SelectAll'] = self.context_menu.addAction("Select All")
         self.context_menu.addSeparator()
         self.context_items["Copy"] = self.context_menu.addAction("Copy")
-        self.context_items["Copy"].setText(f"Copy All Lines")
+        self.context_items["Copy"].setText("Copy All Lines")
         self.context_items["CopyLine"] = self.context_menu.addAction("Copy")
-        self.context_items["CopyLine"].setText(f"Copy Selected Line")
+        self.context_items["CopyLine"].setText("Copy Selected Line")
         self.context_items["Clear"] = self.context_menu.addAction("Clear")
         self.context_menu.addSeparator()
-        self.context_items["OpenOutput"] = self.context_menu.addAction("Open Normal Output In Text Editor")
-        self.context_items["EditRules"] = self.context_menu.addAction("Edit Production Rule File")
-        self.context_items["EditData"] = self.context_menu.addAction("Edit Data Output File")
+        self.context_items["OpenOutput"] = self.context_menu.addAction(
+            "Open Normal Output In Text Editor"
+        )
+        self.context_items["EditRules"] = self.context_menu.addAction(
+            "Edit Production Rule File"
+        )
+        self.context_items["EditData"] = self.context_menu.addAction(
+            "Edit Data Output File"
+        )
         self.context_menu.addSeparator()
-        self.context_items["OpenFolder"] = self.context_menu.addAction("Open Device Folder")
+        self.context_items["OpenFolder"] = self.context_menu.addAction(
+            "Open Device Folder"
+        )
         self.context_menu.addSeparator()
         self.context_items["Quit"] = self.context_menu.addAction("Quit")
 
@@ -1771,20 +1939,30 @@ class MainWin(QMainWindow):
     def launchEditor(self, which_file: str = "NormalOut"):
         if which_file == "NormalOut":
             file_id = datetime.datetime.now().strftime("%m%d%y_%H%M%S")
-            file_path = Path(self.tmp_folder.name, f"TEMP_EPICPY_NORMALOUT_{file_id}.txt")
+            file_path = Path(
+                self.tmp_folder.name, f"TEMP_EPICPY_NORMALOUT_{file_id}.txt"
+            )
             file_path.write_text(self.normalPlainTextEditOutput.get_text())
         elif which_file == "RuleFile":
             if self.simulation.rule_files:
                 if self.simulation.current_rule_index < len(self.simulation.rule_files):
-                    file_path = Path(self.simulation.rule_files[self.simulation.current_rule_index].rule_file)
+                    file_path = Path(
+                        self.simulation.rule_files[
+                            self.simulation.current_rule_index
+                        ].rule_file
+                    )
                 else:
-                    file_path = Path(self.simulation.rule_files[self.simulation.current_rule_index - 1].rule_file)
+                    file_path = Path(
+                        self.simulation.rule_files[
+                            self.simulation.current_rule_index - 1
+                        ].rule_file
+                    )
             else:
                 file_path = None
                 Normal_out(
                     emoji_box(
-                        f"ERROR: Unable to open production rules in external text\n"
-                        f"editor: [There are possibly no rules currently loaded.]",
+                        "ERROR: Unable to open production rules in external text\n"
+                        "editor: [There are possibly no rules currently loaded.]",
                         line="thick",
                     )
                 )
@@ -1796,7 +1974,8 @@ class MainWin(QMainWindow):
             except AttributeError:
                 file_path = None
                 err_msg = (
-                    f"{e_boxed_x} ERROR: Device instance does not appear have " f"expected data_filepath attribute."
+                    f"{e_boxed_x} ERROR: Device instance does not appear have "
+                    f"expected data_filepath attribute."
                 )
             except FileNotFoundError:
                 file_path = None
@@ -1818,7 +1997,6 @@ class MainWin(QMainWindow):
             file_path = None
 
         if file_path is not None:
-
             try:
                 # user has specified the system default editor
                 ec_path = has_epiccoder()
@@ -1860,19 +2038,24 @@ class MainWin(QMainWindow):
             except Exception as e:
                 Normal_out(
                     emoji_box(
-                        f"ERROR: Unable to open {which_file} file\n" f"{file_path.name} in external text editor\n: {e}",
+                        f"ERROR: Unable to open {which_file} file\n"
+                        f"{file_path.name} in external text editor\n: {e}",
                         line="thick",
                     )
                 )
 
-    def start_tool(self, tool_name: Literal["rule_flow", "schematic", "process_graph", "brain"]):
+    def start_tool(
+        self, tool_name: Literal["rule_flow", "schematic", "process_graph", "brain"]
+    ):
         match tool_name:
             case "rule_flow":
                 try:
                     self.rule_flow_window.close()
-                except:
+                except Exception:
                     ...
-                self.rule_flow_window = RuleFlowWindow(trace_textedit=self.normalPlainTextEditOutput)
+                self.rule_flow_window = RuleFlowWindow(
+                    trace_textedit=self.normalPlainTextEditOutput
+                )
                 self.rule_flow_window.show()
                 self.rule_flow_window.update_graph_edges()
                 self.rule_flow_window.update_graph()

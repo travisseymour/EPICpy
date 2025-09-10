@@ -75,7 +75,9 @@ class Ui_DialogDeviceOptions(object):
 
     def retranslateUi(self, DialogDeviceOptions):
         _translate = QtCore.QCoreApplication.translate
-        DialogDeviceOptions.setWindowTitle(_translate("DialogDeviceOptions", "Device Options"))
+        DialogDeviceOptions.setWindowTitle(
+            _translate("DialogDeviceOptions", "Device Options")
+        )
         self.labelDeviceNameAndInfo.setText(
             _translate(
                 "DialogDeviceOptions",

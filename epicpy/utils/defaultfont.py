@@ -3,7 +3,9 @@ from typing import Literal
 from qtpy.QtGui import QFont
 
 
-def get_default_font(family: Literal["sans-serif", "serif", "monospace"] = "monospace", size: int = 14) -> QFont:
+def get_default_font(
+    family: Literal["sans-serif", "serif", "monospace"] = "monospace", size: int = 14
+) -> QFont:
     """Returns a cross-platform QFont object with fallbacks."""
     font_families = {
         "sans-serif": ["Arial", "Helvetica", "DejaVu Sans", "Sans-serif"],

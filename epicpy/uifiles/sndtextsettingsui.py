@@ -31,7 +31,9 @@ class Ui_DialogSndTextSettings(object):
         font.setBold(True)
         font.setUnderline(True)
         self.label.setFont(font)
-        self.label.setStyleSheet("background-color: rgb(255, 255, 127);\n" "color: rgb(0, 0, 0);")
+        self.label.setStyleSheet(
+            "background-color: rgb(255, 255, 127);\ncolor: rgb(0, 0, 0);"
+        )
         self.label.setObjectName("label")
         self.verticalLayout.addWidget(self.label)
         self.checkBoxSoundKind = QtWidgets.QCheckBox(parent=DialogSndTextSettings)
@@ -72,7 +74,9 @@ class Ui_DialogSndTextSettings(object):
         font.setBold(True)
         font.setUnderline(True)
         self.label_2.setFont(font)
-        self.label_2.setStyleSheet("background-color: rgb(255, 255, 127);\n" "color: rgb(0, 0, 0);")
+        self.label_2.setStyleSheet(
+            "background-color: rgb(255, 255, 127);\ncolor: rgb(0, 0, 0);"
+        )
         self.label_2.setObjectName("label_2")
         self.verticalLayout.addWidget(self.label_2)
         self.checkBoxSpeechKind = QtWidgets.QCheckBox(parent=DialogSndTextSettings)
@@ -151,19 +155,29 @@ class Ui_DialogSndTextSettings(object):
 
     def retranslateUi(self, DialogSndTextSettings):
         _translate = QtCore.QCoreApplication.translate
-        DialogSndTextSettings.setWindowTitle(_translate("DialogSndTextSettings", "Sound Text Settings"))
+        DialogSndTextSettings.setWindowTitle(
+            _translate("DialogSndTextSettings", "Sound Text Settings")
+        )
         self.label.setText(_translate("DialogSndTextSettings", "Sound"))
         self.checkBoxSoundKind.setText(_translate("DialogSndTextSettings", "Kind"))
         self.checkBoxSoundStream.setText(_translate("DialogSndTextSettings", "Stream"))
         self.checkBoxSoundTimbre.setText(_translate("DialogSndTextSettings", "Timbre"))
-        self.checkBoxSoundLoudness.setText(_translate("DialogSndTextSettings", "Loudness"))
+        self.checkBoxSoundLoudness.setText(
+            _translate("DialogSndTextSettings", "Loudness")
+        )
         self.label_2.setText(_translate("DialogSndTextSettings", "Speech"))
         self.checkBoxSpeechKind.setText(_translate("DialogSndTextSettings", "Kind"))
         self.checkBoxSpeechStream.setText(_translate("DialogSndTextSettings", "Stream"))
         self.checkBoxSpeechPitch.setText(_translate("DialogSndTextSettings", "Pitch"))
-        self.checkBoxSpeechLoudness.setText(_translate("DialogSndTextSettings", "Loudness"))
-        self.checkBoxSpeechContent.setText(_translate("DialogSndTextSettings", "Content"))
-        self.checkBoxSpeechSpeaker.setText(_translate("DialogSndTextSettings", "Speaker"))
+        self.checkBoxSpeechLoudness.setText(
+            _translate("DialogSndTextSettings", "Loudness")
+        )
+        self.checkBoxSpeechContent.setText(
+            _translate("DialogSndTextSettings", "Content")
+        )
+        self.checkBoxSpeechSpeaker.setText(
+            _translate("DialogSndTextSettings", "Speaker")
+        )
         self.checkBoxSpeechGender.setText(_translate("DialogSndTextSettings", "Gender"))
         self.pushButtonCancel.setText(_translate("DialogSndTextSettings", "Cancel"))
         self.pushButtonOK.setText(_translate("DialogSndTextSettings", "OK"))

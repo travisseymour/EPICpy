@@ -7,7 +7,7 @@ from qtpy.QtGui import QPixmap
 from qtpy.QtCore import Qt, QThread, QTimer
 
 from epicpy.utils import config
-from epicpy import get_resource
+from epicpy.utils.resource_utils import get_resource
 
 
 class AppLoader(QThread):
@@ -34,7 +34,9 @@ class SplashScreen(QSplashScreen):
         super().__init__(scaled_pixmap, Qt.WindowType.WindowStaysOnTopHint)
         self.main_window = main_window
         self.check_timer = QTimer(self)
-        self.check_timer.timeout.connect(self.check_main_window if main_window is not None else self.check_app_ready)
+        self.check_timer.timeout.connect(
+            self.check_main_window if main_window is not None else self.check_app_ready
+        )
         self.check_timer.start(100)  # Check every 100ms
 
     def check_main_window(self):

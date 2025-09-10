@@ -107,7 +107,9 @@ class Ui_DialogTraceSettings(object):
 
     def retranslateUi(self, DialogTraceSettings):
         _translate = QtCore.QCoreApplication.translate
-        DialogTraceSettings.setWindowTitle(_translate("DialogTraceSettings", "Trace Settings"))
+        DialogTraceSettings.setWindowTitle(
+            _translate("DialogTraceSettings", "Trace Settings")
+        )
         self.checkBoxVisual.setText(_translate("DialogTraceSettings", "Visual"))
         self.checkBoxTemporal.setText(_translate("DialogTraceSettings", "Temporal"))
         self.checkBoxVocal.setText(_translate("DialogTraceSettings", "Vocal"))

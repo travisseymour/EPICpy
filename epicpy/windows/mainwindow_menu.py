@@ -230,9 +230,15 @@ def setup_menu_connections(window):
     window.actionCompile_Rules.setShortcut("Ctrl+K")
     window.actionRecompile_Rules.triggered.connect(window.recompile_rules)
     window.actionRecompile_Rules.setShortcut("Ctrl+Alt+K")
-    window.actionLoad_Visual_Encoder.triggered.connect(partial(window.simulation.on_load_encoder, kind="Visual"))
-    window.actionLoad_Auditory_Encoder.triggered.connect(partial(window.simulation.on_load_encoder, kind="Auditory"))
-    window.actionUnload_Visual_Encoder.triggered.connect(partial(window.simulation.on_unload_encoder, kind="Visual"))
+    window.actionLoad_Visual_Encoder.triggered.connect(
+        partial(window.simulation.on_load_encoder, kind="Visual")
+    )
+    window.actionLoad_Auditory_Encoder.triggered.connect(
+        partial(window.simulation.on_load_encoder, kind="Auditory")
+    )
+    window.actionUnload_Visual_Encoder.triggered.connect(
+        partial(window.simulation.on_unload_encoder, kind="Visual")
+    )
     window.actionUnload_Auditory_Encoder.triggered.connect(
         partial(window.simulation.on_unload_encoder, kind="Auditory")
     )
@@ -253,29 +259,51 @@ def setup_menu_connections(window):
     # Help menu actions
     window.actionAbout.triggered.connect(window.about_dialog)
     window.actionHelp.triggered.connect(window.open_help_file)
-    window.actionStandardRun.triggered.connect(partial(window.run_tests, kind="StandardRun"))
-    window.actionEncoderRun.triggered.connect(partial(window.run_tests, kind="EncoderRun"))
+    window.actionStandardRun.triggered.connect(
+        partial(window.run_tests, kind="StandardRun")
+    )
+    window.actionEncoderRun.triggered.connect(
+        partial(window.run_tests, kind="EncoderRun")
+    )
     window.actionAllRuns.triggered.connect(partial(window.run_tests, kind="AllRuns"))
 
     # Settings menu actions
-    window.actionDisplay_Controls.triggered.connect(window.show_display_settings_dialogs)
+    window.actionDisplay_Controls.triggered.connect(
+        window.show_display_settings_dialogs
+    )
     window.actionTrace_Settings.triggered.connect(window.show_trace_settings_dialogs)
     window.actionLogging.triggered.connect(window.show_log_settings_dialogs)
-    window.actionRule_Break_Settings.triggered.connect(window.show_rule_break_settings_dialog)
+    window.actionRule_Break_Settings.triggered.connect(
+        window.show_rule_break_settings_dialog
+    )
     window.actionDevice_Options.triggered.connect(window.show_device_options_dialog)
-    window.actionSound_Text_Settings.triggered.connect(window.show_sound_text_settings_dialog)
+    window.actionSound_Text_Settings.triggered.connect(
+        window.show_sound_text_settings_dialog
+    )
     window.actionSet_Application_Font.triggered.connect(window.set_application_font)
 
     # Windows menu actions
     window.actionClear_Output_Windows.triggered.connect(window.clear_output_windows)
     window.actionReset_Layout.triggered.connect(window.layout_reset)
-    window.actionReload_Session.triggered.connect(partial(window.session_reload, quiet=False))
+    window.actionReload_Session.triggered.connect(
+        partial(window.session_reload, quiet=False)
+    )
 
-    window.actionRestore_Visual_Views.triggered.connect(partial(window.restore_ui_component, component="visual"))
-    window.actionRestore_Auditory_Views.triggered.connect(partial(window.restore_ui_component, component="auditory"))
-    window.actionRestore_Normal_Output.triggered.connect(partial(window.restore_ui_component, component="normal"))
-    window.actionRestore_Trace_Output.triggered.connect(partial(window.restore_ui_component, component="trace"))
-    window.actionRestore_Stats_Output.triggered.connect(partial(window.restore_ui_component, component="stats"))
+    window.actionRestore_Visual_Views.triggered.connect(
+        partial(window.restore_ui_component, component="visual")
+    )
+    window.actionRestore_Auditory_Views.triggered.connect(
+        partial(window.restore_ui_component, component="auditory")
+    )
+    window.actionRestore_Normal_Output.triggered.connect(
+        partial(window.restore_ui_component, component="normal")
+    )
+    window.actionRestore_Trace_Output.triggered.connect(
+        partial(window.restore_ui_component, component="trace")
+    )
+    window.actionRestore_Stats_Output.triggered.connect(
+        partial(window.restore_ui_component, component="stats")
+    )
 
     # Tools menu
     window.actionRuleFlowTool.setEnabled(True)
@@ -283,7 +311,15 @@ def setup_menu_connections(window):
     window.actionProcessGraphTool.setEnabled(False)
     window.actionBrainTool.setEnabled(False)
 
-    window.actionRuleFlowTool.triggered.connect(partial(window.start_tool, tool_name="rule_flow"))
-    window.actionSchematicTool.triggered.connect(partial(window.start_tool, tool_name="schematic"))
-    window.actionProcessGraphTool.triggered.connect(partial(window.start_tool, tool_name="process_graph"))
-    window.actionBrainTool.triggered.connect(partial(window.start_tool, tool_name="brain"))
+    window.actionRuleFlowTool.triggered.connect(
+        partial(window.start_tool, tool_name="rule_flow")
+    )
+    window.actionSchematicTool.triggered.connect(
+        partial(window.start_tool, tool_name="schematic")
+    )
+    window.actionProcessGraphTool.triggered.connect(
+        partial(window.start_tool, tool_name="process_graph")
+    )
+    window.actionBrainTool.triggered.connect(
+        partial(window.start_tool, tool_name="brain")
+    )

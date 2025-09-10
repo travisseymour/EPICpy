@@ -55,16 +55,26 @@ class DisplayControlsWin(QDialog):
         super(DisplayControlsWin, self).resizeEvent(event)
 
     def setup_options(self):
-        self.ui.checkBoxPPSMemoryContents.setChecked(config.device_cfg.output_run_memory_contents)
+        self.ui.checkBoxPPSMemoryContents.setChecked(
+            config.device_cfg.output_run_memory_contents
+        )
         self.ui.checkBoxPPSRunMessages.setChecked(config.device_cfg.output_run_messages)
-        self.ui.checkBoxPPSCompilerMessages.setChecked(config.device_cfg.output_compiler_messages)
-        self.ui.checkBoxCompilerDetails.setChecked(config.device_cfg.output_compiler_details)
+        self.ui.checkBoxPPSCompilerMessages.setChecked(
+            config.device_cfg.output_compiler_messages
+        )
+        self.ui.checkBoxCompilerDetails.setChecked(
+            config.device_cfg.output_compiler_details
+        )
         self.ui.checkBoxRunDetails.setChecked(config.device_cfg.output_run_details)
         self.ui.checkBoxCalibrationGrid.setChecked(config.device_cfg.calibration_grid)
         self.ui.checkBoxCenterDot.setChecked(config.device_cfg.center_dot)
         self.ui.spinBoxSpatialScale.setValue(config.device_cfg.spatial_scale_degree)
-        self.ui.checkBoxAllowDeviceImages.setChecked(config.device_cfg.allow_device_images)
-        self.ui.checkBoxShowModelParameters.setChecked(config.device_cfg.describe_parameters)
+        self.ui.checkBoxAllowDeviceImages.setChecked(
+            config.device_cfg.allow_device_images
+        )
+        self.ui.checkBoxShowModelParameters.setChecked(
+            config.device_cfg.describe_parameters
+        )
 
     def clicked_cancel_button(self):
         self.ok = False
@@ -72,14 +82,26 @@ class DisplayControlsWin(QDialog):
 
     def clicked_ok_button(self):
         self.ok = True
-        config.device_cfg.output_run_memory_contents = self.ui.checkBoxPPSMemoryContents.isChecked()
-        config.device_cfg.output_run_messages = self.ui.checkBoxPPSRunMessages.isChecked()
-        config.device_cfg.output_compiler_messages = self.ui.checkBoxPPSCompilerMessages.isChecked()
-        config.device_cfg.output_compiler_details = self.ui.checkBoxCompilerDetails.isChecked()
+        config.device_cfg.output_run_memory_contents = (
+            self.ui.checkBoxPPSMemoryContents.isChecked()
+        )
+        config.device_cfg.output_run_messages = (
+            self.ui.checkBoxPPSRunMessages.isChecked()
+        )
+        config.device_cfg.output_compiler_messages = (
+            self.ui.checkBoxPPSCompilerMessages.isChecked()
+        )
+        config.device_cfg.output_compiler_details = (
+            self.ui.checkBoxCompilerDetails.isChecked()
+        )
         config.device_cfg.output_run_details = self.ui.checkBoxRunDetails.isChecked()
         config.device_cfg.calibration_grid = self.ui.checkBoxCalibrationGrid.isChecked()
         config.device_cfg.center_dot = self.ui.checkBoxCenterDot.isChecked()
         config.device_cfg.spatial_scale_degree = self.ui.spinBoxSpatialScale.value()
-        config.device_cfg.allow_device_images = self.ui.checkBoxAllowDeviceImages.isChecked()
-        config.device_cfg.describe_parameters = self.ui.checkBoxShowModelParameters.isChecked()
+        config.device_cfg.allow_device_images = (
+            self.ui.checkBoxAllowDeviceImages.isChecked()
+        )
+        config.device_cfg.describe_parameters = (
+            self.ui.checkBoxShowModelParameters.isChecked()
+        )
         self.hide()

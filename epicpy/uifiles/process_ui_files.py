@@ -20,12 +20,10 @@ qt_type = "pyside6"  # required for current designer built windows.
 
 if not qt_type:
     try:
-        import PyQt6.QtGui
-
         qt_type = "pyqt6"
-    except:
+    except Exception as e:
         qt_type = "???"
-        raise ValueError("Expecting To Find Either PySide6 or PyQt6!")
+        raise ValueError(f"Expecting To Find Either PySide6 or PyQt6! ({e})")
 
 
 ui_files: List[Path] = list(Path().glob("*.ui"))
@@ -43,12 +41,14 @@ for ui in ui_files:
         found_anything = True
         print(f"Converting {ui.name} to {py.name}" | cyan)
         try:
-            local["pyuic6" if qt_type == "pyqt6" else "pyside6-uic"]([str(ui.resolve()), "-o", str(py.resolve())])
-            print(f"\tSuccess!" | green)
+            local["pyuic6" if qt_type == "pyqt6" else "pyside6-uic"](
+                [str(ui.resolve()), "-o", str(py.resolve())]
+            )
+            print("\tSuccess!" | green)
         except Exception as e:
             print(f"\tERROR: {e}" | red & bold)
 
 if not found_anything:
-    print(f"All files up to date. Nothing done." | yellow & bold)
+    print("All files up to date. Nothing done." | yellow & bold)
 
 print("Finished." | yellow & bold)

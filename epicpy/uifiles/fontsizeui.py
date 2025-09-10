@@ -52,7 +52,9 @@ class Ui_DialogFontSize(object):
         self.spinBoxFontSize.setObjectName("spinBoxFontSize")
         self.horizontalLayout_3.addWidget(self.spinBoxFontSize)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
-        self.plainTextEditFontSample = QtWidgets.QPlainTextEdit(parent=self.layoutWidget)
+        self.plainTextEditFontSample = QtWidgets.QPlainTextEdit(
+            parent=self.layoutWidget
+        )
         font = QtGui.QFont()
         font.setFamily("Fira Mono")
         font.setPointSize(14)
@@ -75,7 +77,10 @@ class Ui_DialogFontSize(object):
         self.pushButtonCancel.setObjectName("pushButtonCancel")
         self.horizontalLayout_4.addWidget(self.pushButtonCancel)
         spacerItem = QtWidgets.QSpacerItem(
-            308, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum
+            308,
+            20,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Minimum,
         )
         self.horizontalLayout_4.addItem(spacerItem)
         self.pushButtonOK = QtWidgets.QPushButton(parent=self.layoutWidget)
