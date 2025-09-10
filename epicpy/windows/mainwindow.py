@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os
-import platform
 import sys
 
 from itertools import chain
@@ -93,8 +92,13 @@ from epicpy.views.epicpy_textview import EPICTextViewCachedWrite
 from epicpy.views.epicpy_visualview import EPICVisualView
 from epicpy.views.epicpy_auditoryview import EPICAuditoryView
 
-from epicpy.epiclib.epiclib.pps_globals import PPS_out
-from epicpy.epiclib.epiclib.output_tee_globals import (
+import importlib.metadata
+
+version = importlib.metadata.version("epiclibcpp")
+print(f"Currently using epiclibcpp v{version}")
+
+from epiclibcpp.epiclib.pps_globals import PPS_out
+from epiclibcpp.epiclib.output_tee_globals import (
     Normal_out,
     Trace_out,
     Exception_out,

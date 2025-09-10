@@ -25,7 +25,7 @@ from PySide6.QtCore import QByteArray
 
 import shutil
 
-from epicpy.epiclib.epiclib.output_tee_globals import Exception_out
+from epiclibcpp.epiclib.output_tee_globals import Exception_out
 
 # Global flag: is Graphviz available?
 HAVE_GRAPHVIZ = False

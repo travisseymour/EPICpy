@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from epicpy.epiclib.epiclib import Visual_encoder_base, Auditory_encoder_base
+from epiclibcpp.epiclib import Visual_encoder_base, Auditory_encoder_base
 
 
 # ---------------------------------------------------------------------------

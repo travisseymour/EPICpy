@@ -51,7 +51,7 @@ from epicpy.utils.localmunch import Munch, DefaultMunch
 from epicpy.views.epiccolors import epic_colors as colors
 from epicpy.utils import config
 
-from epicpy.epiclib.epiclib import geometric_utilities as GU
+from epiclibcpp.epiclib import geometric_utilities as GU
 
 
 WARNING_ACCUMULATOR = set()

@@ -306,7 +306,7 @@ def main(argv: list[str] | None = None) -> int:
     # =====      Run App       =====
     # ==============================
 
-    print("starting EPICpy at", datetime.datetime.now().ctime())
+    print("Starting EPICpy at", datetime.datetime.now().ctime())
     exit_code = start_ui(application)
     sys.exit(exit_code)
 

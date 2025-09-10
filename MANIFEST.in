@@ -1,6 +1,5 @@
 recursive-include epicpy/resources __init__.py
 recursive-include epicpy/resources/css *
-recursive-include epicpy/resources/epiclib epiclib_versions.zip
 recursive-include epicpy/resources/fonts *
 recursive-include epicpy/resources/images *.py *.jpg *.gif *.png
 recursive-include epicpy/resources/other devices.zip

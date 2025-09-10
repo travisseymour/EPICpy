@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from epicpy.views.auditoryviewwindow import AuditoryViewWin
 from loguru import logger as log
 
-from epicpy.epiclib.epiclib import (
+from epiclibcpp.epiclib import (
     View_base,
     Speech_word,
     geometric_utilities as GU,

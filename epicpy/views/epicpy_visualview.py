@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from epicpy.views.visualviewwindow import VisualViewWin
 from loguru import logger as log
 
-from epicpy.epiclib.epiclib import View_base, geometric_utilities as GU, Symbol
+from epiclibcpp.epiclib import View_base, geometric_utilities as GU, Symbol
 
 
 class EPICVisualView(View_base):

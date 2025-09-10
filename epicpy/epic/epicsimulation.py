@@ -52,12 +52,12 @@ warnings.filterwarnings("ignore", module=r"^pandas")
 
 # KEEP HERE, NEEDED FOR DEVICES
 
-from epicpy.epiclib.epiclib.output_tee_globals import Normal_out, Trace_out, Exception_out
-from epicpy.epiclib.epiclib import Model, Coordinator
-from epicpy.epiclib.epiclib import set_visual_encoder_ptr, set_auditory_encoder_ptr
+from epiclibcpp.epiclib.output_tee_globals import Normal_out, Trace_out, Exception_out
+from epiclibcpp.epiclib import Model, Coordinator
+from epiclibcpp.epiclib import set_visual_encoder_ptr, set_auditory_encoder_ptr
 
 try:
-    from epicpy.epiclib.epiclib import describe_parameters_u
+    from epiclibcpp.epiclib import describe_parameters_u
 
     desc_param_loaded = True
 except:

@@ -29,7 +29,7 @@ from qtpy.QtGui import QPainter, QFontMetrics, QFont, QContextMenuEvent, QKeySeq
 from epicpy.constants.stateconstants import PAUSED, RUNNING
 from epicpy.utils import config
 
-from epicpy.epiclib.epiclib.output_tee_globals import Exception_out
+from epiclibcpp.epiclib.output_tee_globals import Exception_out
 
 
 class SearchDialog(QDialog):

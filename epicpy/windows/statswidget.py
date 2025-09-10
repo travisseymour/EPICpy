@@ -332,7 +332,7 @@ class StatsWidget(QWidget):
 
 if __name__ == "__main__":
     import sys
-    from epicpy.epiclib.epiclib.output_tee_globals import Stats_out
+    from epiclibcpp.epiclib.output_tee_globals import Stats_out
 
     app = QApplication(sys.argv)
     win = StatsWidget(parent=None)

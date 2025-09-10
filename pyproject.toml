@@ -63,7 +63,8 @@ dependencies = [
   "rich",
   "networkx",
   "graphviz",
-  "tomli"
+  "tomli",
+  "epiclibcpp"
 ]
 
 [project.optional-dependencies]

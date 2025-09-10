@@ -46,7 +46,7 @@ from loguru import logger as log
 from epicpy.utils.apputils import Point, Size, Rect, conditional_dataclass
 from epicpy.utils import config
 
-from epicpy.epiclib.epiclib import Symbol, geometric_utilities as GU
+from epiclibcpp.epiclib import Symbol, geometric_utilities as GU
 
 from epicpy.utils.localmunch import DefaultMunch, Munch
 

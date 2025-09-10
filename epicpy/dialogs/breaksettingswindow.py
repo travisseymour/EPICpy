@@ -24,7 +24,7 @@ from epicpy.utils import config
 from epicpy.uifiles.breaksettingsui import Ui_DialogRuleBreak
 from qtpy.QtWidgets import QDialog, QCheckBox, QListWidgetItem
 
-from epicpy.epiclib.epiclib import Model, Symbol
+from epiclibcpp.epiclib import Model, Symbol
 
 from epicpy.utils.apputils import clear_font
 
