@@ -1,6 +1,24 @@
 
 # EPICpy Changelog
 
+## VERSION: 2025.9.10.1
+
+
+
+1. **CHANGED**: Internal change to use epliclib from an importable module (epiclibcpp) instead of trying to build and include each version myself. Users may hopefully experience this as more consistent behavior across updates for all operating systems. EPICpy maintainer gets to use github actions to build the entire cross-platform support matrix instead of compiling all variants of epiclib manually.
+2. **CHANGED**: EPICpy now supports Python version 3.10-3.13 for all operating systems. However, it is recommended you use this for installation:
+```bash
+uv tool uninstall epicpy
+uv tool install git+https://www.github.com/travisseymour/EPICpy.git --python 3.13
+```
+3. **CHANGED**: EPICpy 2025.9.10.1+ requires an updated version of the epicpydevice folder (sits alongside your device folders). You can obtain it from an updated copy of the default devices:
+```bash
+git clone https://www.github.com/travisseymour/EPICpyDevices
+```
+4. **FIXED**: All issues associated with distributing and unpacking libraries should now be moot. 
+
+5. **CHANGED**: Now using ruff for code checking and formatting, the black formatter has been removed from the project requirements.
+
 ---
 
 ## VERSION: 2025.9.6.1
