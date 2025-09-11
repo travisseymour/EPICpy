@@ -46,23 +46,43 @@ from qtpy.QtGui import QImage, QTextDocument
 from epicpy.utils.config import get_start_dir
 from loguru import logger as log
 
-SPECIAL_MESSAGE = """
-<h3><u><font color="orange">Important Notice</u></h3></font>
-<h4><font color="blue">New version of epicpydevice and models needed!</font></h4>
+SPECIAL_MESSAGE = \
+"""
+<h2 id="important-notice" style="color:blue;">Important Notice: Major Change to EPICpy</h2>
+<hr>
 
-As of EPICpy version <b>2025.9.1.2</b>, You will need new copies of <span style="white-space: pre; font-family: monospace;"><small><b>epicpydevice</small></b></span> and all demo devices.
+<p><strong>EPICpy version 2025.9.10.1</strong>, contains <em>breaking changes</em>.<br>All users are strongly recommended to do the following:</p>
+<ol>
+<li value="1">It is recommended that all users upgrade from any version before 2025.9.10.1 by first uninstalling epicpy and then reinstalling it, e.g.:</li>
 
-<br><br><b>You can download the default demo devices from here:</b>:
+<blockquote>
+<pre><code class="lang-bash">uv tool <span class="hljs-keyword">uninstall</span> epicpy
+uv tool <span class="hljs-keyword">install</span> git+https://www.github.com/travisseymour/EPICpy.git <span class="hljs-comment">--python 3.13</span>
+</code></pre>
+</blockquote>
+<blockquote>
+<span style="color:black; background-color:skyblue;">
+Although Python 3.13 is the latest version, any version between 3.10 and 3.13 will work with EPICpy on all operating systems.&lt;.mark&gt;
+</span>
+</blockquote>
 
-<pre>https://github.com/travisseymour/EPICpyDevices</pre>
-<br>
-E.g.,
-<br>
-<pre>
-clone https://github.com/travisseymour/EPICpyDevices
-</pre>
-<br>
-To obtain research devices, contact Professor Seymour.
+<li value="2">You should pull a new version of the demo devices:</li>
+
+<blockquote>
+<pre><code class="lang-bash">git <span class="hljs-keyword">clone</span> <span class="hljs-title">https</span>://www.github.com/travisseymour/EPICpyDevices
+</code></pre>
+</blockquote>
+
+<li value="3"><p>If you have other devices, completely replace any old copies of the folder <code>epicpydevice</code> with the version contained in EPICpyDevices.</p>
+</li>
+<li value="4"><p>To verify that this new version of EPICpy is working on your system, consider running <strong>HELP-&gt;StandardRun</strong> in the menu.</p>
+</li>
+</ol>
+<blockquote>
+<span style="color:black; background-color:skyblue;">
+To obtain updated versions of various research devices, contact Professor Seymour.
+</span>
+</blockquote>
 """
 
 
