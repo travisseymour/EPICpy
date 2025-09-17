@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import sys
 import platform
+from typing import Optional
 
 from rich.console import Console
 
@@ -96,6 +97,7 @@ from epicpy.utils.apputils import frozen
 from epicpy.utils.resource_utils import get_resource
 from epicpy.utils import config
 
+splash: Optional[SplashScreen] = None
 DONE = False
 
 
@@ -169,7 +171,7 @@ if OS in ("Linux", "Darwin"):
         libc = ctypes.CDLL(libc_path)
         libc.signal(SIGSEGV, handler_func_ptr)
 elif OS == "Windows":
-    # Define the C function prototype
+    # Define the C function prototyped
     # handler_func_type = ctypes.CFUNCTYPE(ctypes.wintypes.BOOL, ctypes.c_ulong)
     handler_func_type = ctypes.CFUNCTYPE(ctypes.wintypes.BOOL, ctypes.wintypes.DWORD)
 
@@ -192,6 +194,7 @@ else:
 
 
 def start_ui(app: QApplication):
+    global splash
     # load in any stored config data
     config.get_app_config()
     config.get_device_config(None)
@@ -223,6 +226,7 @@ def start_ui(app: QApplication):
     from epicpy.windows import mainwindow
 
     _ = mainwindow.MainWin(app)
+    splash.close()
     app.lastWindowClosed.connect(shut_it_down)
     try:
         return app.exec()
@@ -239,6 +243,7 @@ def shut_it_down():
 
 
 def main(argv: list[str] | None = None) -> int:
+    global splash
     application = QApplication([])
     application.setWindowIcon(QIcon(str(get_resource("uiicons", "Icon.png"))))
 

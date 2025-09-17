@@ -91,10 +91,8 @@ class AppConfig:
             if not key == "current"
         }
 
-        try:
+        if hasattr(self, "current") and "last_config" in self.current:
             self.current["last_config"] = cfg
-        except KeyError:
-            ...
 
         try:
             Path(self.config_file).write_text(json.dumps(cfg, indent=4))

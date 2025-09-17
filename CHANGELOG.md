@@ -1,9 +1,15 @@
 
 # EPICpy Changelog
 
+---
+
+## VERSION: 2025.9.16.1
+
+1. **FIXED**: Fixed splash screen that was causing crash with non-wayland desktops.
+
+---
+
 ## VERSION: 2025.9.10.1
-
-
 
 1. **CHANGED**: Internal change to use epliclib from an importable module (epiclibcpp) instead of trying to build and include each version myself. Users may hopefully experience this as more consistent behavior across updates for all operating systems. EPICpy maintainer gets to use github actions to build the entire cross-platform support matrix instead of compiling all variants of epiclib manually.
 2. **CHANGED**: EPICpy now supports Python version 3.10-3.13 for all operating systems. However, it is recommended you use this for installation:

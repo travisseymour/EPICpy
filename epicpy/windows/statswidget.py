@@ -46,8 +46,7 @@ from qtpy.QtGui import QImage, QTextDocument
 from epicpy.utils.config import get_start_dir
 from loguru import logger as log
 
-SPECIAL_MESSAGE = \
-"""
+SPECIAL_MESSAGE = """
 <h2 id="important-notice" style="color:blue;">Important Notice: Major Change to EPICpy</h2>
 <hr>
 
