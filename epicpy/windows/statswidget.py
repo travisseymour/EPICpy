@@ -61,7 +61,7 @@ uv tool <span class="hljs-keyword">install</span> git+https://www.github.com/tra
 </blockquote>
 <blockquote>
 <span style="color:black; background-color:skyblue;">
-Although Python 3.13 is the latest version, any version between 3.10 and 3.13 will work with EPICpy on all operating systems.&lt;.mark&gt;
+Although Python 3.13 is the latest version, any version between 3.10 and 3.13 will work with EPICpy on all operating systems.
 </span>
 </blockquote>
 
