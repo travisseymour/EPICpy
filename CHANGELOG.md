@@ -3,6 +3,12 @@
 
 ---
 
+---
+
+## VERSION: 2025.9.18.1
+
+1. **FIXED**: Problem with search function and line visibility in text view widget. 
+
 ## VERSION: 2025.9.16.1
 
 1. **FIXED**: Fixed splash screen that was causing crash with non-wayland desktops.

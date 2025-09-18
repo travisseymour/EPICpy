@@ -7,8 +7,8 @@ from pathlib import Path
 from textwrap import dedent
 
 import networkx as nx
-from PySide6.QtGui import QFont, QColor, QPen, QGuiApplication
-from PySide6.QtWidgets import (
+from qtpy.QtGui import QFont, QColor, QPen, QGuiApplication
+from qtpy.QtWidgets import (
     QApplication,
     QWidget,
     QVBoxLayout,
@@ -19,8 +19,8 @@ from PySide6.QtWidgets import (
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-from PySide6.QtSvgWidgets import QSvgWidget
-from PySide6.QtCore import QByteArray
+from qtpy.QtSvgWidgets import QSvgWidget
+from qtpy.QtCore import QByteArray
 
 import shutil
 

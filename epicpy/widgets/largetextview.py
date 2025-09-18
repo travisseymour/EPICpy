@@ -4,7 +4,7 @@ import re
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QTimer
+from qtpy.QtCore import QTimer
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QWidget,
@@ -97,8 +97,8 @@ class LargeTextView(QWidget):
 
         self.selection_start_line = None
         self.selection_end_line = None
-        self.word_wrap = True
-        self.current_search_index = 0
+        self.word_wrap = False
+        self.current_search_index = -1  # start before the first line
         self.processing_paused = False
 
         self.last_search_pattern: str = ""
@@ -153,6 +153,8 @@ class LargeTextView(QWidget):
             self.find_prev_sc.setContext(Qt.ShortcutContext.WindowShortcut)
             self.find_prev_sc.activated.connect(self.find_prev)
 
+        # self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
+
         QTimer.singleShot(self.update_frequency_ms, self.process_pending_lines)
 
     def line_height(self):
@@ -168,7 +170,7 @@ class LargeTextView(QWidget):
         self.selection_end_line = None
         self.scroll_bar.setValue(0)
         self.scroll_bar.setMaximum(0)
-        self.current_search_index = 0
+        self.current_search_index = -1  # reset so first "next" can hit line 0
         self.last_search_pattern = ""
         self.last_is_regex = False
         self._last_regex = None
@@ -223,6 +225,8 @@ class LargeTextView(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setFont(self.font())
+        painter.setClipRect(event.rect())
+
         line_height = self.line_height()
         visible_lines = self.height() // line_height
         start_line = self.scroll_bar.value()
@@ -386,22 +390,37 @@ class LargeTextView(QWidget):
         pattern = dlg.input.text()
         is_regex = dlg.regex_cb.isChecked()
 
+        new_pattern = (pattern and pattern != self.last_search_pattern) or (
+            is_regex != self.last_is_regex
+        )
+
         if pattern:
-            if is_regex:
-                if not self._compile_regex(pattern):
-                    return
+            if is_regex and not self._compile_regex(pattern):
+                return
             self.last_search_pattern = pattern
             self.last_is_regex = is_regex
+
+        # If the user changed pattern/regex, reset starting point:
+        if new_pattern:
+            # If there’s a selection, start from that; otherwise start fresh
+            if self.selection_end_line is not None:
+                self.current_search_index = self.selection_end_line
+            else:
+                self.current_search_index = -1 if ok else len(self.lines)
 
         if ok:
             self.find_next()
         else:
             self.find_prev()
 
+    def _ensure_visible(self, line_idx):
+        vis = max(1, self.height() // self.line_height())
+        target = max(0, min(line_idx - vis // 2, len(self.lines) - vis))
+        self.scroll_bar.setValue(target)
+
     def find_next(self):
         if not self.last_search_pattern:
             return -1
-        # ensure compiled if regex
         if self.last_is_regex and (
             self._last_regex is None
             or self._last_regex.pattern != self.last_search_pattern
@@ -409,25 +428,32 @@ class LargeTextView(QWidget):
             if not self._compile_regex(self.last_search_pattern):
                 return -1
 
-        for i in range(self.current_search_index + 1, len(self.lines)):
+        start = self.current_search_index
+        # forward search from start+1 ... end
+        for i in range(start + 1, len(self.lines)):
             if self._matches(self.lines[i]):
                 self.current_search_index = i
-                self.scroll_bar.setValue(i)
+                self._ensure_visible(i)
                 self.selection_start_line = self.selection_end_line = i
                 self.update()
                 return i
 
-        # no match → clear selection
-        self.selection_start_line = None
-        self.selection_end_line = None
-        self.update()
+        # optional wrap-around: search from 0 ... start
+        for i in range(0, max(0, start + 1)):
+            if self._matches(self.lines[i]):
+                self.current_search_index = i
+                self._ensure_visible(i)
+                self.selection_start_line = self.selection_end_line = i
+                self.update()
+                return i
 
+        self.selection_start_line = self.selection_end_line = None
+        self.update()
         return -1
 
     def find_prev(self):
         if not self.last_search_pattern:
             return -1
-        # ensure compiled if regex
         if self.last_is_regex and (
             self._last_regex is None
             or self._last_regex.pattern != self.last_search_pattern
@@ -435,19 +461,27 @@ class LargeTextView(QWidget):
             if not self._compile_regex(self.last_search_pattern):
                 return -1
 
-        for i in range(self.current_search_index - 1, -1, -1):
+        start = self.current_search_index
+        # backward search from start-1 ... 0
+        for i in range(start - 1, -1, -1):
             if self._matches(self.lines[i]):
                 self.current_search_index = i
-                self.scroll_bar.setValue(i)
+                self._ensure_visible(i)
                 self.selection_start_line = self.selection_end_line = i
                 self.update()
                 return i
 
-        # no match → clear selection
-        self.selection_start_line = None
-        self.selection_end_line = None
-        self.update()
+        # optional wrap-around: from end ... start
+        for i in range(len(self.lines) - 1, max(-1, start - 1), -1):
+            if self._matches(self.lines[i]):
+                self.current_search_index = i
+                self._ensure_visible(i)
+                self.selection_start_line = self.selection_end_line = i
+                self.update()
+                return i
 
+        self.selection_start_line = self.selection_end_line = None
+        self.update()
         return -1
 
     def pause_writes(self):
@@ -514,7 +548,11 @@ class CustomLargeTextView(LargeTextView):
         edit_rules_action.setEnabled(sim_setup and not running)
 
         copy_action.setEnabled(
-            bool(self.selection_start_line or self.selection_end_line) and not running
+            (
+                self.selection_start_line is not None
+                and self.selection_end_line is not None
+            )
+            and not running
         )
 
         stop_action.setEnabled(
@@ -573,46 +611,51 @@ class CustomLargeTextView(LargeTextView):
 if __name__ == "__main__":
     from qtpy.QtWidgets import QMainWindow
 
-    #     from qtpy.QtCore import QTimer
+    # from qtpy.QtCore import QTimer
     import timeit
+    # import sys
 
-    #     import sys
-
-    class LTTTestMainWindow(QMainWindow):
+    class MainWindow(QMainWindow):
         def __init__(self):
             super().__init__()
-            self.setWindowTitle("Large Text Viewer")
+            self.setWindowTitle("LargeTextView Demo")
+            self.resize(800, 600)
 
-            self.viewer = CustomLargeTextView(parent=self)
-            self.viewer.cache_writes = True
-            self.viewer.setFixedSize(800, 600)
-            self.setCentralWidget(self.viewer)
+            central = QWidget(self)
+            layout = QVBoxLayout(central)
 
-            # Delay the call to populate_text so the UI is ready.
-            QTimer.singleShot(0, self.populate_text)
+            self.view = LargeTextView()
 
-        def populate_text(self):
-            n = 241_511
-            # n = 1_000_000
-            start = timeit.default_timer()
-            batch_size = 10  # Number of lines per batch
-            buffer = []
+            layout.addWidget(self.view)
+            self.setCentralWidget(central)
 
-            for i in range(n):
-                buffer.append(f"Line {i}")
-                if len(buffer) >= batch_size:
-                    self.viewer.write("\n".join(buffer))
-                    buffer.clear()
-                    QApplication.processEvents()
-
-            if buffer:
-                self.viewer.write("\n".join(buffer))
-            self.viewer.cache_writes = False
-            print(
-                f"populate_text added {n} lines in {timeit.default_timer() - start} sec."
+            # self.content = Path("temp_text_choice_100_output.txt").read_text().splitlines()
+            self.content = (
+                Path(
+                    "/home/nogard/Dropbox/Documents/EPICSTUFF/EPICLib_fullbindings/epiclib_flat/devices/covert_warning/data_output.csv"
+                )
+                .read_text()
+                .splitlines()
             )
+            # Simulate real-time appending
+            self.counter = 1
+            self.timer = QTimer(self)
+            self.timer.timeout.connect(self.append_line)
+            self.start = timeit.default_timer()
+            self.timer.start(0)
+
+        def append_line(self):
+            try:
+                aline = self.content[self.counter]
+                self.view.write(aline)
+                self.counter += 1
+            except Exception:
+                self.timer.stop()
+                self.view.write(
+                    f"Time Elapsed: {timeit.default_timer() - self.start:0.5f} sec."
+                )
 
     app = QApplication(sys.argv)
-    window = LTTTestMainWindow()
+    window = MainWindow()
     window.show()
     sys.exit(app.exec())
