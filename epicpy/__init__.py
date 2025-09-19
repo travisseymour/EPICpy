@@ -15,6 +15,9 @@ import signal
 
 from rich.console import Console
 
+EPICPY_DEBUG = os.environ.get("EPICPY_DEBUG", "").lower() in ("1", "true", "yes", "debug")
+if EPICPY_DEBUG:
+    print('EPICPY_DEBUG mode is enabled')
 
 _console = Console()
 

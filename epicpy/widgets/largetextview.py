@@ -12,7 +12,6 @@ from qtpy.QtCore import QTimer, QRect
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QWidget,
-    QHBoxLayout,
     QScrollBar,
     QMenu,
     QDialog,
@@ -73,8 +72,13 @@ class SearchDialog(QDialog):
         btns.addWidget(self.next_button)
         v.addLayout(btns)
 
+        # normal button connections
         self.next_button.clicked.connect(self.accept)
         self.prev_button.clicked.connect(self.reject)
+
+        # pressing the ENTER button in the input field acts like pressing "Find Next"
+        self.input.returnPressed.connect(self.accept)
+
 
 
 
@@ -141,15 +145,19 @@ class LargeTextView(QWidget):
             sc = QShortcut(QKeySequence(QKeySequence.StandardKey.Copy), self)
             sc.setContext(Qt.ShortcutContext.WindowShortcut)
             sc.activated.connect(self.copy_selected_text)
+
             sca = QShortcut(QKeySequence(QKeySequence.StandardKey.SelectAll), self)
             sca.setContext(Qt.ShortcutContext.WindowShortcut)
             sca.activated.connect(self.select_all)
+
             sf = QShortcut(QKeySequence(QKeySequence.StandardKey.Find), self)
             sf.setContext(Qt.ShortcutContext.WindowShortcut)
             sf.activated.connect(self.show_search_dialog)
+
             sfn = QShortcut(QKeySequence(QKeySequence.StandardKey.FindNext), self)
             sfn.setContext(Qt.ShortcutContext.WindowShortcut)
             sfn.activated.connect(self.find_next)
+
             sfp = QShortcut(QKeySequence(QKeySequence.StandardKey.FindPrevious), self)
             sfp.setContext(Qt.ShortcutContext.WindowShortcut)
             sfp.activated.connect(self.find_prev)
@@ -219,13 +227,14 @@ class LargeTextView(QWidget):
             self._scroll_to_bottom()
         self.update()
 
-    def _should_follow_tail(self) -> bool:
+    @staticmethod
+    def _should_follow_tail() -> bool:
         # maintains previous behavior: always stick to bottom in streaming mode
         return True
 
     def _visible_lines(self) -> int:
-        hbar_h = self.h_scroll.sizeHint().height() if self.h_scroll.isVisible() else 0
-        return max(1, (self.height() - hbar_h) // self.line_height())
+        horiz_bar_h = self.h_scroll.sizeHint().height() if self.h_scroll.isVisible() else 0
+        return max(1, (self.height() - horiz_bar_h) // self.line_height())
 
     def _scroll_to_bottom(self):
         vis = self._visible_lines()
@@ -311,7 +320,6 @@ class LargeTextView(QWidget):
             flags = Qt.TextFlag.TextWordWrap if self.word_wrap else Qt.TextFlag.TextSingleLine
             painter.drawText(0 + x_offset, y, text_w, lh, flags | Qt.AlignmentFlag.AlignLeft, line)
 
-    # precise selection
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             line = self.scroll_bar.value() + int(event.position().y()) // self.line_height()
@@ -363,7 +371,9 @@ class LargeTextView(QWidget):
         select_all_action = menu.addAction("Select All")
         find_action = menu.addAction("Find...")
         clear_action = menu.addAction("Clear")
+
         action = menu.exec(self.parent().mapToGlobal(event if isinstance(event, QPoint) else event.pos()))
+
         if action == copy_action:
             self.copy_selected_text()
         elif action == select_all_action:
@@ -457,7 +467,7 @@ class LargeTextView(QWidget):
         if not self.last_search_pattern:
             return -1
         if self.last_is_regex and (self._last_regex is None or self._last_regex.pattern != self.last_search_pattern):
-            if not self._compile_regex(self.last_search_pattern):
+            if not self._compile_regex(self.last_search_pattern, self.last_case_sensitive):
                 return -1
         start = self.current_search_index
         for i in range(start + 1, len(self.lines)):
@@ -482,7 +492,7 @@ class LargeTextView(QWidget):
         if not self.last_search_pattern:
             return -1
         if self.last_is_regex and (self._last_regex is None or self._last_regex.pattern != self.last_search_pattern):
-            if not self._compile_regex(self.last_search_pattern):
+            if not self._compile_regex(self.last_search_pattern, self.last_case_sensitive):
                 return -1
         start = len(self.lines) if self.current_search_index < 0 else self.current_search_index
         for i in range(start - 1, -1, -1):
@@ -648,8 +658,7 @@ class CustomLargeTextView(LargeTextView):
 
         copy_action.setEnabled(
             (
-                self.selection_start_line is not None
-                and self.selection_end_line is not None
+                    self.sel_anchor is not None and self.sel_caret is not None
             )
             and not running
         )
@@ -748,10 +757,11 @@ if __name__ == "__main__":
                 aline = self.content[self.counter]
                 self.view.write(aline)
                 self.counter += 1
-            except Exception:
+            except Exception as e:
+                extra = f' ({e})' if e else ''
                 self.timer.stop()
                 self.view.write(
-                    f"Time Elapsed: {timeit.default_timer() - self.start:0.5f} sec."
+                    f"Time Elapsed: {timeit.default_timer() - self.start:0.5f} sec.{extra}"
                 )
 
     app = QApplication(sys.argv)

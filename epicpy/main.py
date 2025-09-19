@@ -84,9 +84,7 @@ from epicpy.utils.splashscreen import SplashScreen
 os.environ["OUTDATED_IGNORE"] = "1"
 if platform.platform().split("-")[1].startswith("10."):
     os.environ["QT_MAC_WANTS_LAYER"] = "1"
-os.environ["EPICPY_DEBUG"] = (
-    "0"  # off by default, set by passing "debug" on commandline
-)
+
 
 # os.environ["QT_DEBUG_PLUGINS"] = "1" # for more info when there are plugin load errors
 

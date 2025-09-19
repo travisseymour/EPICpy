@@ -30,6 +30,7 @@ from qtpy.QtCore import QRect, QEvent
 from qtpy.QtGui import QHideEvent, QShowEvent, QIcon
 from qtpy.QtWidgets import QDockWidget, QWidget, QSizePolicy
 
+from epicpy import EPICPY_DEBUG
 from epicpy.tools.rule_flow.rule_flow import RuleFlowWindow
 from epicpy.utils import fitness, config
 from epicpy.dialogs.aboutwindow import AboutWin
@@ -103,8 +104,8 @@ from epicpy.views.epicpy_auditoryview import EPICAuditoryView
 
 import importlib.metadata
 
-version = importlib.metadata.version("epiclibcpp")
-print(f"Currently using epiclibcpp v{version}")
+epiclib_version = importlib.metadata.version("epiclibcpp")
+print(f"Currently using epiclibcpp v{epiclib_version}")
 
 from epiclibcpp.epiclib.pps_globals import PPS_out
 from epiclibcpp.epiclib.output_tee_globals import (
@@ -262,7 +263,7 @@ class MainWin(QMainWindow):
 
         # add central widget and setup
         self.normalPlainTextEditOutput = CustomLargeTextView(
-            parent=self, enable_shortcuts=False
+            parent=self, enable_shortcuts=False, name='normal'
         )
         self.normalPlainTextEditOutput.setContextMenuPolicy(
             Qt.ContextMenuPolicy.CustomContextMenu
@@ -280,7 +281,8 @@ class MainWin(QMainWindow):
         # Attach relevant output tees to this window
         for ot in (Normal_out, Debug_out, Device_out, Exception_out, PPS_out):
             ot.add_py_stream(self.normal_out_view)
-            # ot.add_py_stream(sys.stdout)  # for debug
+            if EPICPY_DEBUG:
+                ot.add_py_stream(sys.stdout)  # for debug
 
         update = update_available()
         update_msg = f"\n{update}\n" if update else ""
@@ -292,7 +294,7 @@ class MainWin(QMainWindow):
 
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
         # connect Trace_out now
-        self.tracePlainTextEditOutput = LargeTextView(self)
+        self.tracePlainTextEditOutput = LargeTextView(self, name='trace')
         self.tracePlainTextEditOutput.setContextMenuPolicy(
             Qt.ContextMenuPolicy.CustomContextMenu
         )
@@ -435,9 +437,6 @@ class MainWin(QMainWindow):
         self.context_menu = QMenu(self)
         self.context_items = {}
         self.create_context_menu_items()
-
-        # connect other ui signals
-        # self.normalPlainTextEditOutput.customContextMenuRequested.connect(self.normal_search_context_menu)
 
         self.default_palette = self.app.palette()
         self.update_theme()
@@ -942,35 +941,41 @@ class MainWin(QMainWindow):
 
         self.closing = True
 
-        print("[DEBUG] Shutting Down EPICpy:")
-        print("---------------------")
+        def debug_print(txt:str, alt_txt:str=''):
+            if EPICPY_DEBUG:
+                print(txt)
+            elif alt_txt:
+                print(alt_txt)
 
-        print("1. Stopping simulation...")
+        debug_print("[DEBUG] Shutting Down EPICpy:", 'Shutting Down EPICpy...')
+        debug_print("---------------------")
+
+        debug_print("1. Stopping simulation...")
         if self.run_state == RUNNING:
             self.halt_simulation()
 
-        print("2. Removing file loggers...")
+        debug_print("2. Removing file loggers...")
         self.remove_file_loggers()
 
-        print("3. Saving layout...")
+        debug_print("3. Saving layout...")
         self.layout_save()  # regular and custom
 
-        print("4. Closing stats window...")
+        debug_print("4. Closing stats window...")
         self.stats_win.can_close = True
         self.stats_win.close()  # destroy()
 
-        print("5. Closing views...")
+        debug_print("5. Closing views...")
         try:
             for view in chain(self.visual_views.values(), self.auditory_views.values()):
                 view.can_close = True
                 view.close()  # destroy()
         except Exception:
-            print("\tWARNING: Unable to successfully close all views.")
+            debug_print("\tWARNING: Unable to successfully close all views.")
 
-        print("6. Closing output files...")
+        debug_print("6. Closing output files...")
         self.close_output_files()
 
-        print("7. Removing views from model...")
+        debug_print("7. Removing views from model...")
         try:
             self.simulation.remove_views_from_model(
                 self.visual_physical_view,
@@ -981,9 +986,9 @@ class MainWin(QMainWindow):
                 self.auditory_perceptual_view,
             )
         except Exception:
-            print("\tWARNING: Unable to cleanly release views from model.")
+            debug_print("\tWARNING: Unable to cleanly release views from model.")
 
-        print("8. Pausing and stopping simulation -- seems redundant, halted above...")
+        debug_print("8. Pausing and stopping simulation -- seems redundant, halted above...")
         if self.simulation:
             try:
                 self.simulation.pause_simulation()
@@ -995,7 +1000,7 @@ class MainWin(QMainWindow):
             except Exception as e:
                 log.warning(f"Unable to stop and shutdown simulation: {e}")
 
-        print("9. Shutting down Output_tee instances...")
+        debug_print("9. Shutting down Output_tee instances...")
         ot_info = zip(
             (
                 "Normal_out",
@@ -1018,13 +1023,16 @@ class MainWin(QMainWindow):
         )
 
         for ot_name, ot in ot_info:
-            print(f"\t{ot_name}...")
+            debug_print(f"\t{ot_name}...")
             ot.py_flush()
             ot.clear_py_streams()
             ot.py_close()
 
-        print("10. Closing application window.")
+        debug_print("10. Closing application window.")
         super().closeEvent(event)
+
+        print('Done.')
+
 
     @staticmethod
     def update_theme():
@@ -2069,14 +2077,6 @@ class MainWin(QMainWindow):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
             self.close()
-        # TODO: Delete this
-        # elif event.key() == Qt.Key.Key_F3:
-        #     if not self.normalPlainTextEditOutput.continue_find_text():
-        #         self.normalPlainTextEditOutput.query_search()
-        #     else:
-        #         super().keyPressEvent(event)
-        # elif event.key() == Qt.Key.Key_F and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
-        #     self.normalPlainTextEditOutput.query_search()
         else:
             super().keyPressEvent(event)
 
@@ -2087,3 +2087,15 @@ class MainWin(QMainWindow):
     @property
     def trace_device(self) -> bool:
         return config.device_cfg.trace_device
+
+    # =============================================
+    # Window Utils
+    # =============================================
+
+    def current_editor(self, x=None)->Optional[LargeTextView]:
+        candidates = (self.normalPlainTextEditOutput, self.tracePlainTextEditOutput)
+        fw = QApplication.focusWidget()
+        if fw in candidates:
+            return fw
+        else:
+            return None
