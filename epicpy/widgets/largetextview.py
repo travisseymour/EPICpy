@@ -45,27 +45,37 @@ from epiclibcpp.epiclib.output_tee_globals import Exception_out
 
 
 class SearchDialog(QDialog):
-    def __init__(self, parent=None, start_text: str = "", start_is_regex: bool = False):
+    def __init__(self, parent=None, start_text: str = "",
+                 start_is_regex: bool = False, start_case_sensitive: bool = False):
         super().__init__(parent)
         self.setWindowTitle("Find")
         v = QVBoxLayout(self)
+
         row = HBox()
         row.addWidget(QLabel("Find:"))
         self.input = QLineEdit(self)
         self.input.setText(start_text)
         row.addWidget(self.input)
         v.addLayout(row)
+
         self.regex_cb = QCheckBox("Regex", self)
         self.regex_cb.setChecked(start_is_regex)
         v.addWidget(self.regex_cb)
+
+        self.case_cb = QCheckBox("Case Sensitive", self)
+        self.case_cb.setChecked(start_case_sensitive)
+        v.addWidget(self.case_cb)
+
         btns = HBox()
         self.prev_button = QPushButton("Find Prev", self)
         self.next_button = QPushButton("Find Next", self)
         btns.addWidget(self.prev_button)
         btns.addWidget(self.next_button)
         v.addLayout(btns)
+
         self.next_button.clicked.connect(self.accept)
         self.prev_button.clicked.connect(self.reject)
+
 
 
 class LargeTextView(QWidget):
@@ -120,6 +130,7 @@ class LargeTextView(QWidget):
         self.last_is_regex: bool = False
         self._last_regex: Optional[re.Pattern] = None
         self.current_search_index: int = -1
+        self.last_case_sensitive: bool = False
 
         # focus & shortcuts
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -363,9 +374,10 @@ class LargeTextView(QWidget):
             self.clear()
 
     # ------------ search helpers (fix #1 & #5) ------------
-    def _compile_regex(self, pattern: str) -> bool:
+    def _compile_regex(self, pattern: str, case_sensitive: bool) -> bool:
         try:
-            self._last_regex = re.compile(pattern)
+            flags = 0 if case_sensitive else re.IGNORECASE
+            self._last_regex = re.compile(pattern, flags)
             return True
         except re.error as e:
             QMessageBox.warning(
@@ -381,14 +393,18 @@ class LargeTextView(QWidget):
     def _match_spans(self, line: str) -> List[Tuple[int, int]]:
         if not self.last_search_pattern:
             return []
+
         if self.last_is_regex and self._last_regex is not None:
             return [(m.start(), m.end()) for m in self._last_regex.finditer(line)]
+
         # literal find spans
         spans: List[Tuple[int, int]] = []
         pat = self.last_search_pattern
+        src = line if self.last_case_sensitive else line.lower()
+        pat_cmp = pat if self.last_case_sensitive else pat.lower()
         start = 0
         while True:
-            idx = line.find(pat, start)
+            idx = src.find(pat_cmp, start)
             if idx == -1:
                 break
             spans.append((idx, idx + len(pat)))
@@ -399,20 +415,26 @@ class LargeTextView(QWidget):
         return bool(self._match_spans(line))
 
     def show_search_dialog(self):
-        dlg = SearchDialog(self, self.last_search_pattern, self.last_is_regex)
+        dlg = SearchDialog(self, self.last_search_pattern,
+                           self.last_is_regex, self.last_case_sensitive)
         ok = dlg.exec()
         pattern = dlg.input.text()
         is_regex = dlg.regex_cb.isChecked()
+        case_sensitive = dlg.case_cb.isChecked()
 
-        changed = (pattern and pattern != self.last_search_pattern) or (is_regex != self.last_is_regex)
+        changed = ((pattern and pattern != self.last_search_pattern) or
+                   (is_regex != self.last_is_regex) or
+                   (case_sensitive != self.last_case_sensitive))
+
         if pattern:
             if is_regex:
-                if not self._compile_regex(pattern):
+                if not self._compile_regex(pattern, case_sensitive):
                     return
             else:
                 self._last_regex = None
             self.last_search_pattern = pattern
             self.last_is_regex = is_regex
+            self.last_case_sensitive = case_sensitive
 
         if changed:
             # reset start: after selection if present; otherwise -1 or end
