@@ -20,8 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import platform
 from functools import partial
+from typing import Optional
 
-from qtpy.QtGui import QAction
+from qtpy.QtGui import QKeySequence, Qt, QAction, QShortcut
 
 
 def setup_menu(window):
@@ -88,15 +89,33 @@ def setup_menu(window):
     file_menu.addAction(window.actionQuit)
 
     # --- Find Menu ---
-    find_menu = menubar.addMenu("Find")
-    window.actionFind = QAction("Find", window)
-    find_menu.addAction(window.actionFind)
+    # find_menu = menubar.addMenu("Find")
+    # window.actionFind = QAction("Find", window)
+    # # window.actionFind.setShortcut(QKeySequence("Ctrl+F"))
+    # # window.actionFind.setShortcut(QKeySequence(QKeySequence.StandardKey.Find))
+    # # window.actionFind.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+    # find_menu.addAction(window.actionFind)
+    #
+    # window.actionFindNext = QAction("Find Next", window)
+    # find_menu.addAction(window.actionFindNext)
+    #
+    # window.actionFindPrevious = QAction("Find Previous", window)
+    # find_menu.addAction(window.actionFindPrevious)
 
-    window.actionFindNext = QAction("Find Next", window)
-    find_menu.addAction(window.actionFindNext)
+    window.actionFind: Optional[QShortcut] = QShortcut(
+        QKeySequence.StandardKey.Find, window
+    )
+    window.actionFind.setContext(Qt.ShortcutContext.ApplicationShortcut)
 
-    window.actionFindPrevious = QAction("Find Previous", window)
-    find_menu.addAction(window.actionFindPrevious)
+    window.actionFindNext: Optional[QShortcut] = QShortcut(
+        QKeySequence.StandardKey.FindNext, window
+    )
+    window.actionFindNext.setContext(Qt.ShortcutContext.ApplicationShortcut)
+
+    window.actionFindPrevious: Optional[QShortcut] = QShortcut(
+        QKeySequence.StandardKey.FindPrevious, window
+    )
+    window.actionFindPrevious.setContext(Qt.ShortcutContext.ApplicationShortcut)
 
     # --- Settings Menu ---
     settings_menu = menubar.addMenu("Settings")
@@ -323,3 +342,26 @@ def setup_menu_connections(window):
     window.actionBrainTool.triggered.connect(
         partial(window.start_tool, tool_name="brain")
     )
+
+    # # Find actions
+    def do_search(win):
+        editor = win.which_editor()
+        if editor is None:
+            return
+        editor.show_search_dialog()
+
+    def do_find_next(win):
+        editor = win.which_editor()
+        if editor is None:
+            return
+        editor.find_next()
+
+    def do_find_prev(win):
+        editor = win.which_editor()
+        if editor is None:
+            return
+        editor.find_prev()
+
+    window.actionFind.activated.connect(partial(do_search, window))
+    window.actionFindNext.activated.connect(partial(do_find_next, window))
+    window.actionFindPrevious.activated.connect(partial(do_find_prev, window))

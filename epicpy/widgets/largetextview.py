@@ -1,14 +1,17 @@
+from __future__ import annotations
+
 import platform
 import subprocess
 import re
 import sys
+from itertools import islice
 from pathlib import Path
+from typing import List, Deque, Optional, Tuple
 
-from qtpy.QtCore import QTimer
+from qtpy.QtCore import QTimer, QRect
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QWidget,
-    QHBoxLayout,
     QScrollBar,
     QMenu,
     QDialog,
@@ -25,12 +28,10 @@ from collections import deque
 
 from qtpy.QtCore import Qt, QPoint
 from qtpy.QtGui import (
+    QColor,
     QPainter,
     QFontMetrics,
     QFont,
-    QContextMenuEvent,
-    QKeySequence,
-    QShortcut,
 )
 
 from epicpy.constants.stateconstants import RUNNING, PAUSED
@@ -40,39 +41,45 @@ from epiclibcpp.epiclib.output_tee_globals import Exception_out
 
 
 class SearchDialog(QDialog):
-    def __init__(self, parent=None, start_text: str = "", start_is_regex: bool = False):
+    def __init__(
+        self,
+        parent=None,
+        start_text: str = "",
+        start_is_regex: bool = False,
+        start_case_sensitive: bool = False,
+    ):
         super().__init__(parent)
-        self.setWindowTitle("Find Text")
-        self.setModal(True)
-        self.setMinimumWidth(420)  # make it wider
+        self.setWindowTitle("Find")
+        v = QVBoxLayout(self)
 
+        row = HBox()
+        row.addWidget(QLabel("Find:"))
         self.input = QLineEdit(self)
+        self.input.setText(start_text)
+        row.addWidget(self.input)
+        v.addLayout(row)
+
         self.regex_cb = QCheckBox("Regex", self)
+        self.regex_cb.setChecked(start_is_regex)
+        v.addWidget(self.regex_cb)
 
-        self.next_button = QPushButton("Find Next")
-        self.prev_button = QPushButton("Find Previous")
+        self.case_cb = QCheckBox("Case Sensitive", self)
+        self.case_cb.setChecked(start_case_sensitive)
+        v.addWidget(self.case_cb)
 
-        layout = QVBoxLayout(self)
+        btns = HBox()
+        self.prev_button = QPushButton("Find Prev", self)
+        self.next_button = QPushButton("Find Next", self)
+        btns.addWidget(self.prev_button)
+        btns.addWidget(self.next_button)
+        v.addLayout(btns)
 
-        form = HBox()
-        form.addWidget(QLabel("Find:"))
-        form.addWidget(self.input)
-        layout.addLayout(form)
-
-        layout.addWidget(self.regex_cb)
-
-        button_row = HBox()
-        button_row.addWidget(self.prev_button)
-        button_row.addWidget(self.next_button)
-        layout.addLayout(button_row)
-
+        # normal button connections
         self.next_button.clicked.connect(self.accept)
         self.prev_button.clicked.connect(self.reject)
 
-        if start_text:
-            self.input.setText(start_text)
-            self.input.selectAll()
-        self.regex_cb.setChecked(start_is_regex)
+        # pressing the ENTER button in the input field acts like pressing "Find Next"
+        self.input.returnPressed.connect(self.accept)
 
 
 class LargeTextView(QWidget):
@@ -83,82 +90,59 @@ class LargeTextView(QWidget):
         page_step_lines: int = 100,
         wait_msg_limit: int = 100_000,
         name: str = "",
-        enable_shortcuts: bool = True,
     ):
         super().__init__(parent)
         self.name = name
         self._parent = parent
 
-        self.lines: list[str] = []
-        self.pending_lines = deque()
+        # storage
+        self.lines: List[str] = []
+        self.pending_lines: Deque[str] = deque()
 
-        self.update_frequency_ms = update_frequency_ms
-        self.wait_msg_limit = wait_msg_limit
-
-        self.selection_start_line = None
-        self.selection_end_line = None
-        self.word_wrap = False
-        self.current_search_index = -1  # start before the first line
+        # timing
+        self.update_frequency_ms = int(update_frequency_ms)
+        self.wait_msg_limit = int(wait_msg_limit)
         self.processing_paused = False
+        QTimer.singleShot(self.update_frequency_ms, self.process_pending_lines)
 
-        self.last_search_pattern: str = ""
-        self.last_is_regex: bool = False
-        self._last_regex = None  # type: re.Pattern | None
-
+        # font/metrics
         font = QFont("Courier New" if sys.platform == "win32" else "Courier", 14)
         font.setStyleHint(QFont.StyleHint.Monospace)
         self.setFont(font)
-        self._font_metrics = QFontMetrics(self.font())
+        self._fm = QFontMetrics(self.font())
 
+        # layout & scrollbars
+        self.word_wrap = False  # keep default as before
         self.scroll_bar = QScrollBar(Qt.Orientation.Vertical, self)
-        self.scroll_bar.valueChanged.connect(self.update)
-        self.scroll_bar.setMaximum(0)
         self.scroll_bar.setPageStep(page_step_lines)
-        # self.scroll_bar.setSingleStep(3)
+        self.scroll_bar.valueChanged.connect(self.update)
+        self.h_scroll = QScrollBar(Qt.Orientation.Horizontal, self)
+        self.h_scroll.valueChanged.connect(self.update)
+        self.scroll_bar.raise_()
+        self.h_scroll.raise_()
 
-        layout = QHBoxLayout(self)
-        layout.addWidget(self.scroll_bar, 0, Qt.AlignmentFlag.AlignRight)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        # longest line width tracking for H-scroll when wrap is off
+        self._max_px_width = 0
 
-        # make focusable
+        # selection (character-accurate)
+        self.sel_anchor: Optional[Tuple[int, int]] = None  # (line, col)
+        self.sel_caret: Optional[Tuple[int, int]] = None  # (line, col)
+
+        # search state
+        self.last_search_pattern: str = ""
+        self.last_is_regex: bool = False
+        self._last_regex: Optional[re.Pattern] = None
+        self.current_search_index: int = -1
+        self.last_case_sensitive: bool = False
+
+        # focus & shortcuts
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.scroll_bar.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.h_scroll.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        # shortcuts: disable if you are planning global shortcuts on the parent window.
-        if enable_shortcuts:
-            self.copy_sc = QShortcut(QKeySequence(QKeySequence.StandardKey.Copy), self)
-            self.copy_sc.setContext(Qt.ShortcutContext.WindowShortcut)
-            self.copy_sc.activated.connect(self.copy_selected_text)
-
-            self.selall_sc = QShortcut(
-                QKeySequence(QKeySequence.StandardKey.SelectAll), self
-            )
-            self.selall_sc.setContext(Qt.ShortcutContext.WindowShortcut)
-            self.selall_sc.activated.connect(self.select_all)
-
-            self.find_sc = QShortcut(QKeySequence(QKeySequence.StandardKey.Find), self)
-            self.find_sc.setContext(Qt.ShortcutContext.WindowShortcut)
-            self.find_sc.activated.connect(self.show_search_dialog)
-
-            self.find_next_sc = QShortcut(
-                QKeySequence(QKeySequence.StandardKey.FindNext), self
-            )
-            self.find_next_sc.setContext(Qt.ShortcutContext.WindowShortcut)
-            self.find_next_sc.activated.connect(self.find_next)
-
-            self.find_prev_sc = QShortcut(
-                QKeySequence(QKeySequence.StandardKey.FindPrevious), self
-            )
-            self.find_prev_sc.setContext(Qt.ShortcutContext.WindowShortcut)
-            self.find_prev_sc.activated.connect(self.find_prev)
-
-        # self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
-
-        QTimer.singleShot(self.update_frequency_ms, self.process_pending_lines)
-
-    def line_height(self):
-        return self._font_metrics.lineSpacing()
+    # ---------------- public API ----------------
+    def line_height(self) -> int:
+        return self._fm.lineSpacing()
 
     def write(self, text: str):
         self.pending_lines.extend(text.splitlines(False))
@@ -166,60 +150,105 @@ class LargeTextView(QWidget):
     def clear(self):
         self.lines.clear()
         self.pending_lines.clear()
-        self.selection_start_line = None
-        self.selection_end_line = None
+        self._max_px_width = 0
+        self.sel_anchor = self.sel_caret = None
+        self.last_search_pattern = ""
+        self._last_regex = None
+        self.last_is_regex = False
+        self.current_search_index = -1
         self.scroll_bar.setValue(0)
         self.scroll_bar.setMaximum(0)
-        self.current_search_index = -1  # reset so first "next" can hit line 0
-        self.last_search_pattern = ""
-        self.last_is_regex = False
-        self._last_regex = None
+        self.h_scroll.setValue(0)
+        self.h_scroll.setMaximum(0)
         self.update()
 
-    def get_text(self):
+    def get_text(self) -> str:
         self.flush()
         return "\n".join(self.lines)
 
     def process_pending_lines(self):
-        # Exit early if paused - don't schedule another timer
         if self.processing_paused:
             return
-
         delay = self.update_frequency_ms
-
         if self.pending_lines:
-            batch_size = min(5000, len(self.pending_lines))
-            for _ in range(batch_size):
-                self.lines.append(self.pending_lines.popleft())
-
-            # self.scroll_bar.setMaximum(len(self.lines) - 1)
-            self._recalc_scrollbar_limits()
-            visible_lines = self.height() // self.line_height()
-            self.scroll_bar.setValue(max(0, len(self.lines) - visible_lines))
-            self.update()
-            delay = self.update_frequency_ms // 2
-
-        # Only schedule next processing if not paused
+            n = min(5000, len(self.pending_lines))
+            # pop many items quickly
+            batch = list(islice(self.pending_lines, 0, n))
+            for _ in range(n):
+                self.pending_lines.popleft()
+            self._append_batch(batch)
+            delay = max(1, self.update_frequency_ms // 2)
         QTimer.singleShot(delay, self.process_pending_lines)
 
     def flush(self):
-        """
-        Similar to process_pending_lines(),
-        but does not enable the singleShot
-        """
-        if self.pending_lines:
-            batch_size = min(5000, len(self.pending_lines))
-            for _ in range(batch_size):
-                self.lines.append(self.pending_lines.popleft())
+        """Drain *all* pending lines (fix #2)."""
+        while self.pending_lines:
+            n = min(5000, len(self.pending_lines))
+            batch = list(islice(self.pending_lines, 0, n))
+            for _ in range(n):
+                self.pending_lines.popleft()
+            self._append_batch(batch)
 
-            # self.scroll_bar.setMaximum(len(self.lines) - 1)
-            self._recalc_scrollbar_limits()
-            visible_lines = self.height() // self.line_height()
-            self.scroll_bar.setValue(max(0, len(self.lines) - visible_lines))
-            self.update()
+    # ---------------- internals ----------------
+    def _append_batch(self, batch: List[str]) -> None:
+        if not batch:
+            return
+        self.lines.extend(batch)
+        if not self.word_wrap:
+            fm = self._fm
+            for s in batch:
+                w = fm.horizontalAdvance(s)
+                if w > self._max_px_width:
+                    self._max_px_width = w
+        self._recalc_scrollbar_limits()
+        if self._should_follow_tail():
+            self._scroll_to_bottom()
+        self.update()
 
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
+    @staticmethod
+    def _should_follow_tail() -> bool:
+        # maintains previous behavior: always stick to bottom in streaming mode
+        return True
+
+    def _visible_lines(self) -> int:
+        horiz_bar_h = (
+            self.h_scroll.sizeHint().height() if self.h_scroll.isVisible() else 0
+        )
+        return max(1, (self.height() - horiz_bar_h) // self.line_height())
+
+    def _scroll_to_bottom(self):
+        vis = self._visible_lines()
+        self.scroll_bar.setValue(max(0, len(self.lines) - vis))
+
+    def _recalc_scrollbar_limits(self):
+        vis = self._visible_lines()
+        self.scroll_bar.setMaximum(max(0, len(self.lines) - vis))
+        if self.word_wrap:
+            self.h_scroll.setMaximum(0)
+            self.h_scroll.hide()
+        else:
+            vbar_w = self.scroll_bar.sizeHint().width()
+            margin = self._fm.averageCharWidth() * 2
+            usable_w = max(0, self.width() - vbar_w)
+            max_x = max(0, self._max_px_width - usable_w)
+            self.h_scroll.setMaximum(max(0, max_x + margin))
+            self.h_scroll.show()
+
+    # ---------------- events ----------------
+    def resizeEvent(self, ev: QtGui.QResizeEvent) -> None:
+        super().resizeEvent(ev)
+        vbar_w = self.scroll_bar.sizeHint().width()
+        hbar_h = self.h_scroll.sizeHint().height()
+
+        # Reserve bottom row for hbar, right column for vbar
+        content_w = max(0, self.width() - vbar_w)
+        content_h = max(0, self.height() - hbar_h)
+
+        # Vertical bar on the RIGHT edge, full height minus hbar
+        self.scroll_bar.setGeometry(self.width() - vbar_w, 0, vbar_w, content_h)
+        # Horizontal bar on the BOTTOM, full width minus vbar
+        self.h_scroll.setGeometry(0, self.height() - hbar_h, content_w, hbar_h)
+
         self._recalc_scrollbar_limits()
 
     def paintEvent(self, event):
@@ -227,31 +256,50 @@ class LargeTextView(QWidget):
         painter.setFont(self.font())
         painter.setClipRect(event.rect())
 
-        line_height = self.line_height()
-        visible_lines = self.height() // line_height
-        start_line = self.scroll_bar.value()
-        text_area_width = self.width() - self.scroll_bar.width()
+        lh = self.line_height()
+        first = self.scroll_bar.value()
+        count = self._visible_lines()
+
+        # Use sizeHint so the bar is always the right width even when manually placed
+        vbar_w = self.scroll_bar.sizeHint().width()
+        text_w = max(0, self.width() - vbar_w)
+        x_offset = -self.h_scroll.value() if not self.word_wrap else 0
 
         highlight_color = self.palette().highlight().color()
         text_color = self.palette().text().color()
 
-        if (
-            self.selection_start_line is not None
-            and self.selection_end_line is not None
-        ):
-            sel_start = min(self.selection_start_line, self.selection_end_line)
-            sel_end = max(self.selection_start_line, self.selection_end_line)
-        else:
-            sel_start = sel_end = -1
+        # search highlight color (semi-transparent)
+        search_bg = QColor(highlight_color)
+        search_bg.setAlpha(120)
 
-        for i in range(visible_lines):
-            line_number = start_line + i
-            if line_number >= len(self.lines):
+        # selection map by line
+        sel_ranges = self._selection_ranges_normalized()
+
+        for row in range(count):
+            i = first + row
+            if i >= len(self.lines):
                 break
-            y = i * line_height
-            if sel_start <= line_number <= sel_end:
-                painter.fillRect(0, y, text_area_width, line_height, highlight_color)
+            y = row * lh
+            line = self.lines[i]
 
+            # selection fill
+            for c0, c1 in sel_ranges.get(i, ()):  # may be multiple spans
+                lpx = self._text_x_from_col(line, c0)
+                rpx = self._text_x_from_col(line, c1)
+                painter.fillRect(
+                    QRect(lpx + x_offset, y, max(1, rpx - lpx), lh), highlight_color
+                )
+
+            # search matches fill (fix #5)
+            if self.last_search_pattern:
+                for m0, m1 in self._match_spans(line):
+                    lpx = self._text_x_from_col(line, m0)
+                    rpx = self._text_x_from_col(line, m1)
+                    painter.fillRect(
+                        QRect(lpx + x_offset, y, max(1, rpx - lpx), lh), search_bg
+                    )
+
+            # draw text
             painter.setPen(text_color)
             flags = (
                 Qt.TextFlag.TextWordWrap
@@ -259,66 +307,45 @@ class LargeTextView(QWidget):
                 else Qt.TextFlag.TextSingleLine
             )
             painter.drawText(
-                0,
-                y,
-                text_area_width,
-                line_height,
-                flags | Qt.AlignmentFlag.AlignLeft,
-                self.lines[line_number],
+                0 + x_offset, y, text_w, lh, flags | Qt.AlignmentFlag.AlignLeft, line
             )
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
-            clicked_line = (
+            line = (
                 self.scroll_bar.value()
                 + int(event.position().y()) // self.line_height()
             )
-            self.selection_start_line = clicked_line
-            self.selection_end_line = clicked_line
-            self.update()
+            if 0 <= line < len(self.lines):
+                col = self._col_from_x(
+                    self.lines[line], int(event.position().x()) + self.h_scroll.value()
+                )
+                self.sel_anchor = (line, col)
+                self.sel_caret = (line, col)
+                self.update()
 
     def mouseMoveEvent(self, event):
         if event.buttons() & Qt.MouseButton.LeftButton:
-            current_line = (
+            line = (
                 self.scroll_bar.value()
                 + int(event.position().y()) // self.line_height()
             )
-            self.selection_end_line = current_line
+            line = max(0, min(len(self.lines) - 1, line))
+            col = self._col_from_x(
+                self.lines[line], int(event.position().x()) + self.h_scroll.value()
+            )
+            self.sel_caret = (line, col)
             self.update()
 
-    def copy_selected_text(self):
-        if (
-            self.selection_start_line is not None
-            and self.selection_end_line is not None
-        ):
-            start = max(0, min(self.selection_start_line, self.selection_end_line))
-            end = min(
-                len(self.lines) - 1,
-                max(self.selection_start_line, self.selection_end_line),
-            )
-            selected_text = "\n".join(self.lines[start : end + 1])
-            # QApplication.clipboard().setText(selected_text)
-            QApplication.clipboard().setText(selected_text)
-
-    def select_all(self):
-        self.selection_start_line = 0
-        self.selection_end_line = len(self.lines) - 1
-        self.update()
-
-    def _recalc_scrollbar_limits(self):
-        vis = max(1, self.height() // self.line_height())
-        self.scroll_bar.setMaximum(max(0, len(self.lines) - vis))
-
+    # keyboard & wheel remain the same behavior
     def wheelEvent(self, event):
-        # positive y => wheel up
         dy = event.angleDelta().y()
-        if dy == 0:
-            return
-        steps = dy // 120  # 120 units per notch
-        self.scroll_bar.setValue(
-            self.scroll_bar.value() - steps * self.scroll_bar.singleStep()
-        )
-        self.update()
+        if dy:
+            steps = dy // 120
+            self.scroll_bar.setValue(
+                self.scroll_bar.value() - steps * self.scroll_bar.singleStep()
+            )
+            self.update()
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -338,172 +365,6 @@ class LargeTextView(QWidget):
         else:
             super().keyPressEvent(event)
         self.update()
-
-    def contextMenuEvent(self, event: QContextMenuEvent):
-        menu = QMenu(self)
-        copy_action = menu.addAction("Copy")
-        select_all_action = menu.addAction("Select All")
-        find_action = menu.addAction("Find...")
-        clear_action = menu.addAction("Clear")
-
-        # action = menu.exec(event.globalPos())
-        action = menu.exec(
-            self.parent().mapToGlobal(
-                event if isinstance(event, QPoint) else event.pos()
-            )
-        )
-        if action == copy_action:
-            self.copy_selected_text()
-        elif action == select_all_action:
-            self.select_all()
-        elif action == find_action:
-            self.show_search_dialog()
-        elif action == clear_action:
-            self.clear()
-
-    # ---- search helpers ----
-    def _compile_regex(self, pattern: str) -> bool:
-        try:
-            self._last_regex = re.compile(pattern)
-            return True
-        except re.error as e:
-            QMessageBox.warning(
-                self,
-                "Invalid Regex",
-                f"{e}",
-                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
-                QMessageBox.StandardButton.Ok,
-            )
-            self._last_regex = None
-            return False
-
-    def _matches(self, line: str) -> bool:
-        if not self.last_search_pattern:
-            return False
-        if self.last_is_regex:
-            return bool(self._last_regex.search(line)) if self._last_regex else False
-        return self.last_search_pattern in line
-
-    def show_search_dialog(self):
-        dlg = SearchDialog(self, self.last_search_pattern, self.last_is_regex)
-        ok = dlg.exec()
-        pattern = dlg.input.text()
-        is_regex = dlg.regex_cb.isChecked()
-
-        new_pattern = (pattern and pattern != self.last_search_pattern) or (
-            is_regex != self.last_is_regex
-        )
-
-        if pattern:
-            if is_regex and not self._compile_regex(pattern):
-                return
-            self.last_search_pattern = pattern
-            self.last_is_regex = is_regex
-
-        # If the user changed pattern/regex, reset starting point:
-        if new_pattern:
-            # If there’s a selection, start from that; otherwise start fresh
-            if self.selection_end_line is not None:
-                self.current_search_index = self.selection_end_line
-            else:
-                self.current_search_index = -1 if ok else len(self.lines)
-
-        if ok:
-            self.find_next()
-        else:
-            self.find_prev()
-
-    def _ensure_visible(self, line_idx):
-        vis = max(1, self.height() // self.line_height())
-        target = max(0, min(line_idx - vis // 2, len(self.lines) - vis))
-        self.scroll_bar.setValue(target)
-
-    def find_next(self):
-        if not self.last_search_pattern:
-            return -1
-        if self.last_is_regex and (
-            self._last_regex is None
-            or self._last_regex.pattern != self.last_search_pattern
-        ):
-            if not self._compile_regex(self.last_search_pattern):
-                return -1
-
-        start = self.current_search_index
-        # forward search from start+1 ... end
-        for i in range(start + 1, len(self.lines)):
-            if self._matches(self.lines[i]):
-                self.current_search_index = i
-                self._ensure_visible(i)
-                self.selection_start_line = self.selection_end_line = i
-                self.update()
-                return i
-
-        # optional wrap-around: search from 0 ... start
-        for i in range(0, max(0, start + 1)):
-            if self._matches(self.lines[i]):
-                self.current_search_index = i
-                self._ensure_visible(i)
-                self.selection_start_line = self.selection_end_line = i
-                self.update()
-                return i
-
-        self.selection_start_line = self.selection_end_line = None
-        self.update()
-        return -1
-
-    def find_prev(self):
-        if not self.last_search_pattern:
-            return -1
-        if self.last_is_regex and (
-            self._last_regex is None
-            or self._last_regex.pattern != self.last_search_pattern
-        ):
-            if not self._compile_regex(self.last_search_pattern):
-                return -1
-
-        start = self.current_search_index
-        # backward search from start-1 ... 0
-        for i in range(start - 1, -1, -1):
-            if self._matches(self.lines[i]):
-                self.current_search_index = i
-                self._ensure_visible(i)
-                self.selection_start_line = self.selection_end_line = i
-                self.update()
-                return i
-
-        # optional wrap-around: from end ... start
-        for i in range(len(self.lines) - 1, max(-1, start - 1), -1):
-            if self._matches(self.lines[i]):
-                self.current_search_index = i
-                self._ensure_visible(i)
-                self.selection_start_line = self.selection_end_line = i
-                self.update()
-                return i
-
-        self.selection_start_line = self.selection_end_line = None
-        self.update()
-        return -1
-
-    def pause_writes(self):
-        """Pause processing of pending lines to UI. Writes to buffer continue."""
-        self.processing_paused = True
-        # Timer will naturally stop scheduling new singleShots
-
-    def resume_writes(self):
-        """Resume processing of pending lines to UI."""
-        self.processing_paused = False
-        # Restart the processing timer immediately
-        QTimer.singleShot(0, self.process_pending_lines)
-
-    def is_paused(self) -> bool:
-        """Check if UI processing is paused."""
-        return self.processing_paused
-
-
-class CustomLargeTextView(LargeTextView):
-    """
-    Same as LargeTextView, but with extra context menu suitable for the NormalOutputWindow in EPIC
-    """
 
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent):
         device_file_exists = (
@@ -548,11 +409,7 @@ class CustomLargeTextView(LargeTextView):
         edit_rules_action.setEnabled(sim_setup and not running)
 
         copy_action.setEnabled(
-            (
-                self.selection_start_line is not None
-                and self.selection_end_line is not None
-            )
-            and not running
+            (self.sel_anchor is not None and self.sel_caret is not None) and not running
         )
 
         stop_action.setEnabled(
@@ -607,6 +464,247 @@ class CustomLargeTextView(LargeTextView):
             # self._parent.halt_simulation()
             self._parent.close()
 
+    # ------------ search helpers (fix #1 & #5) ------------
+    def _compile_regex(self, pattern: str, case_sensitive: bool) -> bool:
+        try:
+            flags = 0 if case_sensitive else re.IGNORECASE
+            self._last_regex = re.compile(pattern, flags)
+            return True
+        except re.error as e:
+            QMessageBox.warning(
+                self,
+                "Invalid Regex",
+                f"{e}",
+                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Ok,
+            )
+            self._last_regex = None
+            return False
+
+    def _match_spans(self, line: str) -> List[Tuple[int, int]]:
+        if not self.last_search_pattern:
+            return []
+
+        if self.last_is_regex and self._last_regex is not None:
+            return [(m.start(), m.end()) for m in self._last_regex.finditer(line)]
+
+        # literal find spans
+        spans: List[Tuple[int, int]] = []
+        pat = self.last_search_pattern
+        src = line if self.last_case_sensitive else line.lower()
+        pat_cmp = pat if self.last_case_sensitive else pat.lower()
+        start = 0
+        while True:
+            idx = src.find(pat_cmp, start)
+            if idx == -1:
+                break
+            spans.append((idx, idx + len(pat)))
+            start = idx + max(1, len(pat))
+        return spans
+
+    def _matches(self, line: str) -> bool:
+        return bool(self._match_spans(line))
+
+    def show_search_dialog(self):
+        dlg = SearchDialog(
+            self, self.last_search_pattern, self.last_is_regex, self.last_case_sensitive
+        )
+        ok = dlg.exec()
+        pattern = dlg.input.text()
+        is_regex = dlg.regex_cb.isChecked()
+        case_sensitive = dlg.case_cb.isChecked()
+
+        changed = (
+            (pattern and pattern != self.last_search_pattern)
+            or (is_regex != self.last_is_regex)
+            or (case_sensitive != self.last_case_sensitive)
+        )
+
+        if pattern:
+            if is_regex:
+                if not self._compile_regex(pattern, case_sensitive):
+                    return
+            else:
+                self._last_regex = None
+            self.last_search_pattern = pattern
+            self.last_is_regex = is_regex
+            self.last_case_sensitive = case_sensitive
+
+        if changed:
+            # reset start: after selection if present; otherwise -1 or end
+            if self.sel_caret is not None:
+                self.current_search_index = self.sel_caret[0]
+            else:
+                self.current_search_index = -1 if ok else len(self.lines)
+
+        if ok:
+            self.find_next()
+        else:
+            self.find_prev()
+
+    def _ensure_visible(self, line_idx):
+        vis = self._visible_lines()
+        target = max(0, min(line_idx - vis // 2, len(self.lines) - vis))
+        self.scroll_bar.setValue(target)
+
+    def find_next(self):
+        if not self.last_search_pattern:
+            return -1
+        if self.last_is_regex and (
+            self._last_regex is None
+            or self._last_regex.pattern != self.last_search_pattern
+        ):
+            if not self._compile_regex(
+                self.last_search_pattern, self.last_case_sensitive
+            ):
+                return -1
+        start = self.current_search_index
+        for i in range(start + 1, len(self.lines)):
+            if self._matches(self.lines[i]):
+                self.current_search_index = i
+                self._ensure_visible(i)
+                self._select_whole_line(i)
+                self.update()
+                return i
+        for i in range(0, max(0, start + 1)):
+            if self._matches(self.lines[i]):
+                self.current_search_index = i
+                self._ensure_visible(i)
+                self._select_whole_line(i)
+                self.update()
+                return i
+        self._clear_selection()
+        self.update()
+        return -1
+
+    def find_prev(self):
+        if not self.last_search_pattern:
+            return -1
+        if self.last_is_regex and (
+            self._last_regex is None
+            or self._last_regex.pattern != self.last_search_pattern
+        ):
+            if not self._compile_regex(
+                self.last_search_pattern, self.last_case_sensitive
+            ):
+                return -1
+        start = (
+            len(self.lines)
+            if self.current_search_index < 0
+            else self.current_search_index
+        )
+        for i in range(start - 1, -1, -1):
+            if self._matches(self.lines[i]):
+                self.current_search_index = i
+                self._ensure_visible(i)
+                self._select_whole_line(i)
+                self.update()
+                return i
+        for i in range(len(self.lines) - 1, start - 1, -1):
+            if self._matches(self.lines[i]):
+                self.current_search_index = i
+                self._ensure_visible(i)
+                self._select_whole_line(i)
+                self.update()
+                return i
+        self._clear_selection()
+        self.update()
+        return -1
+
+    # selection utilities
+    def _clear_selection(self):
+        self.sel_anchor = None
+        self.sel_caret = None
+
+    def _select_whole_line(self, i: int):
+        line = self.lines[i]
+        self.sel_anchor = (i, 0)
+        self.sel_caret = (i, len(line))
+
+    def _selection_ranges_normalized(self) -> dict[int, List[Tuple[int, int]]]:
+        if not self.sel_anchor or not self.sel_caret:
+            return {}
+        (l0, c0), (l1, c1) = self.sel_anchor, self.sel_caret
+        if (l1, c1) < (l0, c0):
+            (l0, c0), (l1, c1) = (l1, c1), (l0, c0)
+        ranges: dict[int, List[Tuple[int, int]]] = {}
+        for li in range(l0, l1 + 1):
+            line = self.lines[li]
+            if l0 == l1:
+                a, b = c0, c1
+            elif li == l0:
+                a, b = c0, len(line)
+            elif li == l1:
+                a, b = 0, c1
+            else:
+                a, b = 0, len(line)
+            a = max(0, min(len(line), a))
+            b = max(0, min(len(line), b))
+            if a != b:
+                ranges.setdefault(li, []).append((a, b))
+        return ranges
+
+    def _selected_text(self) -> str:
+        ranges = self._selection_ranges_normalized()
+        if not ranges:
+            return ""
+        parts: List[str] = []
+        for i in sorted(ranges):
+            line = self.lines[i]
+            spans = ranges[i]
+            out = []
+            for a, b in spans:
+                out.append(line[a:b])
+            parts.append("".join(out))
+        return "\n".join(parts)
+
+    def copy_selected_text(self):
+        txt = self._selected_text()
+        if txt:
+            QApplication.clipboard().setText(txt)
+
+    def select_all(self):
+        if not self.lines:
+            return
+        last = len(self.lines) - 1
+        self.sel_anchor = (0, 0)
+        self.sel_caret = (last, len(self.lines[last]))
+        self.update()
+
+    # ---- column/x mapping ----
+    def _col_from_x(self, line: str, x_view_px: int) -> int:
+        if not line:
+            return 0
+        fm = self._fm
+        if x_view_px <= 0:
+            return 0
+        if x_view_px >= fm.horizontalAdvance(line):
+            return len(line)
+        lo, hi = 0, len(line)
+        while lo < hi:
+            mid = (lo + hi) // 2
+            w = fm.horizontalAdvance(line[:mid])
+            if w <= x_view_px:
+                lo = mid + 1
+            else:
+                hi = mid
+        return max(0, lo - 1)
+
+    def _text_x_from_col(self, line: str, col: int) -> int:
+        col = max(0, min(len(line), col))
+        return self._fm.horizontalAdvance(line[:col])
+
+    # ---- pause/resume (unchanged) ----
+    def pause_writes(self):
+        self.processing_paused = True
+
+    def resume_writes(self):
+        self.processing_paused = False
+        QTimer.singleShot(0, self.process_pending_lines)
+
+    def is_paused(self):
+        return self.processing_paused
+
 
 if __name__ == "__main__":
     from qtpy.QtWidgets import QMainWindow
@@ -649,10 +747,11 @@ if __name__ == "__main__":
                 aline = self.content[self.counter]
                 self.view.write(aline)
                 self.counter += 1
-            except Exception:
+            except Exception as e:
+                extra = f" ({e})" if e else ""
                 self.timer.stop()
                 self.view.write(
-                    f"Time Elapsed: {timeit.default_timer() - self.start:0.5f} sec."
+                    f"Time Elapsed: {timeit.default_timer() - self.start:0.5f} sec.{extra}"
                 )
 
     app = QApplication(sys.argv)
