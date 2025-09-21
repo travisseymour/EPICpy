@@ -32,9 +32,6 @@ from qtpy.QtGui import (
     QPainter,
     QFontMetrics,
     QFont,
-    QContextMenuEvent,
-    QKeySequence,
-    QShortcut,
 )
 
 from epicpy.constants.stateconstants import RUNNING, PAUSED
@@ -44,8 +41,13 @@ from epiclibcpp.epiclib.output_tee_globals import Exception_out
 
 
 class SearchDialog(QDialog):
-    def __init__(self, parent=None, start_text: str = "",
-                 start_is_regex: bool = False, start_case_sensitive: bool = False):
+    def __init__(
+        self,
+        parent=None,
+        start_text: str = "",
+        start_is_regex: bool = False,
+        start_case_sensitive: bool = False,
+    ):
         super().__init__(parent)
         self.setWindowTitle("Find")
         v = QVBoxLayout(self)
@@ -80,8 +82,6 @@ class SearchDialog(QDialog):
         self.input.returnPressed.connect(self.accept)
 
 
-
-
 class LargeTextView(QWidget):
     def __init__(
         self,
@@ -90,7 +90,6 @@ class LargeTextView(QWidget):
         page_step_lines: int = 100,
         wait_msg_limit: int = 100_000,
         name: str = "",
-        enable_shortcuts: bool = True,
     ):
         super().__init__(parent)
         self.name = name
@@ -127,7 +126,7 @@ class LargeTextView(QWidget):
 
         # selection (character-accurate)
         self.sel_anchor: Optional[Tuple[int, int]] = None  # (line, col)
-        self.sel_caret: Optional[Tuple[int, int]] = None   # (line, col)
+        self.sel_caret: Optional[Tuple[int, int]] = None  # (line, col)
 
         # search state
         self.last_search_pattern: str = ""
@@ -140,27 +139,6 @@ class LargeTextView(QWidget):
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.scroll_bar.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.h_scroll.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-
-        if enable_shortcuts:
-            sc = QShortcut(QKeySequence(QKeySequence.StandardKey.Copy), self)
-            sc.setContext(Qt.ShortcutContext.WindowShortcut)
-            sc.activated.connect(self.copy_selected_text)
-
-            sca = QShortcut(QKeySequence(QKeySequence.StandardKey.SelectAll), self)
-            sca.setContext(Qt.ShortcutContext.WindowShortcut)
-            sca.activated.connect(self.select_all)
-
-            sf = QShortcut(QKeySequence(QKeySequence.StandardKey.Find), self)
-            sf.setContext(Qt.ShortcutContext.WindowShortcut)
-            sf.activated.connect(self.show_search_dialog)
-
-            sfn = QShortcut(QKeySequence(QKeySequence.StandardKey.FindNext), self)
-            sfn.setContext(Qt.ShortcutContext.WindowShortcut)
-            sfn.activated.connect(self.find_next)
-
-            sfp = QShortcut(QKeySequence(QKeySequence.StandardKey.FindPrevious), self)
-            sfp.setContext(Qt.ShortcutContext.WindowShortcut)
-            sfp.activated.connect(self.find_prev)
 
     # ---------------- public API ----------------
     def line_height(self) -> int:
@@ -233,7 +211,9 @@ class LargeTextView(QWidget):
         return True
 
     def _visible_lines(self) -> int:
-        horiz_bar_h = self.h_scroll.sizeHint().height() if self.h_scroll.isVisible() else 0
+        horiz_bar_h = (
+            self.h_scroll.sizeHint().height() if self.h_scroll.isVisible() else 0
+        )
         return max(1, (self.height() - horiz_bar_h) // self.line_height())
 
     def _scroll_to_bottom(self):
@@ -306,34 +286,54 @@ class LargeTextView(QWidget):
             for c0, c1 in sel_ranges.get(i, ()):  # may be multiple spans
                 lpx = self._text_x_from_col(line, c0)
                 rpx = self._text_x_from_col(line, c1)
-                painter.fillRect(QRect(lpx + x_offset, y, max(1, rpx - lpx), lh), highlight_color)
+                painter.fillRect(
+                    QRect(lpx + x_offset, y, max(1, rpx - lpx), lh), highlight_color
+                )
 
             # search matches fill (fix #5)
             if self.last_search_pattern:
                 for m0, m1 in self._match_spans(line):
                     lpx = self._text_x_from_col(line, m0)
                     rpx = self._text_x_from_col(line, m1)
-                    painter.fillRect(QRect(lpx + x_offset, y, max(1, rpx - lpx), lh), search_bg)
+                    painter.fillRect(
+                        QRect(lpx + x_offset, y, max(1, rpx - lpx), lh), search_bg
+                    )
 
             # draw text
             painter.setPen(text_color)
-            flags = Qt.TextFlag.TextWordWrap if self.word_wrap else Qt.TextFlag.TextSingleLine
-            painter.drawText(0 + x_offset, y, text_w, lh, flags | Qt.AlignmentFlag.AlignLeft, line)
+            flags = (
+                Qt.TextFlag.TextWordWrap
+                if self.word_wrap
+                else Qt.TextFlag.TextSingleLine
+            )
+            painter.drawText(
+                0 + x_offset, y, text_w, lh, flags | Qt.AlignmentFlag.AlignLeft, line
+            )
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
-            line = self.scroll_bar.value() + int(event.position().y()) // self.line_height()
+            line = (
+                self.scroll_bar.value()
+                + int(event.position().y()) // self.line_height()
+            )
             if 0 <= line < len(self.lines):
-                col = self._col_from_x(self.lines[line], int(event.position().x()) + self.h_scroll.value())
+                col = self._col_from_x(
+                    self.lines[line], int(event.position().x()) + self.h_scroll.value()
+                )
                 self.sel_anchor = (line, col)
                 self.sel_caret = (line, col)
                 self.update()
 
     def mouseMoveEvent(self, event):
         if event.buttons() & Qt.MouseButton.LeftButton:
-            line = self.scroll_bar.value() + int(event.position().y()) // self.line_height()
+            line = (
+                self.scroll_bar.value()
+                + int(event.position().y()) // self.line_height()
+            )
             line = max(0, min(len(self.lines) - 1, line))
-            col = self._col_from_x(self.lines[line], int(event.position().x()) + self.h_scroll.value())
+            col = self._col_from_x(
+                self.lines[line], int(event.position().x()) + self.h_scroll.value()
+            )
             self.sel_caret = (line, col)
             self.update()
 
@@ -342,7 +342,9 @@ class LargeTextView(QWidget):
         dy = event.angleDelta().y()
         if dy:
             steps = dy // 120
-            self.scroll_bar.setValue(self.scroll_bar.value() - steps * self.scroll_bar.singleStep())
+            self.scroll_bar.setValue(
+                self.scroll_bar.value() - steps * self.scroll_bar.singleStep()
+            )
             self.update()
 
     def keyPressEvent(self, event):
@@ -364,15 +366,62 @@ class LargeTextView(QWidget):
             super().keyPressEvent(event)
         self.update()
 
-    # context menu & actions
-    def contextMenuEvent(self, event: QContextMenuEvent):
+    def contextMenuEvent(self, event: QtGui.QContextMenuEvent):
+        device_file_exists = (
+            bool(config.device_cfg.device_file)
+            and Path(config.device_cfg.device_file).is_file()
+        )
+        rule_file_exists = (
+            bool(config.device_cfg.rule_files)
+            and Path(config.device_cfg.rule_files[0]).is_file()
+        )
+        sim_setup = device_file_exists and rule_file_exists
+        # running = COORDINATOR.state in (SimState.running, SimState.timed_out)
+        running = (self._parent.run_state == RUNNING) and (
+            not self._parent.run_state == PAUSED
+        )
+
+        # define context menu
+
         menu = QMenu(self)
         copy_action = menu.addAction("Copy")
         select_all_action = menu.addAction("Select All")
         find_action = menu.addAction("Find...")
         clear_action = menu.addAction("Clear")
+        menu.addSeparator()
+        stop_action = menu.addAction("Stop Simulation")
+        menu.addSeparator()
+        open_output_action = menu.addAction("Open Normal Output Text")
+        edit_rules_action = menu.addAction("Edit Production Rule File")
+        edit_data_action = menu.addAction("Edit Data Output File")
+        open_folder_action = menu.addAction("Open Project Folder")
+        menu.addSeparator()
+        quit_action = menu.addAction("Quit Application")
 
-        action = menu.exec(self.parent().mapToGlobal(event if isinstance(event, QPoint) else event.pos()))
+        # Decide Which Items Are Enabled
+
+        find_action.setEnabled(not running)
+        clear_action.setEnabled(not running)
+        open_output_action.setEnabled(not running)
+        open_folder_action.setEnabled(device_file_exists and not running)
+
+        edit_data_action.setEnabled(sim_setup and not running)
+        edit_rules_action.setEnabled(sim_setup and not running)
+
+        copy_action.setEnabled(
+            (self.sel_anchor is not None and self.sel_caret is not None) and not running
+        )
+
+        stop_action.setEnabled(
+            sim_setup and (running or self._parent.run_state == PAUSED)
+        )
+
+        # process menu
+        action = menu.exec(
+            self.parent().mapToGlobal(
+                event if isinstance(event, QPoint) else event.pos()
+            )
+        )
 
         if action == copy_action:
             self.copy_selected_text()
@@ -382,6 +431,38 @@ class LargeTextView(QWidget):
             self.show_search_dialog()
         elif action == clear_action:
             self.clear()
+        elif action == stop_action:
+            self._parent.halt_simulation()
+        elif action == open_output_action:
+            self._parent.launchEditor(which_file="NormalOut")
+        elif action == edit_rules_action:
+            self._parent.launchEditor(which_file="RuleFile")
+        elif action == edit_data_action:
+            self._parent.launchEditor(which_file="DataFile")
+        elif action == open_folder_action:
+            operating_system = platform.system()
+            if operating_system == "Linux":
+                open_cmd = "xdg-open"
+            elif operating_system == "Darwin":
+                open_cmd = "open"
+            elif operating_system == "Windows":
+                open_cmd = "explorer"
+            else:
+                open_cmd = ""
+                msg = f"ERROR: Opening project folder when OS=='{operating_system}' is not yet implemented!"
+                try:
+                    Exception_out(msg)
+                except Exception:
+                    print(msg)
+            if open_cmd and config.device_cfg.device_file:
+                cmd = [
+                    open_cmd,
+                    str(Path(config.device_cfg.device_file).resolve().parent),
+                ]
+                subprocess.run(args=cmd)
+        elif action == quit_action:
+            # self._parent.halt_simulation()
+            self._parent.close()
 
     # ------------ search helpers (fix #1 & #5) ------------
     def _compile_regex(self, pattern: str, case_sensitive: bool) -> bool:
@@ -425,16 +506,19 @@ class LargeTextView(QWidget):
         return bool(self._match_spans(line))
 
     def show_search_dialog(self):
-        dlg = SearchDialog(self, self.last_search_pattern,
-                           self.last_is_regex, self.last_case_sensitive)
+        dlg = SearchDialog(
+            self, self.last_search_pattern, self.last_is_regex, self.last_case_sensitive
+        )
         ok = dlg.exec()
         pattern = dlg.input.text()
         is_regex = dlg.regex_cb.isChecked()
         case_sensitive = dlg.case_cb.isChecked()
 
-        changed = ((pattern and pattern != self.last_search_pattern) or
-                   (is_regex != self.last_is_regex) or
-                   (case_sensitive != self.last_case_sensitive))
+        changed = (
+            (pattern and pattern != self.last_search_pattern)
+            or (is_regex != self.last_is_regex)
+            or (case_sensitive != self.last_case_sensitive)
+        )
 
         if pattern:
             if is_regex:
@@ -466,8 +550,13 @@ class LargeTextView(QWidget):
     def find_next(self):
         if not self.last_search_pattern:
             return -1
-        if self.last_is_regex and (self._last_regex is None or self._last_regex.pattern != self.last_search_pattern):
-            if not self._compile_regex(self.last_search_pattern, self.last_case_sensitive):
+        if self.last_is_regex and (
+            self._last_regex is None
+            or self._last_regex.pattern != self.last_search_pattern
+        ):
+            if not self._compile_regex(
+                self.last_search_pattern, self.last_case_sensitive
+            ):
                 return -1
         start = self.current_search_index
         for i in range(start + 1, len(self.lines)):
@@ -491,10 +580,19 @@ class LargeTextView(QWidget):
     def find_prev(self):
         if not self.last_search_pattern:
             return -1
-        if self.last_is_regex and (self._last_regex is None or self._last_regex.pattern != self.last_search_pattern):
-            if not self._compile_regex(self.last_search_pattern, self.last_case_sensitive):
+        if self.last_is_regex and (
+            self._last_regex is None
+            or self._last_regex.pattern != self.last_search_pattern
+        ):
+            if not self._compile_regex(
+                self.last_search_pattern, self.last_case_sensitive
+            ):
                 return -1
-        start = len(self.lines) if self.current_search_index < 0 else self.current_search_index
+        start = (
+            len(self.lines)
+            if self.current_search_index < 0
+            else self.current_search_index
+        )
         for i in range(start - 1, -1, -1):
             if self._matches(self.lines[i]):
                 self.current_search_index = i
@@ -608,114 +706,6 @@ class LargeTextView(QWidget):
         return self.processing_paused
 
 
-
-class CustomLargeTextView(LargeTextView):
-    """
-    Same as LargeTextView, but with extra context menu suitable for the NormalOutputWindow in EPIC
-    """
-
-    def contextMenuEvent(self, event: QtGui.QContextMenuEvent):
-        device_file_exists = (
-            bool(config.device_cfg.device_file)
-            and Path(config.device_cfg.device_file).is_file()
-        )
-        rule_file_exists = (
-            bool(config.device_cfg.rule_files)
-            and Path(config.device_cfg.rule_files[0]).is_file()
-        )
-        sim_setup = device_file_exists and rule_file_exists
-        # running = COORDINATOR.state in (SimState.running, SimState.timed_out)
-        running = (self._parent.run_state == RUNNING) and (
-            not self._parent.run_state == PAUSED
-        )
-
-        # define context menu
-
-        menu = QMenu(self)
-        copy_action = menu.addAction("Copy")
-        select_all_action = menu.addAction("Select All")
-        find_action = menu.addAction("Find...")
-        clear_action = menu.addAction("Clear")
-        menu.addSeparator()
-        stop_action = menu.addAction("Stop Simulation")
-        menu.addSeparator()
-        open_output_action = menu.addAction("Open Normal Output Text")
-        edit_rules_action = menu.addAction("Edit Production Rule File")
-        edit_data_action = menu.addAction("Edit Data Output File")
-        open_folder_action = menu.addAction("Open Project Folder")
-        menu.addSeparator()
-        quit_action = menu.addAction("Quit Application")
-
-        # Decide Which Items Are Enabled
-
-        find_action.setEnabled(not running)
-        clear_action.setEnabled(not running)
-        open_output_action.setEnabled(not running)
-        open_folder_action.setEnabled(device_file_exists and not running)
-
-        edit_data_action.setEnabled(sim_setup and not running)
-        edit_rules_action.setEnabled(sim_setup and not running)
-
-        copy_action.setEnabled(
-            (
-                    self.sel_anchor is not None and self.sel_caret is not None
-            )
-            and not running
-        )
-
-        stop_action.setEnabled(
-            sim_setup and (running or self._parent.run_state == PAUSED)
-        )
-
-        # process menu
-        action = menu.exec(
-            self.parent().mapToGlobal(
-                event if isinstance(event, QPoint) else event.pos()
-            )
-        )
-
-        if action == copy_action:
-            self.copy_selected_text()
-        elif action == select_all_action:
-            self.select_all()
-        elif action == find_action:
-            self.show_search_dialog()
-        elif action == clear_action:
-            self.clear()
-        elif action == stop_action:
-            self._parent.halt_simulation()
-        elif action == open_output_action:
-            self._parent.launchEditor(which_file="NormalOut")
-        elif action == edit_rules_action:
-            self._parent.launchEditor(which_file="RuleFile")
-        elif action == edit_data_action:
-            self._parent.launchEditor(which_file="DataFile")
-        elif action == open_folder_action:
-            operating_system = platform.system()
-            if operating_system == "Linux":
-                open_cmd = "xdg-open"
-            elif operating_system == "Darwin":
-                open_cmd = "open"
-            elif operating_system == "Windows":
-                open_cmd = "explorer"
-            else:
-                open_cmd = ""
-                msg = f"ERROR: Opening project folder when OS=='{operating_system}' is not yet implemented!"
-                try:
-                    Exception_out(msg)
-                except Exception:
-                    print(msg)
-            if open_cmd and config.device_cfg.device_file:
-                cmd = [
-                    open_cmd,
-                    str(Path(config.device_cfg.device_file).resolve().parent),
-                ]
-                subprocess.run(args=cmd)
-        elif action == quit_action:
-            # self._parent.halt_simulation()
-            self._parent.close()
-
-
 if __name__ == "__main__":
     from qtpy.QtWidgets import QMainWindow
 
@@ -758,7 +748,7 @@ if __name__ == "__main__":
                 self.view.write(aline)
                 self.counter += 1
             except Exception as e:
-                extra = f' ({e})' if e else ''
+                extra = f" ({e})" if e else ""
                 self.timer.stop()
                 self.view.write(
                     f"Time Elapsed: {timeit.default_timer() - self.start:0.5f} sec.{extra}"

@@ -3,20 +3,13 @@
 ################################################################################
 ## Form generated from reading UI file 'mainui.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.1
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide6.QtCore import (
-    QCoreApplication,
-    QMetaObject,
-    QRect,
-)
-from PySide6.QtGui import (
-    QAction,
-    QFont,
-)
+from PySide6.QtCore import QCoreApplication, QMetaObject, QRect
+from PySide6.QtGui import QAction, QFont
 from PySide6.QtWidgets import QGridLayout, QMenu, QMenuBar, QStatusBar, QWidget
 
 
@@ -248,7 +241,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName("menubar")
-        self.menubar.setGeometry(QRect(0, 0, 638, 34))
+        self.menubar.setGeometry(QRect(0, 0, 638, 27))
         self.menubar.setFont(font1)
         self.menuFiles = QMenu(self.menubar)
         self.menuFiles.setObjectName("menuFiles")
@@ -267,9 +260,6 @@ class Ui_MainWindow(object):
         self.menuTests.setFont(font1)
         self.menuWindows = QMenu(self.menubar)
         self.menuWindows.setObjectName("menuWindows")
-        self.menuSearch = QMenu(self.menubar)
-        self.menuSearch.setObjectName("menuSearch")
-        self.menuSearch.setFont(font1)
         self.menuTools = QMenu(self.menubar)
         self.menuTools.setObjectName("menuTools")
         self.menuTools.setEnabled(True)
@@ -280,7 +270,6 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.menubar.addAction(self.menuFiles.menuAction())
-        self.menubar.addAction(self.menuSearch.menuAction())
         self.menubar.addAction(self.menuSettings.menuAction())
         self.menubar.addAction(self.menuRun.menuAction())
         self.menubar.addAction(self.menuWindows.menuAction())
@@ -342,9 +331,6 @@ class Ui_MainWindow(object):
         self.menuWindows.addAction(self.actionClear_Output_Windows)
         self.menuWindows.addSeparator()
         self.menuWindows.addAction(self.actionReset_Layout)
-        self.menuSearch.addAction(self.actionFind)
-        self.menuSearch.addAction(self.actionFindNext)
-        self.menuSearch.addAction(self.actionFindPrevious)
         self.menuTools.addAction(self.actionSchematicTool)
         self.menuTools.addAction(self.actionBrainTool)
         self.menuTools.addAction(self.actionRuleFlowTool)
@@ -536,7 +522,6 @@ class Ui_MainWindow(object):
         self.menuWindows.setTitle(
             QCoreApplication.translate("MainWindow", "Windows", None)
         )
-        self.menuSearch.setTitle(QCoreApplication.translate("MainWindow", "Find", None))
         self.menuTools.setTitle(
             QCoreApplication.translate("MainWindow", "SimTools", None)
         )

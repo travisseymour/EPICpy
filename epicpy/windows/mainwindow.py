@@ -27,7 +27,7 @@ from itertools import chain
 from textwrap import dedent
 
 from qtpy.QtCore import QRect, QEvent
-from qtpy.QtGui import QHideEvent, QShowEvent, QIcon
+from qtpy.QtGui import QHideEvent, QShowEvent, QIcon, QShortcut
 from qtpy.QtWidgets import QDockWidget, QWidget, QSizePolicy
 
 from epicpy import EPICPY_DEBUG
@@ -262,18 +262,15 @@ class MainWin(QMainWindow):
         self.default_middle_custom_settings: dict = {}
 
         # add central widget and setup
-        self.normalPlainTextEditOutput = CustomLargeTextView(
-            parent=self, enable_shortcuts=False, name='normal'
-        )
+        self.normalPlainTextEditOutput = CustomLargeTextView(parent=self, name="normal")
         self.normalPlainTextEditOutput.setContextMenuPolicy(
             Qt.ContextMenuPolicy.CustomContextMenu
         )
-        self.normalPlainTextEditOutput.setObjectName(
-            "MainWindow"
-        )  # "plainTextEditOutput"
         self.normalPlainTextEditOutput.customContextMenuRequested.connect(
             self.normalPlainTextEditOutput.contextMenuEvent
         )
+        self.normalPlainTextEditOutput.setObjectName("MainWindow")
+
         self.normal_out_view = EPICTextViewCachedWrite(
             text_widget=self.normalPlainTextEditOutput
         )
@@ -294,11 +291,11 @@ class MainWin(QMainWindow):
 
         # to avoid having to load any epic stuff in tracewindow.py, we go ahead and
         # connect Trace_out now
-        self.tracePlainTextEditOutput = LargeTextView(self, name='trace')
+        self.tracePlainTextEditOutput = LargeTextView(self, name="trace")
+        self.tracePlainTextEditOutput.setObjectName("TraceWindow")
         self.tracePlainTextEditOutput.setContextMenuPolicy(
             Qt.ContextMenuPolicy.CustomContextMenu
         )
-        self.tracePlainTextEditOutput.setObjectName("TraceWindow")
         self.tracePlainTextEditOutput.customContextMenuRequested.connect(
             self.tracePlainTextEditOutput.contextMenuEvent
         )
@@ -416,9 +413,9 @@ class MainWin(QMainWindow):
         self.actionReset_Layout: Optional[QAction] = None
 
         # Find Menu Actions
-        self.actionFind: Optional[QAction] = None
-        self.actionFindNext: Optional[QAction] = None
-        self.actionFindPrevious: Optional[QAction] = None
+        self.actionFind: Optional[QShortcut] = None
+        self.actionFindNext: Optional[QShortcut] = None
+        self.actionFindPrevious: Optional[QShortcut] = None
 
         # Tools Menu Actions
         self.actionRuleFlowTool: Optional[QAction] = None
@@ -941,13 +938,13 @@ class MainWin(QMainWindow):
 
         self.closing = True
 
-        def debug_print(txt:str, alt_txt:str=''):
+        def debug_print(txt: str, alt_txt: str = ""):
             if EPICPY_DEBUG:
                 print(txt)
             elif alt_txt:
                 print(alt_txt)
 
-        debug_print("[DEBUG] Shutting Down EPICpy:", 'Shutting Down EPICpy...')
+        debug_print("[DEBUG] Shutting Down EPICpy:", "Shutting Down EPICpy...")
         debug_print("---------------------")
 
         debug_print("1. Stopping simulation...")
@@ -988,7 +985,9 @@ class MainWin(QMainWindow):
         except Exception:
             debug_print("\tWARNING: Unable to cleanly release views from model.")
 
-        debug_print("8. Pausing and stopping simulation -- seems redundant, halted above...")
+        debug_print(
+            "8. Pausing and stopping simulation -- seems redundant, halted above..."
+        )
         if self.simulation:
             try:
                 self.simulation.pause_simulation()
@@ -1031,8 +1030,7 @@ class MainWin(QMainWindow):
         debug_print("10. Closing application window.")
         super().closeEvent(event)
 
-        print('Done.')
-
+        print("Done.")
 
     @staticmethod
     def update_theme():
@@ -2092,10 +2090,18 @@ class MainWin(QMainWindow):
     # Window Utils
     # =============================================
 
-    def current_editor(self, x=None)->Optional[LargeTextView]:
+    def which_editor(self) -> LargeTextView:
+        if QApplication.focusWidget().name == "trace":
+            return self.tracePlainTextEditOutput
+        else:
+            return self.normalPlainTextEditOutput
+
+    def current_editor(self) -> Optional[LargeTextView]:
         candidates = (self.normalPlainTextEditOutput, self.tracePlainTextEditOutput)
         fw = QApplication.focusWidget()
         if fw in candidates:
+            print(f"Current Editor: {fw}")
             return fw
         else:
+            print("Current Editor: None")
             return None
