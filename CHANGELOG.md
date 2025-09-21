@@ -3,6 +3,13 @@
 
 ---
 
+## VERSION: 2025.9.21.1
+
+1. **UPDATED**: Scrolling (vert and horz), selection, and copy work more naturally in output windows. These tradoff a tiny bit of speed.
+2. **ADDED**: Search in output windows highlight all matches while also moving to the next (or prev) occurrence. 
+3. **FIXED**: Find/FindNext/FindPrev key combinations now work and are sensitive to which output window is focused.
+4. **FIXED**: Proper setup for debug flag (development)
+
 ---
 
 ## VERSION: 2025.9.18.1
