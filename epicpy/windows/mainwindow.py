@@ -46,7 +46,7 @@ from epicpy.utils.apputils import (
 from epicpy.utils.resource_utils import get_resource
 from epicpy.utils.defaultfont import get_default_font
 from epicpy.utils.update_utils import update_available
-from epicpy.widgets.largetextview import LargeTextView, CustomLargeTextView
+from epicpy.widgets.largetextview import LargeTextView
 from epicpy.windows import mainwindow_menu
 from epicpy.windows.appstyle import set_dark_style, set_light_style
 from epicpy.windows.mainwindow_utils import (
@@ -262,7 +262,7 @@ class MainWin(QMainWindow):
         self.default_middle_custom_settings: dict = {}
 
         # add central widget and setup
-        self.normalPlainTextEditOutput = CustomLargeTextView(parent=self, name="normal")
+        self.normalPlainTextEditOutput = LargeTextView(self, name="normal")
         self.normalPlainTextEditOutput.setContextMenuPolicy(
             Qt.ContextMenuPolicy.CustomContextMenu
         )

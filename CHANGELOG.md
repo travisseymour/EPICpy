@@ -3,7 +3,7 @@
 
 ---
 
-## VERSION: 2025.9.21.1
+## VERSION: 2025.9.21.2
 
 1. **UPDATED**: Scrolling (vert and horz), selection, and copy work more naturally in output windows. These tradoff a tiny bit of speed.
 2. **ADDED**: Search in output windows highlight all matches while also moving to the next (or prev) occurrence. 
