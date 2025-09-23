@@ -26,43 +26,6 @@ if EPICPY_DEBUG:
 
 _console = Console()
 
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# @@@@@@@@@@@@@@@@@@@  PREVENT SILENT CRASH @@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-# Crash/exception logging (Windows native crashes included)
-
-
-def _install_crash_logging(log_path: str = None) -> None:
-    if log_path is None:
-        # per-Python/per-version log inside cache root
-        base = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~\\AppData\\Local")
-        log_path = str(
-            Path(base)
-            / "epicpy"
-            / "epiclib"
-            / f"crash-py{sys.version_info.major}{sys.version_info.minor}.log"
-        )
-    os.makedirs(os.path.dirname(log_path), exist_ok=True)
-    f = open(log_path, "w", buffering=1, encoding="utf-8")
-    faulthandler.enable(file=f, all_threads=True)
-    # Ctrl+Break prints stacks on Windows
-    try:
-        faulthandler.register(getattr(signal, "SIGBREAK"), file=f, all_threads=True)
-    except Exception:
-        pass
-
-    # Also capture uncaught Python exceptions
-    def _excepthook(t, e, tb):
-        import traceback
-
-        traceback.print_exception(t, e, tb, file=f)
-
-    sys.excepthook = _excepthook
-
-
-_install_crash_logging()
-
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # @@@@@@@@@@@@@@@@@@@  SETUP VERSION ACCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@
