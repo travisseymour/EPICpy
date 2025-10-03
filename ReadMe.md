@@ -35,26 +35,6 @@ Project Sources
 
 ---
 
-<mark>IMPORTANT NOTICE<br>Monday March 24, 2025</mark>
-As of version 2025.3.25.1, those who have existing copies of the epicpydevice folder, will need to update one of its files:
-
-- Open epicpydevice/epicpy_device_base.py in a text editor.
-- Replace the existing definition of the `write` method with this one:
-
-```python
-def write(self, text: str):
-    """
-    Device write method for text that adds newlines properly. 
-    This will be dynamically added to the device object after 
-    it has been loaded and instantiated.
-    """
-    self.parent.write(text, copy_to_trace=True)
-```
-
----
-
-
-
 ### EPCpy Installation
 
 #### System Requirements for EPICpy
@@ -62,7 +42,7 @@ def write(self, text: str):
 - [git](https://git-scm.com/): Git is a distributed version control system. 
   - **Linux**: You almost certainly have this. Otherwise run `sudo apt install git`.
   - **Windows**: Use the installer at https://git-scm.com/
-  - **MacOS**: Use the installer at https://git-scm.com/, or run `xcode-select --install`, or install [Homebrew](https://brew.sh/) and then run `brew install git`.
+  - **MacOS**: Use the installer at https://git-scm.com/, or run `xcode-select --install`, or **[RECOMMENDED]** install [Homebrew](https://brew.sh/) and then run `brew install git`.
 
 - [uv](https://docs.astral.sh/uv/): uv is a Python package and project manager.
 - [xcb](https://xcb.freedesktop.org/): Library implementing the client-side of the X11 display server protocol. 
@@ -70,31 +50,12 @@ def write(self, text: str):
 
 #### Python Requirements for EPICpy
 
-- EPICpy requires Python 3.10 (Linux and MacOS) or Python 3.9 (Windows). You will need the path to the appropriate version of Python. 
-  - run `uv python list` and copy the path to the Python version you need, e.g., on my Linux install, I can use `/usr/bin/python3.10`.
-  - If you don't see an entry for Python 3.10 (Linux & MacOS) or Python 3.9, you can install the version you need:
-    - `uv python install 3.10` (Linux & MacOS) or `uv python install 3.9` (Windows), and then run `uv python list` to jot down the path to Python.
+EPICpy requires Python 3.10-3.13 and can be installed on Macos 11+ (Intel or Arm), Linux, and Microsoft Windows version 10+.
 
 #### Install EPICpy
 
-On Linux & MacOS:
-
 ```bash
-uv tool install git+https://www.github.com/travisseymour/EPICpy.git --python [PATH_TO_YOUR_PYTHON_310]
+# Feel free to change 3.12 to 3.10, 3.11, or 3.13 if preferred
+# If you system lacks the version you specify, uv will automatically install the specified version.
+uv tool install git+https://www.github.com/travisseymour/EPICpy.git --python 3.12
 ```
-   
-On Windows:
-
-```bash
-uv tool install git+https://www.github.com/travisseymour/EPICpy.git --python [PATH_TO_YOUR_PYTHON_39]
-```
- 
-For example,
-
-```bash
-# Linux or MacOS
-uv tool install git+https://www.github.com/travisseymour/EPICpy.git --python /usr/bin/python3.10
-# Windows
-uv tool install git+https://www.github.com/travisseymour/EPICpy.git --python AppData\Local\Programs\Python\Python310\python.exe
-```
-

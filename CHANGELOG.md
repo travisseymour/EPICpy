@@ -3,6 +3,12 @@
 
 ---
 
+## VERSION: 2025.10.3.1
+
+1. **UPDATED**: Updated Readme.md with new much simpler install instructions, including expanded Python version support (3.10-3.13) on all platforms.
+
+---
+
 ## VERSION: 2025.9.21.2
 
 1. **UPDATED**: Scrolling (vert and horz), selection, and copy work more naturally in output windows. These tradoff a tiny bit of speed.
