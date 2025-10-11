@@ -66,6 +66,7 @@ class AppConfig:
     )
     text_editor: str = ""  # defaults to BUILT-IN editor
     config_file: str = ""
+    show_full_error_trace: bool = False
 
     # will hold temporary config data, will not be saved to config file
     current: dict = field(default_factory=dict)

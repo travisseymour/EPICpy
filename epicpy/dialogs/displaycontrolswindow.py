@@ -75,6 +75,9 @@ class DisplayControlsWin(QDialog):
         self.ui.checkBoxShowModelParameters.setChecked(
             config.device_cfg.describe_parameters
         )
+        self.ui.checkBoxShowFullTraceback.setChecked(
+            config.app_cfg.show_full_error_trace
+        )
 
     def clicked_cancel_button(self):
         self.ok = False
@@ -104,4 +107,8 @@ class DisplayControlsWin(QDialog):
         config.device_cfg.describe_parameters = (
             self.ui.checkBoxShowModelParameters.isChecked()
         )
+        config.app_cfg.show_full_error_trace = (
+            self.ui.checkBoxShowFullTraceback.isChecked()
+        )
+
         self.hide()

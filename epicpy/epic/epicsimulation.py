@@ -36,7 +36,7 @@ from epicpy.constants.emoji import (
     e_bangbang,
     e_boxed_ok,
 )
-from epicpy.utils.apputils import unpack_param_string
+from epicpy.utils.apputils import unpack_param_string, rich_traceback_str
 
 from epicpy.epic.encoderpassthru import NullVisualEncoder, NullAuditoryEncoder
 from epicpy.epic.epicpyexception import EPICpyException
@@ -870,6 +870,10 @@ class Simulation:
             msg = (
                 f"\nERROR: Run of {self.device.rule_filename} Stopped With Error:\n{e}"
             )
+
+            if config.app_cfg.show_full_error_trace:
+                msg += f"\n{rich_traceback_str(e)}\n"
+
             self.halt_simulation("error", msg)
             return
 

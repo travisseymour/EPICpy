@@ -53,6 +53,9 @@ from epicpy.utils.resource_utils import get_resource
 OS = platform.system()
 from dataclasses import dataclass as base_dataclass
 
+from rich.console import Console
+from rich.traceback import Traceback
+
 
 class Point:
     """
@@ -499,6 +502,13 @@ def extract_from_zip(
                 dest_file.parent.mkdir(parents=True, exist_ok=True)
                 with zf.open(member) as source, open(dest_file, "wb") as target_file:
                     target_file.write(source.read())
+
+
+def rich_traceback_str(e, *, show_locals=False, width=100):
+    tb = Traceback.from_exception(type(e), e, e.__traceback__, show_locals=show_locals)
+    console = Console(record=True, width=width)
+    console.print(tb)
+    return console.export_text()  # plain text, no ANSI
 
 
 if __name__ == "__main__":

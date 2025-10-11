@@ -8,10 +8,7 @@ from importlib.metadata import (
 
 from typing import Optional
 import os
-import sys
 from pathlib import Path
-import faulthandler
-import signal
 
 from rich.console import Console
 
