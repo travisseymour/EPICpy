@@ -5,7 +5,7 @@
 # E.g.:
 # make build
 
-.PHONY: help install build clean clean-pycache format
+.PHONY: help install build clean clean-pycache format device-format device-reset
 
 help:
 	clear

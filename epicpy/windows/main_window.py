@@ -584,8 +584,12 @@ class MainWin(LayoutMixin, QMainWindow):
                 self.tabifyDockWidget(self.dockNormal, self.dockTrace)
                 self.dockInfo.raise_()
 
-                # Sync parallel runs checkbox with loaded config
+                # Sync parallel runs checkbox with loaded config.
+                # Block signals to avoid the toggled handler writing the same value back
+                # to config (and triggering a redundant disk save).
+                self.actionAllow_Parallel_Runs.blockSignals(True)
                 self.actionAllow_Parallel_Runs.setChecked(config.device_cfg.allow_parallel_runs)  # type: ignore[attr-defined]
+                self.actionAllow_Parallel_Runs.blockSignals(False)
 
                 # Track this device in recent devices list
                 self._add_recent_device(device_file)
@@ -661,7 +665,10 @@ class MainWin(LayoutMixin, QMainWindow):
             param_string = self.simulation.device.get_parameter_string()
 
         # Check for permutations in parameter string
-        if parallel and config.device_cfg.allow_parallel_runs and has_permutations(param_string):
+        # Use the checkbox state directly as the source of truth for the parallel decision,
+        # rather than config.device_cfg.allow_parallel_runs which can get out of sync.
+        allow_parallel = parallel and self.actionAllow_Parallel_Runs.isChecked()
+        if allow_parallel and has_permutations(param_string):
             self._run_parallel(param_string)
             return
 

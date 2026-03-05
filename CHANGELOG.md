@@ -1,4 +1,3 @@
-
 # EPICpy Changelog
 
 ---
@@ -24,6 +23,7 @@
 17. **FIXED**: View windows (visual and auditory) updated for improved rendering and consistent behavior.
 18. **UPDATED**: Run settings UI updated with additional options.
 19. **UPDATED**: Logging and display controls dialogs updated.
+20. **FIXED**: Parallel simulation mode toggle now consistently respected -- previously there were some oddities.
 
 ---
 
@@ -51,7 +51,7 @@
 ## VERSION: 2025.9.21.2
 
 1. **UPDATED**: Scrolling (vert and horz), selection, and copy work more naturally in output windows. These tradoff a tiny bit of speed.
-2. **ADDED**: Search in output windows highlight all matches while also moving to the next (or prev) occurrence. 
+2. **ADDED**: Search in output windows highlight all matches while also moving to the next (or prev) occurrence.
 3. **FIXED**: Find/FindNext/FindPrev key combinations now work and are sensitive to which output window is focused.
 4. **FIXED**: Proper setup for debug flag (development)
 
@@ -59,7 +59,7 @@
 
 ## VERSION: 2025.9.18.1
 
-1. **FIXED**: Problem with search function and line visibility in text view widget. 
+1. **FIXED**: Problem with search function and line visibility in text view widget.
 
 ## VERSION: 2025.9.16.1
 
@@ -71,15 +71,19 @@
 
 1. **CHANGED**: Internal change to use epliclib from an importable module (epiclibcpp) instead of trying to build and include each version myself. Users may hopefully experience this as more consistent behavior across updates for all operating systems. EPICpy maintainer gets to use github actions to build the entire cross-platform support matrix instead of compiling all variants of epiclib manually.
 2. **CHANGED**: EPICpy now supports Python version 3.10-3.13 for all operating systems. However, it is recommended you use this for installation:
+
 ```bash
 uv tool uninstall epicpy
 uv tool install git+https://www.github.com/travisseymour/EPICpy.git --python 3.13
 ```
+
 3. **CHANGED**: EPICpy 2025.9.10.1+ requires an updated version of the epicpydevice folder (sits alongside your device folders). You can obtain it from an updated copy of the default devices:
+
 ```bash
 git clone https://www.github.com/travisseymour/EPICpyDevices
 ```
-4. **FIXED**: All issues associated with distributing and unpacking libraries should now be moot. 
+
+4. **FIXED**: All issues associated with distributing and unpacking libraries should now be moot.
 
 5. **CHANGED**: Now using ruff for code checking and formatting, the black formatter has been removed from the project requirements.
 
@@ -192,7 +196,7 @@ git clone https://www.github.com/travisseymour/EPICpyDevices
 2. **FIXED**: Problems with test runner.
 3. **UPDATED**: Overhauled User Interface. Instead of multiple windows, uses a unified dockable interface.
 4. Added code to create app launcher following first load.
-5. Allows launcher cleanup via "cleanup" argument on commandline. 
+5. Allows launcher cleanup via "cleanup" argument on commandline.
 6. Added epicpydevice notice to StatsOutput.
 
 ---
@@ -203,12 +207,10 @@ git clone https://www.github.com/travisseymour/EPICpyDevices
 
 ---
 
-
 ## VERSION: 2025.3.11.2
 
 1. **CHANGED**: Preferring Sans-Serif system font default after issues with monospace rendering on some systems.
 2. **FIXED**: Problem with menu access to output window text search functionality (keyboard was already working).
-
 
 ---
 
@@ -217,15 +219,14 @@ git clone https://www.github.com/travisseymour/EPICpyDevices
 1. **FIXED**: Problem with view background images was fixed.
 2. **ADDED**: added ParameterString tool-tip in run-settings dialog.
 
-
 ---
 
 ## VERSION: 2025.2.26.4
 
 1. **ADDED**: Ability to copy current line of output window.
 2. **FIXED**: Fixed bugs in custom textedit used in output windows.
-3. **UPDATE**: Updated device loader to a more secure method. 
-4. **FIXED**: Started moving broken text boxes. 
+3. **UPDATE**: Updated device loader to a more secure method.
+4. **FIXED**: Started moving broken text boxes.
 5. **FIXED**: Remove redundant timer calls.
 
 ---
@@ -275,14 +276,15 @@ git clone https://www.github.com/travisseymour/EPICpyDevices
 
 ## VERSION: 2025.2.6.2
 
-1. **FIXED**: epiccoder fallback now working on Linux and MacOS (no test on Windows). If config entry "text_editor" is either empty or contains "default" __and__ epiccoder has been installed, then epiccoder is used for text and prs editing. Otherwise, EPICpy attempts to launch the sytem default (if set).
+1. **FIXED**: epiccoder fallback now working on Linux and MacOS (no test on Windows). If config entry "text_editor" is either empty or contains "default" **and** epiccoder has been installed, then epiccoder is used for text and prs editing. Otherwise, EPICpy attempts to launch the sytem default (if set).
 2. **CHANGED**: default font family is monospace, not sans-serif
 3. **FIXED**: fixed extention fallback when saving stats window content to external file.
+
 ---
 
 ## VERSION: 2025.2.5.3
 
-1. **CHANGED**: When running external apps to edit simulation text files; a) if app path is set  in global config for text, it is used. b) If noting is set, but epiccoder is installed, it is used. c) otherwise, default app for text is called. d) for data file editing, default app is always called.
+1. **CHANGED**: When running external apps to edit simulation text files; a) if app path is set in global config for text, it is used. b) If noting is set, but epiccoder is installed, it is used. c) otherwise, default app for text is called. d) for data file editing, default app is always called.
 2. **FIXED**: Removed all emoji and ascii_box for windows due to corresponding issue exporting text from output windows. Will try to recover this functionality on windows shortly.
 
 ---
@@ -290,25 +292,20 @@ git clone https://www.github.com/travisseymour/EPICpyDevices
 ## VERSION: 2025.2.5.2
 
 1. **FIXED**: Encoding error when saving output windows to text on MacOS.
-2. **CHANGED**: Better cross os control of font and font size changes across ui. 
+2. **CHANGED**: Better cross os control of font and font size changes across ui.
 3. **CHANGED**: Faster lru_cache behavior for flywheel patterns.
 
 ---
 
 ## VERSION: 2025.1.11.4
 
-1. **FIXED**: There was a syntax error in setup.py, fixed. 
+1. **FIXED**: There was a syntax error in setup.py, fixed.
 2. **CHANGED**: Re-added pingouin to see if this was part of the problem addressed by 2025.1.9.1
 3. **FIXED**: Fixed bug rated to issues with older pinned project requirements resulting in tying.Self error.
-4. **FIXED**: Issue on older MacOS versions where normal output window context window glitched (exec/exec_ error).
+4. **FIXED**: Issue on older MacOS versions where normal output window context window glitched (exec/exec\_ error).
 
 ---
 
 ## VERSION: 2025.1.8.5
 
 1. **FIXED**: epiclib library not being copied properly on MacOS and Windows. Using more robust scheme for referencing app resources when packaged.
-
-
-
-
-

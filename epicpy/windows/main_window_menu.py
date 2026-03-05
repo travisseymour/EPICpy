@@ -24,6 +24,8 @@ from functools import partial
 from qtpy.QtGui import QAction
 from qtpy.QtWidgets import QMenu
 
+from epicpy.utils import config
+
 
 def setup_menu(window):
     menubar = window.menuBar()
@@ -127,7 +129,7 @@ def setup_menu(window):
 
     window.actionAllow_Parallel_Runs = QAction("Allow Parallel Runs", window)
     window.actionAllow_Parallel_Runs.setCheckable(True)
-    window.actionAllow_Parallel_Runs.setChecked(True)
+    window.actionAllow_Parallel_Runs.setChecked(config.device_cfg.allow_parallel_runs)
     run_menu.addAction(window.actionAllow_Parallel_Runs)
     run_menu.addSeparator()
 
