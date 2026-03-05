@@ -1,3 +1,23 @@
+"""
+This file is part of the EPICpy source code. EPICpy is a tool for simulating
+human performance tasks using the EPIC computational cognitive architecture
+(David Kieras and David Meyer 1997a) using the Python programming language.
+Copyright (C) 2022 Travis L. Seymour, PhD
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import shutil
 import sys
 from pathlib import Path
@@ -8,9 +28,7 @@ def get_app_path(app_name: str) -> str:
     """Finds the installed application path using shutil.which()."""
     app_path = shutil.which(app_name)
     if not app_path:
-        print(
-            f"Post-Install Error: '{app_name}' not found. The command 'uv tool install {app_name}' may have failed."
-        )
+        print(f"Post-Install Error: '{app_name}' not found. The command 'uv tool install {app_name}' may have failed.")
         sys.exit(1)
     return app_path
 
@@ -139,9 +157,7 @@ def remove_macos_app_launcher(app_name: str):
         #     f"You can remove it manually by dragging it to the Trash.\n",
         #     QMessageBox.StandardButton.Ok,
         # )
-        print(
-            "\n\nLauncher Application Removal Failed. You can remove EPICpy.app manually by dragging it to the Trash."
-        )
+        print("\n\nLauncher Application Removal Failed. You can remove EPICpy.app manually by dragging it to the Trash.")
 
     # else:
     #     QMessageBox.information(

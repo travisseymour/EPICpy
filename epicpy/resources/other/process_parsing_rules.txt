@@ -1,0 +1,55 @@
+# Motor Modality Status Changes
+# -----------------------------
+Manual Modality from Free to Busy = FLASH ManualMotorProcessor
+Ocular Modality from Free to Busy = FLASH OcularMotorProcessor
+Vocal Modality from Free to Busy = FLASH VocalMotorProcessor
+
+Manual Modality from Busy to Free = OFF ManualMotorProcessor
+Ocular Modality from Busy to Free = OFF OcularMotorProcessor
+Vocal Modality from Busy to Free = OFF VocalMotorProcessor
+
+# Visual Events
+# -------------
+Visual_physical_store = FLASH Screen
+Human:Eye = FLASH Eye
+Visual_sensory_store = FLASH VisualProcessor
+Visual_perceptual_store = FLASH VisualProcessor
+
+# Auditory Events
+# ---------------
+Auditory_physical_store = FLASH Speaker
+Human:Ear = FLASH Ear
+Auditory_sensory_store = FLASH AuditoryProcessor
+Auditory_perceptual_store = FLASH AuditoryProcessor
+
+# Cognitive Events
+# ----------------
+Human:Cognitive, update = FLASH WorkingMemory
+
+# Manual Motor Events
+# ---------------------
+Human:Cognitive, add clause, Manual, Punch, Started = ON Keyboard, ON Hands
+Human:Cognitive, add clause, Manual, Keystroke, Started = ON Keyboard, ON Hands
+Human:Cognitive, add clause, Manual, Point, Started = ON Keyboard, ON Hands
+Human:Cognitive, add clause, Manual, Ply, Started = ON Joystick, ON Hands
+
+Human:Cognitive, add clause, Manual, Punch, Finished = OFF Keyboard, OFF Hands
+Human:Cognitive, add clause, Manual, Keystroke, Finished = OFF Keyboard, OFF Hands
+Human:Cognitive, add clause, Manual, Point, Finished = OFF Keyboard, OFF Hands
+Human:Cognitive, add clause, Manual, Ply, Finished = OFF Joystick, OFF Hands
+
+Human:Cognitive, add clause, Manual, Finished = ON TactileProcessor
+Human:Cognitive, delete clause, Manual, Finished = OFF TactileProcessor
+
+# Vocal Motor Events
+# ---------------------
+
+# >>>>>>>>>>>>>>>>>>>>>>>>I Just Ran This...Not Seeing Mic Flash??<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+Human:Vocal = FLASH VocalMotorProcessor
+Human:Vocal:Execution initiated = ON Mic, ON Mouth
+Human:Vocal, Motor_Movement_Complete_event = OFF Mic, OFF Mouth
+
+# These Require You To Log Trace AND Normal
+# -----------------------------------------
+Cycle, Rules fired: = FLASH ProductionMemory, FLASH ProductionRuleInterpreter

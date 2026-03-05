@@ -1,30 +1,43 @@
-import sys
-import timeit
-from typing import Set
+"""
+This file is part of the EPICpy source code. EPICpy is a tool for simulating
+human performance tasks using the EPIC computational cognitive architecture
+(David Kieras and David Meyer 1997a) using the Python programming language.
+Copyright (C) 2022 Travis L. Seymour, PhD
 
-from datetime import datetime
-from pathlib import Path
-from textwrap import dedent
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-import networkx as nx
-from qtpy.QtGui import QFont, QColor, QPen, QGuiApplication
-from qtpy.QtWidgets import (
-    QApplication,
-    QWidget,
-    QVBoxLayout,
-    QPlainTextEdit,
-    QMainWindow,
-)
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-from matplotlib import pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-
-from qtpy.QtSvgWidgets import QSvgWidget
-from qtpy.QtCore import QByteArray
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
 
 import shutil
+import timeit
+from collections.abc import Iterable
+from textwrap import dedent
+from typing import Set
 
+import networkx as nx
 from epiclibcpp.epiclib.output_tee_globals import Exception_out
+from matplotlib import pyplot as plt
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from qtpy.QtCore import QByteArray
+from qtpy.QtGui import QColor, QGuiApplication, QPen
+from qtpy.QtSvgWidgets import QSvgWidget
+from qtpy.QtWidgets import (
+    QMainWindow,
+    QVBoxLayout,
+    QWidget,
+)
+
+from epicpy.widgets.mem_large_text_view import MemLargeTextView
 
 # Global flag: is Graphviz available?
 HAVE_GRAPHVIZ = False
@@ -44,7 +57,8 @@ else:
 WHICH_NETWORKX = 0  # in (0=directed_one_level, 1=directed_multi_level)
 
 """
-Create an EPIC rule graph that updates as you run the simulation.
+Create an EPIC rule graph based on the trace output.
+NOTE: for now, I think we're using the content of the Normal Output Window, not the Trace Output Window.
 """
 
 import re
@@ -53,7 +67,7 @@ from typing import Dict, Tuple
 
 # ~.08 sec
 class RegexScheduler(object):
-    FIRE_PATTERN = re.compile(r"^\*\*\* Fire: (.+)$", re.M)
+    FIRE_PATTERN = re.compile(r"^\*\*\* Fire: (.+)$")
 
     def __init__(self):
         self.nodes: Dict[str, int] = {}
@@ -66,16 +80,18 @@ class RegexScheduler(object):
         rule = rule.replace("_", "\n")
         return rule.replace("visualresponse", "visual\nresponse")
 
-    def process_event_text(self, text: str):
+    def process_lines(self, lines: Iterable[str]):
         """
-        Find all rule firings with regex, then build nodes/edges.
-        Much faster for large texts than line-by-line scanning.
+        Find all rule firings by scanning lines, then build nodes/edges.
+        Works directly with an iterable (e.g., deque) to avoid copying.
         """
-        # start = timeit.default_timer()
-        matches = self.FIRE_PATTERN.finditer(text)
-        rules = [self._normalize_rule(m.group(1)) for m in matches]
+        for line in lines:
+            match = self.FIRE_PATTERN.match(line)
+            if not match:
+                continue
 
-        for rule in rules:
+            rule = self._normalize_rule(match.group(1))
+
             if not self.nodes:
                 # First rule starts subset 1
                 self.nodes[rule] = 1
@@ -88,7 +104,7 @@ class RegexScheduler(object):
             # Always add edge from last_rule → rule
             self.edges.add((self.last_rule, rule))
             self.last_rule = rule
-        # print(f'Event text process took {timeit.default_timer()-start:0.5f} sec.')
+
         self.redraw = True
 
     def display(self):
@@ -103,7 +119,7 @@ class OrigScheduler(object):
         self.last_rule: str = ""
         self.redraw: bool = False
 
-    def process_event_text(self, text: str):
+    def process_lines(self, lines: Iterable[str]):
         """
         looking for rule firings, e.g.:
         *** Fire: Identify_steeringwheel
@@ -111,10 +127,10 @@ class OrigScheduler(object):
         Creates a unique list of edges by combining rules with their predecessor
         """
         start = timeit.default_timer()
-        for event_text in (aline.strip() for aline in text.splitlines()):
-            _event_text = event_text.strip()
-            if _event_text.startswith("*** Fire: "):
-                rule = _event_text.split(": ")[-1]
+        for line in lines:
+            line = line.strip()
+            if line.startswith("*** Fire: "):
+                rule = line.split(": ")[-1]
                 rule = rule.replace("_", "\n")
                 rule = rule.replace("visualresponse", "visual\nresponse")
 
@@ -143,15 +159,15 @@ class OrigScheduler(object):
 
 
 class RuleFlowWindow(QMainWindow):
-    def __init__(self, trace_textedit: QPlainTextEdit):
+    def __init__(self, trace_widget: MemLargeTextView):
         super(RuleFlowWindow, self).__init__()
 
-        self.trace_textedit: QPlainTextEdit = trace_textedit
+        self.trace_widget: MemLargeTextView = trace_widget
 
         """ Setup GUI """
 
-        self.font = QFont()
-        self.font.setPointSize(16)
+        # self.font = QFont()
+        # self.font.setPointSize(16)
         self.pen = QPen(QColor("black"))
         self.scheduler = RegexScheduler()
 
@@ -168,35 +184,9 @@ class RuleFlowWindow(QMainWindow):
 
         self.center_me()
 
-    #     # Debounce timer for resize re-renders
-    #     self._resize_timer = QTimer(self)
-    #     self._resize_timer.setSingleShot(True)
-    #     self._resize_timer.timeout.connect(self._on_resize_timeout)
-    #
-    # def resizeEvent(self, event):
-    #     super().resizeEvent(event)
-    #     # restart the timer on each resize event
-    #     self._resize_timer.start(150)   # ms; tweak 100–250 as you like
-    #
-    #
-    # def _on_resize_timeout(self):
-    #     # If edges don’t depend on window size, you could call only update_graph()
-    #     print('on resize timeout')
-    #     # self.update_graph_edges()
-    #     self.update_graph()
-
     def update_graph_edges(self):
         self.scheduler = RegexScheduler()
-        if hasattr(self.trace_textedit, "toPlainText"):
-            text = self.trace_textedit.toPlainText()
-        elif hasattr(self.trace_textedit, "get_text"):
-            text = self.trace_textedit.get_text()
-        else:
-            raise AttributeError(
-                f'Unable to create rule_flow graph, {self.trace_textedit} does not have a method called "toPlainText" or "get_text".'
-            )
-
-        self.scheduler.process_event_text(text)
+        self.scheduler.process_lines(self.trace_widget.lines)
 
     def center_me(self):
         center_point = QGuiApplication.screens()[0].geometry().center()
@@ -223,30 +213,12 @@ class RuleFlowWindow(QMainWindow):
             graph = nx.DiGraph()
 
             for key, value in node_dict.items():
-                # log.debug(f'{key=} {value=}')
                 graph.add_node(key, subset=value)
 
             edges = list(edge_set)
             graph.add_edges_from(edges)
 
-            # Create a figure and draw the graph
-
-            # manually set figure size to 10x8 inches
-            # fig = Figure(figsize=(10, 8), dpi=96)
-
-            # set figure size based on window size so user can freely adjust
-            # screen = QGuiApplication.primaryScreen()
-            # logical_dpi = screen.logicalDotsPerInch()
-
-            # f_width, f_height = pixels_to_inches(self.width(), self.height(), logical_dpi)
-            # f_width = min(max(f_width, min_width_inch), 10)  # 20.0)
-            # f_height = min(max(f_height, min_height_inch), 8)  # 11.25)
-
-            # figure_size = (f_width, f_height)
-
-            # fig = Figure(figsize=figure_size, dpi=logical_dpi)
-
-            # ax = fig.add_subplot(111)
+            # Draw the graph
 
             pos = nx.multipartite_layout(graph, align="vertical")
 
@@ -307,9 +279,7 @@ class RuleFlowWindow(QMainWindow):
             screen = QGuiApplication.primaryScreen()
             logical_dpi = screen.logicalDotsPerInch()
 
-            f_width, f_height = pixels_to_inches(
-                self.width(), self.height(), logical_dpi
-            )
+            f_width, f_height = pixels_to_inches(self.width(), self.height(), int(logical_dpi))
             f_width = min(max(f_width, min_width_inch), 10)
             f_height = min(max(f_height, min_height_inch), 8)
 
@@ -370,7 +340,7 @@ class RuleFlowWindow(QMainWindow):
             self.canvas.draw_idle()
 
         except Exception as e:
-            log.error(f"Problem drawing graph: {e}")
+            print(f"Problem drawing graph: {e}")
 
     def create_directed_graph_graphviz(self, node_dict: dict, edge_set: set):
         """
@@ -440,52 +410,17 @@ class RuleFlowWindow(QMainWindow):
     def update_graph(self):
         # reset background image
         if HAVE_GRAPHVIZ:
-            self.create_directed_graph_graphviz(
-                self.scheduler.nodes, self.scheduler.edges
-            )
+            self.create_directed_graph_graphviz(self.scheduler.nodes, self.scheduler.edges)
         else:
             if WHICH_NETWORKX == 0:
                 self.create_directed_graph(self.scheduler.nodes, self.scheduler.edges)
             elif WHICH_NETWORKX == 1:
-                self.create_directed_graph_separated(
-                    self.scheduler.nodes, self.scheduler.edges
-                )
+                self.create_directed_graph_separated(self.scheduler.nodes, self.scheduler.edges)
             else:
-                raise ValueError(
-                    f"{WHICH_NETWORKX=} is not a valid NETWORKX method reference"
-                )
+                raise ValueError(f"{WHICH_NETWORKX=} is not a valid NETWORKX method reference")
 
     def showEvent(self, event):
         super().showEvent(event)
         self.center_me()
         self.activateWindow()
         self.raise_()
-
-
-if __name__ == "__main__":
-    from loguru import logger as log
-
-    app = QApplication(sys.argv)
-
-    """ Fake Server Used For Development of This Tool """
-
-    # get some EPICpy NormalOutputWindow output to use as input to this tool
-    p: Path = Path(
-        Path().home(),
-        "Dropbox/Documents/python_coding/EPIC_visualization/EPICViewRuleFlow/info/covert_warning_normal_out_partial.txt",
-    )
-
-    # create a fake qplaintextedit for testing purposes
-    plain_text_edit = QPlainTextEdit(p.read_text(encoding="utf-8"))
-
-    # show main window
-    widget = RuleFlowWindow(trace_textedit=plain_text_edit)
-    widget.show()
-    widget.update_graph_edges()
-    widget.update_graph()
-
-    app.exec()
-
-    log.info(f"epicview_rule_flow app shutdown @ {datetime.now().ctime()}")
-
-    sys.exit()

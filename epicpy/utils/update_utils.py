@@ -20,11 +20,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Optional
-import re
 
 import requests
+
 from epicpy import __version__
 
 # --- TOML parsing ---
@@ -54,18 +55,14 @@ except Exception:
         return a.strip() > b.strip()
 
 
-_VERSION_RE = re.compile(
-    r'^\s*(?P<var>__version__|VERSION)\s*=\s*["\'](?P<val>[^"\']+)["\']\s*$'
-)
+_VERSION_RE = re.compile(r'^\s*(?P<var>__version__|VERSION)\s*=\s*["\'](?P<val>[^"\']+)["\']\s*$')
 
 
 def _pick(v) -> Optional[str]:
     return v.strip() if isinstance(v, str) and v.strip() else None
 
 
-def _read_version_from_file(
-    root: Path, rel_path: str, var_name: str | None = None
-) -> Optional[str]:
+def _read_version_from_file(root: Path, rel_path: str, var_name: str | None = None) -> Optional[str]:
     """Read a Python file and extract __version__ (or custom var) = 'x.y.z'."""
     src = (root / rel_path).read_text(encoding="utf-8", errors="ignore").splitlines()
     if var_name:
@@ -110,11 +107,7 @@ def extract_version_from_toml(path: str | Path) -> Optional[str]:
         return _norm(v)
 
     # 3) Flit (legacy)
-    v = _pick(
-        (((data.get("tool") or {}).get("flit") or {}).get("metadata") or {}).get(
-            "version"
-        )
-    )
+    v = _pick((((data.get("tool") or {}).get("flit") or {}).get("metadata") or {}).get("version"))
     if v:
         return _norm(v)
 
@@ -137,9 +130,7 @@ def extract_version_from_toml(path: str | Path) -> Optional[str]:
     return None
 
 
-def extract_version_from_toml_text(
-    text: str, *, base_dir: str | Path = "."
-) -> Optional[str]:
+def extract_version_from_toml_text(text: str, *, base_dir: str | Path = ".") -> Optional[str]:
     """
     Same as above, but takes TOML text (e.g., from GitHub raw).
     If Hatchling path-source is used, 'base_dir' is where to resolve the path.
@@ -155,11 +146,7 @@ def extract_version_from_toml_text(
     if v:
         return _norm(v)
 
-    v = _pick(
-        (((data.get("tool") or {}).get("flit") or {}).get("metadata") or {}).get(
-            "version"
-        )
-    )
+    v = _pick((((data.get("tool") or {}).get("flit") or {}).get("metadata") or {}).get("version"))
     if v:
         return _norm(v)
 
@@ -211,11 +198,7 @@ def get_remote_version(
 
 def update_available() -> str:
     remote_version = get_remote_version("travisseymour", "EPICpy")
-    if (
-        remote_version
-        and (remote_version != __version__)
-        and _is_newer(remote_version, __version__)
-    ):
+    if remote_version and (remote_version != __version__) and _is_newer(remote_version, __version__):
         return (
             "\n----------------------------------------------\n"
             f"A NEW version of EPICpy is available ({remote_version}), you have version {__version__}. "

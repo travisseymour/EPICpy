@@ -18,14 +18,35 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import ctypes.wintypes
+import datetime
 import os
-import sys
 import platform
+import re
+import signal
+import subprocess
+import sys
+from pathlib import Path
 from typing import Optional
 
+from loguru import logger as log
+from qtpy.QtGui import QFontDatabase, QIcon
 from rich.console import Console
 
 from epicpy.cli import build_parser, do_cleanup
+from epicpy.launcher.linux_launcher import (
+    create_linux_desktop_entry,
+    linux_desktop_entry_exists,
+)
+from epicpy.launcher.macos_launcher import (
+    create_macos_app_launcher,
+    macos_launcher_exists,
+)
+from epicpy.launcher.windows_launcher import (
+    create_windows_shortcut,
+    windows_shortcut_exists,
+)
+from epicpy.utils.splash_screen import SplashScreen
 
 _console = Console()
 
@@ -36,10 +57,10 @@ def set_qt_platform():
     if platform.system() == "Linux":
         if "WAYLAND_DISPLAY" in os.environ:
             os.environ["QT_QPA_PLATFORM"] = "wayland"
-            print("Using Wayland as the display server.")
+            # print("Using Wayland as the display server.")
         else:
             os.environ["QT_QPA_PLATFORM"] = "xcb"
-            print("Using X11 (xcb) as the display server.")
+            # print("Using X11 (xcb) as the display server.")
     elif platform.system() == "Windows":
         # Windows typically does not require setting this
         pass
@@ -54,46 +75,15 @@ def set_qt_platform():
 # Set the appropriate platform before importing QApplication
 set_qt_platform()
 
-
-from qtpy.QtGui import QIcon
-from fastnumbers import check_int
-
-import datetime
-import ctypes.wintypes
-import signal
-import re
-import subprocess
-from pathlib import Path
-from loguru import logger as log
-
-from epicpy.launcher.linux_launcher import (
-    linux_desktop_entry_exists,
-    create_linux_desktop_entry,
-)
-from epicpy.launcher.macos_launcher import (
-    macos_launcher_exists,
-    create_macos_app_launcher,
-)
-from epicpy.launcher.windows_launcher import (
-    windows_shortcut_exists,
-    create_windows_shortcut,
-)
-from epicpy.utils.defaultfont import get_default_font
-from epicpy.utils.splashscreen import SplashScreen
-
-os.environ["OUTDATED_IGNORE"] = "1"
-if platform.platform().split("-")[1].startswith("10."):
-    os.environ["QT_MAC_WANTS_LAYER"] = "1"
-
-
+# os.environ["OUTDATED_IGNORE"] = "1"
 # os.environ["QT_DEBUG_PLUGINS"] = "1" # for more info when there are plugin load errors
 
+from qtpy.QtCore import QCoreApplication, qInstallMessageHandler
 from qtpy.QtWidgets import QApplication
-from qtpy.QtCore import qInstallMessageHandler, QCoreApplication
 
-from epicpy.utils.apputils import frozen
-from epicpy.utils.resource_utils import get_resource
 from epicpy.utils import config
+from epicpy.utils.app_utils import check_int, frozen
+from epicpy.utils.resource_utils import get_resource
 
 splash: Optional[SplashScreen] = None
 DONE = False
@@ -108,84 +98,85 @@ def pyqt_warning_handler(msg_type, msg_log_content, msg_string):
 # ==================================================
 # ==========  SETUP SIGSEGV HANDLER ================
 # ==================================================
-# epiclib inevitably leads to segmentation fault on exit.
-# all of this is to ignore that. It isn't really too
-# consequential on Windows and Linux, but on Macos, not
-# handling SIGSEGV causes EPICpy to hang, which requires
+# epiclib inevitably leads to segmentation fault on exit. all of this is to ignore that. It isn't really too
+# consequential on Windows and Linux, but on Macos, not handling SIGSEGV causes EPICpy to hang, which requires
 # the user to issue a force-quit to the application.
-# When we port epiclib to Python, this will no longer be necessary.
-# This is why it's getting a visual fence here
+# I'm not sure this is still an issue given updates to epiclibcpp. Before I remove all of this stuff,
+# I need to first see if the crash is gone on macos and windows.
 
-OS = platform.system()
+IGNORE_CRASH = True
 
+if IGNORE_CRASH:
+    OS = platform.system()
 
-# Define the C signal handler function
-def segfault_handler(signal, frame):
-    log.warning("Segmentation fault occurred")
-    try:
-        os._exit(1)
-    except AttributeError:
-        sys.exit(1)
+    # Define the C signal handler function
+    def segfault_handler(signal, frame):
+        log.warning("Segmentation fault occurred")
+        try:
+            os._exit(1)
+        except AttributeError:
+            sys.exit(1)
 
+    if OS in ("Linux", "Darwin"):
+        # Define the C function prototype
+        handler_func_type = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)
 
-if OS in ("Linux", "Darwin"):
-    # Define the C function prototype
-    handler_func_type = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)
+        # Convert the Python signal handler to a C function pointer
+        handler_func_ptr = handler_func_type(segfault_handler)
 
-    # Convert the Python signal handler to a C function pointer
-    handler_func_ptr = handler_func_type(segfault_handler)
+        # Get the underlying C handle for the SIGSEGV signal
+        SIGSEGV = signal.SIGSEGV.value
 
-    # Get the underlying C handle for the SIGSEGV signal
-    SIGSEGV = signal.SIGSEGV.value
-
-    # Set the signal handler using ctypes
-    if OS == "Linux":
-        output = subprocess.check_output(["ldd", "/bin/ls"]).decode("utf-8")
-        # Extract the path for libc.so.[version] using regular expression
-        pattern = r"libc\.so\.\d+\s*=>\s*(.*?)\s"
-        match = re.search(pattern, output)
-        if match:
-            try:
-                libc_path = match.group(1)
-                if not Path(libc_path).is_file():
-                    raise FileExistsError
-            except Exception as e:
+        # Set the signal handler using ctypes
+        if OS == "Linux":
+            output = subprocess.check_output(["ldd", "/bin/ls"]).decode("utf-8")
+            # Extract the path for libc.so.[version] using regular expression
+            pattern = r"libc\.so\.\d+\s*=>\s*(.*?)\s"
+            match = re.search(pattern, output)
+            if match:
+                try:
+                    libc_path = match.group(1)
+                    if not Path(libc_path).is_file():
+                        raise FileExistsError
+                except Exception as e:
+                    libc_path = ""
+                    log.warning(f"Extracted bad or unreadable libc path: {libc_path}: {e}. Unable to install SIGSEGV handler.")
+            else:
                 libc_path = ""
-                log.warning(
-                    f"Extracted bad or unreadable libc path: {libc_path}: {e}. Unable to install SIGSEGV handler."
-                )
+                log.warning("ERROR: Cannot find libc path. Unable to install SIGSEGV handler.")
+        elif OS == "Darwin":
+            libc_path = "/usr/lib/libc.dylib"  # Update with the correct path on macOS
         else:
+            # Unknown OS, do nothing
             libc_path = ""
-            log.warning(
-                "ERROR: Cannot find libc path. Unable to install SIGSEGV handler."
-            )
-    elif OS == "Darwin":
-        libc_path = "/usr/lib/libc.dylib"  # Update with the correct path on macOS
+
+        if libc_path:
+            libc = ctypes.CDLL(libc_path)
+            libc.signal(SIGSEGV, handler_func_ptr)
+    elif OS == "Windows":
+        # Define the C function prototyped
+        # handler_func_type = ctypes.CFUNCTYPE(ctypes.wintypes.BOOL, ctypes.c_ulong)
+        handler_func_type = ctypes.CFUNCTYPE(ctypes.wintypes.BOOL, ctypes.wintypes.DWORD)
+
+        # Convert the Python signal handler to a C function pointer
+        handler_func_ptr = handler_func_type(segfault_handler)
+
+        # Set the signal handler using ctypes on Windows
+        ctypes.windll.kernel32.SetConsoleCtrlHandler(handler_func_ptr, True)
     else:
         # Unknown OS, do nothing
-        libc_path = ""
+        ...
 
-    if libc_path:
-        libc = ctypes.CDLL(libc_path)
-        libc.signal(SIGSEGV, handler_func_ptr)
-elif OS == "Windows":
-    # Define the C function prototyped
-    # handler_func_type = ctypes.CFUNCTYPE(ctypes.wintypes.BOOL, ctypes.c_ulong)
-    handler_func_type = ctypes.CFUNCTYPE(ctypes.wintypes.BOOL, ctypes.wintypes.DWORD)
+    # To test on Linux or Macos, run this:
+    # ctypes.string_at(0)
+    # NOTE: I can't figure out how to test on Windows.
+    # string_at(0) doesn't handle anything on Windows.
 
-    # Convert the Python signal handler to a C function pointer
-    handler_func_ptr = handler_func_type(segfault_handler)
-
-    # Set the signal handler using ctypes on Windows
-    ctypes.windll.kernel32.SetConsoleCtrlHandler(handler_func_ptr, True)
 else:
-    # Unknown OS, do nothing
-    ...
+    import faulthandler
 
-# To test on Linux or Macos, run this:
-# ctypes.string_at(0)
-# NOTE: I can't figure out how to test on Windows.
-# string_at(0) doesn't handle anything on Windows.
+    faulthandler.enable(file=sys.stderr, all_threads=True)
+
 
 # ==================================================
 # ==================================================
@@ -200,30 +191,24 @@ def start_ui(app: QApplication):
     # prepare the default font
 
     if (
-        not hasattr(config.app_cfg, "font_family")
-        or not isinstance(config.app_cfg.font_family, str)
-        or config.app_cfg.font_family not in ["sans-serif", "serif", "monospace"]
-    ):
-        config.app_cfg.font_family = "sans-serif"  # Apply fallback
-
-    if (
         not hasattr(config.app_cfg, "font_size")
         or not isinstance(config.app_cfg.font_size, (str, int))
         or not check_int(config.app_cfg.font_size)
-        or not 12 < int(config.app_cfg.font_size) < 72
+        or not 12 <= int(config.app_cfg.font_size) <= 32
     ):
         config.app_cfg.font_size = 14  # Apply fallback
+        log.warning("APPLIED FALLBACK FONT SIZE = 14!")
 
-    # default_font = get_default_font(family=config.app_cfg.font_family, size=config.app_cfg.font_size)
-    default_font = get_default_font(family="sans-serif", size=config.app_cfg.font_size)
+    default_font = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
+    default_font.setPointSize(config.app_cfg.font_size)
 
     # Set the font for the application
     QApplication.instance().setFont(default_font)
 
     # NOTE: This is down here because we need to setup app font before loading any gui windows!
-    from epicpy.windows import mainwindow
+    from epicpy.windows import main_window
 
-    _ = mainwindow.MainWin(app)
+    _ = main_window.MainWin(app)
     splash.close()
     app.lastWindowClosed.connect(shut_it_down)
     try:
@@ -243,7 +228,15 @@ def shut_it_down():
 def main(argv: list[str] | None = None) -> int:
     global splash
     application = QApplication([])
-    application.setWindowIcon(QIcon(str(get_resource("uiicons", "Icon.png"))))
+
+    app_icon = QIcon()
+    for size in [16, 24, 32, 48, 64, 128, 256, 512]:
+        try:
+            icon_path = get_resource("images", "appicon", f"icon_{size}.png")
+            app_icon.addFile(str(icon_path))
+        except FileNotFoundError:
+            log.warning("Problem setting app window icon!")
+    application.setWindowIcon(app_icon)
 
     print("Loading EPICpy, please wait...")
 
@@ -264,13 +257,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "cleanup":
         return do_cleanup(args.name)
 
-        # create launcher on first launch of epicpy
+    # create launcher on first launch of epicpy
     print(f"{platform.system()=}")
-    if os.environ.get("PYCHARM_HOSTED") != "1":
+    running_in_ide = (
+        os.environ.get("PYCHARM_HOSTED") == "1"  # PyCharm
+        or "vscode" in os.environ.get("TERM_PROGRAM", "").lower()  # VS Code / VSCodium
+        or sys.gettrace() is not None  # Any debugger attached
+    )
+    if not running_in_ide:
         try:
-            print(
-                "Making sure EPICpy application launcher exists (otherwise, create one)."
-            )
+            print("Making sure EPICpy application launcher exists (otherwise, create one).")
             if platform.system() == "Linux":
                 if not linux_desktop_entry_exists("epicpy"):
                     create_linux_desktop_entry("epicpy", "EPICpy")
@@ -304,10 +300,7 @@ def main(argv: list[str] | None = None) -> int:
 
         log_file = Path(config_dir, "epicpy.log")
         log.add(log_file, level="ERROR")
-        print(
-            f"NOTE: Logging errors to file ({log_file.name}) "
-            f"in config_dir ({str(config_dir.resolve())})"
-        )
+        print(f"NOTE: Logging errors to file ({log_file.name}) in config_dir ({str(config_dir.resolve())})")
         # Disable pyqt warnings when not developing
         qInstallMessageHandler(pyqt_warning_handler)
 

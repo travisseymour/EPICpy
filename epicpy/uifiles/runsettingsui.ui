@@ -392,6 +392,9 @@
            </item>
            <item>
             <widget class="QRadioButton" name="radioButtonRefreshContinuouslyText">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="text">
               <string>Continuously (slow)</string>
              </property>
@@ -454,6 +457,9 @@
            </item>
            <item>
             <widget class="QRadioButton" name="radioButtonRefreshNoneText">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="text">
               <string>None During Run</string>
              </property>

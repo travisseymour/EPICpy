@@ -1,0 +1,37 @@
+{
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#60c0cb",
+        "activityBar.background": "#60c0cb",
+        "activityBar.foreground": "#15202b",
+        "activityBar.inactiveForeground": "#15202b99",
+        "activityBarBadge.background": "#c03fb3",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "commandCenter.border": "#15202b99",
+        "sash.hoverBorder": "#60c0cb",
+        "statusBar.background": "#3daebb",
+        "statusBar.foreground": "#15202b",
+        "statusBarItem.hoverBackground": "#308a95",
+        "statusBarItem.remoteBackground": "#3daebb",
+        "statusBarItem.remoteForeground": "#15202b",
+        "titleBar.activeBackground": "#3daebb",
+        "titleBar.activeForeground": "#15202b",
+        "titleBar.inactiveBackground": "#3daebb99",
+        "titleBar.inactiveForeground": "#15202b99"
+    },
+    "peacock.color": "#3daebb",
+    "cSpell.words": [
+        "bangbang",
+        "epiccoder",
+        "epiclib",
+        "epiclibcpp",
+        "epicpydevicelib",
+        "keepends",
+        "libnss",
+        "modname",
+        "passthru",
+        "syspath",
+        "tabify",
+        "uifiles",
+        "uiicons"
+    ]
+}

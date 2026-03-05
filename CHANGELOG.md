@@ -3,6 +3,21 @@
 
 ---
 
+## VERSION: 2025.10.21.1
+
+1. **ADDED**: Run-Nonstop run mode will run model very quickly without graphical or text updates. Note that when run in this mode, the simulation cannot be paused or resumed.
+2. **UPDATED**: In normal run mode with permutated parameter string, graphical and text updates will not be processed until last permutation is run.
+
+---
+
+## VERSION: 2025.10.11.1
+
+1. **ADDED**: Ability to toggle on full trace for exceptions during simulation run.
+2. **UPDATED**: Search dialog has more reasonable dimensions and font now matches main gui font.
+3. **UPDATED**: Search dialog to now remember prior searches.
+
+---
+
 ## VERSION: 2025.10.3.1
 
 1. **UPDATED**: Updated Readme.md with new much simpler install instructions, including expanded Python version support (3.10-3.13) on all platforms.

@@ -14,13 +14,12 @@ If not, see <https://www.gnu.org/licenses/>.
 """
 
 import json
-from pathlib import Path
 import platform
-from typing import Optional, Literal
 from dataclasses import dataclass, field, fields
+from pathlib import Path
+from typing import Literal, Optional
 
 from loguru import logger as log
-
 
 """
 Global Constants
@@ -36,8 +35,8 @@ Global Configuration Variable
 SAVE_CONFIG_ON_UPDATE: bool = True
 APP_READY: bool = False  # will be True once main app window is visible
 
-device_cfg: Optional["DeviceConfig"] = None
-app_cfg: Optional["AppConfig"] = None
+device_cfg: "DeviceConfig" = None  # type: ignore[assignment]  # initialized by get_device_config()
+app_cfg: "AppConfig" = None  # type: ignore[assignment]  # initialized by get_app_config()
 
 
 def set_ready(flag: bool):
@@ -54,16 +53,12 @@ class AppConfig:
     last_device_file: str = ""  # for reloading last session
     last_script_file: str = ""
     dark_mode: Literal["Light", "Dark", "Auto"] = "Light"
-    epiclib_version: str = (
-        ""  # if not "", passes this value to DeviceConfig on app init
-    )
+    epiclib_version: str = ""  # if not "", passes this value to DeviceConfig on app init
     font_family: Literal["sans-serif", "serif", "monospace"] = "monospace"
     font_size: int = 14
     dialog_size: dict = field(default_factory=dict)  # hold dialog sizes if changed
     main_geom: list = field(default_factory=list)  # does nothing yet
-    auto_load_last_device: bool = (
-        False  # only True when changing epiclib_version from UI
-    )
+    auto_load_last_device: bool = False  # only True when changing epiclib_version from UI
     text_editor: str = ""  # defaults to BUILT-IN editor
     config_file: str = ""
     show_full_error_trace: bool = False
@@ -79,18 +74,14 @@ class AppConfig:
 
     def save_config(self) -> bool:
         global app_cfg
-        if app_cfg is None:
+        if app_cfg is None:  # type: ignore[comparison-overlap]  # can be None before init
             return False
 
         if not hasattr(self, "config_file") or self.config_file == "":
             config_dir = get_config_dir()
             self.config_file = str(Path(config_dir, "global_config.json").resolve())
 
-        cfg = {
-            key: value
-            for key, value in app_cfg.__dict__.items()
-            if not key == "current"
-        }
+        cfg = {key: value for key, value in app_cfg.__dict__.items() if not key == "current"}
 
         if hasattr(self, "current") and "last_config" in self.current:
             self.current["last_config"] = cfg
@@ -99,9 +90,7 @@ class AppConfig:
             Path(self.config_file).write_text(json.dumps(cfg, indent=4))
             return True
         except Exception as e:
-            log.error(
-                f'ERROR attempting to write to app configuration file @ "{str(self.config_file)}": {e}'
-            )
+            log.error(f'ERROR attempting to write to app configuration file @ "{str(self.config_file)}": {e}')
             return False
 
     def rollback(self) -> bool:
@@ -121,7 +110,7 @@ class AppConfig:
 class DeviceConfig:
     """Class for keeping track of EpicPy configuration"""
 
-    config_version: str = "20250205"
+    config_version: str = "20260301"
 
     device_file: str = ""
     rule_files: list = field(default_factory=list)
@@ -140,8 +129,8 @@ class DeviceConfig:
     run_command: str = "run_until_done"
     run_command_value: float = 1.0
     display_refresh: str = "after_each_step"
-    text_refresh: str = "continuously"
-    display_refresh_value: float = 1.0
+    text_refresh: str = "none_during_run"
+    display_refresh_value: float = 5.0
     text_refresh_value: float = 2.0
 
     trace_visual: bool = False
@@ -177,14 +166,17 @@ class DeviceConfig:
     setting_run_for_real_secs: int = 5
     setting_run_until_msecs: int = 600
     setting_run_cycles: int = 1
-    setting_refresh_secs: float = 1.0
+    setting_refresh_secs: float = 0.1
+    setting_refresh_steps: int = 5
     device_params: str = ""
+    stats_zoom_level: float = 1.0
 
     spatial_scale_degree: int = 10
     calibration_grid: bool = False
     center_dot: bool = False
     describe_parameters: bool = False
     allow_device_images: bool = False
+    allow_parallel_runs: bool = True
 
     device_config_file: str = ""
 
@@ -199,7 +191,7 @@ class DeviceConfig:
 
     def save_config(self):
         global device_cfg
-        if device_cfg is None or not self.device_file:
+        if device_cfg is None or not self.device_file:  # type: ignore[comparison-overlap]  # can be None before init
             return
 
         # NOTE: it's important that this get recomputed every time!
@@ -208,11 +200,7 @@ class DeviceConfig:
         device_name = device.stem.strip().replace(" ", "_")
         device_config_file = f"{device_name}_config.json"
 
-        cfg = {
-            key: value
-            for key, value in device_cfg.__dict__.items()
-            if not key == "current"
-        }
+        cfg = {key: value for key, value in device_cfg.__dict__.items() if not key == "current"}
 
         try:
             self.current["last_config"] = cfg
@@ -220,15 +208,10 @@ class DeviceConfig:
             ...
 
         try:
-            Path(device_folder, device_config_file).write_text(
-                json.dumps(cfg, indent=4)
-            )
+            Path(device_folder, device_config_file).write_text(json.dumps(cfg, indent=4))
             return True
         except Exception as e:
-            log.error(
-                f"Unable to write updated config file to "
-                f"{str(Path(device_folder, device_config_file))}:\n{e}"
-            )
+            log.error(f"Unable to write updated config file to {str(Path(device_folder, device_config_file))}:\n{e}")
             return False
 
     def rollback(self) -> bool:
@@ -336,10 +319,7 @@ def get_app_config():
 
     except FileNotFoundError:
         # Problem? Just use the defaults.
-        log.info(
-            f'Unable to find global app file "global_config.json" in {str(config_dir)}, '
-            f"using defaults."
-        )
+        log.info(f'Unable to find global app file "global_config.json" in {str(config_dir)}, using defaults.')
         app_cfg = AppConfig()
 
 
@@ -374,20 +354,17 @@ def get_device_config(device: Optional[Path]):
             current = device_cfg.current
             device_cfg = DeviceConfig(current=current)
     except FileNotFoundError:
-        log.info(
-            f"ERROR: Unable to find device configuration file "
-            f'"{device_config_file}" in "{str(device_folder)}". '
-            f"Creating default configuration instead."
-        )
+        # log.warning(
+        #     f"WARNING: Unable to find device configuration file "
+        #     f'"{device_config_file}" in "{str(device_folder)}". '
+        #     f"Creating default configuration instead."
+        # )
         current = device_cfg.current
         device_cfg = DeviceConfig(current=current)
 
 
 def get_start_dir() -> Path:
-    if (
-        hasattr(app_cfg, "last_script_file")
-        and Path(app_cfg.last_script_file).is_file()
-    ):
+    if hasattr(app_cfg, "last_script_file") and Path(app_cfg.last_script_file).is_file():
         start_dir = Path(app_cfg.last_script_file)
     elif Path(device_cfg.device_file).is_file():
         start_dir = Path(device_cfg.device_file).parent

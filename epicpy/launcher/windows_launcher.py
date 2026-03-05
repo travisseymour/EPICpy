@@ -1,3 +1,23 @@
+"""
+This file is part of the EPICpy source code. EPICpy is a tool for simulating
+human performance tasks using the EPIC computational cognitive architecture
+(David Kieras and David Meyer 1997a) using the Python programming language.
+Copyright (C) 2022 Travis L. Seymour, PhD
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import os
 import platform
 import shutil
@@ -9,9 +29,7 @@ if platform.system() == "Windows":
     try:
         import win32com.client
     except ImportError:
-        print(
-            "Please install the 'pywin32' package to enable Windows shortcut creation."
-        )
+        print("Please install the 'pywin32' package to enable Windows shortcut creation.")
         sys.exit(1)
 
 
@@ -19,9 +37,7 @@ def get_app_path(app_name: str) -> str:
     """Finds the installed application path using shutil.which()."""
     app_path = shutil.which(app_name)
     if not app_path:
-        print(
-            f"Post-Install Error: '{app_name}' not found. The command 'uv tool install {app_name}' may have failed."
-        )
+        print(f"Post-Install Error: '{app_name}' not found. The command 'uv tool install {app_name}' may have failed.")
         sys.exit(1)
     return app_path
 
@@ -53,9 +69,7 @@ def find_app_icon(app_name: str) -> Optional[Path]:
 
 def windows_shortcut_exists(app_name: str) -> bool:
     """Checks if a Windows shortcut already exists in the Start Menu."""
-    start_menu_path = (
-        Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs"
-    )
+    start_menu_path = Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs"
     shortcut_file = start_menu_path / f"{app_name}.lnk"
     return shortcut_file.exists()
 
@@ -71,9 +85,7 @@ def create_windows_shortcut(app_name: str, app_title: Optional[str] = ""):
     if not app_path:
         return
 
-    start_menu_path = (
-        Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs"
-    )
+    start_menu_path = Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs"
     start_menu_path.mkdir(parents=True, exist_ok=True)
     shortcut_file = start_menu_path / f"{app_name}.lnk"
 
@@ -96,9 +108,7 @@ def create_windows_shortcut(app_name: str, app_title: Optional[str] = ""):
 
 def remove_windows_shortcut(app_name: str):
     """Removes the Windows shortcut (.lnk) from the Start Menu when the app is uninstalled."""
-    start_menu_path = (
-        Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs"
-    )
+    start_menu_path = Path(os.environ["APPDATA"]) / "Microsoft/Windows/Start Menu/Programs"
     shortcut_file = start_menu_path / f"{app_name}.lnk"
 
     if shortcut_file.exists():

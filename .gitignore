@@ -167,18 +167,13 @@ cython_debug/
 
 # these are test scripts of mine that I'm not currently pushing to the repo
 secret.*
-do_release.py
-do_pseudo_release.py
-freeze_and_run.sh
-freeze_and_run_macos.sh
 devices/
-epicpy/resources/epiclib/epiclib_versions/
-/epicpy/resources/epiclib/old_dlls_not_needed/
-
-# stuff put in by pipx, both already in default python .gitignore
-# build/
+devices
+devices_local/
+covert_warning/
 # *.egg-info/
-
-# Pycharm config files
-
+tests/
+large_output.txt
+.ruff_cache/
+.vscode/
 

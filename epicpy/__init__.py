@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+import os
 from importlib.metadata import (
-    version as _dist_version,
     PackageNotFoundError,
     packages_distributions,
 )
-
-from typing import Optional
-import os
+from importlib.metadata import (
+    version as _dist_version,
+)
 from pathlib import Path
+from typing import Optional
 
 from rich.console import Console
 

@@ -99,9 +99,7 @@ def run_uic(cmd: List[str], ui: Path, py: Path) -> bool:
     Execute the UI compiler. Returns True on success.
     """
     full_cmd = [*cmd, str(ui.resolve()), "-o", str(py.resolve())]
-    proc = subprocess.run(
-        full_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-    )
+    proc = subprocess.run(full_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if proc.returncode == 0:
         return True
     # show error details
@@ -117,15 +115,11 @@ def run_uic(cmd: List[str], ui: Path, py: Path) -> bool:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Compile .ui files to .py (only if changed)."
-    )
+    parser = argparse.ArgumentParser(description="Compile .ui files to .py (only if changed).")
     parser.add_argument(
         "--qt", choices=["pyside6", "pyqt6"], help="Force binding (auto if omitted)."
     )
-    parser.add_argument(
-        "--dir", default=".", help="Directory to scan for .ui files (default: .)"
-    )
+    parser.add_argument("--dir", default=".", help="Directory to scan for .ui files (default: .)")
     args = parser.parse_args()
 
     try:
