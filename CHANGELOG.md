@@ -3,6 +3,30 @@
 
 ---
 
+## VERSION: 2026.3.5.2
+
+1. **ADDED**: Parallel simulation mode — multiple parameter permutations now run concurrently in separate processes using `ProcessPoolExecutor`, with full isolation of epiclibcpp globals.
+2. **ADDED**: Recent Devices menu (MRU list) for quickly reloading previously used devices.
+3. **ADDED**: Process Viewer tool under SimTools — timeline visualization of EPIC processor activities based on trace output parsing rules.
+4. **ADDED**: New `MemLargeTextView` widget replaces `LargeTextView`, providing a memory-efficient, high-performance custom text renderer for output windows.
+5. **ADDED**: `CustomQTextEdit` widget with stream-compatible `write()`/`flush()` methods and custom context menu commands.
+6. **ADDED**: Layout manager (`layout_manager.py`) for improved dock-based window arrangement with versioned layout persistence.
+7. **ADDED**: Device PyEE bridge (`device_pyee_bridge.py`) to relay `epicpydevicelib` event bus signals (`stats_write`, `background_image`, `progress`) to Qt signals.
+8. **ADDED**: New module reloader (`module_reloader.py`) using content+path+mtime hashing for reliable device code hot-reloading.
+9. **CHANGED**: Devices now loaded via external `epicpydevicelib` package instead of internal device loading code. Removed internal `localmunch.py` in favor of the `munch` package.
+10. **CHANGED**: Main window fully rewritten (`mainwindow.py` → `main_window.py`) — ~1,900-line rewrite with cleaner architecture and improved simulation lifecycle management.
+11. **CHANGED**: Simulation engine (`epic_simulation.py`) substantially reworked with improved output handling and parallel mode support.
+12. **CHANGED**: All source files renamed from camelCase to snake_case (e.g., `mainwindow.py` → `main_window.py`, `apputils.py` → `app_utils.py`, etc.) for PEP 8 consistency.
+13. **CHANGED**: Replaced `fastnumbers` dependency with internal `check_int` utility. Added `pyqtgraph`, `munch`, `epicpydevicelib`, and `psutil` as new dependencies. Added `PySide6-Addons`. Pinned version ranges for `rich`, `networkx`, `graphviz`, and `tomli`.
+14. **CHANGED**: Ruff line-length increased from 120 to 130; added import sorting (`I`) to lint rules; `uifiles` directory excluded from linting.
+15. **CHANGED**: Removed bundled epiclib shared libraries from `setuptools.package-data` — now fully provided by `epiclibcpp` package.
+16. **FIXED**: Fitness tests reworked — snapshot/restore of device config avoids deepcopy of Qt/C++ handles; proper event-loop integration during test runs.
+17. **FIXED**: View windows (visual and auditory) updated for improved rendering and consistent behavior.
+18. **UPDATED**: Run settings UI updated with additional options.
+19. **UPDATED**: Logging and display controls dialogs updated.
+
+---
+
 ## VERSION: 2025.10.21.1
 
 1. **ADDED**: Run-Nonstop run mode will run model very quickly without graphical or text updates. Note that when run in this mode, the simulation cannot be paused or resumed.
