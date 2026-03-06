@@ -2,6 +2,12 @@
 
 ---
 
+## VERSION: 2026.3.5.3
+
+1. **FIXED**: Had to rework how html was used with the custom textedit used in Info Output window.
+
+---
+
 ## VERSION: 2026.3.5.2
 
 1. **ADDED**: Parallel simulation mode — multiple parameter permutations now run concurrently in separate processes using `ProcessPoolExecutor`, with full isolation of epiclibcpp globals.
