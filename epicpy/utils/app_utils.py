@@ -488,3 +488,20 @@ def rich_traceback_str(e, *, show_locals=False, width=100):
     console = Console(record=True, width=width)
     console.print(tb)
     return console.export_text()  # plain text, no ANSI
+
+
+def newline_to_br(text: str) -> str:
+    """
+    Replace any newline sequence in a string with '<br>'.
+    Handles Unix (\n), Windows (\r\n), and old Mac (\r) newlines.
+    """
+    return text.replace("\r\n", "\n").replace("\r", "\n").replace("\n", "<br>")
+
+
+def hcolor(text: str, foreground_color: str = "", background_color: str = "", bold: bool = False, paragraph: bool = True) -> str:
+    fg = f" color: {foreground_color};" if foreground_color else ""
+    bg = f" background-color: {background_color};" if background_color else ""
+    result = f'<span style="{fg};{bg}">{newline_to_br(text)}</span>'
+    if bold:
+        result = f"<b>{result}</b>"
+    return f"<p>{result}</p>" if paragraph else result

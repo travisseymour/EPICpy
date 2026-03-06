@@ -33,11 +33,7 @@ from qtpy.QtCore import (
 from qtpy.QtWidgets import QFileDialog
 
 from epicpy.constants.emoji import (
-    e_bangbang,
-    e_boxed_check,
     e_boxed_ok,
-    e_boxed_x,
-    e_info,
 )
 from epicpy.constants.state_constants import PAUSED, RUNNABLE, RUNNING, UNREADY
 from epicpy.dialogs.logging_window import LoggingSettingsWin
@@ -45,7 +41,7 @@ from epicpy.epic.encoder_passthru import NullAuditoryEncoder, NullVisualEncoder
 from epicpy.epic.epicpy_exception import EPICpyException
 from epicpy.epic.run_info import RunInfo
 from epicpy.utils import config
-from epicpy.utils.app_utils import rich_traceback_str, unpack_param_string
+from epicpy.utils.app_utils import hcolor, rich_traceback_str, unpack_param_string
 from epicpy.utils.module_reloader import make_device, unload_directory_modules, unload_module
 from epicpy.utils.syspath_manage import (
     clear_active_plugin_path,
@@ -174,7 +170,7 @@ class Simulation(QObject):
             self.model.set_trace_temporal(config.device_cfg.trace_temporal)
             self.model.set_trace_device(config.device_cfg.trace_device)
         except Exception as e:
-            Info_out(f"\n❌ ERROR: Failed to update EPIC output or trace settings:\n{e}\n")
+            Info_out(hcolor(f"Failed to update EPIC output or trace settings:\n{e}\n", "red"))
 
     def on_load_device(self, device_file: str = "", quiet: bool = False):
         # load config for this device, or create new device on if none exists already
@@ -246,7 +242,7 @@ class Simulation(QObject):
 
         try:
             if not quiet:
-                Info_out(f"\n{e_info} loading device code from {device_file_p.name}...\n")
+                Info_out(f"Attempting to load device code from {device_file_p.name}...<br>")
 
             device, modname = make_device(
                 Path(device_file),
@@ -257,8 +253,8 @@ class Simulation(QObject):
             self._device_modname = modname
 
             if not quiet:
-                Info_out(f"\n{e_info} found EpicDevice class, created new device instance based on this class.\n")
-            Info_out(f"\n{e_boxed_check} {self.device.device_name} device was created successfully.\n")
+                Info_out("Found EpicDevice class and successfully created new device instance based on it.\n")
+            Info_out(f"{self.device.device_name} device was created successfully.\n")
 
             # must store default device params before we reload one from settings
             if hasattr(self.device, "condition_string"):
@@ -277,7 +273,7 @@ class Simulation(QObject):
                 self.device.set_parameter_string(config.device_cfg.device_params)
 
         except Exception as e:
-            Info_out(f"\nERROR: Failed to create new EpicDevice from\n{device_file_p.name}!\n{e}\n")
+            Info_out(hcolor(f"ERROR: Failed to create new EpicDevice from {device_file_p.name}!\n{e}\n", "red"))
             self.device = None  # type: ignore[assignment]
             self.main_win.context = "UnKnown"
             self.main_win.update_text_outputs()
@@ -286,7 +282,7 @@ class Simulation(QObject):
         try:
             assert self.device.processor_info()
         except AssertionError:
-            Info_out("\nERROR: Created new device, but access to device_processor_pointer failed!\n")
+            Info_out(hcolor("ERROR: Created new device, but access to device_processor_pointer failed!\n", "orange"))
             self.device = None  # type: ignore[assignment]
             self.main_win.context = "UnKnown"
             self.main_win.update_text_outputs()
@@ -296,24 +292,19 @@ class Simulation(QObject):
         try:
             self.model = Model(self.device)
             if isinstance(self.model, Model):
-                Info_out(f"\n{e_boxed_check} New Model() was successfully created with device.\n")
+                Info_out("New Human Model was successfully created with device.\n")
             else:
                 self.main_win.update_text_outputs()
-                raise EPICpyException(f"\n{e_boxed_x} Error creating new Model() with device.\n")
+                raise EPICpyException(hcolor("ERROR: Unable to create new Human Model with device.\n", "red"))
 
             # now connect everything up
 
             self.model.interconnect_device_and_human()
 
-            # if self.model.compile() and self.model.initialize():
-            #     Info_out(f"{e_boxed_check} Model() was successfully initialized.")
-            # else:
-            #     raise EPICpyException(f"{e_boxed_x} Error compiling and initializing Model().")
-
             self.update_model_output_settings()
 
         except Exception as e:
-            Info_out(f"\nERROR: Simulation unable to properly connect new Device and Model:\n{e}\n")
+            Info_out(hcolor(f"ERROR: Simulation unable to properly connect new Device and Model:\n{e}\n", "red"))
             self.device = None  # type: ignore[assignment]
             self.main_win.context = "UnKnown"
             self.main_win.update_text_outputs()
@@ -321,7 +312,7 @@ class Simulation(QObject):
 
         self.main_win.update_title()
         if not quiet:
-            Info_out(f"\n{e_boxed_check} Successfully initialized device: {device_file}.\n")
+            Info_out(f"Successfully initialized device: {device_file}.\n")
 
         if self.has_device() and self.model.get_compiled():
             self.main_win.run_state = RUNNABLE
@@ -359,10 +350,10 @@ class Simulation(QObject):
         encoder = self.visual_encoder if kind == "Visual" else self.auditory_encoder
 
         if not encoder:
-            Info_out(f"\nFailed to unload {kind} encoder...none appears to be currently loaded.\n")
+            Info_out(hcolor(f"WARNING: Can't unload {kind} encoder...none appears to be currently loaded.\n", "gold"))
             return
         else:
-            Info_out(f"\nAttempting to unload {kind} encoder...\n")
+            Info_out(f"Attempting to unload {kind} encoder...\n")
 
         # go ahead and save now. Unlike in on_load_encoder(), we do this first.
         # If unload fails, it will still be effectively unloaded on session reload.
@@ -373,7 +364,7 @@ class Simulation(QObject):
             config.device_cfg.auditory_encoder = ""
 
         try:
-            assert self.model, f"{e_bangbang} Model doesn't appear to be initialized...has a device been loaded??!!"
+            assert self.model, hcolor("Model doesn't appear to be initialized...has a device been loaded??!!", "gold")
             if kind == "Visual":
                 self.visual_encoder = NullVisualEncoder("NullVisualEncoder", self)
                 set_visual_encoder_ptr(self.model, self.visual_encoder)
@@ -382,9 +373,12 @@ class Simulation(QObject):
                 set_auditory_encoder_ptr(self.model, self.auditory_encoder)
         except Exception as e:
             Info_out(
-                f"\nERROR: Unable to unload {kind} encoder!\n"
-                f"[{e}]\n"
-                f"However, it won't be loaded the next time this device is loaded.",
+                hcolor(
+                    f"ERROR: Unable to unload {kind} encoder!\n"
+                    f"[{e}]\n"
+                    f"However, it won't be loaded the next time this device is loaded.\n",
+                    "red",
+                )
             )
             if kind == "Visual":
                 self.visual_encoder = None  # type: ignore[assignment]
@@ -393,7 +387,7 @@ class Simulation(QObject):
 
         self.main_win.update_title()
 
-        Info_out(f"\n{e_boxed_check} {kind} encoder successfully unloaded.\n")
+        Info_out(f" {kind} encoder successfully unloaded.\n")
         self.main_win.update_text_outputs()
 
     def on_load_encoder(self, kind: str, file: str = "", quiet: bool = False):
@@ -434,7 +428,7 @@ class Simulation(QObject):
                 mod = importlib.reload(mod)
 
                 if not quiet:
-                    Info_out(f"\n{e_info} loading encoder from {encoder_file_p.name}...\n")
+                    Info_out(f"Attempting to load encoder from {encoder_file_p.name}...\n")
 
                 ul_name = encoder_file_p.stem.replace("_", " ").title()
                 if kind == "Visual":
@@ -448,10 +442,10 @@ class Simulation(QObject):
                     setattr(self.auditory_encoder, "write", Normal_out)
 
                 if not quiet:
-                    Info_out(f"\n{e_info} found {kind}Encoder class, creating new encoder instance based on this class...\n")
-                Info_out(f"\n{e_boxed_check} {kind}encoder was created successfully.\n")
+                    Info_out(f"Found {kind}Encoder class, attempting to create new encoder instance based on this class...\n")
+                Info_out(f"{kind}encoder was created successfully.\n")
             except Exception as e:
-                Info_out(f"\nERROR: Failed to create new {kind}Encoder from\n{encoder_file_p.name}:\n{e}\n")
+                Info_out(hcolor(f"ERROR: Failed to create new {kind}Encoder from {encoder_file_p.name}:\n{e}\n", "red"))
                 if kind == "Visual":
                     self.visual_encoder = None  # type: ignore[assignment]
                     config.device_cfg.visual_encoder = ""
@@ -463,13 +457,17 @@ class Simulation(QObject):
                 return
 
             try:
-                assert self.model, f"{e_bangbang} Model doesn't appear to be initialized...has a device been loaded??!!"
+                assert self.model, hcolor(
+                    "WARNING: Model doesn't appear to be initialized...has a device been loaded??!!", "gold"
+                )
                 if kind == "Visual":
                     set_visual_encoder_ptr(self.model, self.visual_encoder)
                 else:
                     set_auditory_encoder_ptr(self.model, self.auditory_encoder)
+
+                Info_out(f"Successfully created new {kind}Encoder from {encoder_file_p.name}\n")
             except Exception as e:
-                Info_out(f"\nERROR: Created new {kind} encoder, but connection to\nHuman_processor failed:\n{e}\n")
+                Info_out(hcolor(f"ERROR: Created new {kind} encoder, but connection to Human_processor failed:\n{e}\n", "red"))
                 if kind == "Visual":
                     self.visual_encoder = None  # type: ignore[assignment]
                     config.device_cfg.visual_encoder = ""
@@ -493,10 +491,12 @@ class Simulation(QObject):
     def recompile_rules(self):
         self.current_rule_index = 0
         if self.rule_files and Path(self.rule_files[self.current_rule_index].rule_file).is_file():
-            Info_out(f"\n{e_info} Recompiling {self.rule_files[self.current_rule_index].rule_file}...\n")
+            Info_out(f"Recompiling {self.rule_files[self.current_rule_index].rule_file}...\n")
             self.compile_rule(self.rule_files[self.current_rule_index].rule_file)
         else:
-            Info_out("\nERROR: Rule recompile failed because former rule file no longer\nexists or is not readable.\n")
+            Info_out(
+                hcolor("ERROR: Rule recompile failed because former rule file no longer exists or is not readable.\n", "red")
+            )
             self.main_win.actionRecompile_Rules.setEnabled(False)
 
     def choose_rules(self, files: Optional[list] = None) -> bool:
@@ -512,9 +512,12 @@ class Simulation(QObject):
             else:
                 the_types = set([type(item) for item in files])
                 Info_out(
-                    f"\nERROR: epic_simulation.choose_rules can only accept a list of ALL RuleInfo objects, or"
-                    f" a list of ALL rule file path strings, not a list consisting of multiple types"
-                    f" (e.g., {the_types})."
+                    hcolor(
+                        f"epic_simulation.choose_rules() can only accept a list of ALL RuleInfo objects, or"
+                        f" a list of ALL rule file path strings, not a list consisting of multiple types"
+                        f" (e.g., {the_types}).\n",
+                        "red",
+                    )
                 )
                 raise ValueError("Mixed types given to choose_rule function!")
         else:
@@ -566,13 +569,13 @@ class Simulation(QObject):
                 config.device_cfg.rule_files = rule_file_paths
             line_end = "\n"
             Info_out(
-                f"\n{len(rule_file_paths)} ruleset files {note}:\n"
-                f"{line_end.join(Path(rule_file).name for rule_file in rule_file_paths)}"
+                f"{len(rule_file_paths)} ruleset files {note}:\n"
+                f"{line_end.join(Path(rule_file).name for rule_file in rule_file_paths)}\n"
             )
             Info_out(
-                f"\n{e_info} Attempting to compile first rule in {note} ruleset list..."
+                f"Attempting to compile first rule in {note} ruleset list...\n"
                 if len(rule_files) > 1
-                else f"\n{e_info} Attempting to compile {note} ruleset..."
+                else f"Attempting to compile {note} ruleset...\n"
             )
 
             return self.compile_rule(
@@ -581,7 +584,7 @@ class Simulation(QObject):
             )
         else:
             self.rule_files = []
-            Info_out(f"\n{e_boxed_x} No valid rule file(s) {note}.\n")
+            Info_out(hcolor(f"WARNING: No valid rule file(s) {note}.\n", "gold"))
 
         return False
 
@@ -593,23 +596,25 @@ class Simulation(QObject):
             self.model.set_prs_filename(file)
             result = self.model.compile() and self.model.initialize()
         except Exception as e:
-            if calm:
-                Info_out(f"\nWARNING: Unable to compile ruleset file\n{rule_path.name}:\n{e}\n")
-            else:
-                Info_out(
-                    f"\nERROR: Unable to compile ruleset file\n{rule_path.name}:\n{e}",
+            Info_out(
+                hcolor(
+                    f"{'WARNING' if calm else 'ERROR'}: Unable to compile ruleset file\n{rule_path.name}:\n{e}\n",
+                    "gold" if calm else "red",
                 )
+            )
             result = False
 
         if result:
-            Info_out(f"\nRule file {rule_path.name} compiled successfully!\n")
+            Info_out(f"Rule file {rule_path.name} compiled successfully!\n")
             self.main_win.update_title()
             rule_compiled = True
         else:
-            if calm:
-                Info_out(f"\nWARNING: Unable to (re)compile ruleset file\n{rule_path.name}\n")
-            else:
-                Info_out(f"\nERROR: Unable to (re)compile ruleset file\n{rule_path.name}!\n")
+            Info_out(
+                hcolor(
+                    f"{'WARNING' if calm else 'ERROR'}: Unable to (re)compile ruleset file\n{rule_path.name}\n",
+                    "gold" if calm else "red",
+                )
+            )
             rule_compiled = False
 
         # make sure run state reflects result of rule compile attempt
@@ -642,7 +647,7 @@ class Simulation(QObject):
             self.model.add_auditory_perceptual_view(auditory_perceptual)
         except Exception as e:
             self.main_win.update_text_outputs()
-            Info_out(f"Unable to add views to model: {e}\n")
+            Info_out(hcolor(f"ERROR: Unable to add views to model: {e}\n", "red"))
 
     def remove_views_from_model(
         self,
@@ -662,7 +667,7 @@ class Simulation(QObject):
             self.model.get_human_ptr().remove_auditory_perceptual_view(auditory_perceptual)
         except Exception as e:
             self.main_win.update_text_outputs()
-            Info_out(f"Unable to remove views to model: {e}\n")
+            Info_out(hcolor(f"ERROR: Unable to remove views from model: {e}\n", "red"))
 
     def run_one_step(self):
         # just in case output settings were changed between runs
@@ -677,7 +682,7 @@ class Simulation(QObject):
             self.run_time = self.model.get_time()
         except Exception as e:
             run_result = False
-            Normal_out(f"\nERROR:\n{e}\n")
+            Info_out(hcolor(f"ERROR:\n{e}\n", "red"))
             self.main_win.update_text_outputs()
             return
 
@@ -695,8 +700,11 @@ class Simulation(QObject):
         if self.main_win.run_state not in (RUNNABLE, PAUSED):
             # This shouldn't be possible
             Info_out(
-                "\nERROR: Unable to run simulation because model is not yet RUNNABLE\n"
-                "(device successfully loaded and rules successfully compiled).",
+                hcolor(
+                    "ERROR: Unable to run simulation because model is not yet RUNNABLE\n"
+                    "(device successfully loaded and rules successfully compiled).\n",
+                    "red",
+                )
             )
             return
 
@@ -749,10 +757,13 @@ class Simulation(QObject):
             if config.device_cfg.run_command in run_commands:
                 self.run_time_limit = run_commands.get(config.device_cfg.run_command, sys.maxsize)
             else:
-                Normal_out(
-                    f"\n{e_info} WARNING: unexpected run command found in config file "
-                    f' ("{config.device_cfg.run_command}"), using "RUN_UNTIL_DONE" '
-                    f"instead.\n"
+                Info_out(
+                    hcolor(
+                        f"WARNING: unexpected run command found in config file "
+                        f' ("{config.device_cfg.run_command}"), using "RUN_UNTIL_DONE" '
+                        f"instead.\n",
+                        "gold",
+                    )
                 )
 
         elif self.main_win.run_state == PAUSED:
@@ -765,7 +776,8 @@ class Simulation(QObject):
                     # are we past the specified time or did we pause and change from
                     #   run until done?
                     if self.run_time >= config.device_cfg.run_command_value:
-                        Normal_out(f"\n{e_info} Unable to run additional steps, RUN_UNTIL_TIME value already reached!\n")
+                        Info_out("Unable to run additional steps, RUN_UNTIL_TIME value already reached!\n")
+                        Normal_out("\nUnable to run additional steps, RUN_UNTIL_TIME value already reached!\n")
                     self.run_time_limit = 0
                     return
                 else:
@@ -816,7 +828,8 @@ class Simulation(QObject):
         if self.instance.is_paused():
             # this is presumably because of a rule with a break state set
             self.main_win.run_state = PAUSED
-            Normal_out(f"\n{e_info} Run of {self.device.rule_filename} Paused.\n")
+            Normal_out(f"\nRun of {self.device.rule_filename} Paused.\n")
+            Info_out(f"Run of {self.device.rule_filename} Paused.\n")
 
         if run_result and (
             (config.device_cfg.run_command in ("run_for", "run_until") and self.run_time < self.run_time_limit)
@@ -849,7 +862,8 @@ class Simulation(QObject):
 
         self.main_win.update_text_outputs()
 
-        Normal_out(f"\n{e_info} Run paused\n")
+        Normal_out("\nRun paused\n")
+        Info_out("Run paused\n")
 
     def halt_simulation(self, reason: str = "", extra: str = "", force: bool = False):
         duration = timeit.default_timer() - self.run_start_time
@@ -881,9 +895,11 @@ class Simulation(QObject):
             self.main_win.set_view_batch_mode(False)
 
         if not reason:
-            Normal_out(f"\n{e_bangbang} Run halted\n")
+            Normal_out("\nRun halted!\n")
+            Info_out("Run halted!\n")
 
         Normal_out(extra)
+        Info_out(extra)
 
         msg = f" (run took {duration:0.4f} seconds)\n"
 
@@ -941,8 +957,11 @@ class Simulation(QObject):
                 if (next_sim.device_file and next_sim.device_file != prev_sim.device_file) or next_sim.reload_device:
                     if not self.main_win.on_load_device(next_sim.device_file, auto_load_rules=False, quiet=True):
                         Info_out(
-                            f"\n{e_boxed_x} Device (re)load failed while running "
-                            f"{next_sim.device_file} + {next_sim.rule_file} from script!"
+                            hcolor(
+                                f"ERROR: Device (re)load failed while running "
+                                f"{next_sim.device_file} + {next_sim.rule_file} from script!\n",
+                                "red",
+                            )
                         )
                         self.current_rule_index = 0
                         self.main_win.update_text_outputs()
@@ -956,7 +975,7 @@ class Simulation(QObject):
                 else:
                     self.current_rule_index += 1
                     if self.current_rule_index < len(self.rule_files):
-                        Info_out(f"\n{e_boxed_x} Compile Failed for {rule_name}, moving to next rule in list....\n")
+                        Info_out(f"Compile Failed for {rule_name}, moving to next rule in list....\n")
                         if self.compile_rule(self.rule_files[self.current_rule_index].rule_file):
                             run_func[self.last_run_mode](clear_ui=False)
                     else:
@@ -982,4 +1001,4 @@ class Simulation(QObject):
                 </span>
                 """
             self.main_win.stats_win.setHtml(msg)
-            Info_out(msg + "\n")
+            Info_out(msg)

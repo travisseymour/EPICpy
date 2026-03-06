@@ -25,6 +25,7 @@
         "epiclib",
         "epiclibcpp",
         "epicpydevicelib",
+        "hbold",
         "keepends",
         "libnss",
         "modname",

@@ -43,50 +43,7 @@ from qtpy.QtWidgets import (
 
 from epicpy.utils.config import get_start_dir
 
-SPECIAL_MESSAGE = """
-<h2 id="important-notice" style="color:magenta;">Important Notice: Major Change to EPICpy</h2>
-<hr>
-
-<p><strong>EPICpy version 2025.10.26.1</strong>, contains <em>breaking changes</em>.
-<br>All users are strongly recommended to do the following:</p>
-<ol>
-<li value="1">It is recommended that all users upgrade from any version before 2025.9.10.1 by first u
-ninstalling epicpy and then reinstalling it, e.g.:</li>
-
-<blockquote>
-<pre><code class="lang-bash">uv tool <span class="hljs-keyword">uninstall</span> epicpy
-uv tool <span class="hljs-keyword">install</span> git+https://www.github.com/travisseymour/EPICpy.git 
-<span class="hljs-comment">--python 3.12</span>
-</code></pre>
-</blockquote>
-<blockquote>
-<span style="color:black; background-color:skyblue;">
-Although Python 3.13 is the latest version, any version between 3.10 and 3.13 will work with EPICpy on 
-all operating systems.
-</span>
-</blockquote>
-
-<li value="2">You should pull a new version of the demo devices:</li>
-
-<blockquote>
-<pre><code class="lang-bash">git <span class="hljs-keyword">clone</span> 
-<span class="hljs-title">https</span>://www.github.com/travisseymour/EPICpyDevices
-</code></pre>
-</blockquote>
-
-<li value="3"><p>If you have other devices, completely <u>DELETE</u> any copies of the folder 
-<code>epicpydevice</code>.</p>
-</li>
-<li value="4"><p>... in addition, replace any mention of 'epicpydevice' in your device .py file's 
-import section with 'epicpydevicelib'</p>
-</li>
-</ol>
-<blockquote>
-<span style="color:black; background-color:skyblue;">
-To obtain updated versions of various research devices, contact Professor Seymour.
-</span>
-</blockquote>
-"""
+SPECIAL_MESSAGE = ""
 
 
 class CustomStatsTextBrowser(QTextBrowser):

@@ -196,19 +196,34 @@ def get_remote_version(
         return ""
 
 
-def update_available() -> str:
+def update_available(html: bool = False) -> str:
     remote_version = get_remote_version("travisseymour", "EPICpy")
     if remote_version and (remote_version != __version__) and _is_newer(remote_version, __version__):
-        return (
-            "\n----------------------------------------------\n"
-            f"A NEW version of EPICpy is available ({remote_version}), you have version {__version__}. "
-            "To update, run\nuv tool upgrade epicpy\nin your terminal, and then press ENTER.\n"
-            "----------------------------------------------\n"
-        )
+        if html:
+            return f"""
+                <span style="color: black; background-color: lightblue;">
+                    A NEW version of EPICpy is available ({remote_version}).<br>
+                    You have version {__version__}.<br>
+                    To update, run<br>
+                    <span style="font-family: 'Courier New', Courier, monospace;">
+                        uv tool upgrade epicpy
+                    </span>
+                    <br>in your terminal, and then press ENTER.<br>
+                </span>
+                <br>
+                """
+        else:
+            return (
+                "\n----------------------------------------------\n"
+                f"A NEW version of EPICpy is available ({remote_version}).\n"
+                "You have version {__version__}.\n"
+                "To update, run\nuv tool upgrade epicpy\nin your terminal, and then press ENTER.\n"
+                "----------------------------------------------\n"
+            )
     else:
         return ""
 
 
 if __name__ == "__main__":
     print(f"{__version__=}")
-    print(f"{update_available()=}")
+    print(f"{update_available()}")

@@ -48,7 +48,7 @@ from qtpy.QtGui import (
 from qtpy.QtWidgets import QApplication, QDockWidget, QFileDialog, QMainWindow, QWidget
 
 from epicpy import EPICPY_DEBUG, __version__
-from epicpy.constants.emoji import e_boxed_check, e_boxed_x, e_info, emoji_box
+from epicpy.constants.emoji import e_boxed_x, e_info, emoji_box
 from epicpy.constants.state_constants import PAUSED, RUNNABLE, RUNNING, UNREADY
 from epicpy.dialogs.about_window import AboutWin
 from epicpy.dialogs.break_settings_window import BreakSettingsWin
@@ -75,6 +75,7 @@ from epicpy.utils import config, fitness
 from epicpy.utils.app_utils import (
     clear_font,
     has_epiccoder,
+    hcolor,
     loading_cursor_context,
     run_without_waiting,
 )
@@ -186,7 +187,7 @@ class MainWin(LayoutMixin, QMainWindow):
                 ot.add_py_stream(sys.stdout)  # for debug
         Exception_out.add_py_stream(sys.stderr)  # NOTE: I'm not sure that this is needed
 
-        update = update_available()
+        update = update_available(html=True)
         update_msg = f"\n{update}\n" if update else "\n"
         self.normalTextOutput.write(f"Normal Out! ({datetime.datetime.now().strftime('%r')})\n")
 
@@ -209,8 +210,8 @@ class MainWin(LayoutMixin, QMainWindow):
             f"Info Out! ({datetime.datetime.now().strftime('%r')})\n"
             f"Python: Using {platform.python_implementation()} {platform.python_version()}.\n"
             f"EPIClib: Using version {epiclib_version}.\n"
-            f"{update_msg}",
         )
+        self.infoTextOutput.write(update_msg)
 
         Info_out.add_py_stream(self.infoTextOutput)
         # Info_out.add_py_stream(sys.stdout)  # for debug
@@ -633,7 +634,7 @@ class MainWin(LayoutMixin, QMainWindow):
 
             self.simulation.run_one_step()
         else:
-            Info_out("Unable to complete RunOneStep action because run_state is not RUNNABLE\n")
+            Info_out(hcolor("WARNING: Unable to complete RunOneStep action because run_state is not RUNNABLE\n", "gold"))
 
     def run_normal(self, parallel: bool = True):
         """
@@ -649,7 +650,7 @@ class MainWin(LayoutMixin, QMainWindow):
             return
 
         if self.run_state != RUNNABLE:
-            Info_out('<font color="red">ERROR: Unable to complete RunNormal action because run_state is not RUNNABLE<font>\n')
+            Info_out(hcolor("ERROR: Unable to complete RunNormal action because run_state is not RUNNABLE<font>\n", "red"))
             return
 
         self.simulation.current_rule_index = 0
@@ -674,7 +675,7 @@ class MainWin(LayoutMixin, QMainWindow):
 
         # Sequential execution (normal serial run)
         param_count = 1 if not has_permutations(param_string) else len(expand_permutations(param_string))
-        Info_out(f"<br><b>Running {param_count} parameter permutations serially...</b><br>")
+        Info_out(hcolor(f"Running {param_count} parameter permutations serially...\n", bold=True))
         self.simulation.device.set_parameter_string(param_string)
         self.simulation.run()
 
@@ -703,7 +704,7 @@ class MainWin(LayoutMixin, QMainWindow):
             auditory_encoder_file=config.device_cfg.auditory_encoder,
         )
 
-        Info_out(f"<br><b>Running {len(sim_configs)} parameter permutations in parallel...</b><br>\n")
+        Info_out(hcolor(f"Running {len(sim_configs)} parameter permutations in parallel...\n", bold=True))
         for i, cfg in enumerate(sim_configs, 1):
             Info_out(f"  {i}. {cfg.parameter_string}\n")
 
@@ -733,12 +734,12 @@ class MainWin(LayoutMixin, QMainWindow):
         # Report results
         Info_out("\nParallel execution complete. Results:\n")
         for result in results:
-            status = "SUCCESS" if result.success else "FAILED"
-            Info_out(f"  [{status}] {result.sim_config.parameter_string}\n")
+            status = hcolor("SUCCESS", "green", paragraph=False) if result.success else hcolor("FAILED", "red", paragraph=False)
+            Info_out(f"  [{status}] {result.sim_config.parameter_string}")
             if result.success:
-                Info_out(f"    Simulated time: {result.simulated_time_ms}ms, Wall time: {result.run_time_seconds:.2f}s\n")
+                Info_out(f" ➡️ Simulated time: {result.simulated_time_ms}ms, Wall time: {result.run_time_seconds:.2f}s\n")
             else:
-                Info_out(f"    Error: {result.error_message}\n")
+                Info_out(f" ➡️ Error: {result.error_message}\n")
 
         # this one is special, don't restore until the above is done
         Info_out.clear_py_streams()
@@ -758,7 +759,7 @@ class MainWin(LayoutMixin, QMainWindow):
                 </span>
                 """
             self.stats_win.setHtml(msg)
-            Info_out(msg + "\n")
+            Info_out(msg)
 
     def _emit_outputs_from_parallel_run(
         self, results: tuple[SimulationResult, ...], mode: Literal["All Runs", "Last Run"] = "Last Run"
@@ -774,13 +775,6 @@ class MainWin(LayoutMixin, QMainWindow):
 
         self.normalTextOutput.load(deque(chain.from_iterable(result.outputs["Normal_out"] for result in results[start:])))
         self.traceTextOutput.load(deque(chain.from_iterable(result.outputs["Trace_out"] for result in results[start:])))
-        # for line in chain.from_iterable(result.outputs["Info_out"] for result in results[start:]):
-        #     self.infoTextOutput.write(line, move_to_end=False)
-        # self.infoTextOutput.move_to_end()
-
-        # print("INFO_OUT")
-        # for x in chain.from_iterable(result.outputs["Info_out"] for result in results[start:]):
-        #     print(x)
 
     def run_next_cycle(self):
         self.simulation.run_next_cycle()
@@ -839,13 +833,7 @@ class MainWin(LayoutMixin, QMainWindow):
         if Path(device_file).is_file():
             self.on_load_device(device_file, quiet)
         else:
-            Info_out(
-                emoji_box(
-                    f"ERROR: Unable to reload session: Device file not found:\n{device_file}",
-                    line="thick",
-                )
-                + "\n"
-            )
+            Info_out(hcolor(f"Unable to reload session: Device file not found:\n{device_file}", "red"))
 
         if self.simulation and self.simulation.has_device():
             if config.device_cfg.rule_files:
@@ -853,10 +841,11 @@ class MainWin(LayoutMixin, QMainWindow):
                 for i, rule_file in enumerate(config.device_cfg.rule_files):
                     p = Path(rule_file)
                     if p.is_file():
-                        status = f"({e_boxed_check} Found)"
+                        status = hcolor("(Found)", "green", paragraph=False)
                     else:
-                        status = f"({e_boxed_x} Missing)"
+                        status = hcolor("(Missing)", "red", paragraph=False)
                     Info_out(f"   {p.name} ({status})\n")
+                Info_out("\n")
                 config.device_cfg.rule_files = [
                     rule_file for rule_file in config.device_cfg.rule_files if Path(rule_file).is_file()
                 ]
@@ -873,8 +862,7 @@ class MainWin(LayoutMixin, QMainWindow):
 
             if self.simulation.rule_files:
                 Info_out(
-                    f"{e_info} Attempting to compile first rule in ruleset list "
-                    f'("{Path(self.simulation.rule_files[0].rule_file).name}")\n'
+                    f'Attempting to compile first rule in ruleset list ("{Path(self.simulation.rule_files[0].rule_file).name}")\n'
                 )
                 self.simulation.compile_rule(self.simulation.rule_files[0].rule_file)
 
@@ -1378,7 +1366,7 @@ class MainWin(LayoutMixin, QMainWindow):
 
     def show_run_settings(self):
         if not self.simulation or not self.simulation.has_device():
-            Info_out(f"{e_boxed_x} Unable to open run settings, load a device first.\n")
+            Info_out(hcolor("WARNING: Unable to open run settings, load a device first.\n", "gold"))
             return
 
         # ---- Because of device parameter settings, we're just recreating this every
@@ -1427,11 +1415,11 @@ class MainWin(LayoutMixin, QMainWindow):
         # ----- Dialog Closed, deal with any changes
 
         if self.run_settings_dialog.ok:
-            Info_out(f"{e_info} Settings changes accepted.\n")
+            Info_out("Settings changes accepted.\n")
             config.device_cfg.device_params = self.run_settings_dialog.ui.lineEditDeviceParameters.text()
             self.simulation.device.set_parameter_string(config.device_cfg.device_params)
         else:
-            Info_out(f"{e_info} Settings changes ignored.\n")
+            Info_out("Settings changes ignored.\n")
             config.device_cfg.rollback()
 
     def show_display_settings_dialogs(self):
@@ -1447,11 +1435,11 @@ class MainWin(LayoutMixin, QMainWindow):
         self.display_settings_dialog.exec()  # needed to make it modal?!
 
         if self.display_settings_dialog.ok:
-            Info_out(f"{e_info} Display controls changes accepted.\n")
+            Info_out("Display controls changes accepted.\n")
             if self.simulation and self.simulation.has_device() and self.simulation.has_model():
                 self.simulation.update_model_output_settings()
         else:
-            Info_out(f"{e_info} Display controls changes ignored.\n")
+            Info_out("Display controls changes ignored.\n")
             config.device_cfg.rollback()
 
     def show_trace_settings_dialogs(self):
@@ -1483,11 +1471,11 @@ class MainWin(LayoutMixin, QMainWindow):
         self.log_settings_dialog.exec()  # needed to make it modal?!
 
         if self.log_settings_dialog.ok:
-            Info_out(f"{e_info} Log Settings changes saved.\n")
+            Info_out("Log Settings changes saved.\n")
             self.simulation.update_model_output_settings()
             self.update_output_logging()
         else:
-            Info_out(f"{e_info} Log Settings changes ignored.\n")
+            Info_out("Log Settings changes ignored.\n")
             config.device_cfg.rollback()
 
     def show_rule_break_settings_dialog(self):
@@ -1543,7 +1531,7 @@ class MainWin(LayoutMixin, QMainWindow):
             config.app_cfg.save_config()
 
             Info_out(
-                f"{e_info} Application font size changed to {config.app_cfg.font_size} "
+                f"Application font size changed to {config.app_cfg.font_size} "
                 f"pt). NOTE: Some font changes may only take place after application restart.\n"
             )
 
@@ -1558,7 +1546,7 @@ class MainWin(LayoutMixin, QMainWindow):
                 win.reset_font()
 
         else:
-            Info_out(f"{e_info} No changes made to application font size.\n")
+            Info_out("No changes made to application font size.\n")
             config.app_cfg.rollback()
 
     def clear_output_windows(self):
@@ -1596,7 +1584,7 @@ class MainWin(LayoutMixin, QMainWindow):
         if webbrowser.open(url):
             Info_out(f"Opened {url} in default web browser.\n")
         else:
-            Info_out(f"Error opening {url} in default web browser.\n")
+            Info_out(hcolor(f"ERROR: Unable to open {url} in default web browser.\n", "red"))
 
     @staticmethod
     def choose_log_file(file_type: str, ext: str = ".txt") -> str:
@@ -1653,7 +1641,7 @@ class MainWin(LayoutMixin, QMainWindow):
 
         out_file = self.choose_log_file(name, ext)
         if not out_file:
-            Info_out(f"{e_info} {name.title()} window text export abandoned.\n")
+            Info_out(hcolor(f"WARNING: {name.title()} window text export abandoned.\n", "gold"))
             return
 
         out_path = Path(out_file)
@@ -1665,14 +1653,13 @@ class MainWin(LayoutMixin, QMainWindow):
             def on_html_ready(html: str):
                 try:
                     out_path.write_text(html, encoding="utf-8")
-                    Info_out(f"{e_boxed_check} {name.title()} Output window text written to {out_path}\n")
+                    Info_out(f"{name.title()} Output window text written to {out_path}\n")
                 except OSError as e:
                     Info_out(
-                        emoji_box(
-                            f"ERROR: Unable to write output from '{name.title()}' to '{out_path}': {e}",
-                            line="thick",
+                        hcolor(
+                            f"ERROR: Unable to write output from '{name.title()}' to '{out_path}': {e}\n",
+                            "red",
                         )
-                        + "\n"
                     )
 
             source.page().toHtml(on_html_ready)
@@ -1680,14 +1667,13 @@ class MainWin(LayoutMixin, QMainWindow):
             # Normal/Trace output: use MemLargeTextView.save()
             success = source.save(out_path)
             if success:
-                Info_out(f"{e_boxed_check} {name.title()} Output window text written to {out_path}\n")
+                Info_out(f"{name.title()} Output window text written to {out_path}\n")
             else:
                 Info_out(
-                    emoji_box(
-                        f"ERROR: Unable to write output text from '{name.title()}' to '{out_path}'.",
-                        line="thick",
+                    hcolor(
+                        f"ERROR: Unable to write output text from '{name.title()}' to '{out_path}'.\n",
+                        "red",
                     )
-                    + "\n"
                 )
 
     def delete_datafile(self):
@@ -1698,26 +1684,6 @@ class MainWin(LayoutMixin, QMainWindow):
     # =============================================
     # Context Menu Behavior
     # =============================================
-
-    # def create_context_menu_items(self):
-    #     # only ones active if self.run_state == RUNNING
-    #     self.context_items["Stop"] = self.context_menu.addAction("Stop")
-    #     self.context_items["Search"] = self.context_menu.addAction("Search")
-    #     # self.context_items['SelectAll'] = self.context_menu.addAction("Select All")
-    #     self.context_menu.addSeparator()
-    #     self.context_items["Copy"] = self.context_menu.addAction("Copy")
-    #     self.context_items["Copy"].setText("Copy All Lines")
-    #     self.context_items["CopyLine"] = self.context_menu.addAction("Copy")
-    #     self.context_items["CopyLine"].setText("Copy Selected Line")
-    #     self.context_items["Clear"] = self.context_menu.addAction("Clear")
-    #     self.context_menu.addSeparator()
-    #     self.context_items["OpenOutput"] = self.context_menu.addAction("Open Normal Output In Text Editor")
-    #     self.context_items["EditRules"] = self.context_menu.addAction("Edit Production Rule File")
-    #     self.context_items["EditData"] = self.context_menu.addAction("Edit Data Output File")
-    #     self.context_menu.addSeparator()
-    #     self.context_items["OpenFolder"] = self.context_menu.addAction("Open Device Folder")
-    #     self.context_menu.addSeparator()
-    #     self.context_items["Quit"] = self.context_menu.addAction("Quit")
 
     def launchEditor(self, which_file: str = "NormalOut"):
         if which_file == "NormalOut":
@@ -1734,12 +1700,11 @@ class MainWin(LayoutMixin, QMainWindow):
             else:
                 file_path = Path()
                 Info_out(
-                    emoji_box(
-                        "ERROR: Unable to open production rules in external text\n"
-                        "editor: [There are possibly no rules currently loaded.]",
-                        line="thick",
+                    hcolor(
+                        "ERROR: Unable to open production rules in external text "
+                        "editor: [There are possibly no rules currently loaded.]\n",
+                        "red",
                     )
-                    + "\n"
                 )
         elif which_file == "DataFile":
             try:
@@ -1759,10 +1724,11 @@ class MainWin(LayoutMixin, QMainWindow):
             except Exception as e:
                 file_path = Path()
                 err_msg = (
-                    f"ERROR: Unexpected error during attempt to open data file\n{str(self.simulation.device.data_filepath)}:\n{e}"
+                    f"ERROR: Unexpected error during attempt to open data file"
+                    f"\n{str(self.simulation.device.data_filepath)}:\n{e}\n"
                 )
             if err_msg:
-                Info_out(emoji_box(err_msg, line="thick") + "\n")
+                Info_out(hcolor(err_msg, "red"))
         else:
             file_path = Path()
 
@@ -1796,9 +1762,9 @@ class MainWin(LayoutMixin, QMainWindow):
                     err_msg = (
                         f"ERROR: EPICpy can only open system default editor on\n"
                         f"Linux, Darwin, and Windows based operating systems.\n"
-                        f"It does not currently support your operating system type ({_os})."
+                        f"It does not currently support your operating system type ({_os}).\n"
                     )
-                    Info_out(emoji_box(err_msg, line="thick") + "\n")
+                    Info_out(hcolor(err_msg, "red"))
                 if open_cmd:
                     if _os == "Windows":
                         os.startfile(str(file_path.resolve()))
@@ -1807,11 +1773,7 @@ class MainWin(LayoutMixin, QMainWindow):
                         run_without_waiting(open_cmd, str(file_path.resolve()))
             except Exception as e:
                 Info_out(
-                    emoji_box(
-                        f"ERROR: Unable to open {which_file} file\n{file_path.name} in external text editor\n: {e}",
-                        line="thick",
-                    )
-                    + "\n"
+                    hcolor(f"ERROR: Unable to open {which_file} file\n{file_path.name} in external text editor\n: {e}\n", "red")
                 )
 
     def start_tool(self, tool_name: Literal["rule_flow", "schematic", "process_viewer", "brain"]):

@@ -37,6 +37,7 @@ from epiclibcpp.epiclib.output_tee_globals import Info_out
 from platformdirs import user_documents_path
 from qtpy.QtCore import QCoreApplication, QEventLoop, QTimer
 
+from epicpy.utils.app_utils import hcolor
 from epicpy.widgets.custom_text_edit import CustomQTextEdit
 
 if TYPE_CHECKING:
@@ -207,7 +208,7 @@ def setup_test_device_folder(window: MainWin):
         Info_out(f"- Successfully setup test device in {DEVICE_BASE_FOLDER}.\n")
         return True
     else:
-        Info_out(f"- Failed to setup test device in {DEVICE_BASE_FOLDER}.\n")
+        Info_out(hcolor(f"- Failed to setup test device in {DEVICE_BASE_FOLDER}.\n", "red"))
         return False
 
 
@@ -498,7 +499,7 @@ def run_model_test(
                             if text:
                                 Info_out(f"\nGot access to stats window text after {elapsed:0.4f} sec:\n{text}\n")
                             else:
-                                Info_out("\nFAILED to retrieve text from stats window after test!!\n")
+                                Info_out(hcolor("\nFAILED to retrieve text from stats window after test!!\n", "red"))
 
                             correct_N = "N=40" in text  # 10 trials for 4 runs
                             correct_ACCURACY = "ACCURACY=100.00" in text
@@ -569,7 +570,7 @@ def run_model_test(
                     config.app_cfg.last_device_file = last_device_file
 
     if see_results:
-        wait(2, "\nCreating Results Output, Please wait...")
+        wait(2, "Creating Results Output, Please wait...\n")
         show_results()
         Info_out("Test Complete.\n")
 
@@ -595,7 +596,7 @@ def run_all_model_tests(window: MainWin, close_on_finish: bool = True, see_resul
     _ = run_model_test(window, load_encoders=True, close_on_finish=False, see_results=False)
 
     if see_results:
-        wait(2, "\nCreating Results Output, Please wait...")
+        wait(2, "Creating Results Output, Please wait...\n")
         show_results()
         Info_out("Test Finished.\n")
 
