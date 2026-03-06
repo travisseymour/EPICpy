@@ -101,7 +101,9 @@ class Selection:
 
 
 class SearchDialog(QDialog):
-    """Search dialog with editable dropdown history."""
+    """
+    Search dialog with editable dropdown history.
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -216,7 +218,6 @@ class MemLargeTextView(QAbstractScrollArea):
 
     Supports write() to append text and load() to adopt an existing deque.
     Renders only visible lines for efficiency.
-    Supports selection, copy, search, and jump-to-line.
     """
 
     # Signals
@@ -303,12 +304,8 @@ class MemLargeTextView(QAbstractScrollArea):
         self.update_theme()
 
     def _setup_shortcuts(self):
-        """Setup keyboard shortcuts.
-
-        Uses WidgetWithChildrenShortcut context so that shortcuts only fire
-        when this specific instance (or its viewport) has focus. This avoids
-        ambiguous-shortcut conflicts when multiple MemLargeTextView instances
-        exist in the same window.
+        """
+        Setup keyboard shortcuts.
         """
         ctx = Qt.ShortcutContext.WidgetWithChildrenShortcut
 
@@ -348,7 +345,8 @@ class MemLargeTextView(QAbstractScrollArea):
         esc_shortcut.activated.connect(self._handle_escape)
 
     def update_theme(self):
-        """Update colors based on the current system color scheme (dark/light mode)."""
+        """
+        Update colors based on the current system color scheme (dark/light mode)."""
         try:
             scheme = QGuiApplication.styleHints().colorScheme()
             is_dark = scheme == Qt.ColorScheme.Dark
@@ -429,11 +427,6 @@ class MemLargeTextView(QAbstractScrollArea):
     def write(self, text: str):
         """
         Append text to the write buffer.
-
-        The text is split into lines and each line is added to the write buffer.
-        Partial lines (text without a trailing newline) are held in _partial_text
-        until a newline is received. Call update_display() to transfer the write
-        buffer contents to the display buffer.
         """
         if not text:
             return
@@ -456,8 +449,7 @@ class MemLargeTextView(QAbstractScrollArea):
 
     def flush(self):
         """
-        Flush any partial text to the write buffer.
-        Does not update the display - call update_display() for that.
+        Flush any partial text to the write buffer. Does not update the display (call update_display() for that).
         """
         if self._partial_text:
             self._write_buffer.append(self._partial_text)
@@ -466,7 +458,7 @@ class MemLargeTextView(QAbstractScrollArea):
     def update_display(self):
         """
         Transfer all content from the write buffer to the display buffer
-        and refresh the display. Also flushes any partial text first.
+        and refresh the display. Flushes any partial text first.
         """
         # First flush any partial text to write buffer
         self.flush()
@@ -497,7 +489,9 @@ class MemLargeTextView(QAbstractScrollArea):
         self.content_changed.emit(len(self._lines))
 
     def clear(self):
-        """Clear all content from both write buffer and display buffer."""
+        """
+        Clear all content from both write buffer and display buffer.
+        """
         self._write_buffer.clear()
         self._partial_text = ""
         self._lines.clear()
@@ -521,11 +515,11 @@ class MemLargeTextView(QAbstractScrollArea):
 
     @property
     def lines(self) -> deque[str]:
-        """Access the underlying deque."""
         return self._lines
 
     def get_text(self) -> str:
-        """Return all content as a single string."""
+        """
+        Return all content as a single string."""
         if self._search_text is not None:
             return self._search_text
         return "\n".join(self._lines)
@@ -552,7 +546,6 @@ class MemLargeTextView(QAbstractScrollArea):
     # -------------------------------------------------------------------------
 
     def _update_scrollbars(self):
-        """Update scrollbar ranges based on content."""
         line_count = len(self._lines)
         if line_count == 0:
             self.verticalScrollBar().setRange(0, 0)
@@ -573,21 +566,17 @@ class MemLargeTextView(QAbstractScrollArea):
             self.horizontalScrollBar().setRange(0, 0)
 
     def _visible_line_count(self) -> int:
-        """Number of lines visible in viewport."""
         if self._line_height == 0:
             return 0
         return self.viewport().height() // self._line_height
 
     def _text_area_width(self) -> int:
-        """Width available for text (excluding line numbers)."""
         return self.viewport().width() - self._line_number_width
 
     def _first_visible_line(self) -> int:
-        """First visible line number (0-indexed)."""
         return self.verticalScrollBar().value()
 
     def scroll_to_line(self, line_num: int):
-        """Scroll to make a line visible (1-indexed for user convenience)."""
         line_count = len(self._lines)
         line_idx = max(0, min(line_num - 1, line_count - 1))
         visible = self._visible_line_count()
@@ -597,7 +586,6 @@ class MemLargeTextView(QAbstractScrollArea):
         self.verticalScrollBar().setValue(target)
 
     def scroll_to_bottom(self):
-        """Scroll to the bottom of the content."""
         self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
 
     def resizeEvent(self, event: QResizeEvent):
@@ -733,7 +721,6 @@ class MemLargeTextView(QAbstractScrollArea):
         painter.fillRect(x1, y, x2 - x1, self._line_height, self._selection_bg)
 
     def _draw_search_highlights_for_line(self, painter: QPainter, line_idx: int, line_text: str, y: int, text_x: int):
-        """Draw search match highlights for a line."""
         for match_line, start_col, end_col in self._search_matches:
             if match_line != line_idx:
                 continue
@@ -747,7 +734,9 @@ class MemLargeTextView(QAbstractScrollArea):
     # -------------------------------------------------------------------------
 
     def _pos_to_line_col(self, pos: QPoint) -> tuple[int, int]:
-        """Convert viewport position to line/column."""
+        """
+        Convert viewport position to line/column.
+        """
         line_count = len(self._lines)
         if line_count == 0:
             return 0, 0
@@ -898,7 +887,6 @@ class MemLargeTextView(QAbstractScrollArea):
         self._do_search(search_text, forward=False)
 
     def _show_search_progress_bar(self):
-        """Show and position the progress bar for search indexing."""
         vp = self.viewport()
         bar_width = min(400, vp.width() - 40)
         x = (vp.width() - bar_width) // 2
@@ -910,7 +898,9 @@ class MemLargeTextView(QAbstractScrollArea):
         QApplication.processEvents()
 
     def _ensure_search_cache(self):
-        """Build search cache if not already built. Shows progress bar."""
+        """
+        Build search cache if not already built. Shows progress bar.
+        """
         if self._search_text is not None:
             return  # Already cached
 
@@ -956,7 +946,9 @@ class MemLargeTextView(QAbstractScrollArea):
             self._progress_bar.hide()
 
     def _char_offset_to_line_col(self, char_offset: int) -> tuple[int, int]:
-        """Convert character offset in joined text to (line_idx, col)."""
+        """
+        Convert character offset in joined text to (line_idx, col).
+        """
         if not self._char_offsets:
             return 0, 0
 
@@ -967,7 +959,6 @@ class MemLargeTextView(QAbstractScrollArea):
         return line_idx, col
 
     def _do_search(self, search_text: str, forward: bool = True):
-        """Perform search and highlight matches using cached joined text."""
         line_count = len(self._lines)
         if line_count == 0:
             return
@@ -1064,7 +1055,6 @@ class MemLargeTextView(QAbstractScrollArea):
             self.viewport().update()
 
     def clear_search(self):
-        """Clear search highlights."""
         self._search_matches = []
         self._current_match_index = -1
         self.viewport().update()
@@ -1074,7 +1064,6 @@ class MemLargeTextView(QAbstractScrollArea):
     # -------------------------------------------------------------------------
 
     def show_goto_dialog(self):
-        """Show go-to-line dialog."""
         line_count = len(self._lines)
         if line_count == 0:
             return
@@ -1094,7 +1083,6 @@ class MemLargeTextView(QAbstractScrollArea):
     # -------------------------------------------------------------------------
 
     def keyPressEvent(self, event: QKeyEvent):
-        """Handle keyboard navigation."""
         key = event.key()
         modifiers = event.modifiers()
 
@@ -1132,7 +1120,6 @@ class MemLargeTextView(QAbstractScrollArea):
             super().keyPressEvent(event)
 
     def _handle_escape(self):
-        """Handle Escape key."""
         if self._search_dialog and self._search_dialog.isVisible():
             self._search_dialog.hide()
             self.clear_search()
@@ -1144,7 +1131,6 @@ class MemLargeTextView(QAbstractScrollArea):
     # -------------------------------------------------------------------------
 
     def contextMenuEvent(self, event):
-        """Show context menu on right-click."""
         menu = QMenu(self)
         line_count = len(self._lines)
 
@@ -1207,48 +1193,39 @@ class MemLargeTextView(QAbstractScrollArea):
         menu.exec(event.globalPos())
 
     def enable_command(self, name: str, enabled: bool = True):
-        """Enable or disable a single custom command by name.
-
-        Args:
-            name: The command name as it appears in the context menu.
-            enabled: True to enable, False to disable.
+        """
+        Enable or disable a single custom command by name.
         """
         if name in self._commands:
             self._commands[name].enabled = enabled
 
     def enable_commands(self, names: list[str]):
-        """Enable the named custom commands."""
         for name in names:
             if name in self._commands:
                 self._commands[name].enabled = True
 
     def disable_commands(self, names: list[str]):
-        """Disable the named custom commands."""
         for name in names:
             if name in self._commands:
                 self._commands[name].enabled = False
 
     def enable_all_commands(self):
-        """Enable all custom commands."""
         for cmd in self._commands.values():
             cmd.enabled = True
 
     def disable_all_commands(self):
-        """Disable all custom commands."""
         for cmd in self._commands.values():
             cmd.enabled = False
 
     def set_commands(self, commands: dict[str, Callable]):
         """
-        Set up custom commands for the context menu.
-
-        Replaces any existing commands. Use this when commands need to
-        reference the widget itself (which isn't available at construction time).
+        Set up custom commands for the context menu. Note that this replaces any existing commands.
+        Use this when commands need to reference the widget itself
+        (which isn't available at construction time).
         """
         self._commands = {name: PopupCommand(callback=cb) for name, cb in commands.items()}
 
     def _toggle_line_numbers(self):
-        """Toggle line number display."""
         self.set_show_line_numbers(not self._show_line_numbers)
 
 

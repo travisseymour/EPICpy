@@ -55,7 +55,7 @@ class CustomQTextEdit(QTextEdit):
         self._commands: dict[str, PopupCommand] = {name: PopupCommand(callback=cb) for name, cb in (commands or {}).items()}
 
     def write(self, text: str, move_to_end: bool = True):
-        """Append text to the widget. Enables use as a file-like object."""
+        """Append text to the widget. Also must exist for stream compatibility."""
         if "<" in text and _HTML_TAG_RE.search(text):
             self.append(text)
             if move_to_end:
@@ -69,7 +69,7 @@ class CustomQTextEdit(QTextEdit):
                 self.ensureCursorVisible()
 
     def flush(self):
-        """No-op for stream compatibility."""
+        """Has to exist for stream compatibility."""
         ...
 
     def move_to_end(self):
@@ -98,37 +98,31 @@ class CustomQTextEdit(QTextEdit):
         menu.exec(event.globalPos())
 
     def enable_command(self, name: str, enabled: bool = True):
-        """Enable or disable a single custom command by name."""
         if name in self._commands:
             self._commands[name].enabled = enabled
 
     def enable_commands(self, names: list[str]):
-        """Enable the named custom commands."""
         for name in names:
             if name in self._commands:
                 self._commands[name].enabled = True
 
     def disable_commands(self, names: list[str]):
-        """Disable the named custom commands."""
         for name in names:
             if name in self._commands:
                 self._commands[name].enabled = False
 
     def enable_all_commands(self):
-        """Enable all custom commands."""
         for cmd in self._commands.values():
             cmd.enabled = True
 
     def disable_all_commands(self):
-        """Disable all custom commands."""
         for cmd in self._commands.values():
             cmd.enabled = False
 
     def set_commands(self, commands: dict[str, Callable]):
         """
-        Set up custom commands for the context menu.
-
-        Replaces any existing commands. Use this when commands need to
-        reference the widget itself (which isn't available at construction time).
+        Set up custom commands for the context menu. Replaces any existing commands.
+        Use this when commands need to reference the widget itself
+        (which isn't available at construction time).
         """
         self._commands = {name: PopupCommand(callback=cb) for name, cb in commands.items()}

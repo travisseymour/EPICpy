@@ -318,13 +318,6 @@ def has_epiccoder() -> str:
     """
     Determines whether the application "epiccoder" is installed by checking for its
     executable using the appropriate command for the current platform.
-
-    On macOS and Linux, it runs `which epiccoder`.
-    On Windows, it runs `where epiccoder`.
-
-    Returns:
-        The full path to the "epiccoder" executable if it exists and is a local file;
-        otherwise, returns an empty string.
     """
     try:
         # Choose the command based on the operating system.
@@ -371,12 +364,6 @@ def default_run(file_path: Union[str, Path]) -> bool:
     """
     Opens the file specified by file_path using the current operating system's
     default command for launching files. The file is opened in the background.
-
-    Parameters:
-        file_path (Union[str, Path]): The path to the file to be opened.
-
-    Returns:
-        bool: True if the file was successfully launched, False otherwise.
     """
     try:
         # Convert to string if file_path is a Path object.

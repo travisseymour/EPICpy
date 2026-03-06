@@ -28,6 +28,7 @@ ensuring complete isolation of the Coordinator singleton and output streams.
 import multiprocessing
 import os
 import tempfile
+from typing import Literal
 
 # Set to True to force 'spawn' start method on Linux (matching Windows/macOS behavior).
 # This helps catch pickling issues during development that would otherwise only appear
@@ -243,17 +244,10 @@ def _setup_output_routing() -> dict[str, DequeStream]:
     return streams
 
 
-def _load_encoder(encoder_file: str, kind: str, output_stream) -> tuple:
+def _load_encoder(encoder_file: str, kind: Literal["Visual", "Auditory"], output_stream) -> tuple:
     """
     Load an encoder from a file, or return a null encoder if no file is provided.
-
-    Args:
-        encoder_file: Path to the encoder Python file, or empty string for null encoder
-        kind: "Visual" or "Auditory"
-        output_stream: Output stream for the encoder's write attribute
-
-    Returns:
-        Tuple of (encoder_instance, status_message)
+    Returns tuple of (encoder_instance, status_message)
     """
     import importlib
     import sys
@@ -538,13 +532,6 @@ def expand_permutations(param_string: str) -> list[str]:
 def merge_data_files(results: list[SimulationResult], output_path: Path) -> int:
     """
     Merge all temp data files from parallel simulations into a single output file.
-
-    Args:
-        results: List of SimulationResult objects with data_file paths
-        output_path: Path to the merged output file
-
-    Returns:
-        Number of data rows written (excluding headers)
     """
     data_files = [Path(r.data_file) for r in results if r.data_file and Path(r.data_file).is_file()]
     if not data_files:
@@ -581,15 +568,6 @@ def run_parallel_simulations(
 ) -> list[SimulationResult]:
     """
     Run multiple simulations in parallel using ProcessPoolExecutor.
-
-    Args:
-        sim_configs: List of simulation configurations to run
-        max_workers: Maximum number of parallel worker processes
-        on_complete: Optional callback called when each simulation completes
-        device_folder: Folder to write merged data_output.csv (if None, no merge)
-
-    Returns:
-        List of SimulationResult objects
     """
     # Set up temp directory for data files
     temp_dir = _get_session_temp_dir()
@@ -632,26 +610,13 @@ def create_sim_configs_from_permutations(
     rule_file: str,
     base_param_string: str,
     output_settings: OutputSettings,
-    run_command: str = "run_until_done",
-    run_command_value: int = 0,
+    run_command: Literal["run_until_done", "run_for", "run_until", "run_for_cycles"] = "run_until_done",
+    run_command_value: int = 0,  # only for run_for/run_until/run_for_cycles commands
     visual_encoder_file: str = "",
     auditory_encoder_file: str = "",
 ) -> list[SimulationConfig]:
     """
     Create a list of SimulationConfig objects from a parameter string with permutations.
-
-    Args:
-        device_file: Path to the device file
-        rule_file: Path to the rule file
-        base_param_string: Parameter string, possibly with [option1|option2] syntax
-        output_settings: Output and trace settings copied from device config
-        run_command: One of "run_until_done", "run_for", "run_until", "run_for_cycles"
-        run_command_value: Value for run_for/run_until/run_for_cycles commands
-        visual_encoder_file: Path to the visual encoder file (optional)
-        auditory_encoder_file: Path to the auditory encoder file (optional)
-
-    Returns:
-        List of SimulationConfig objects, one per parameter permutation
     """
     param_variations = expand_permutations(base_param_string)
 

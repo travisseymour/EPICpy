@@ -102,22 +102,8 @@ class HorizontalDockArea(QMainWindow):
 
 
 class LayoutMixin:
-    """Mixin for MainWin providing layout save/load/reset functionality.
-
-    Expects the following attributes on self (provided by MainWin):
-        context: str                        - current layout context name ("Main" or device name)
-        window_settings: QSettings          - persistent settings store
-        topAreaInner: HorizontalDockArea    - inner dock area for visual views
-        middleAreaInner: HorizontalDockArea - inner dock area for auditory views
-        minimum_view_size: QSize            - minimum size for view widgets
-        default_top_custom_settings: dict   - captured default settings for top inner docks
-        default_middle_custom_settings: dict - captured default settings for middle inner docks
-        dockTop: QDockWidget                - visual views dock
-        dockMiddle: QDockWidget             - auditory views dock
-        dockInfo: QDockWidget               - info output dock
-        dockNormal: QDockWidget             - normal output dock
-        dockTrace: QDockWidget              - trace output dock
-        dockSide: QDockWidget               - statistics dock
+    """
+    Mixin for MainWin providing layout save/load/reset functionality.
     """
 
     def layout_save(self, layout_name: str | None = ""):

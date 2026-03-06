@@ -679,15 +679,10 @@ class MainWin(LayoutMixin, QMainWindow):
         self.simulation.device.set_parameter_string(param_string)
         self.simulation.run()
 
-    def _run_parallel(self, param_string: str):
+    def _run_parallel(self, param_string: str) -> list[SimulationResult] | None:
         """
         Run all parameter permutations in parallel using separate processes.
-
-        Args:
-            param_string: Parameter string with [option1|option2] syntax
-
-        Returns:
-            List of SimulationResult objects, one per permutation
+        Parameter string are indicated with [option1|option2] syntax.
         """
         rule_file = self.simulation.rule_files[self.simulation.current_rule_index].rule_file
         device_file = config.app_cfg.last_device_file
@@ -1154,8 +1149,10 @@ class MainWin(LayoutMixin, QMainWindow):
             view.allow_updates(enable)
 
     def set_view_batch_mode(self, enable: bool = True):
-        """Enable/disable batch mode on all views. When enabled, views accumulate
-        state changes without triggering repaints until force_view_display is called."""
+        """
+        Enable/disable batch mode on all views. When enabled, views accumulate
+        state changes without triggering repaints until force_view_display is called.
+        """
         for view in (*self.visual_views.values(), *self.auditory_views.values()):
             view.set_batch_mode(enable)
 

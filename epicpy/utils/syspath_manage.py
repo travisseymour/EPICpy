@@ -90,17 +90,10 @@ def _install_path_on_syspath(path: str) -> None:
 def set_active_plugin_path(plugin_dir: str) -> None:
     """
     Make `plugin_dir` the active plugin directory on sys.path.
-
-    Behavior:
     - If `plugin_dir` is the same as the currently active path (after normalization),
       do nothing.
     - Otherwise, remove the currently active plugin path from sys.path (only if this
       module installed it), then install the new one and store it as active.
-
-    Raises:
-        ValueError: if `plugin_dir` is empty.
-        FileNotFoundError: if `plugin_dir` does not exist.
-        NotADirectoryError: if `plugin_dir` is not a directory.
     """
     global _active_plugin_path, _active_installed_by_us
 

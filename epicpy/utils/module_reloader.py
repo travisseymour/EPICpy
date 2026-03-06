@@ -67,7 +67,8 @@ def unload_module(modname: str) -> None:
 
 
 def unload_directory_modules(directory: Path) -> None:
-    """Remove from sys.modules any modules whose file resides in *directory*.
+    """
+    Remove from sys.modules any modules whose file resides in *directory*.
 
     This clears cached device-local modules (e.g. graph_maker) so that
     switching devices forces a fresh import from the new device folder.

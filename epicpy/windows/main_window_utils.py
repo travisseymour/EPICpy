@@ -53,10 +53,6 @@ def set_unscaled_geometry(widget: QWidget, physical_rect: QRect):
     Sets the geometry of the given widget so that its position and size match
     the provided physical (unscaled) pixel QRect. It converts the physical
     coordinates to logical coordinates using the primary screen's device pixel ratio.
-
-    Parameters:
-        widget (QWidget): The widget to resize and reposition.
-        physical_rect (QRect): The desired geometry (position and size) in physical pixels.
     """
     screen = QGuiApplication.primaryScreen()
     scaling_factor = screen.devicePixelRatio() if screen else 1.0

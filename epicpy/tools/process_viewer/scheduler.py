@@ -61,12 +61,6 @@ class Scheduler:
     ):
         """
         Initialize the scheduler.
-
-        Args:
-            rules: Translated rules from parse_rules.translate()
-            time_scale: Float indicating delay timescale to use
-            flash_delay_ms: Delay used for FLASH commands (scaled by time_scale)
-            reset_signal: Optional string that triggers a reset when found in event text
         """
         self.rules: List[tuple] = rules
         self.time_scale: float = float(time_scale)

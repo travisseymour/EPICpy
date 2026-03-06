@@ -65,7 +65,7 @@ helper functions
 def _snapshot_cfg_fields(cfg):
     """
     Take a shallow snapshot of simple fields on device_cfg.
-    We avoid deepcopy to prevent copying Qt / C++ handles.
+    Avoids deepcopy to prevent copying Qt / C++ handles.
     """
     # Most of your fields are primitives/str/bool/float, so shallow is fine.
     # If device_cfg is a plain object, vars(cfg) works; fallback to dir-based.
@@ -91,7 +91,7 @@ def _restore_cfg_fields(cfg, snapshot: dict):
 def temporary_device_cfg(overrides_func):
     """
     Context manager that snapshots current device_cfg fields,
-    applies your overrides (via `setup_test_device_config`), and restores them.
+    applies overrides (via setup_test_device_config), and then restores them.
     """
     snap = _snapshot_cfg_fields(config.device_cfg)
     try:
@@ -325,12 +325,8 @@ def wait_for_output(
 ) -> Tuple[bool, str]:
     """
     Wait for target text to appear in a text widget.
-
-    Args:
-        text_edit: The text widget to monitor
-        target: Regex pattern(s) to match (use || to separate multiple patterns that must all match)
-        sigil: Regex pattern(s) that indicate failure (use || to separate multiple)
-        timeout_secs: Maximum time to wait (default 10 seconds)
+    - a target is a Regex pattern(s) to be matched (use || to separate multiple patterns that must all match)
+    - a sigil is a Regex pattern(s) that indicates failure (use || to separate multiple)
     """
     _timeout = timeout_secs if timeout_secs else 10.0
     start = timeit.default_timer()
@@ -370,11 +366,13 @@ def wait_for_output(
         return False
 
     def on_content_changed(*_args):
-        """Called when content changes in either widget type."""
+        """
+        Called when content changes in either widget type.
+        There may be a better way to do this?
+        """
         check_content()
 
     def on_timeout():
-        """Called when timeout expires."""
         if not result:
             result.append((False, f"Operation Timed Out after {_timeout}s"))
             loop.quit()
@@ -409,13 +407,7 @@ def wait_for_output(
 
 def wait_for_stats_window(window: MainWin, timeout_secs: float = 60.0) -> str:
     """
-    Wait for the stats window (QWebEngineView) to have content.
-
-    Uses a combination of signal-based waiting and polling to handle all timing
-    scenarios reliably, with a generous timeout for slow machines.
-
-    Returns:
-        The plain text content of the stats window, or empty string on timeout.
+    Wait for the stats window (QWebEngineView) to have content and return it.
     """
     start = time.time()
     poll_interval_ms = 250  # Check every 250ms

@@ -40,12 +40,6 @@ from loguru import logger as log
 def load_rules(file_path: str | Path) -> List[str]:
     """
     Load rules from the specified file.
-
-    Args:
-        file_path: Path to the rules file
-
-    Returns:
-        List of rule strings, or empty list on error
     """
     try:
         temp_rules = Path(file_path).read_text().splitlines(keepends=False)
@@ -58,12 +52,6 @@ def load_rules(file_path: str | Path) -> List[str]:
 def clean_rules(rules: List[str]) -> List[str]:
     """
     Remove comments and blank lines from rule list.
-
-    Args:
-        rules: List of raw rule strings
-
-    Returns:
-        List of cleaned rule strings (no comments or blanks)
     """
     _rules = [rule.strip() for rule in rules]
     return [rule for rule in _rules if rule and not rule.startswith("#")]
@@ -72,12 +60,6 @@ def clean_rules(rules: List[str]) -> List[str]:
 def load_parse_rules(file_path: str | Path) -> List[str]:
     """
     Load and clean parse rules from a file.
-
-    Args:
-        file_path: Path to the rules file
-
-    Returns:
-        List of cleaned rule strings
     """
     rules = load_rules(file_path)
     cleaned_rules = clean_rules(rules)
@@ -87,20 +69,6 @@ def load_parse_rules(file_path: str | Path) -> List[str]:
 def translate(rules: List[str]) -> Optional[List[tuple]]:
     """
     Translate raw rule strings to a list of (conditions, actions) tuples.
-
-    Args:
-        rules: List of cleaned rule strings
-
-    Returns:
-        List of tuples, each containing:
-            - conditions: tuple of condition strings
-            - actions: tuple of action strings (e.g., "ON Keyboard", "FLASH Eye")
-
-        Returns None if any rule has invalid format.
-
-    Example:
-        Input: ["Human:Cognitive, update = FLASH WorkingMemory"]
-        Output: [(("Human:Cognitive", "update"), ("FLASH WorkingMemory",))]
     """
     output = []
 
