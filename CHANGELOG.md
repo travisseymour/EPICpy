@@ -2,6 +2,12 @@
 
 ---
 
+## VERSION: 2026.3.8.1
+
+1. **UPDATED**: Follwing a reasonable request to do so, I've removed all unused code and other cruft.
+
+---
+
 ## VERSION: 2026.3.5.3
 
 1. **FIXED**: Had to rework how html was used with the custom textedit used in Info Output window.
