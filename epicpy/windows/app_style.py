@@ -2,7 +2,7 @@
 This file is part of the EPICpy source code. EPICpy is a tool for simulating
 human performance tasks using the EPIC computational cognitive architecture
 (David Kieras and David Meyer 1997a) using the Python programming language.
-Copyright (C) 2022 Travis L. Seymour, PhD
+Copyright (C) 2022-2026 Travis L. Seymour, PhD
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
