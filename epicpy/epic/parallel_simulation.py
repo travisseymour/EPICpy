@@ -569,8 +569,12 @@ def run_parallel_simulations(
     """
     Run multiple simulations in parallel using ProcessPoolExecutor.
     """
-    # Set up temp directory for data files
+    # Set up temp directory for data files, clearing any stale data from prior runs.
+    # Temp filenames are deterministic (md5 of parameter string), so without cleanup
+    # the workers would append to leftover files and accumulate duplicate rows.
     temp_dir = _get_session_temp_dir()
+    for old_file in temp_dir.glob("data_output_*.csv"):
+        old_file.unlink()
     for cfg in sim_configs:
         cfg.temp_data_dir = str(temp_dir)
 

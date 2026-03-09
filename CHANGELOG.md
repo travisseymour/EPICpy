@@ -2,9 +2,15 @@
 
 ---
 
+## VERSION: 2026.3.9.1
+
+1. **FIXED**: Fixed error in parallel run mode where partial data was not being properly cleaned up.
+
+---
+
 ## VERSION: 2026.3.8.1
 
-1. **UPDATED**: Follwing a reasonable request to do so, I've removed all unused code and other cruft.
+1. **UPDATED**: Following a reasonable request to do so, I've removed all unused code and other cruft.
 
 ---
 
