@@ -676,6 +676,9 @@ class MainWin(LayoutMixin, QMainWindow):
         # Sequential execution (normal serial run)
         param_count = 1 if not has_permutations(param_string) else len(expand_permutations(param_string))
         Info_out(hcolor(f"Running {param_count} parameter permutations serially...\n", bold=True))
+
+        QApplication.processEvents()  # Force UI update before blocking call
+
         self.simulation.device.set_parameter_string(param_string)
         self.simulation.run()
 
@@ -699,9 +702,12 @@ class MainWin(LayoutMixin, QMainWindow):
             auditory_encoder_file=config.device_cfg.auditory_encoder,
         )
 
-        Info_out(hcolor(f"Running {len(sim_configs)} parameter permutations in parallel...\n", bold=True))
+        Info_out(hcolor(f"Running {len(sim_configs)} parameter permutations in parallel:\n", bold=True))
         for i, cfg in enumerate(sim_configs, 1):
             Info_out(f"  {i}. {cfg.parameter_string}\n")
+        Info_out(hcolor("Please wait...\n", bold=True))
+
+        QApplication.processEvents()  # Force UI update before blocking call
 
         # Run all permutations in parallel **WARNING: Will Temporarily Re-Route All Output_tees to memory**
         # TODO: Consider running this in a background thread to avoid blocking the UI
@@ -732,14 +738,14 @@ class MainWin(LayoutMixin, QMainWindow):
             status = hcolor("SUCCESS", "green", paragraph=False) if result.success else hcolor("FAILED", "red", paragraph=False)
             Info_out(f"  [{status}] {result.sim_config.parameter_string}")
             if result.success:
-                Info_out(f" ➡️ Simulated time: {result.simulated_time_ms}ms, Wall time: {result.run_time_seconds:.2f}s\n")
+                Info_out(f" ➡️ Simulated time: {result.simulated_time_ms}ms, Wall time: {result.run_time_seconds:.2f}s")
             else:
                 Info_out(f" ➡️ Error: {result.error_message}\n")
 
         # this one is special, don't restore until the above is done
         Info_out.clear_py_streams()
         Info_out.add_py_stream(self.infoTextOutput)
-        Info_out("Parallel Run Finished!\n")
+        Info_out("\nParallel Run Finished!\n")
 
         # show updated graph
         try:

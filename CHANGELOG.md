@@ -2,6 +2,12 @@
 
 ---
 
+## VERSION: 2026.3.9.2
+
+1. **FIXED**: EPICpy now supports python version 3.10 to 3.14!
+
+---
+
 ## VERSION: 2026.3.9.1
 
 1. **FIXED**: Fixed error in parallel run mode where partial data was not being properly cleaned up.
