@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import ctypes.wintypes
+import ctypes
 import datetime
 import os
 import platform
@@ -106,18 +106,26 @@ def pyqt_warning_handler(msg_type, msg_log_content, msg_string):
 
 IGNORE_CRASH = True
 
-if IGNORE_CRASH:
-    OS = platform.system()
+
+def _setup_crash_handler():
+    """Setup SIGSEGV/crash handler. Called from main() to avoid silent crashes at import time."""
+    if not IGNORE_CRASH:
+        import faulthandler
+
+        faulthandler.enable(file=sys.stderr, all_threads=True)
+        return
+
+    current_os = platform.system()
 
     # Define the C signal handler function
-    def segfault_handler(signal, frame):
+    def segfault_handler(sig, frame):
         log.warning("Segmentation fault occurred")
         try:
             os._exit(1)
         except AttributeError:
             sys.exit(1)
 
-    if OS in ("Linux", "Darwin"):
+    if current_os in ("Linux", "Darwin"):
         # Define the C function prototype
         handler_func_type = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_void_p)
 
@@ -128,7 +136,7 @@ if IGNORE_CRASH:
         SIGSEGV = signal.SIGSEGV.value
 
         # Set the signal handler using ctypes
-        if OS == "Linux":
+        if current_os == "Linux":
             output = subprocess.check_output(["ldd", "/bin/ls"]).decode("utf-8")
             # Extract the path for libc.so.[version] using regular expression
             pattern = r"libc\.so\.\d+\s*=>\s*(.*?)\s"
@@ -144,7 +152,7 @@ if IGNORE_CRASH:
             else:
                 libc_path = ""
                 log.warning("ERROR: Cannot find libc path. Unable to install SIGSEGV handler.")
-        elif OS == "Darwin":
+        elif current_os == "Darwin":
             libc_path = "/usr/lib/libc.dylib"  # Update with the correct path on macOS
         else:
             # Unknown OS, do nothing
@@ -153,29 +161,21 @@ if IGNORE_CRASH:
         if libc_path:
             libc = ctypes.CDLL(libc_path)
             libc.signal(SIGSEGV, handler_func_ptr)
-    elif OS == "Windows":
-        # Define the C function prototyped
-        # handler_func_type = ctypes.CFUNCTYPE(ctypes.wintypes.BOOL, ctypes.c_ulong)
-        handler_func_type = ctypes.CFUNCTYPE(ctypes.wintypes.BOOL, ctypes.wintypes.DWORD)
+    elif current_os == "Windows":
+        from ctypes import wintypes
+
+        handler_func_type = ctypes.CFUNCTYPE(wintypes.BOOL, wintypes.DWORD)
 
         # Convert the Python signal handler to a C function pointer
         handler_func_ptr = handler_func_type(segfault_handler)
 
         # Set the signal handler using ctypes on Windows
         ctypes.windll.kernel32.SetConsoleCtrlHandler(handler_func_ptr, True)
-    else:
-        # Unknown OS, do nothing
-        ...
 
     # To test on Linux or Macos, run this:
     # ctypes.string_at(0)
     # NOTE: I can't figure out how to test on Windows.
     # string_at(0) doesn't handle anything on Windows.
-
-else:
-    import faulthandler
-
-    faulthandler.enable(file=sys.stderr, all_threads=True)
 
 
 # ==================================================
@@ -227,6 +227,9 @@ def shut_it_down():
 
 def main(argv: list[str] | None = None) -> int:
     global splash
+
+    _setup_crash_handler()
+
     application = QApplication([])
 
     app_icon = QIcon()
@@ -259,6 +262,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # create launcher on first launch of epicpy
     print(f"{platform.system()=}")
+    print(f"Python: Using {platform.python_implementation()} {platform.python_version()}.")
     running_in_ide = (
         os.environ.get("PYCHARM_HOSTED") == "1"  # PyCharm
         or "vscode" in os.environ.get("TERM_PROGRAM", "").lower()  # VS Code / VSCodium

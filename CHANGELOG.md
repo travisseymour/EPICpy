@@ -2,6 +2,12 @@
 
 ---
 
+## VERSION: 2026.3.12.2
+
+1. **FIXED**: EPICpy not properly starting gui on windows 11
+
+---
+
 ## VERSION: 2026.3.9.2
 
 1. **FIXED**: EPICpy now supports python version 3.10 to 3.14!

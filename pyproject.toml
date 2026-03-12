@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "epicpy"
-version = "2026.3.9.2"
+version = "2026.3.12.1"
 authors = [
     { name = "Travis L. Seymour, PhD", email = "nogard@ucsc.edu" }
 ]
@@ -85,6 +85,9 @@ exclude = [
 ]
 
 [project.scripts]
+epicpy-debug = "epicpy.main:main"
+
+[project.gui-scripts]
 EPICpy = "epicpy.main:main"
 epicpy = "epicpy.main:main"
 
