@@ -51,7 +51,8 @@ Project Sources
 
 #### Python Requirements for EPICpy
 
-EPICpy requires Python 3.10-3.14 and can be installed on Macos 11+ (Intel or Arm), Linux, and Microsoft Windows version 10+.
+EPICpy can be installed on Macos 11+ (Intel or Arm), Linux, and Microsoft Windows version 10+.
+EPICpy can run under Python 3.10-3.14 on Linux and Macos, but only 3.10-3.13 on Windows
 
 #### Install EPICpy
 
@@ -60,10 +61,12 @@ EPICpy requires Python 3.10-3.14 and can be installed on Macos 11+ (Intel or Arm
 uv tool install git+https://www.github.com/travisseymour/EPICpy.git
 ```
 
-_Or, if you'd prefer to specify the Python version:_
+_If you'd prefer to specify the Python version (or are on Windows at the moment):_
 
 ```bash
-# Feel free to change 3.12 to 3.10, 3.11, 3.13 or 3.14 if preferred
+# Feel free to change 3.12 to 3.10, 3.11, 3.13 or 3.14 (Mac & Linux only) if preferred
 # If you system lacks the version you specify, uv will automatically install the specified version.
-uv tool install git+https://www.github.com/travisseymour/EPICpy.git --python 3.12
+uv tool install git+https://www.github.com/travisseymour/EPICpy.git --python 3.13
 ```
+
+> If you are on Windows and EPICpy fails to run due to missing libraries, install them directly from Microsoft: https://aka.ms/vs/17/release/vc_redist.x64.exe
