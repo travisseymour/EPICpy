@@ -42,8 +42,8 @@ class BreakSettingsWin(QDialog):
 
         self.ok: bool = False
 
-        self.all_rules = [str(break_rule) for break_rule in self.model.get_rule_names()]
-        self.break_rules = [str(break_rule) for break_rule in self.model.get_break_rule_names()]
+        self.all_rules = [break_rule.str() for break_rule in self.model.get_rule_names()]
+        self.break_rules = [break_rule.str() for break_rule in self.model.get_break_rule_names()]
 
         # self.setLayout(self.ui.verticalLayout)
 

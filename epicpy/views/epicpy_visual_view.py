@@ -93,7 +93,7 @@ class EPICVisualView(View_base):
 
     def notify_visual_property_changed(self, object_name: Symbol, prop_name: Symbol, prop_value: Symbol):
         if self.view_window.enabled:
-            if prop_name in ("Status", "Color", "Shape", "Text", "Leader"):
+            if prop_name.str() in ("Status", "Color", "Shape", "Text", "Leader"):
                 self.view_window.change_object_property(object_name.str(), prop_name.str(), prop_value.str())
                 self.set_changed()
 

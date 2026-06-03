@@ -112,7 +112,7 @@ class Simulation(QObject):
         self.auditory_encoder_path_additions: list = []
 
     def has_coordinator(self) -> bool:
-        return hasattr(self, "Coordinator") and isinstance(self.instance, Coordinator)
+        return hasattr(self, "instance") and isinstance(self.instance, Coordinator)
 
     def has_model(self) -> bool:
         return hasattr(self, "model") and isinstance(self.model, Model)
@@ -659,12 +659,12 @@ class Simulation(QObject):
         auditory_perceptual: EPICVisualView,
     ):
         try:
-            self.model.get_human_ptr().remove_visual_physical_view(visual_physical)
-            self.model.get_human_ptr().remove_visual_sensory_view(visual_sensory)
-            self.model.get_human_ptr().remove_visual_perceptual_view(visual_perceptual)
-            self.model.get_human_ptr().remove_auditory_physical_view(auditory_physical)
-            self.model.get_human_ptr().remove_auditory_sensory_view(auditory_sensory)
-            self.model.get_human_ptr().remove_auditory_perceptual_view(auditory_perceptual)
+            self.model.remove_visual_physical_view(visual_physical)
+            self.model.remove_visual_sensory_view(visual_sensory)
+            self.model.remove_visual_perceptual_view(visual_perceptual)
+            self.model.remove_auditory_physical_view(auditory_physical)
+            self.model.remove_auditory_sensory_view(auditory_sensory)
+            self.model.remove_auditory_perceptual_view(auditory_perceptual)
         except Exception as e:
             self.main_win.update_text_outputs()
             Info_out(hcolor(f"ERROR: Unable to remove views from model: {e}\n", "red"))
