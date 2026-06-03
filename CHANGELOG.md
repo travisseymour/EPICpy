@@ -2,6 +2,12 @@
 
 ---
 
+## VERSION: 2026.6.3.1
+
+1. **UPDATE**: Minor api tweaks to be inline with epiclibcpp v0.1.8
+
+---
+
 ## VERSION: 2026.3.12.2
 
 1. **FIXED**: EPICpy not properly starting gui on windows 11

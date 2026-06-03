@@ -6,7 +6,7 @@ instead of `pip install -r requirements.txt`, do `make install`
 
 3. make changes
 4. manually update CHANGELOG.md to just the most recent changes
-5. manually update version.py
+5. ~~manually update version.py~~
 6. do a commit + push
 
 ## for new release
