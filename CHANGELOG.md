@@ -3,6 +3,13 @@
 
 ---
 
+## VERSION: 2026.11.13.1
+
+1. **FIXED**: various graph saving commands were not properly enabled in Stats Window righ-click menu!
+
+
+---
+
 ## VERSION: 2026.6.3.1
 
 1. **FIXED**: pyside6-essentials is no longer sufficient - changed the dep to full pyside6 package.

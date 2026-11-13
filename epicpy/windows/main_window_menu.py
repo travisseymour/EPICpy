@@ -237,6 +237,17 @@ def setup_menu_connections(window):
     window.actionUnload_Visual_Encoder.triggered.connect(partial(window.simulation.on_unload_encoder, kind="Visual"))
     window.actionUnload_Auditory_Encoder.triggered.connect(partial(window.simulation.on_unload_encoder, kind="Auditory"))
 
+    # Export actions
+    window.actionExport_Normal_Output.triggered.connect(
+        lambda: window.export_output(window.normalTextOutput, "Normal")
+    )
+    window.actionExport_Trace_Output.triggered.connect(
+        lambda: window.export_output(window.traceTextOutput, "Trace")
+    )
+    window.actionExport_Stats_Output.triggered.connect(
+        lambda: window.export_output(window.stats_win, "Stats")
+    )
+
     # Run menu actions
     window.actionAllow_Parallel_Runs.toggled.connect(window.toggle_allow_parallel_runs)
     window.actionRun_Settings.triggered.connect(window.show_run_settings)
