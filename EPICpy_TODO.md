@@ -24,3 +24,10 @@
 - trial event vs rule-fire list
 
 ## EPICpy ideas
+
+
+## Hold For Now
+
+    "plum-dispatch>=2.5.0,<=2.6.0; sys_platform != 'win32'",
+    "plum-dispatch>=2.5.0,<=2.6.0; sys_platform == 'win32'",
+        "ulid>=1.1,<2.0",
