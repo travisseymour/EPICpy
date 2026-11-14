@@ -40,12 +40,9 @@ def _read_pyproject_version(start: Path) -> Optional[str]:
     cand = Path(__file__).parent.parent / "pyproject.toml"
     if cand.is_file():
         try:
-            try:
-                import tomllib as toml  # Python 3.11+
-            except ModuleNotFoundError:  # Python 3.10
-                import tomli as toml  # pip install tomli for dev/runtime
+            import tomllib
             with cand.open("rb") as fh:
-                data = toml.load(fh)
+                data = tomllib.load(fh)
             v = (data.get("project") or {}).get("version")
             if isinstance(v, str) and v.strip():
                 return v.strip()

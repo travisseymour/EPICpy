@@ -29,10 +29,7 @@ import requests
 from epicpy import __version__
 
 # --- TOML parsing ---
-try:
-    import tomllib as toml  # Python 3.11+
-except ModuleNotFoundError:  # Python 3.10
-    import tomli as toml  # pip install tomli
+import tomllib
 
 # --- Version validation / comparison ---
 try:
@@ -94,7 +91,7 @@ def extract_version_from_toml(path: str | Path) -> Optional[str]:
     """
     path = Path(path)
     root = path.parent
-    data = toml.loads(path.read_text(encoding="utf-8"))
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
 
     # 1) PEP 621
     v = _pick((data.get("project") or {}).get("version"))
@@ -136,7 +133,7 @@ def extract_version_from_toml_text(text: str, *, base_dir: str | Path = ".") -> 
     If Hatchling path-source is used, 'base_dir' is where to resolve the path.
     """
     base = Path(base_dir)
-    data = toml.loads(text)
+    data = tomllib.loads(text)
 
     v = _pick((data.get("project") or {}).get("version"))
     if v:

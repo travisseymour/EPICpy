@@ -405,16 +405,9 @@ def clear_font(widget: QWidget):
         child.setFont(QApplication.instance().font())
 
 
-# Define a conditional dataclass decorator.
-if sys.version_info >= (3, 10) and platform.system() != "Windows":
-
-    def conditional_dataclass(cls):
-        return base_dataclass(cls, slots=True)
-
-else:
-    # Either Python version is below 3.10 or we are on Windows.
-    # In that case, just use the normal dataclass decorator.
-    conditional_dataclass = base_dataclass
+# Dataclass decorator with slots enabled (requires Python 3.10+, which is guaranteed)
+def conditional_dataclass(cls):
+    return base_dataclass(cls, slots=True)
 
 
 def is_dark_mode():

@@ -1,5 +1,11 @@
 # EPICpy Changelog
 
+---
+
+## VERSION: 2026.11.13.2
+
+1. **CHANGED**: bumped minimum python version to Python 3.11 (3.10 is not longer supported).
+
 
 ---
 
