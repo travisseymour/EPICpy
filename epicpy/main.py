@@ -267,7 +267,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Python: Using {platform.python_implementation()} {platform.python_version()}.")
     running_in_ide = (
         os.environ.get("PYCHARM_HOSTED") == "1"  # PyCharm
-        or "vscode" in os.environ.get("TERM_PROGRAM", "").lower()  # VS Code / VSCodium
+        or os.environ.get("VSCODE_PID") is not None  # VS Code / VSCodium integrated terminal
         or sys.gettrace() is not None  # Any debugger attached
     )
     if not running_in_ide:

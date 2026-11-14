@@ -19,29 +19,30 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import shutil
-import sys
+from importlib.resources import as_file, files
 from pathlib import Path
 from typing import Optional
 
 
-def get_app_path(app_name: str) -> str:
+def get_app_path(app_name: str) -> Optional[str]:
     """Finds the installed application path using shutil.which()."""
     app_path = shutil.which(app_name)
     if not app_path:
-        print(f"Post-Install Error: '{app_name}' not found. The command 'uv tool install {app_name}' may have failed.")
-        sys.exit(1)
+        return None
     return app_path
 
 
-def find_app_icon(app_name: str) -> Optional[Path]:
-    """Finds the icon file for a uv-installed app (expects Icon.icns)."""
-    base_path = Path.home() / ".local/share/uv/tools" / app_name
-    icon_paths = list(base_path.rglob("Icon.icns"))
-    if icon_paths:
-        return icon_paths[0]
-    else:
-        print(f"No Icon.icns found in {base_path}")
-        return None
+def find_app_icon() -> Optional[Path]:
+    """Finds the icon file from the installed epicpy package resources."""
+    try:
+        # Use importlib.resources to find icon in package resources
+        icon_resource = files("epicpy").joinpath("resources", "images", "appicon", "icon_256.png")
+        with as_file(icon_resource) as icon_path:
+            if icon_path.is_file():
+                return Path(icon_path).resolve()
+    except Exception:
+        pass
+    return None
 
 
 def macos_launcher_exists(app_name: str) -> bool:
@@ -79,12 +80,12 @@ def create_macos_app_launcher(app_name: str, app_title: Optional[str] = ""):
     macos_dir.mkdir(parents=True, exist_ok=True)
     resources_dir.mkdir(parents=True, exist_ok=True)
 
-    # Handle icon: If an Icon.icns exists, copy it as Icon.icns.
-    icon_path = find_app_icon(app_name)
+    # Handle icon: Copy PNG icon to Resources (macOS supports PNG icons)
+    icon_path = find_app_icon()
     if icon_path:
-        target_icon = resources_dir / "Icon.icns"
+        target_icon = resources_dir / "icon.png"
         shutil.copy(str(icon_path), str(target_icon))
-        icon_file_entry = "Icon.icns"
+        icon_file_entry = "icon.png"
     else:
         icon_file_entry = ""
 

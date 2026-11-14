@@ -2,6 +2,12 @@
 
 ---
 
+## VERSION: 2026.11.14.3
+
+1. **FIXED**: Fixed issue with automatic launcher not using app icon consistently. Also, added additional IDE check for vscode
+
+---
+
 ## VERSION: 2026.11.14.2
 
 1. **FIXED**: Suppressing QT GBM warning on linux when using x11 instead of wayland. Purely cosmetic.

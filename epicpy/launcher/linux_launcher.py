@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import shutil
 import subprocess
+from importlib.resources import as_file, files
 from pathlib import Path
 from typing import Optional
 
@@ -33,17 +34,17 @@ def get_app_path(app_name: str) -> Optional[str]:
     return app_path
 
 
-def find_app_icon(app_name: str) -> Optional[Path]:
-    """Finds the icon file for a uv-installed app."""
-    base_path = Path.home() / ".local/share/uv/tools" / app_name
-    # Recursively search for Icon.png inside base_path
-    icon_paths = list(base_path.rglob("Icon.png"))
-
-    if icon_paths:
-        return icon_paths[0]  # Return the first match
-    else:
-        print(f"No Icon.png found in {base_path}")
-        return None
+def find_app_icon() -> Optional[Path]:
+    """Finds the icon file from the installed epicpy package resources."""
+    try:
+        # Use importlib.resources to find icon in package resources
+        icon_resource = files("epicpy").joinpath("resources", "images", "appicon", "icon_256.png")
+        with as_file(icon_resource) as icon_path:
+            if icon_path.is_file():
+                return Path(icon_path).resolve()
+    except Exception:
+        pass
+    return None
 
 
 def linux_desktop_entry_exists(app_name: str) -> bool:
@@ -61,7 +62,7 @@ def create_linux_desktop_entry(app_name: str, app_title: Optional[str] = ""):
         return
 
     desktop_file = Path.home() / ".local/share/applications" / f"{app_name}.desktop"
-    icon_path = find_app_icon(app_name)
+    icon_path = find_app_icon()
     if icon_path:
         icon_path = str(icon_path.absolute())
     else:

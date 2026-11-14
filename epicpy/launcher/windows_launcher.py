@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import platform
 import shutil
-import sys
+from importlib.resources import as_file, files
 from pathlib import Path
 from typing import Optional
 
@@ -30,41 +30,36 @@ if platform.system() == "Windows":
         import win32com.client
     except ImportError:
         print("Please install the 'pywin32' package to enable Windows shortcut creation.")
-        sys.exit(1)
 
 
-def get_app_path(app_name: str) -> str:
+def get_app_path(app_name: str) -> Optional[str]:
     """Finds the installed application path using shutil.which()."""
     app_path = shutil.which(app_name)
     if not app_path:
-        print(f"Post-Install Error: '{app_name}' not found. The command 'uv tool install {app_name}' may have failed.")
-        sys.exit(1)
+        return None
     return app_path
 
 
-def find_app_icon(app_name: str) -> Optional[Path]:
-    """
-    Unlike on other OSs, the windows path to our icon is determined.
-    Thus, we can return it if it exists, otherwise fail
-    """
-    icon_path = Path(
-        Path.home(),
-        "AppData",
-        "Roaming",
-        "uv",
-        "tools",
-        app_name,
-        "Lib",
-        "site-packages",
-        app_name,
-        "resources",
-        "Icon.ico",
-    )
+def find_app_icon() -> Optional[Path]:
+    """Finds the icon file from the installed epicpy package resources."""
+    try:
+        # First try to find .ico file for Windows
+        icon_resource = files("epicpy").joinpath("resources", "images", "appicon", "icon.ico")
+        with as_file(icon_resource) as icon_path:
+            if icon_path.is_file():
+                return Path(icon_path).resolve()
+    except Exception:
+        pass
 
-    if icon_path.is_file():
-        return icon_path
-    else:
-        return None
+    try:
+        # Fall back to PNG (Windows can use PNG for shortcuts too)
+        icon_resource = files("epicpy").joinpath("resources", "images", "appicon", "icon_256.png")
+        with as_file(icon_resource) as icon_path:
+            if icon_path.is_file():
+                return Path(icon_path).resolve()
+    except Exception:
+        pass
+    return None
 
 
 def windows_shortcut_exists(app_name: str) -> bool:
@@ -89,11 +84,11 @@ def create_windows_shortcut(app_name: str, app_title: Optional[str] = ""):
     start_menu_path.mkdir(parents=True, exist_ok=True)
     shortcut_file = start_menu_path / f"{app_name}.lnk"
 
-    icon_path = find_app_icon(app_name)
+    icon_path = find_app_icon()
     if icon_path:
         icon_path = str(icon_path.absolute())
     else:
-        icon_path = ""  # If no icon is found, Windows will default to the app's Icon.
+        icon_path = ""  # If no icon is found, Windows will default to the app's icon.
 
     shell = win32com.client.Dispatch("WScript.Shell")
     shortcut = shell.CreateShortCut(str(shortcut_file))
