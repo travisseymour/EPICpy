@@ -21,8 +21,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import platform
 from functools import partial
 
-from qtpy.QtGui import QAction
-from qtpy.QtWidgets import QMenu
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QMenu
 
 from epicpy.utils import config
 

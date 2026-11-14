@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from pathlib import Path
 
-from qtpy.QtWidgets import QDialog, QFileDialog
+from PySide6.QtWidgets import QDialog, QFileDialog
 
 from epicpy.uifiles.logging_ui import Ui_DialogLoggingSettings
 from epicpy.utils import config

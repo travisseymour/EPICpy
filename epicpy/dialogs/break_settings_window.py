@@ -19,8 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from epiclibcpp.epiclib import Model, Symbol
-from qdarktheme.qtpy.QtWidgets import QApplication
-from qtpy.QtWidgets import QCheckBox, QDialog, QListWidgetItem
+from PySide6.QtWidgets import QApplication, QCheckBox, QDialog, QListWidgetItem
 
 from epicpy.uifiles.break_settings_ui import Ui_DialogRuleBreak
 from epicpy.utils import config

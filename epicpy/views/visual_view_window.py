@@ -26,9 +26,8 @@ from typing import Optional
 from epiclibcpp.epiclib import geometric_utilities as GU
 from loguru import logger as log
 from munch import DefaultMunch, Munch
-from qdarktheme.qtpy.QtWidgets import QApplication
-from qtpy.QtCore import QPoint, QPointF, QRect, QRectF, QSize, Qt
-from qtpy.QtGui import (
+from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, QSize, Qt
+from PySide6.QtGui import (
     QBrush,
     QCloseEvent,
     QColor,
@@ -45,7 +44,7 @@ from qtpy.QtGui import (
     QStaticText,
     QTransform,
 )
-from qtpy.QtWidgets import QGraphicsTextItem, QMainWindow
+from PySide6.QtWidgets import QApplication, QGraphicsTextItem, QMainWindow
 
 from epicpy.utils import config
 from epicpy.utils.app_utils import Point, Rect, Size, conditional_dataclass

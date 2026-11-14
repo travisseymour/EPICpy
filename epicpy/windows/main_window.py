@@ -35,8 +35,8 @@ from typing import Literal, Optional
 from loguru import logger as log
 from PySide6.QtWebEngineCore import QWebEngineSettings
 from PySide6.QtWebEngineWidgets import QWebEngineView  # Linux might need `sudo apt install libnss3`
-from qtpy.QtCore import QByteArray, QEvent, QPoint, QRect, QSettings, QSize, Qt, QTimer
-from qtpy.QtGui import (
+from PySide6.QtCore import QByteArray, QEvent, QPoint, QRect, QSettings, QSize, Qt, QTimer
+from PySide6.QtGui import (
     QAction,
     QCloseEvent,
     QFontDatabase,
@@ -45,7 +45,7 @@ from qtpy.QtGui import (
     QIcon,
     QShowEvent,
 )
-from qtpy.QtWidgets import QApplication, QDockWidget, QFileDialog, QMainWindow, QWidget
+from PySide6.QtWidgets import QApplication, QDockWidget, QFileDialog, QMainWindow, QWidget
 
 from epicpy import EPICPY_DEBUG, __version__
 from epicpy.constants.emoji import e_boxed_x, e_info, emoji_box

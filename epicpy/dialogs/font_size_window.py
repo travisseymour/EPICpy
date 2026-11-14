@@ -18,10 +18,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from qdarktheme.qtpy.QtWidgets import QApplication
-from qtpy.QtCore import QSize
-from qtpy.QtGui import QFont, QFontDatabase, QShowEvent
-from qtpy.QtWidgets import QDialog
+from PySide6.QtCore import QSize
+from PySide6.QtGui import QFont, QFontDatabase, QShowEvent
+from PySide6.QtWidgets import QApplication, QDialog
 
 from epicpy.uifiles.font_size_ui import Ui_DialogFontSize
 from epicpy.utils import config

@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from munch import Munch
-from qtpy.QtGui import QColor, QColorConstants
+from PySide6.QtGui import QColor, QColorConstants
 
 """
 For more colors, consult https://cloford.com/resources/colours/500col.htm

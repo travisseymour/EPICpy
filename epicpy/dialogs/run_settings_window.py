@@ -20,8 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Callable
 
-from qtpy.QtGui import QShowEvent
-from qtpy.QtWidgets import QButtonGroup, QDialog, QMessageBox
+from PySide6.QtGui import QShowEvent
+from PySide6.QtWidgets import QButtonGroup, QDialog, QMessageBox
 
 from epicpy.uifiles.run_settings_ui import Ui_DialogRunSettings
 from epicpy.utils import config

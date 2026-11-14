@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from qtpy.QtWidgets import QDialog
+from PySide6.QtWidgets import QDialog
 
 from epicpy.uifiles.display_controls_ui import Ui_DialogDisplayControls
 from epicpy.utils import config

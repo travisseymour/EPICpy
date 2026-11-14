@@ -18,9 +18,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from qtpy.QtCore import QRect, QSize
-from qtpy.QtGui import QGuiApplication
-from qtpy.QtWidgets import QWidget
+from PySide6.QtCore import QRect, QSize
+from PySide6.QtGui import QGuiApplication
+from PySide6.QtWidgets import QWidget
 
 
 def usable_size_at_least(target_size: QSize) -> bool:

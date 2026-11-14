@@ -28,10 +28,10 @@ import networkx as nx
 from epiclibcpp.epiclib.output_tee_globals import Exception_out
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-from qtpy.QtCore import QByteArray
-from qtpy.QtGui import QColor, QGuiApplication, QPen
-from qtpy.QtSvgWidgets import QSvgWidget
-from qtpy.QtWidgets import (
+from PySide6.QtCore import QByteArray
+from PySide6.QtGui import QColor, QGuiApplication, QPen
+from PySide6.QtSvgWidgets import QSvgWidget
+from PySide6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
     QWidget,

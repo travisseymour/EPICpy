@@ -37,9 +37,9 @@ from typing import Optional, Union
 from weakref import WeakKeyDictionary
 
 from loguru import logger as log
-from qtpy.QtCore import QEventLoop, Qt, QTimer
-from qtpy.QtGui import QCursor, QPalette
-from qtpy.QtWidgets import QApplication, QWidget
+from PySide6.QtCore import QEventLoop, Qt, QTimer
+from PySide6.QtGui import QCursor, QPalette
+from PySide6.QtWidgets import QApplication, QWidget
 
 OS = platform.system()
 from dataclasses import dataclass as base_dataclass

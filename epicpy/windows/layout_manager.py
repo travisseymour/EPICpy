@@ -20,8 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from collections.abc import Mapping
 
-from qtpy.QtCore import QSize, Qt
-from qtpy.QtWidgets import QDockWidget, QMainWindow, QSizePolicy
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtWidgets import QDockWidget, QMainWindow, QSizePolicy
 
 from epicpy.views.auditory_view_window import AuditoryViewWin
 from epicpy.views.visual_view_window import VisualViewWin

@@ -18,8 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from qtpy.QtGui import QPixmap
-from qtpy.QtWidgets import QDialog
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QDialog
 
 from epicpy import __version__
 from epicpy.uifiles.about_ui import Ui_aboutDialog

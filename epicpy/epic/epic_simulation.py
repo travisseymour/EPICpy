@@ -26,11 +26,11 @@ from pathlib import Path
 from typing import List, Optional
 
 from epicpydevicelib.epicpy_device_base import EpicPyDevice
-from qtpy.QtCore import (
+from PySide6.QtCore import (
     QObject,
     QTimer,
 )
-from qtpy.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog
 
 from epicpy.constants.emoji import (
     e_boxed_ok,

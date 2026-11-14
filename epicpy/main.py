@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Optional
 
 from loguru import logger as log
-from qtpy.QtGui import QFontDatabase, QIcon
+from PySide6.QtGui import QFontDatabase, QIcon
 from rich.console import Console
 
 from epicpy.cli import build_parser, do_cleanup
@@ -78,8 +78,8 @@ set_qt_platform()
 # os.environ["OUTDATED_IGNORE"] = "1"
 # os.environ["QT_DEBUG_PLUGINS"] = "1" # for more info when there are plugin load errors
 
-from qtpy.QtCore import QCoreApplication, qInstallMessageHandler
-from qtpy.QtWidgets import QApplication
+from PySide6.QtCore import QCoreApplication, qInstallMessageHandler
+from PySide6.QtWidgets import QApplication
 
 from epicpy.utils import config
 from epicpy.utils.app_utils import check_int, frozen

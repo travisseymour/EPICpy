@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from qtpy.QtWidgets import QApplication, QCheckBox, QDialog, QListWidgetItem
+from PySide6.QtWidgets import QApplication, QCheckBox, QDialog, QListWidgetItem
 
 from epicpy.uifiles.device_settings_ui import Ui_DialogDeviceOptions
 from epicpy.utils import config

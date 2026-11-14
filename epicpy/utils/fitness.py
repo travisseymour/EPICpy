@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING, Optional, Tuple
 import pandas as pd
 from epiclibcpp.epiclib.output_tee_globals import Info_out
 from platformdirs import user_documents_path
-from qtpy.QtCore import QCoreApplication, QEventLoop, QTimer
+from PySide6.QtCore import QCoreApplication, QEventLoop, QTimer
 
 from epicpy.utils.app_utils import hcolor
 from epicpy.widgets.custom_text_edit import CustomQTextEdit
