@@ -2,6 +2,13 @@
 
 ---
 
+## VERSION: 2026.11.14.2
+
+1. **FIXED**: Suppressing QT GBM warning on linux when using x11 instead of wayland. Purely cosmetic.
+2. **UPDATED**: Updated Workflow.md with complete workflow I'm using, and using .gitignore to keep temp release message out of versioning.
+
+---
+
 ## VERSION: 2026.11.14.1
 
 1. **CHANGED**: Removed multiple unused dependencies
@@ -14,13 +21,11 @@
 
 1. **CHANGED**: bumped minimum python version to Python 3.11 (3.10 is not longer supported).
 
-
 ---
 
 ## VERSION: 2026.11.13.1
 
 1. **FIXED**: various graph saving commands were not properly enabled in Stats Window righ-click menu!
-
 
 ---
 

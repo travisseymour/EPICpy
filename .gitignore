@@ -177,3 +177,4 @@ large_output.txt
 .ruff_cache/
 .vscode/
 
+RELEASE-NOTES.md

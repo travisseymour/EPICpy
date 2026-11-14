@@ -55,6 +55,8 @@ _console = Console()
 def set_qt_platform():
     # Check if the operating system is Linux
     if platform.system() == "Linux":
+        # Suppress GBM warning from Qt WebEngine (Chromium) - it falls back to Vulkan rendering fine
+        os.environ["QT_LOGGING_RULES"] = "qt.qpa.gl=false"
         if "WAYLAND_DISPLAY" in os.environ:
             os.environ["QT_QPA_PLATFORM"] = "wayland"
             # print("Using Wayland as the display server.")

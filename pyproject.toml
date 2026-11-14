@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "epicpy"
-version = "2026.11.14.1"
+version = "2026.11.14.2"
 authors = [
     { name = "Travis L. Seymour, PhD", email = "nogard@ucsc.edu" }
 ]
