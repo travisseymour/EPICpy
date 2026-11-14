@@ -529,25 +529,39 @@ def expand_permutations(param_string: str) -> list[str]:
     return unpack_param_string(param_string)
 
 
-def merge_data_files(results: list[SimulationResult], output_path: Path) -> int:
+def merge_data_files(results: list[SimulationResult], output_path: Path, overwrite: bool = True) -> int:
     """
     Merge all temp data files from parallel simulations into a single output file.
+
+    Args:
+        results: List of simulation results containing data file paths
+        output_path: Path to the output CSV file
+        overwrite: If True, overwrite existing file. If False, append to existing file.
     """
     data_files = [Path(r.data_file) for r in results if r.data_file and Path(r.data_file).is_file()]
     if not data_files:
         return 0
 
     rows_written = 0
-    header_written = False
 
-    with open(output_path, "w", newline="") as outfile:
+    # Determine if we need to write the header
+    # In append mode, only write header if the output file doesn't exist or is empty
+    if overwrite:
+        file_mode = "w"
+        header_written = False
+    else:
+        file_mode = "a"
+        # Check if file exists and has content (header already present)
+        header_written = output_path.exists() and output_path.stat().st_size > 0
+
+    with open(output_path, file_mode, newline="") as outfile:
         for data_file in data_files:
             with open(data_file, "r", newline="") as infile:
                 lines = infile.readlines()
                 if not lines:
                     continue
 
-                # Write header only once (from the first file)
+                # Write header only once (from the first file, or not at all if appending to existing)
                 if not header_written:
                     outfile.write(lines[0])
                     header_written = True
@@ -565,9 +579,17 @@ def run_parallel_simulations(
     max_workers: int = _DEFAULT_MAX_WORKERS,
     on_complete: Callable[[SimulationResult], None] | None = None,
     device_folder: Path | None = None,
+    overwrite_data: bool = True,
 ) -> list[SimulationResult]:
     """
     Run multiple simulations in parallel using ProcessPoolExecutor.
+
+    Args:
+        sim_configs: List of simulation configurations to run
+        max_workers: Maximum number of parallel workers
+        on_complete: Optional callback for each completed simulation
+        device_folder: Folder where the merged data file will be written
+        overwrite_data: If True, overwrite existing data file. If False, append to it.
     """
     # Set up temp directory for data files, clearing any stale data from prior runs.
     # Temp filenames are deterministic (md5 of parameter string), so without cleanup
@@ -604,7 +626,7 @@ def run_parallel_simulations(
     # Merge data files into device folder
     if device_folder:
         output_path = device_folder / "data_output.csv"
-        merge_data_files(results, output_path)
+        merge_data_files(results, output_path, overwrite=overwrite_data)
 
     return results
 

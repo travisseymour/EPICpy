@@ -131,6 +131,11 @@ def setup_menu(window):
     window.actionAllow_Parallel_Runs.setCheckable(True)
     window.actionAllow_Parallel_Runs.setChecked(config.device_cfg.allow_parallel_runs)
     run_menu.addAction(window.actionAllow_Parallel_Runs)
+
+    window.actionOverwrite_Data = QAction("Overwrite Previous Data", window)
+    window.actionOverwrite_Data.setCheckable(True)
+    window.actionOverwrite_Data.setChecked(config.device_cfg.overwrite_data)
+    run_menu.addAction(window.actionOverwrite_Data)
     run_menu.addSeparator()
 
     window.actionRun_Settings = QAction("Run Settings", window)
@@ -250,6 +255,7 @@ def setup_menu_connections(window):
 
     # Run menu actions
     window.actionAllow_Parallel_Runs.toggled.connect(window.toggle_allow_parallel_runs)
+    window.actionOverwrite_Data.toggled.connect(window.toggle_overwrite_data)
     window.actionRun_Settings.triggered.connect(window.show_run_settings)
 
     window.actionRun_Normal.triggered.connect(lambda _: window.run_normal())

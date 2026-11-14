@@ -677,6 +677,10 @@ class MainWin(LayoutMixin, QMainWindow):
         param_count = 1 if not has_permutations(param_string) else len(expand_permutations(param_string))
         Info_out(hcolor(f"Running {param_count} parameter permutations serially...\n", bold=True))
 
+        # Delete existing data file if overwrite mode is enabled
+        if config.device_cfg.overwrite_data:
+            self.delete_datafile()
+
         QApplication.processEvents()  # Force UI update before blocking call
 
         self.simulation.device.set_parameter_string(param_string)
@@ -716,6 +720,7 @@ class MainWin(LayoutMixin, QMainWindow):
             sim_configs=sim_configs,
             max_workers=min(len(sim_configs), os.cpu_count() or 4),
             device_folder=device_folder,
+            overwrite_data=config.device_cfg.overwrite_data,
         )
 
         # Restore default Output_tee routing
@@ -1366,6 +1371,10 @@ class MainWin(LayoutMixin, QMainWindow):
     def toggle_allow_parallel_runs(self, checked: bool):
         """Toggle the allow_parallel_runs setting."""
         config.device_cfg.allow_parallel_runs = checked
+
+    def toggle_overwrite_data(self, checked: bool):
+        """Toggle the overwrite_data setting."""
+        config.device_cfg.overwrite_data = checked
 
     def show_run_settings(self):
         if not self.simulation or not self.simulation.has_device():

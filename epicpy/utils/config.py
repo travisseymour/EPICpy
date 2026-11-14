@@ -177,6 +177,7 @@ class DeviceConfig:
     describe_parameters: bool = False
     allow_device_images: bool = False
     allow_parallel_runs: bool = True
+    overwrite_data: bool = True
 
     device_config_file: str = ""
 
