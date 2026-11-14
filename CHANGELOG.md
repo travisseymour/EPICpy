@@ -2,6 +2,14 @@
 
 ---
 
+## VERSION: 2026.11.14.1
+
+1. **CHANGED**: Removed multiple unused dependencies
+2. **CHANGED**: Removed qtpy abstraction layer in favor of direct pyside6 calls
+3. **ADDED**: Added data overwrite/append toggle in Run menu
+
+---
+
 ## VERSION: 2026.11.13.2
 
 1. **CHANGED**: bumped minimum python version to Python 3.11 (3.10 is not longer supported).

@@ -16,7 +16,7 @@ instead of `pip install -r requirements.txt`, do `make install`
 git commit -am "Prepare release 1.2.0"
 
 # these lines do the release
-git tag -a v1.2.0 -m "Release v1.2.0"
+git tag -a v2026.11.14.1 -m "Release v2026.11.14.1"
 git push
-git push origin v1.2.0
+git push origin v2026.11.14.1
 ```
