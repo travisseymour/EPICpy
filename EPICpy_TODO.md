@@ -6,6 +6,12 @@
 
 ## NOTES
 
+You can test different epiclibcpp versions with uv's --with flag:
+
+```bash
+uv tool install /home/nogard/Dropbox/Documents/EPICSTUFF/EPICpy3/EPICpy3 --with "epiclibcpp==0.2.1" --reinstall
+```
+
 ## COMMUNICATION STUFF
 
 ## ASAP

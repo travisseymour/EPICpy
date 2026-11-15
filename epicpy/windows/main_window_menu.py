@@ -301,6 +301,7 @@ def setup_menu_connections(window):
     window.actionRuleFlowTool.setEnabled(False)  # Enabled dynamically when normalTextOutput has cycle data
     window.actionSchematicTool.setEnabled(False)
     window.actionProcessViewerTool.setEnabled(False)  # Enabled dynamically when traceTextOutput has Human data
+    window.actionProcessViewerTool.setToolTip("Requires Human processor tracing to be enabled")
     window.actionBrainTool.setEnabled(False)
 
     window.actionRuleFlowTool.triggered.connect(partial(window.start_tool, tool_name="rule_flow"))
