@@ -1,22 +1,5 @@
-"""
-This file is part of the EPICpy source code. EPICpy is a tool for simulating
-human performance tasks using the EPIC computational cognitive architecture
-(David Kieras and David Meyer 1997a) using the Python programming language.
-Copyright (C) 2022-2026 Travis L. Seymour, PhD
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
+# SPDX-FileCopyrightText: EPICpy | Copyright (c) 2022-2026 Travis L. Seymour, PhD <nogard@ucsc.edu>
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 import platform
 from functools import partial
@@ -243,15 +226,9 @@ def setup_menu_connections(window):
     window.actionUnload_Auditory_Encoder.triggered.connect(partial(window.simulation.on_unload_encoder, kind="Auditory"))
 
     # Export actions
-    window.actionExport_Normal_Output.triggered.connect(
-        lambda: window.export_output(window.normalTextOutput, "Normal")
-    )
-    window.actionExport_Trace_Output.triggered.connect(
-        lambda: window.export_output(window.traceTextOutput, "Trace")
-    )
-    window.actionExport_Stats_Output.triggered.connect(
-        lambda: window.export_output(window.stats_win, "Stats")
-    )
+    window.actionExport_Normal_Output.triggered.connect(lambda: window.export_output(window.normalTextOutput, "Normal"))
+    window.actionExport_Trace_Output.triggered.connect(lambda: window.export_output(window.traceTextOutput, "Trace"))
+    window.actionExport_Stats_Output.triggered.connect(lambda: window.export_output(window.stats_win, "Stats"))
 
     # Run menu actions
     window.actionAllow_Parallel_Runs.toggled.connect(window.toggle_allow_parallel_runs)
