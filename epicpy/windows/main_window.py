@@ -750,6 +750,9 @@ class MainWin(LayoutMixin, QMainWindow):
             self.stats_win.setHtml(msg)
             Info_out(msg)
 
+        # Save output logs if enabled
+        self._save_output_logs()
+
     def _emit_outputs_from_parallel_run(
         self, results: tuple[SimulationResult, ...], mode: Literal["All Runs", "Last Run"] = "Last Run"
     ):
@@ -1194,6 +1197,50 @@ class MainWin(LayoutMixin, QMainWindow):
         self.normalTextOutput.update_display()
         self.traceTextOutput.update_display()
 
+    def _save_output_logs(self):
+        """Save enabled log outputs to the logging folder after run completion."""
+        if not config.device_cfg.log_enabled:
+            return
+
+        device_folder = Path(config.device_cfg.device_file).parent
+        logging_folder = device_folder / "logging"
+        logging_folder.mkdir(exist_ok=True)
+
+        mode = "w" if config.device_cfg.log_write_mode == "overwrite" else "a"
+
+        # Save Normal Output
+        if config.device_cfg.log_normal_out:
+            try:
+                path = logging_folder / "normal_output.txt"
+                text = self.normalTextOutput.get_text()
+                with open(path, mode, encoding="utf-8") as f:
+                    f.write(text)
+            except Exception as e:
+                Info_out(f"Error saving normal output log: {e}\n")
+
+        # Save Trace Output
+        if config.device_cfg.log_trace_out:
+            try:
+                path = logging_folder / "trace_output.txt"
+                text = self.traceTextOutput.get_text()
+                with open(path, mode, encoding="utf-8") as f:
+                    f.write(text)
+            except Exception as e:
+                Info_out(f"Error saving trace output log: {e}\n")
+
+        # Save Stats Output (async via callback)
+        if config.device_cfg.log_stats_out:
+            stats_path = logging_folder / "stats_output.html"
+
+            def on_html(html: str):
+                try:
+                    with open(stats_path, mode, encoding="utf-8") as f:
+                        f.write(html)
+                except Exception as e:
+                    Info_out(f"Error saving stats output log: {e}\n")
+
+            self.stats_win.page().toHtml(on_html)
+
     def clear(self):
         self.normalTextOutput.clear()
 
@@ -1309,7 +1356,7 @@ class MainWin(LayoutMixin, QMainWindow):
 
         self.actionDisplay_Controls.setEnabled(has_device)
         self.actionTrace_Settings.setEnabled(has_device)
-        # self.actionLogging.setEnabled(has_device)
+        self.actionLogging.setEnabled(has_device)
 
         self.actionExport_Normal_Output.setEnabled(has_device)
         self.actionExport_Trace_Output.setEnabled(has_device)
@@ -1455,20 +1502,16 @@ class MainWin(LayoutMixin, QMainWindow):
             config.device_cfg.rollback()
 
     def show_log_settings_dialogs(self):
-        raise NotImplementedError("logging from this dialog is not currently supported!")
-
         if hasattr(self, "log_settings_dialog"):
             self.log_settings_dialog.close()
 
         self.log_settings_dialog = LoggingSettingsWin()
         self.log_settings_dialog.setup_options()
         self.log_settings_dialog.setModal(True)
-        self.log_settings_dialog.exec()  # needed to make it modal?!
+        self.log_settings_dialog.exec()
 
         if self.log_settings_dialog.ok:
             Info_out("Log Settings changes saved.\n")
-            self.simulation.update_model_output_settings()
-            self.update_output_logging()
         else:
             Info_out("Log Settings changes ignored.\n")
             config.device_cfg.rollback()
@@ -1586,24 +1629,17 @@ class MainWin(LayoutMixin, QMainWindow):
         kind = file_type.title()
         assert kind in ("Trace", "Normal", "Stats")
 
-        if kind == "Normal":
-            start_file = config.device_cfg.normal_out_file
-        elif kind == "Trace":
-            start_file = config.device_cfg.trace_out_file
-        elif kind == "Stats":
-            start_file = config.device_cfg.stats_out_file
-            if start_file.endswith(".txt"):
-                start_file = start_file.replace(".txt", ".html")
+        # Determine starting directory and filename
+        if Path(config.device_cfg.device_file).parent.is_dir():
+            start_dir = Path(config.device_cfg.device_file).parent
         else:
-            start_file = ""
+            start_dir = Path().home().expanduser()
 
-        if not start_file:
-            if Path(config.device_cfg.device_file).parent.is_dir():
-                start_dir = Path(config.device_cfg.device_file).parent
-            else:
-                start_dir = Path().home().expanduser()
-            start_file = f"{start_dir.stem}_{kind}_output.html" if kind == "Stats" else f"{start_dir.stem}_{kind}_output.txt"
-            start_file = str(Path(start_dir, start_file).with_suffix(ext).resolve())
+        if kind == "Stats":
+            start_file = f"{start_dir.stem}_{kind}_output.html"
+        else:
+            start_file = f"{start_dir.stem}_{kind}_output.txt"
+        start_file = str(Path(start_dir, start_file).with_suffix(ext).resolve())
 
         if kind == "Stats":
             _filter = "HTML-Files (*.html);;Text files (*.txt);;Markdown files (*.md);;ODF files (*.odt);;All Files (*)"

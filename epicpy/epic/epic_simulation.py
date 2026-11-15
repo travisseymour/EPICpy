@@ -19,7 +19,6 @@ from epicpy.constants.emoji import (
     e_boxed_ok,
 )
 from epicpy.constants.state_constants import PAUSED, RUNNABLE, RUNNING, UNREADY
-from epicpy.dialogs.logging_window import LoggingSettingsWin
 from epicpy.epic.encoder_passthru import NullAuditoryEncoder, NullVisualEncoder
 from epicpy.epic.epicpy_exception import EPICpyException
 from epicpy.epic.run_info import RunInfo
@@ -172,16 +171,6 @@ class Simulation(QObject):
 
         # save global app config in case we need last_device_file
         config.app_cfg.last_device_file = device_file
-
-        if not config.device_cfg.normal_out_file:
-            logfile = LoggingSettingsWin.default_log_filename("normal")
-            config.device_cfg.normal_out_file = logfile if logfile else ""
-        if not config.device_cfg.trace_out_file:
-            logfile = LoggingSettingsWin.default_log_filename("trace")
-            config.device_cfg.trace_out_file = logfile if logfile else ""
-        if not config.device_cfg.stats_out_file:
-            logfile = LoggingSettingsWin.default_log_filename("stats")
-            config.device_cfg.stats_out_file = logfile if logfile else ""
 
         if self.has_device():
             # make sure device data output gets flushed and saved no matter how
@@ -985,3 +974,7 @@ class Simulation(QObject):
                 """
             self.main_win.stats_win.setHtml(msg)
             Info_out(msg)
+
+        # Save output logs if enabled and all runs complete
+        if reason == "finished" and self.current_rule_index == 0:
+            self.main_win._save_output_logs()

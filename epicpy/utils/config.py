@@ -120,11 +120,11 @@ class DeviceConfig:
     visual_encoder: str = ""
     auditory_encoder: str = ""
 
+    log_enabled: bool = False
     log_normal_out: bool = False
     log_trace_out: bool = False
-    normal_out_file: str = ""
-    trace_out_file: str = ""
-    stats_out_file: str = ""
+    log_stats_out: bool = False
+    log_write_mode: str = "overwrite"  # "overwrite" or "append"
 
     run_command: str = "run_until_done"
     run_command_value: float = 1.0
