@@ -34,6 +34,7 @@ from epicpy.views.epicpy_visual_view import EPICVisualView
 
 warnings.filterwarnings("ignore", module=r"^matplotlib")
 warnings.filterwarnings("ignore", module=r"^pingouin")
+warnings.filterwarnings("ignore", module=r"^scipy")
 warnings.filterwarnings("ignore", module=r"^pandas")
 warnings.filterwarnings("ignore", module=r"^numpy")
 
