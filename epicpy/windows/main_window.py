@@ -84,6 +84,7 @@ epiclib_version = importlib.metadata.version("epiclibcpp")
 print(f"Currently using epiclibcpp v{epiclib_version}")
 
 from epiclibcpp.epiclib.output_tee_globals import (
+    cleanup_all_output_tees,
     Debug_out,
     Device_out,
     Exception_out,
@@ -943,12 +944,7 @@ class MainWin(LayoutMixin, QMainWindow):
             self.simulation.halt_simulation(reason="user_stop")
 
     def close_output_files(self):
-        # FIXME: Revisit this when we figure out how to re=do text output
-        # if Normal_out.is_present(self.normal_out_fs):
-        #     Normal_out.remove_stream(self.normal_out_fs)
-        # if Trace_out.is_present(self.trace_out_fs):
-        #     Trace_out.remove_stream(self.trace_out_fs)
-        ...
+        cleanup_all_output_tees()
 
     def update_ui_status(self):
         if self.run_state == RUNNING:
