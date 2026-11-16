@@ -10,14 +10,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "epicpy"
-version = "2026.11.15.5"
+version = "2026.11.15.6"
 authors = [
     { name = "Travis L. Seymour, PhD", email = "nogard@ucsc.edu" }
 ]
 description = "Python interface to the EPIC computational cognitive architecture simulation environment."
 readme = "ReadMe.md"
 requires-python = ">=3.11,<3.15"
-license = { text = "GNU General Public License v3 or later (GPLv3+)" }
+license = "GPL-3.0-or-later"
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",

@@ -979,3 +979,8 @@ class Simulation(QObject):
         # Save output logs if enabled and all runs complete
         if reason == "finished" and self.current_rule_index == 0:
             self.main_win._save_output_logs()
+
+            # Refresh RuleFlow tool window if it's open
+            if self.main_win.rule_flow_window is not None and self.main_win.rule_flow_window.isVisible():
+                self.main_win.rule_flow_window.update_graph_edges()
+                self.main_win.rule_flow_window.update_graph()
