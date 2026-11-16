@@ -189,6 +189,9 @@ def setup_menu(window):
     window.actionProcessViewerTool = QAction("Process Viewer", window)
     tool_menu.addAction(window.actionProcessViewerTool)
 
+    window.actionNormalOutputMapTool = QAction("Normal Output Map", window)
+    tool_menu.addAction(window.actionNormalOutputMapTool)
+
     # --- Help Menu ---
     help_menu = menubar.addMenu("Help")
     window.actionAbout = QAction("About", window)
@@ -285,3 +288,5 @@ def setup_menu_connections(window):
     window.actionSchematicTool.triggered.connect(partial(window.start_tool, tool_name="schematic"))
     window.actionProcessViewerTool.triggered.connect(partial(window.start_tool, tool_name="process_viewer"))
     window.actionBrainTool.triggered.connect(partial(window.start_tool, tool_name="brain"))
+    window.actionNormalOutputMapTool.setEnabled(False)  # Enabled dynamically when normalTextOutput has cycle data
+    window.actionNormalOutputMapTool.triggered.connect(partial(window.start_tool, tool_name="normal_output_map"))

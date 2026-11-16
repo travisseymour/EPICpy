@@ -52,6 +52,7 @@ from epicpy.epic.parallel_simulation import (
     run_parallel_simulations,
 )
 from epicpy.epic.run_info import RunInfo
+from epicpy.tools.normal_output_map.normal_output_map import NormalOutputMapWindow
 from epicpy.tools.process_viewer.process_viewer import ProcessViewerWindow
 from epicpy.tools.rule_flow.rule_flow import RuleFlowWindow
 from epicpy.utils import config, fitness
@@ -308,11 +309,13 @@ class MainWin(LayoutMixin, QMainWindow):
         self.actionSchematicTool: QAction
         self.actionProcessViewerTool: QAction
         self.actionBrainTool: QAction
+        self.actionNormalOutputMapTool: QAction
 
         self.rule_flow_window: QMainWindow | None = None
         self.schematic_window: QMainWindow | None = None
         self.process_viewer_window: QMainWindow | None = None
         self.brain_tool: QMainWindow | None = None
+        self.normal_output_map_window: QMainWindow | None = None
 
         main_window_menu.setup_menu(self)
         main_window_menu.setup_menu_connections(self)
@@ -1803,7 +1806,7 @@ class MainWin(LayoutMixin, QMainWindow):
                     hcolor(f"ERROR: Unable to open {which_file} file\n{file_path.name} in external text editor\n: {e}\n", "red")
                 )
 
-    def start_tool(self, tool_name: Literal["rule_flow", "schematic", "process_viewer", "brain"]):
+    def start_tool(self, tool_name: Literal["rule_flow", "schematic", "process_viewer", "brain", "normal_output_map"]):
         match tool_name:
             case "rule_flow":
                 try:
@@ -1821,6 +1824,14 @@ class MainWin(LayoutMixin, QMainWindow):
                     ...
                 self.process_viewer_window = ProcessViewerWindow(trace_widget=self.traceTextOutput)
                 self.process_viewer_window.show()
+            case "normal_output_map":
+                try:
+                    self.normal_output_map_window.close()
+                except Exception:
+                    ...
+                self.normal_output_map_window = NormalOutputMapWindow(trace_widget=self.normalTextOutput)
+                self.normal_output_map_window.show()
+                self.normal_output_map_window.parse_and_display()
             case _:
                 Exception_out(f'Tool "{tool_name}" has not been implemented\n')
 
@@ -1862,10 +1873,11 @@ class MainWin(LayoutMixin, QMainWindow):
         return config.device_cfg.trace_device
 
     def _update_ruleflow_tool_enabled(self, _line_count: int = 0):
-        """Enable RuleFlow tool only when normalTextOutput contains cycle data."""
+        """Enable RuleFlow and Normal Output Map tools only when normalTextOutput contains cycle data."""
         # Check if any line matches the pattern \d+:Cycle
         has_cycle_data = any(re.match(r"\d+:Cycle", line) for line in self.normalTextOutput.lines)
         self.actionRuleFlowTool.setEnabled(has_cycle_data)
+        self.actionNormalOutputMapTool.setEnabled(has_cycle_data)
 
     def _update_process_viewer_tool_enabled(self, _line_count: int = 0):
         """Enable Process Viewer tool only when traceTextOutput contains Human processor data."""

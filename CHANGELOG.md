@@ -2,6 +2,13 @@
 
 ---
 
+## VERSION: 2026.11.15.7
+
+1. **ADDED**: Added Normal Output Map Tool to Tools Menu.
+
+
+---
+
 ## VERSION: 2026.11.15.3
 
 1. **ADDED**: I finally got around to adding (re-adding) the previously disabled logging facility. Unlike Kieras's app, this does not write while the simulation is running. Instead, it writes after it has finished. This is not as useful for debugging as in his app because if the EPICpy crashes, no log is written. Use the Logging dialog to configure.
