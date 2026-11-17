@@ -1849,8 +1849,13 @@ class MainWin(LayoutMixin, QMainWindow):
     # Output Text Helpers
     # =============================================
 
-    def get_stats_text(self) -> str:
-        """Get plain text from stats window (blocking)."""
+    def get_stats_text(self, timeout_ms: int = 5000) -> str:
+        """Get plain text from stats window (blocking with safety timeout).
+
+        A timeout is necessary because calling setHtml() on the QWebEngineView
+        while a toPlainText() callback is pending can cause the callback to be
+        silently dropped, which would otherwise block the QEventLoop forever.
+        """
         from PySide6.QtCore import QEventLoop
 
         result: list[str] = []
@@ -1861,8 +1866,10 @@ class MainWin(LayoutMixin, QMainWindow):
             loop.quit()
 
         self.stats_win.page().toPlainText(callback)
+        QTimer.singleShot(timeout_ms, loop.quit)
         loop.exec()
-        return result[0] if result else ""
+        text = result[0] if result else ""
+        return text.strip()
 
     # =============================================
     # Device Helpers

@@ -91,15 +91,15 @@ def make_device(file: Path, **ctor_kwargs) -> EpicPyDevice:
 
 def find_visual_encoder_class(mod: types.ModuleType) -> Type[EPICPyVisualEncoder]:
     EPICVisualEncoderClass = getattr(mod, "VisualEncoder", None)
-    if EPICVisualEncoderClass is None or not issubclass(EPICVisualEncoderClass, EPICPyAuditoryEncoder):
+    if EPICVisualEncoderClass is None or not issubclass(EPICVisualEncoderClass, EPICPyVisualEncoder):
         raise ImportError("Module does not define VisualEncoder(EPICPyVisualEncoder)")
     return EPICVisualEncoderClass
 
 
-def make_avisual_encoder(file: Path, **ctor_kwargs) -> EPICPyVisualEncoder:
+def make_visual_encoder(file: Path, **ctor_kwargs) -> tuple[EPICPyVisualEncoder, str]:
     mod = load_module(file)
-    Device = find_device_class(mod)
-    return Device(**ctor_kwargs), mod.__name__
+    EncoderClass = find_visual_encoder_class(mod)
+    return EncoderClass(**ctor_kwargs), mod.__name__
 
 
 # -------------------
@@ -114,7 +114,7 @@ def find_auditory_encoder_class(mod: types.ModuleType) -> Type[EPICPyAuditoryEnc
     return EPICAuditoryEncoderClass
 
 
-def make_auditory_encoder(file: Path, **ctor_kwargs) -> EPICPyAuditoryEncoder:
+def make_auditory_encoder(file: Path, **ctor_kwargs) -> tuple[EPICPyAuditoryEncoder, str]:
     mod = load_module(file)
-    Device = find_device_class(mod)
-    return Device(**ctor_kwargs), mod.__name__
+    EncoderClass = find_auditory_encoder_class(mod)
+    return EncoderClass(**ctor_kwargs), mod.__name__

@@ -4,12 +4,10 @@
 from __future__ import annotations
 
 import datetime
-import platform
 import re
 import shutil
 import time
 import timeit
-import webbrowser
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Tuple
@@ -18,7 +16,8 @@ from typing import TYPE_CHECKING, Optional, Tuple
 import pandas as pd
 from epiclibcpp.epiclib.output_tee_globals import Info_out
 from platformdirs import user_documents_path
-from PySide6.QtCore import QCoreApplication, QEventLoop, QTimer
+from PySide6.QtCore import QCoreApplication, QEventLoop, QTimer, QUrl
+from PySide6.QtGui import QDesktopServices
 
 from epicpy.utils.app_utils import hcolor
 from epicpy.widgets.custom_text_edit import CustomQTextEdit
@@ -28,6 +27,7 @@ if TYPE_CHECKING:
 
 import epicpy.utils.config as config
 from epicpy.utils.app_utils import extract_from_zip
+from epicpy.utils.param_utils import unpack_param_string
 from epicpy.utils.resource_utils import get_resource
 from epicpy.widgets.mem_large_text_view import MemLargeTextView
 
@@ -208,7 +208,7 @@ def show_results():
             table += f'{tab6}<td colspan="3">{item["Name"]}</td>\n'
             table += f"{tab5}<tr>\n"
         else:
-            color = "Green" if item["Worked"] else "Red"
+            color = "Green" if item["Worked"] == "True" else "Red"
             table += f"{tab5}<tr>\n"
             table += f'{tab6}<td><font color="{color}">{item["Name"]}</font></td>\n'
             table += f'{tab6}<td><font color="{color}">{item["Worked"]}</font></td>\n'
@@ -227,19 +227,19 @@ def show_results():
                 border-collapse: collapse;
                 <!-- width: 100%; -->
             }
-            
+
             td, th {
                 border: 1px solid #dddddd;
                 text-align: left;
                 padding: 8px;
             }
-            
+
             tr:nth-child(even) {
                 background-color: #dddddd;
             }
             </style>
             </head>
-            <body>fitness
+            <body>
                 <h1>EPICpy Test Results</h1>
                 <hr>
                 <table>
@@ -259,12 +259,10 @@ def show_results():
     html_file = Path(DEVICE_BASE_FOLDER, "results.html")
     html_file.write_text(html)
 
-    if platform.system() == "Darwin":
-        # without this, webbrowser.open() crashed trying to find chrome.
-        # rather than solve that issue, just force Safari use
-        webbrowser.get(using="Safari").open(html_file.as_uri(), new=0, autoraise=True)
-    else:
-        webbrowser.open(html_file.as_uri(), new=0, autoraise=True)
+    if not QDesktopServices.openUrl(QUrl.fromLocalFile(str(html_file))):
+        Info_out(hcolor(f"WARNING: Could not open browser for results.\n", "gold"))
+
+    Info_out(f"Results saved to {html_file}\n")
 
 
 def add_string(name: str):
@@ -305,11 +303,13 @@ def wait_for_output(
     target: str,
     sigil: Optional[str] = None,
     timeout_secs: float = 0.0,
+    min_count: int = 1,
 ) -> Tuple[bool, str]:
     """
     Wait for target text to appear in a text widget.
     - a target is a Regex pattern(s) to be matched (use || to separate multiple patterns that must all match)
     - a sigil is a Regex pattern(s) that indicates failure (use || to separate multiple)
+    - min_count: require at least this many matches of each target pattern (default 1)
     """
     _timeout = timeout_secs if timeout_secs else 10.0
     start = timeit.default_timer()
@@ -329,7 +329,7 @@ def wait_for_output(
         """Check if target or sigil is found. Sets result and quits loop if done."""
         text = get_text()
 
-        if target_parts and all(re.findall(p, text) for p in target_parts):
+        if target_parts and all(len(re.findall(p, text)) >= min_count for p in target_parts):
             result.append((True, "Success"))
             loop.quit()
             return True
@@ -424,9 +424,6 @@ def run_model_test(
     close_on_finish: bool = True,
     see_results: bool = True,
 ):
-    # Clear Output Windows
-    # window.clear_output_windows()
-
     # init
     device_loaded, rules_compiled, model_run = None, None, None
 
@@ -437,112 +434,115 @@ def run_model_test(
     # save app_settings last device, so we can put it back
     last_device_file = config.app_cfg.last_device_file
 
-    # Load Device
-    device_loaded, outcome = test_load_device(window)
-    add_result("Loading Device", device_loaded, outcome)
+    try:
+        # Load Device
+        device_loaded, outcome = test_load_device(window)
+        add_result("Loading Device", device_loaded, outcome)
 
-    if device_loaded:
-        # Load Rules
-        rules_compiled, outcome = test_compile_rules(window)
-        add_result("Compiling Rules", rules_compiled, outcome)
+        if device_loaded:
+            # Load Rules
+            rules_compiled, outcome = test_compile_rules(window)
+            add_result("Compiling Rules", rules_compiled, outcome)
 
-        if rules_compiled:
-            # Apply overrides inside a context that restores fields afterwards
-            with temporary_device_cfg(setup_test_device_config):
-                try:
-                    if load_encoders:
-                        encoder_loaded, outcome = test_load_encoder(window)
-                        add_result("Load Encoder", encoder_loaded, outcome)
-                    else:
-                        encoder_loaded = False
+            if rules_compiled:
+                # Apply overrides inside a context that restores fields afterwards
+                with temporary_device_cfg(setup_test_device_config):
+                    try:
+                        if load_encoders:
+                            encoder_loaded, outcome = test_load_encoder(window)
+                            add_result("Load Encoder", encoder_loaded, outcome)
+                        else:
+                            encoder_loaded = False
 
-                    if encoder_loaded or not load_encoders:
-                        try:
-                            window.delete_datafile()
-                        except AttributeError:
-                            ...
-                        # Run Model
-                        model_run, outcome = test_run_model(window)
-                        add_result("Run Model", model_run, outcome)
-
-                        if model_run:
-                            # Wait for stats window population using loadFinished signal
-                            Info_out("Waiting for stats window to populate...\n")
-                            start = time.time()
-                            text = wait_for_stats_window(window, timeout_secs=60.0)
-                            elapsed = time.time() - start
-                            if text:
-                                Info_out(f"\nGot access to stats window text after {elapsed:0.4f} sec:\n{text}\n")
-                            else:
-                                Info_out(hcolor("\nFAILED to retrieve text from stats window after test!!\n", "red"))
-
-                            correct_N = "N=40" in text  # 10 trials for 4 runs
-                            correct_ACCURACY = "ACCURACY=100.00" in text
-                            if load_encoders:
-                                correct_ACCURACY = not correct_ACCURACY
-
-                            add_result(
-                                "StatsWindow: N == 40",
-                                correct_N,
-                                "Success" if correct_N else "Failed",
-                            )
-                            add_result(
-                                f"StatsWindow: ACC {'!=' if load_encoders else '=='} 100.00%",
-                                correct_ACCURACY,
-                                "Success" if correct_ACCURACY else "Failed",
-                            )
-
-                            # Saved Data checks (unchanged)
+                        if encoder_loaded or not load_encoders:
                             try:
-                                data = pd.read_csv(data_file)
-                                can_read_data = True
-                                expected_header = [
-                                    "RunID",
-                                    "Trial",
-                                    "Task",
-                                    "Difficulty",
-                                    "StimColor",
-                                    "StimPos",
-                                    "CorrectResponse",
-                                    "Response",
-                                    "Modality",
-                                    "RT",
-                                    "Accuracy",
-                                    "Tag",
-                                    "Device",
-                                    "Rules",
-                                    "Date",
-                                ]
-                                correct_header = list(data.columns) == expected_header
-                                if load_encoders:
-                                    correct_accuracy_range = sorted(set(data.Accuracy)) == [
-                                        "CORRECT",
-                                        "INCORRECT",
-                                    ]
+                                window.delete_datafile()
+                            except AttributeError:
+                                ...
+                            # Run Model
+                            model_run, outcome = test_run_model(window)
+                            add_result("Run Model", model_run, outcome)
+
+                            if model_run:
+                                # Wait for stats window population using loadFinished signal
+                                Info_out("Waiting for stats window to populate...\n")
+                                start = time.time()
+                                text = wait_for_stats_window(window, timeout_secs=60.0)
+                                elapsed = time.time() - start
+                                if text:
+                                    Info_out(f"\nGot access to stats window text after {elapsed:0.4f} sec:\n{text}\n")
                                 else:
-                                    correct_accuracy_range = sorted(set(data.Accuracy)) == ["CORRECT"]
-                            except Exception:
-                                can_read_data = False
-                                correct_header = False
-                                correct_accuracy_range = False
-                            add_result(
-                                "DataFile: Able To Read Data",
-                                can_read_data,
-                                "Success" if can_read_data else "Failed",
-                            )
-                            add_result(
-                                "DataFile: Data Has Correct Header",
-                                correct_header,
-                                "Success" if correct_header else "Failed",
-                            )
-                            add_result(
-                                f"DataFile: {'NOT' if encoder_loaded else ''} All trial 'CORRECT'",
-                                correct_accuracy_range,
-                                "Success" if correct_accuracy_range else "Failed",
-                            )
-                finally:
-                    # restore app's last device setting (do NOT replace device_cfg object)
-                    config.app_cfg.last_device_file = last_device_file
+                                    Info_out(hcolor("\nFAILED to retrieve text from stats window after test!!\n", "red"))
+
+                                correct_N = "N=40" in text  # 10 trials for 4 runs
+                                correct_ACCURACY = "ACCURACY=100.00" in text
+                                if load_encoders:
+                                    correct_ACCURACY = not correct_ACCURACY
+
+                                add_result(
+                                    "StatsWindow: N == 40",
+                                    correct_N,
+                                    "Success" if correct_N else "Failed",
+                                )
+                                add_result(
+                                    f"StatsWindow: ACC {'!=' if load_encoders else '=='} 100.00%",
+                                    correct_ACCURACY,
+                                    "Success" if correct_ACCURACY else "Failed",
+                                )
+
+                                # Saved Data checks
+                                try:
+                                    data = pd.read_csv(data_file)
+                                    can_read_data = True
+                                    expected_header = [
+                                        "RunID",
+                                        "Trial",
+                                        "Task",
+                                        "Difficulty",
+                                        "StimColor",
+                                        "StimPos",
+                                        "CorrectResponse",
+                                        "Response",
+                                        "Modality",
+                                        "RT",
+                                        "Accuracy",
+                                        "Tag",
+                                        "Device",
+                                        "Rules",
+                                        "Date",
+                                    ]
+                                    correct_header = list(data.columns) == expected_header
+                                    if load_encoders:
+                                        correct_accuracy_range = sorted(set(data.Accuracy)) == [
+                                            "CORRECT",
+                                            "INCORRECT",
+                                        ]
+                                    else:
+                                        correct_accuracy_range = sorted(set(data.Accuracy)) == ["CORRECT"]
+                                except Exception:
+                                    can_read_data = False
+                                    correct_header = False
+                                    correct_accuracy_range = False
+                                add_result(
+                                    "DataFile: Able To Read Data",
+                                    can_read_data,
+                                    "Success" if can_read_data else "Failed",
+                                )
+                                add_result(
+                                    "DataFile: Data Has Correct Header",
+                                    correct_header,
+                                    "Success" if correct_header else "Failed",
+                                )
+                                add_result(
+                                    f"DataFile: {'NOT' if encoder_loaded else ''} All trial 'CORRECT'",
+                                    correct_accuracy_range,
+                                    "Success" if correct_accuracy_range else "Failed",
+                                )
+                    finally:
+                        # restore app's last device setting (do NOT replace device_cfg object)
+                        config.app_cfg.last_device_file = last_device_file
+    except Exception as e:
+        add_result("Unexpected Error", False, str(e))
 
     if see_results:
         wait(2, "Creating Results Output, Please wait...\n")
@@ -556,19 +556,19 @@ def run_model_test(
 
 
 def run_all_model_tests(window: MainWin, close_on_finish: bool = True, see_results: bool = True):
-    add_string("RUNNING MODEL WITHOUT ENCODER (Expecting 100% Accuracy)")
-    _ = run_model_test(window, load_encoders=False, close_on_finish=False, see_results=False)
+    try:
+        add_string("RUNNING MODEL WITHOUT ENCODER (Expecting 100% Accuracy)")
+        _ = run_model_test(window, load_encoders=False, close_on_finish=False, see_results=False)
 
-    # If you *must* stop, guard it — but generally unnecessary after a clean finish.
-    # try:
-    #     if getattr(window, "actionStop", None):
-    #         window.actionStop.trigger()
-    # except Exception:
-    #     ...
+        # Clear output windows so the second test's wait_for_output calls
+        # don't immediately match stale text from the first test.
+        window.clear_output_windows()
+        wait(2)
 
-    wait(2)
-    add_string("RUNNING MODEL WITH VISUAL ENCODER (Expecting < 100% Accuracy)")
-    _ = run_model_test(window, load_encoders=True, close_on_finish=False, see_results=False)
+        add_string("RUNNING MODEL WITH VISUAL ENCODER (Expecting < 100% Accuracy)")
+        _ = run_model_test(window, load_encoders=True, close_on_finish=False, see_results=False)
+    except Exception as e:
+        add_result("Unexpected Error", False, str(e))
 
     if see_results:
         wait(2, "Creating Results Output, Please wait...\n")
@@ -617,19 +617,23 @@ def test_load_encoder(window: MainWin) -> Tuple[bool, str]:
 
     return wait_for_output(
         text_edit=window.infoTextOutput,  # Info_out writes to infoTextOutput
-        target="Visualencoder was created successfully",
+        target="VisualEncoder was created successfully",
         sigil="Failed to create new Visual encoder",
         timeout_secs=15.0,
     )
 
 
 def test_run_model(window: MainWin) -> Tuple[bool, str]:
+    # Determine how many permutations to expect from the parameter string
+    param_str = config.device_cfg.device_params
+    perm_count = len(unpack_param_string(param_str)) if "[" in param_str else 1
+
     window.run_normal(parallel=False)
 
     return wait_for_output(
-        # window=window,
         text_edit=window.normalTextOutput,
         target=r"Run of .+\.prs Finished.",
         sigil="Stopped With Error",
-        timeout_secs=15.0,
+        timeout_secs=15.0 * perm_count,
+        min_count=perm_count,
     )

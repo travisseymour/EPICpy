@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: EPICpy | Copyright (c) 2022-2026 Travis L. Seymour, PhD <nogard@ucsc.edu>
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import importlib
 import sys
 import timeit
 import warnings
@@ -24,7 +23,13 @@ from epicpy.epic.epicpy_exception import EPICpyException
 from epicpy.epic.run_info import RunInfo
 from epicpy.utils import config
 from epicpy.utils.app_utils import hcolor, rich_traceback_str, unpack_param_string
-from epicpy.utils.module_reloader import make_device, unload_directory_modules, unload_module
+from epicpy.utils.module_reloader import (
+    make_auditory_encoder,
+    make_device,
+    make_visual_encoder,
+    unload_directory_modules,
+    unload_module,
+)
 from epicpy.utils.syspath_manage import (
     clear_active_plugin_path,
     get_active_plugin_path,
@@ -67,6 +72,8 @@ class Simulation(QObject):
         self.model: Model
         self.visual_encoder: EPICPyVisualEncoder
         self.auditory_encoder = EPICPyAuditoryEncoder
+        self._visual_encoder_modname: str = ""
+        self._auditory_encoder_modname: str = ""
 
         self.instance: Coordinator = Coordinator.get_instance()
         self.stop_model_now: bool = False
@@ -358,6 +365,28 @@ class Simulation(QObject):
             else:
                 self.auditory_encoder = None  # type: ignore[assignment]
 
+        # Unload the encoder module from sys.modules and clean up sys.path
+        if kind == "Visual":
+            if self._visual_encoder_modname:
+                unload_module(self._visual_encoder_modname)
+                self._visual_encoder_modname = ""
+            for path in self.visual_encoder_path_additions:
+                try:
+                    sys.path.remove(path)
+                except ValueError:
+                    ...
+            self.visual_encoder_path_additions.clear()
+        else:
+            if self._auditory_encoder_modname:
+                unload_module(self._auditory_encoder_modname)
+                self._auditory_encoder_modname = ""
+            for path in self.auditory_encoder_path_additions:
+                try:
+                    sys.path.remove(path)
+                except ValueError:
+                    ...
+            self.auditory_encoder_path_additions.clear()
+
         self.main_win.update_title()
 
         Info_out(f" {kind} encoder successfully unloaded.\n")
@@ -371,93 +400,100 @@ class Simulation(QObject):
         else:
             encoder_file = file
 
-        if encoder_file:
+        if not encoder_file:
+            self.main_win.update_text_outputs()
+            return
+
+        encoder_file_p = Path(encoder_file)
+
+        if not quiet:
+            Info_out(f"Attempting to load encoder from {encoder_file_p.name}...\n")
+
+        # Unload old encoder module if one was previously loaded
+        if kind == "Visual":
+            self.visual_encoder = None  # type: ignore[assignment]
+            if self._visual_encoder_modname:
+                unload_module(self._visual_encoder_modname)
+                self._visual_encoder_modname = ""
+        else:
+            self.auditory_encoder = None  # type: ignore[assignment]
+            if self._auditory_encoder_modname:
+                unload_module(self._auditory_encoder_modname)
+                self._auditory_encoder_modname = ""
+
+        # Clean up old encoder sys.path entries
+        path_additions = self.visual_encoder_path_additions if kind == "Visual" else self.auditory_encoder_path_additions
+        for path in path_additions:
+            try:
+                sys.path.remove(path)
+            except ValueError:
+                ...
+        path_additions.clear()
+
+        # Add encoder parent folder to sys.path (needed for encoder-local imports)
+        encoder_parent = str(encoder_file_p.parent)
+        if encoder_parent not in sys.path:
+            sys.path.append(encoder_parent)
+        path_additions.append(encoder_parent)
+
+        # Load the encoder module and create an instance
+        try:
+            ul_name = encoder_file_p.stem.replace("_", " ").title()
+            if kind == "Visual":
+                self.visual_encoder, self._visual_encoder_modname = make_visual_encoder(
+                    encoder_file_p, encoder_name=ul_name
+                )
+                setattr(self.visual_encoder, "write", Normal_out)
+            else:
+                self.auditory_encoder, self._auditory_encoder_modname = make_auditory_encoder(
+                    encoder_file_p, encoder_name=ul_name
+                )
+                setattr(self.auditory_encoder, "write", Normal_out)
+
+            if not quiet:
+                Info_out(f"Found {kind}Encoder class, attempting to create new encoder instance based on this class...\n")
+            Info_out(f"{kind}Encoder was created successfully.\n")
+        except Exception as e:
+            Info_out(hcolor(f"ERROR: Failed to create new {kind}Encoder from {encoder_file_p.name}:\n{e}\n", "red"))
             if kind == "Visual":
                 self.visual_encoder = None  # type: ignore[assignment]
+                config.device_cfg.visual_encoder = ""
+            else:
+                self.auditory_encoder = None
+                config.device_cfg.auditory_encoder = ""
+            self.main_win.update_text_outputs()
+            return
+
+        # Connect the encoder to the C++ Human_processor
+        try:
+            assert self.model, hcolor(
+                "WARNING: Model doesn't appear to be initialized...has a device been loaded??!!", "gold"
+            )
+            if kind == "Visual":
+                set_visual_encoder_ptr(self.model, self.visual_encoder)
+            else:
+                set_auditory_encoder_ptr(self.model, self.auditory_encoder)
+
+            Info_out(f"Successfully connected new {kind}Encoder from {encoder_file_p.name}\n")
+        except Exception as e:
+            Info_out(hcolor(f"ERROR: Created new {kind} encoder, but connection to Human_processor failed:\n{e}\n", "red"))
+            if kind == "Visual":
+                self.visual_encoder = None  # type: ignore[assignment]
+                config.device_cfg.visual_encoder = ""
             else:
                 self.auditory_encoder = None  # type: ignore[assignment]
+                config.device_cfg.auditory_encoder = ""
 
-            # create a new encoder [encoder file must define a class called VisualEncoder]
-            encoder_file_p = Path(encoder_file)
+            self.main_win.update_text_outputs()
+            return
 
-            # remove any old encoder paths
-            for path in self.visual_encoder_path_additions if kind == "Visual" else self.auditory_encoder_path_additions:
-                try:
-                    sys.path.remove(path)
-                except ValueError:
-                    ...
+        self.main_win.update_title()
 
-            # Must add encoder parent folder to system path
-            if str(encoder_file_p.parent) not in self.device_path_additions:
-                self.device_path_additions.append(str(encoder_file_p.parent))
-            sys.path.append(str(encoder_file_p.parent))
-
-            # - now we can attempt to import the VisualEncoder or AuditoryEncoder class
-            #   from this module
-            try:
-                # Import and reload the module to pull any changes that have occurred
-                # since starting EPICpy
-                mod = importlib.import_module(encoder_file_p.stem)
-                mod = importlib.reload(mod)
-
-                if not quiet:
-                    Info_out(f"Attempting to load encoder from {encoder_file_p.name}...\n")
-
-                ul_name = encoder_file_p.stem.replace("_", " ").title()
-                if kind == "Visual":
-                    self.visual_encoder = mod.VisualEncoder(ul_name)
-                else:
-                    self.auditory_encoder = mod.AuditoryEncoder(ul_name)
-
-                if kind == "Visual":
-                    setattr(self.visual_encoder, "write", Normal_out)
-                else:
-                    setattr(self.auditory_encoder, "write", Normal_out)
-
-                if not quiet:
-                    Info_out(f"Found {kind}Encoder class, attempting to create new encoder instance based on this class...\n")
-                Info_out(f"{kind}encoder was created successfully.\n")
-            except Exception as e:
-                Info_out(hcolor(f"ERROR: Failed to create new {kind}Encoder from {encoder_file_p.name}:\n{e}\n", "red"))
-                if kind == "Visual":
-                    self.visual_encoder = None  # type: ignore[assignment]
-                    config.device_cfg.visual_encoder = ""
-                else:
-                    self.auditory_encoder = None
-                    config.device_cfg.auditory_encoder = ""
-                # self.device = None  # NOTE: This was enabled, but seems too harsh?!
-                self.main_win.update_text_outputs()
-                return
-
-            try:
-                assert self.model, hcolor(
-                    "WARNING: Model doesn't appear to be initialized...has a device been loaded??!!", "gold"
-                )
-                if kind == "Visual":
-                    set_visual_encoder_ptr(self.model, self.visual_encoder)
-                else:
-                    set_auditory_encoder_ptr(self.model, self.auditory_encoder)
-
-                Info_out(f"Successfully created new {kind}Encoder from {encoder_file_p.name}\n")
-            except Exception as e:
-                Info_out(hcolor(f"ERROR: Created new {kind} encoder, but connection to Human_processor failed:\n{e}\n", "red"))
-                if kind == "Visual":
-                    self.visual_encoder = None  # type: ignore[assignment]
-                    config.device_cfg.visual_encoder = ""
-                else:
-                    self.auditory_encoder = None  # type: ignore[assignment]
-                    config.device_cfg.auditory_encoder = ""
-
-                self.main_win.update_text_outputs()
-                return
-
-            self.main_win.update_title()
-
-            # go ahead and save in case we need cfg.last_visual_encoder
-            if kind == "Visual":
-                config.device_cfg.visual_encoder = encoder_file
-            else:
-                config.device_cfg.auditory_encoder = encoder_file
+        # go ahead and save in case we need cfg.last_visual_encoder
+        if kind == "Visual":
+            config.device_cfg.visual_encoder = encoder_file
+        else:
+            config.device_cfg.auditory_encoder = encoder_file
 
         self.main_win.update_text_outputs()
 

@@ -2,7 +2,13 @@
 
 ---
 
-## VERSION: 2026.11.16.4
+## VERSION: 2026.11.17.10
+
+1. **FIXED**: Fixed problems with Help->Tests. Tests now run properly and show expected summary information in default browser. 
+
+---
+
+## VERSION: 2026.11.17.4
 
 1. **FIXED**: Removed incorrect model removal error when loading new model. 
 2. **CHANGED**: Making rule errors more explicit in interface by offering colored message on Info Output, as well as raising Normal Output and scrolling to error message.
