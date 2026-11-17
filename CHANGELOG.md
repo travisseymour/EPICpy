@@ -2,6 +2,13 @@
 
 ---
 
+## VERSION: 2026.11.16.4
+
+1. **FIXED**: Removed incorrect model removal error when loading new model. 
+2. **CHANGED**: Making rule errors more explicit in interface by offering colored message on Info Output, as well as raising Normal Output and scrolling to error message.
+
+---
+
 ## VERSION: 2026.11.15.7
 
 1. **ADDED**: Added Normal Output Map Tool to Tools Menu.

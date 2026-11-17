@@ -588,6 +588,10 @@ class Simulation(QObject):
                     "gold" if calm else "red",
                 )
             )
+            if not calm:
+                Info_out(hcolor("COMPILATION FAILED! See Normal Output for details.\n", "red"))
+                self.main_win.dockNormal.raise_()
+                self.main_win.normalTextOutput.scroll_to_bottom()
             rule_compiled = False
 
         # make sure run state reflects result of rule compile attempt
@@ -631,16 +635,15 @@ class Simulation(QObject):
         auditory_sensory: EPICVisualView,
         auditory_perceptual: EPICVisualView,
     ):
-        try:
-            self.model.remove_visual_physical_view(visual_physical)
-            self.model.remove_visual_sensory_view(visual_sensory)
-            self.model.remove_visual_perceptual_view(visual_perceptual)
-            self.model.remove_auditory_physical_view(auditory_physical)
-            self.model.remove_auditory_sensory_view(auditory_sensory)
-            self.model.remove_auditory_perceptual_view(auditory_perceptual)
-        except Exception as e:
-            self.main_win.update_text_outputs()
-            Info_out(hcolor(f"ERROR: Unable to remove views from model: {e}\n", "red"))
+        if not self.has_model():
+            return
+
+        self.model.remove_visual_physical_view(visual_physical)
+        self.model.remove_visual_sensory_view(visual_sensory)
+        self.model.remove_visual_perceptual_view(visual_perceptual)
+        self.model.remove_auditory_physical_view(auditory_physical)
+        self.model.remove_auditory_sensory_view(auditory_sensory)
+        self.model.remove_auditory_perceptual_view(auditory_perceptual)
 
     def run_one_step(self):
         # just in case output settings were changed between runs

@@ -226,12 +226,12 @@ def main(argv: list[str] | None = None) -> int:
             log.warning("Problem setting app window icon!")
     application.setWindowIcon(app_icon)
 
-    print("Loading EPICpy, please wait...")
-
     try:
         from epicpy import __version__
     except Exception:
         __version__ = "Unknown!"
+
+    print(f"Loading EPICpy v{__version__}, please wait...")
 
     parser = build_parser(__version__)
     args = parser.parse_args(argv)
