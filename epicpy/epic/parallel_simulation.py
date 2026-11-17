@@ -23,6 +23,7 @@ if CHECK_MAC_WIN_MP:
         multiprocessing.set_start_method("spawn", force=False)
     except RuntimeError:
         pass  # Already set
+import threading
 from collections import deque
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass, field
@@ -563,6 +564,7 @@ def run_parallel_simulations(
     on_complete: Callable[[SimulationResult], None] | None = None,
     device_folder: Path | None = None,
     overwrite_data: bool = True,
+    stop_event: threading.Event | None = None,
 ) -> list[SimulationResult]:
     """
     Run multiple simulations in parallel using ProcessPoolExecutor.
@@ -573,6 +575,8 @@ def run_parallel_simulations(
         on_complete: Optional callback for each completed simulation
         device_folder: Folder where the merged data file will be written
         overwrite_data: If True, overwrite existing data file. If False, append to it.
+        stop_event: Optional threading.Event; when set, pending futures are cancelled
+                    and the function returns early with whatever results are available.
     """
     # Set up temp directory for data files, clearing any stale data from prior runs.
     # Temp filenames are deterministic (md5 of parameter string), so without cleanup
@@ -605,6 +609,12 @@ def run_parallel_simulations(
                 results.append(error_result)
                 if on_complete:
                     on_complete(error_result)
+
+            # Check for cancellation AFTER collecting this future's result
+            if stop_event is not None and stop_event.is_set():
+                for f in futures:
+                    f.cancel()
+                break
 
     # Merge data files into device folder
     if device_folder:
@@ -642,3 +652,64 @@ def create_sim_configs_from_permutations(
         )
         for param in param_variations
     ]
+
+
+# ---------------------------------------------------------------------------
+# QThread worker for running parallel simulations without blocking the UI
+# ---------------------------------------------------------------------------
+
+from PySide6.QtCore import QThread, Signal
+
+
+class ParallelRunWorker(QThread):
+    """Runs run_parallel_simulations on a background thread.
+
+    Signals
+    -------
+    permutation_done(completed, total, param_string, success)
+        Emitted each time one permutation finishes.
+    all_done(results)
+        Emitted once when every permutation has finished (or was stopped early).
+    """
+
+    permutation_done = Signal(int, int, str, bool)
+    all_done = Signal(list)
+
+    def __init__(
+        self,
+        sim_configs: list[SimulationConfig],
+        max_workers: int,
+        device_folder: Path | None,
+        overwrite_data: bool,
+    ):
+        super().__init__()
+        self.sim_configs = sim_configs
+        self.max_workers = max_workers
+        self.device_folder = device_folder
+        self.overwrite_data = overwrite_data
+        self._stop_event = threading.Event()
+
+    def request_stop(self):
+        """Signal the worker to cancel pending futures and finish early."""
+        self._stop_event.set()
+
+    def run(self):
+        completed = 0
+        total = len(self.sim_configs)
+
+        def on_complete(result: SimulationResult):
+            nonlocal completed
+            completed += 1
+            self.permutation_done.emit(
+                completed, total, result.sim_config.parameter_string, result.success
+            )
+
+        results = run_parallel_simulations(
+            sim_configs=self.sim_configs,
+            max_workers=self.max_workers,
+            on_complete=on_complete,
+            device_folder=self.device_folder,
+            overwrite_data=self.overwrite_data,
+            stop_event=self._stop_event,
+        )
+        self.all_done.emit(results)

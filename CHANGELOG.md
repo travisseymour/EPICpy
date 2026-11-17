@@ -2,6 +2,14 @@
 
 ---
 
+## VERSION: 2026.11.17.12
+
+1. **FIXED**: The UI was locking up during parallel runs making it not only hard to stop or do anything else, but to see the status widget indicating the current progress.
+2. **FIXED**: The run stop function was not working properly during parallel runs. 
+
+
+---
+
 ## VERSION: 2026.11.17.10
 
 1. **FIXED**: Fixed problems with Help->Tests. Tests now run properly and show expected summary information in default browser. 

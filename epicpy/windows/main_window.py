@@ -45,11 +45,11 @@ from epicpy.dialogs.trace_settings_window import TraceSettingsWin
 from epicpy.epic.epic_simulation import Simulation
 from epicpy.epic.parallel_simulation import (
     OutputSettings,
+    ParallelRunWorker,
     SimulationResult,
     create_sim_configs_from_permutations,
     expand_permutations,
     has_permutations,
-    run_parallel_simulations,
 )
 from epicpy.epic.run_info import RunInfo
 from epicpy.tools.normal_output_map.normal_output_map import NormalOutputMapWindow
@@ -117,6 +117,7 @@ class MainWin(LayoutMixin, QMainWindow):
         self.context = "Main"
 
         self.run_state = UNREADY
+        self._parallel_worker: ParallelRunWorker | None = None
 
         self.last_search_spec = None
 
@@ -673,10 +674,13 @@ class MainWin(LayoutMixin, QMainWindow):
         self.simulation.device.set_parameter_string(param_string)
         self.simulation.run()
 
-    def _run_parallel(self, param_string: str) -> list[SimulationResult] | None:
+    def _run_parallel(self, param_string: str) -> None:
         """
         Run all parameter permutations in parallel using separate processes.
-        Parameter string are indicated with [option1|option2] syntax.
+        Parameter strings are indicated with [option1|option2] syntax.
+
+        The heavy work runs on a background QThread so the UI stays responsive.
+        Post-processing happens on the main thread via signal connections.
         """
         rule_file = self.simulation.rule_files[self.simulation.current_rule_index].rule_file
         device_file = config.app_cfg.last_device_file
@@ -698,17 +702,31 @@ class MainWin(LayoutMixin, QMainWindow):
             Info_out(f"  {i}. {cfg.parameter_string}\n")
         Info_out(hcolor("Please wait...\n", bold=True))
 
-        QApplication.processEvents()  # Force UI update before blocking call
+        # Mark UI as running so menus are disabled and status bar updates
+        self.run_state = RUNNING
 
-        # Run all permutations in parallel **WARNING: Will Temporarily Re-Route All Output_tees to memory**
-        # TODO: Consider running this in a background thread to avoid blocking the UI
         device_folder = Path(device_file).parent
-        results = run_parallel_simulations(
+        self._parallel_worker = ParallelRunWorker(
             sim_configs=sim_configs,
             max_workers=min(len(sim_configs), os.cpu_count() or 4),
             device_folder=device_folder,
             overwrite_data=config.device_cfg.overwrite_data,
         )
+        self._parallel_worker.permutation_done.connect(self._on_parallel_permutation_done)
+        self._parallel_worker.all_done.connect(self._on_parallel_run_finished)
+        self._parallel_worker.start()
+
+    def _on_parallel_permutation_done(self, completed: int, total: int, param_string: str, success: bool):
+        """Slot: update status bar as each permutation finishes."""
+        status = "ok" if success else "FAILED"
+        self.statusBar().showMessage(f"Parallel Run: {completed}/{total} complete  ({param_string}: {status})")
+
+    def _on_parallel_run_finished(self, results: list[SimulationResult]):
+        """Slot: all parallel permutations are done — restore UI and display results."""
+        was_stopped = self._parallel_worker is not None and self._parallel_worker._stop_event.is_set()
+
+        # Clean up worker reference
+        self._parallel_worker = None
 
         # Restore default Output_tee routing
         for ot in (Normal_out, Debug_out, Device_out, Exception_out, PPS_out):
@@ -720,12 +738,15 @@ class MainWin(LayoutMixin, QMainWindow):
         Trace_out.clear_py_streams()
         Trace_out.add_py_stream(self.traceTextOutput)
 
-        # move cached output_tee contents where they belong
+        # Move cached output_tee contents where they belong
         if results:
             self._emit_outputs_from_parallel_run(results=tuple(results))
 
         # Report results
-        Info_out("\nParallel execution complete. Results:\n")
+        if was_stopped:
+            Info_out(hcolor(f"\nParallel run stopped by user ({len(results)} of permutations completed).\n", "gold"))
+        else:
+            Info_out("\nParallel execution complete. Results:\n")
         for result in results:
             status = hcolor("SUCCESS", "green", paragraph=False) if result.success else hcolor("FAILED", "red", paragraph=False)
             Info_out(f"  [{status}] {result.sim_config.parameter_string}")
@@ -734,19 +755,19 @@ class MainWin(LayoutMixin, QMainWindow):
             else:
                 Info_out(f" ➡️ Error: {result.error_message}\n")
 
-        # this one is special, don't restore until the above is done
+        # Restore Info_out routing (kept separate until above messages are emitted)
         Info_out.clear_py_streams()
         Info_out.add_py_stream(self.infoTextOutput)
-        Info_out("\nParallel Run Finished!\n")
+        Info_out(f"\nParallel Run {'Stopped' if was_stopped else 'Finished'}!\n")
 
-        # show updated graph
+        # Show updated graph
         try:
             html = self.simulation.device.show_output_stats()
             self.stats_win.setHtml(html)
         except Exception as e:
             msg = f"""
                 <span style="color: red;">
-                <h2>Unable to render analysis for 
+                <h2>Unable to render analysis for
                 {self.simulation.device.get_name() if self.simulation.has_device else "Current Device"}
                 </h2>:<br><b>{str(e)}</b>
                 </span>
@@ -756,6 +777,9 @@ class MainWin(LayoutMixin, QMainWindow):
 
         # Save output logs if enabled
         self._save_output_logs()
+
+        # Restore run state so UI becomes interactive again
+        self.run_state = RUNNABLE
 
     def _emit_outputs_from_parallel_run(
         self, results: tuple[SimulationResult, ...], mode: Literal["All Runs", "Last Run"] = "Last Run"
@@ -943,6 +967,9 @@ class MainWin(LayoutMixin, QMainWindow):
             win.set_changed()
 
     def stop_simulation(self):
+        if self._parallel_worker is not None:
+            self._parallel_worker.request_stop()
+            return
         if isinstance(self.simulation, Simulation):
             self.simulation.halt_simulation(reason="user_stop")
 
@@ -982,6 +1009,10 @@ class MainWin(LayoutMixin, QMainWindow):
         debug_print("---------------------")
 
         debug_print("1. Stopping simulation...")
+        if self._parallel_worker is not None:
+            debug_print("   Waiting for parallel worker to finish...")
+            self._parallel_worker.wait()
+            self._parallel_worker = None
         if self.run_state == RUNNING:
             self.halt_simulation()
 
