@@ -2,6 +2,12 @@
 
 ---
 
+## VERSION: 2026.11.17.15
+
+1. **FIXED**: Fixed 2 ui quirks in the Normal Output Monitor window. Incorrect phase row highlighting, and unbound initial column sizes.
+
+---
+
 ## VERSION: 2026.11.17.12
 
 1. **FIXED**: The UI was locking up during parallel runs making it not only hard to stop or do anything else, but to see the status widget indicating the current progress.

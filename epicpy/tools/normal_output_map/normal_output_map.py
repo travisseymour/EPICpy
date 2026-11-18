@@ -37,6 +37,8 @@ _HIGHLIGHT_BG = QColor(255, 255, 180)  # pale yellow for pseudo-events
 _DUPLICATE_BG = QColor(210, 230, 255)  # light blue for repeated rules
 _HIGHLIGHT_FG = QColor(0, 0, 0)  # black text for highlighted rows (readable in dark mode)
 
+_MAX_COL_WIDTH = 460  # max default width in pixels for text-heavy columns
+
 # column indices
 _COL_TRIAL = 0
 _COL_CYCLE = 1
@@ -110,7 +112,7 @@ class NormalOutputMapWindow(QMainWindow):
         )
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-        self.table.setAlternatingRowColors(True)
+        # Alternating colors applied manually in _refresh() so custom backgrounds take precedence
         self.table.verticalHeader().setVisible(False)
         header = self.table.horizontalHeader()
         header.setStretchLastSection(False)
@@ -304,6 +306,9 @@ class NormalOutputMapWindow(QMainWindow):
         bold_font = QFont(self.table.font())
         bold_font.setBold(True)
 
+        # Get alternating row color from palette for manual application
+        alt_base = self.table.palette().alternateBase().color()
+
         # Find rule names that appear more than once (excluding pseudo-events)
         rule_counts: Counter[str] = Counter()
         for ev in events:
@@ -341,18 +346,44 @@ class NormalOutputMapWindow(QMainWindow):
                 for item in items:
                     item.setBackground(_DUPLICATE_BG)
                     item.setForeground(_HIGHLIGHT_FG)
+            elif row % 2 == 1:
+                # Manually apply alternating color only to non-highlighted rows
+                for item in items:
+                    item.setBackground(alt_base)
 
             for col, item in enumerate(items):
                 self.table.setItem(row, col, item)
 
         if not self._user_resized_columns:
             self._programmatic_resize = True
-            self.table.resizeColumnsToContents()
+            # Auto-size numeric columns
+            for col in (_COL_TRIAL, _COL_CYCLE, _COL_DELAY, _COL_POSTSTIM):
+                self.table.resizeColumnToContents(col)
+            # For text-heavy columns: use fixed default if content exists, else auto-size to header
+            has_adds = any(ev.adds for ev in events)
+            has_deletes = any(ev.deletes for ev in events)
+            has_motor = any(ev.commands for ev in events)
+            col_has_content = {
+                _COL_RULE: True,  # always has rule names
+                _COL_ADD: has_adds,
+                _COL_DELETE: has_deletes,
+                _COL_MOTOR: has_motor,
+            }
+            for col in (_COL_RULE, _COL_ADD, _COL_DELETE, _COL_MOTOR):
+                if col_has_content[col]:
+                    self.table.setColumnWidth(col, _MAX_COL_WIDTH)
+                else:
+                    self.table.resizeColumnToContents(col)
             self._programmatic_resize = False
 
     def center_me(self):
-        """Center window on screen."""
-        center_point = QGuiApplication.screens()[0].geometry().center()
+        """Center window on the same screen as the parent application."""
+        parent_window = self.trace_widget.window()
+        if parent_window:
+            screen = parent_window.screen()
+        else:
+            screen = QGuiApplication.screens()[0]
+        center_point = screen.geometry().center()
         self.move(center_point - self.frameGeometry().center())
 
     def showEvent(self, event):
