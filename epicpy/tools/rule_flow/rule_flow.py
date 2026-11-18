@@ -11,7 +11,7 @@ import networkx as nx
 from epiclibcpp.epiclib.output_tee_globals import Exception_out
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-from PySide6.QtCore import QByteArray
+from PySide6.QtCore import QByteArray, QSettings
 from PySide6.QtGui import QColor, QGuiApplication, QPen
 from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import (
@@ -146,6 +146,7 @@ class RuleFlowWindow(QMainWindow):
         super(RuleFlowWindow, self).__init__()
 
         self.trace_widget: MemLargeTextView = trace_widget
+        self._settings = QSettings("EPICpy", "RuleFlow")
 
         """ Setup GUI """
 
@@ -155,7 +156,15 @@ class RuleFlowWindow(QMainWindow):
         self.scheduler = RegexScheduler()
 
         self.setWindowTitle("EPICViewRuleFlow")
-        self.setGeometry(100, 100, 1024, 768)
+
+        # Restore saved geometry, fall back to default size
+        geometry = self._settings.value("window/geometry")
+        self._has_saved_geometry = geometry is not None
+        self._first_show = True
+        if self._has_saved_geometry:
+            self.restoreGeometry(geometry)
+        else:
+            self.setGeometry(100, 100, 1024, 768)
 
         self.figure = plt.figure(dpi=125)
         self.canvas = FigureCanvas(self.figure)
@@ -165,15 +174,23 @@ class RuleFlowWindow(QMainWindow):
         layout.addWidget(self.canvas)
         self.setCentralWidget(my_graph_widget)
 
-        self.center_me()
-
     def update_graph_edges(self):
         self.scheduler = RegexScheduler()
         self.scheduler.process_lines(self.trace_widget.lines)
 
     def center_me(self):
-        center_point = QGuiApplication.screens()[0].geometry().center()
+        """Center window on the same screen as the parent application."""
+        parent_window = self.trace_widget.window()
+        if parent_window:
+            screen = parent_window.screen()
+        else:
+            screen = QGuiApplication.screens()[0]
+        center_point = screen.geometry().center()
         self.move(center_point - self.frameGeometry().center())
+
+    def closeEvent(self, event) -> None:
+        self._settings.setValue("window/geometry", self.saveGeometry())
+        super().closeEvent(event)
 
     def create_directed_graph_off(self, *args, **kwargs):
         self.figure.clear()
@@ -404,6 +421,10 @@ class RuleFlowWindow(QMainWindow):
 
     def showEvent(self, event):
         super().showEvent(event)
-        self.center_me()
+        # Only center on first show if there's no saved geometry
+        if self._first_show:
+            self._first_show = False
+            if not self._has_saved_geometry:
+                self.center_me()
         self.activateWindow()
         self.raise_()

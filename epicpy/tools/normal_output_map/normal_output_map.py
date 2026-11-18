@@ -71,7 +71,9 @@ class NormalOutputMapWindow(QMainWindow):
 
         # Restore saved geometry, fall back to default size
         geometry = self._settings.value("window/geometry")
-        if geometry is not None:
+        self._has_saved_geometry = geometry is not None
+        self._first_show = True
+        if self._has_saved_geometry:
             self.restoreGeometry(geometry)
         else:
             self.resize(1300, 1000)
@@ -388,6 +390,10 @@ class NormalOutputMapWindow(QMainWindow):
 
     def showEvent(self, event):
         super().showEvent(event)
-        self.center_me()
+        # Only center on first show if there's no saved geometry
+        if self._first_show:
+            self._first_show = False
+            if not self._has_saved_geometry:
+                self.center_me()
         self.activateWindow()
         self.raise_()
