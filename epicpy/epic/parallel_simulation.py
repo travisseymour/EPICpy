@@ -473,10 +473,21 @@ def run_single_simulation(sim_config: SimulationConfig) -> SimulationResult:
         model.stop()
         instance.stop()
 
+        # Ensure data file is flushed and closed before process ends
+        if hasattr(device, "finalize_data_output"):
+            device.finalize_data_output()
+
     except Exception as e:
         import traceback
 
         result.error_message = f"{e}\n{traceback.format_exc()}"
+
+        # Try to finalize data output even on error (device may have partial data)
+        try:
+            if "device" in dir() and device is not None and hasattr(device, "finalize_data_output"):
+                device.finalize_data_output()
+        except Exception:
+            pass
 
     # Clear Python streams from C++ output tees to prevent GIL issues during
     # process finalization. This must happen outside the try block to ensure

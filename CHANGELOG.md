@@ -1,5 +1,11 @@
 # EPICpy Changelog
 
+
+## VERSION: 2026.11.18.6
+
+1. **CHANGED**: Big refactor of main_window module. Not complete separation of concerns (that's all coming later), but moved out dialog, simulation, and ui_state code to their own modules.
+2. **FIXED**: Fix errors with managing single and grid parameter runs in parallel mode.
+
 ---
 
 ## VERSION: 2026.11.18.1

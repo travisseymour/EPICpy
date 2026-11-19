@@ -83,7 +83,9 @@ class RunSettingsWin(QDialog):
         self.parameter_grid: List[ParameterGridItem] = []
 
         # Grid radio button and control signals
+        # Connect both radio buttons to ensure grid_mode is properly set regardless of which is clicked
         self.ui.radioButtonMultipleParams.toggled.connect(self.toggle_grid_mode)
+        self.ui.radioButtonSingleParam.toggled.connect(lambda checked: self.toggle_grid_mode(False) if checked else None)
         self.ui.pushButtonAddRow.clicked.connect(self.add_grid_row)
         self.ui.pushButtonDeleteRow.clicked.connect(self.delete_selected_rows)
         self.ui.pushButtonClearGrid.clicked.connect(self.clear_grid)
@@ -167,9 +169,15 @@ class RunSettingsWin(QDialog):
         # Setup parameter grid
         self.setup_grid_table()
         self.load_grid_from_config()
-        self.toggle_grid_mode(config.device_cfg.use_parameter_grid)
+        # Block signals while setting initial radio button state to avoid redundant toggle_grid_mode calls
+        self.ui.radioButtonMultipleParams.blockSignals(True)
+        self.ui.radioButtonSingleParam.blockSignals(True)
         self.ui.radioButtonMultipleParams.setChecked(config.device_cfg.use_parameter_grid)
         self.ui.radioButtonSingleParam.setChecked(not config.device_cfg.use_parameter_grid)
+        self.ui.radioButtonMultipleParams.blockSignals(False)
+        self.ui.radioButtonSingleParam.blockSignals(False)
+        # Now explicitly set grid_mode to match config
+        self.toggle_grid_mode(config.device_cfg.use_parameter_grid)
 
     def reset_device_params(self):
         self.ui.lineEditDeviceParameters.setText(self.default_device_params)
