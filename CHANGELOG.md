@@ -2,6 +2,13 @@
 
 ---
 
+## VERSION: 2026.11.18.1
+
+1. **ADDED**: Run Settings dialog now features a toggle to either use the standard single string parameter-string, or a multiple parameter setting grid. This grid not only allows creating multiple parameter strings, but each can use a different rule file. Each row can be toggled on or off for partial grid runs.
+
+
+---
+
 ## VERSION: 2026.11.17.15
 
 1. **FIXED**: Fixed 2 ui quirks in the Normal Output Monitor window. Incorrect phase row highlighting, and unbound initial column sizes.

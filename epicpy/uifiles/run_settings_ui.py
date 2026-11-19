@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'runsettingsui.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.10.2
+## Created by: Qt User Interface Compiler version 6.12.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -15,17 +15,18 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QDialog, QDoubleSpinBox, QFormLayout,
-    QGridLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QRadioButton, QSizePolicy, QSpacerItem,
-    QSpinBox, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QDialog, QDoubleSpinBox,
+    QFormLayout, QGridLayout, QHBoxLayout, QHeaderView,
+    QLabel, QLineEdit, QPushButton, QRadioButton,
+    QSizePolicy, QSpacerItem, QSpinBox, QTableWidget,
+    QTableWidgetItem, QVBoxLayout, QWidget)
 
 class Ui_DialogRunSettings(object):
     def setupUi(self, DialogRunSettings):
         if not DialogRunSettings.objectName():
             DialogRunSettings.setObjectName(u"DialogRunSettings")
-        DialogRunSettings.resize(877, 420)
-        DialogRunSettings.setMinimumSize(QSize(840, 408))
+        DialogRunSettings.resize(877, 580)
+        DialogRunSettings.setMinimumSize(QSize(840, 550))
         DialogRunSettings.setMaximumSize(QSize(3000, 3000))
         font = QFont()
         font.setFamilies([u"Fira Mono"])
@@ -176,30 +177,26 @@ class Ui_DialogRunSettings(object):
 
         self.horizontalLayout_9.addWidget(self.spinBoxRefreshSteps)
 
+
         self.verticalLayout_2.addLayout(self.horizontalLayout_9)
 
         self.horizontalLayout_7 = QHBoxLayout()
         self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
         self.radioButtonRefreshEachSecs = QRadioButton(DialogRunSettings)
         self.radioButtonRefreshEachSecs.setObjectName(u"radioButtonRefreshEachSecs")
-        self.radioButtonRefreshEachSecs.setEnabled(True)
+        self.radioButtonRefreshEachSecs.setEnabled(False)
 
         self.horizontalLayout_7.addWidget(self.radioButtonRefreshEachSecs)
 
         self.doubleSpinBoxRefreshSecs = QDoubleSpinBox(DialogRunSettings)
         self.doubleSpinBoxRefreshSecs.setObjectName(u"doubleSpinBoxRefreshSecs")
-        self.doubleSpinBoxRefreshSecs.setEnabled(True)
+        self.doubleSpinBoxRefreshSecs.setEnabled(False)
         self.doubleSpinBoxRefreshSecs.setMinimumSize(QSize(110, 0))
-        font4 = QFont()
-        font4.setFamilies([u"Fira Mono"])
-        font4.setPointSize(11)
-        font4.setBold(False)
         self.doubleSpinBoxRefreshSecs.setFont(font4)
         self.doubleSpinBoxRefreshSecs.setStyleSheet(u"")
-        self.doubleSpinBoxRefreshSecs.setMinimum(0.050000000000000)
         self.doubleSpinBoxRefreshSecs.setMaximum(600.000000000000000)
-        self.doubleSpinBoxRefreshSecs.setSingleStep(0.050000000000000)
-        self.doubleSpinBoxRefreshSecs.setValue(0.100000000000000)
+        self.doubleSpinBoxRefreshSecs.setSingleStep(0.500000000000000)
+        self.doubleSpinBoxRefreshSecs.setValue(1.000000000000000)
 
         self.horizontalLayout_7.addWidget(self.doubleSpinBoxRefreshSecs)
 
@@ -340,14 +337,28 @@ class Ui_DialogRunSettings(object):
 
         self.horizontalLayout.addWidget(self.label_3)
 
-        self.pushButtonResetParams = QPushButton(DialogRunSettings)
-        self.pushButtonResetParams.setObjectName(u"pushButtonResetParams")
-        self.pushButtonResetParams.setFont(font2)
-        self.pushButtonResetParams.setAutoFillBackground(False)
-        self.pushButtonResetParams.setStyleSheet(u"")
-        self.pushButtonResetParams.setFlat(False)
+        self.radioButtonSingleParam = QRadioButton(DialogRunSettings)
+        self.radioButtonSingleParam.setObjectName(u"radioButtonSingleParam")
+        self.radioButtonSingleParam.setFont(font2)
+        self.radioButtonSingleParam.setChecked(True)
 
-        self.horizontalLayout.addWidget(self.pushButtonResetParams)
+        self.horizontalLayout.addWidget(self.radioButtonSingleParam)
+
+        self.radioButtonMultipleParams = QRadioButton(DialogRunSettings)
+        self.radioButtonMultipleParams.setObjectName(u"radioButtonMultipleParams")
+        self.radioButtonMultipleParams.setFont(font2)
+        self.radioButtonMultipleParams.setChecked(False)
+
+        self.horizontalLayout.addWidget(self.radioButtonMultipleParams)
+
+        self.pushButtonClearParams = QPushButton(DialogRunSettings)
+        self.pushButtonClearParams.setObjectName(u"pushButtonClearParams")
+        self.pushButtonClearParams.setFont(font2)
+        self.pushButtonClearParams.setAutoFillBackground(False)
+        self.pushButtonClearParams.setStyleSheet(u"")
+        self.pushButtonClearParams.setFlat(False)
+
+        self.horizontalLayout.addWidget(self.pushButtonClearParams)
 
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -362,6 +373,51 @@ class Ui_DialogRunSettings(object):
         self.lineEditDeviceParameters.setStyleSheet(u"")
 
         self.verticalLayout_3.addWidget(self.lineEditDeviceParameters)
+
+        self.horizontalLayoutGridButtons = QHBoxLayout()
+        self.horizontalLayoutGridButtons.setObjectName(u"horizontalLayoutGridButtons")
+        self.pushButtonAddRow = QPushButton(DialogRunSettings)
+        self.pushButtonAddRow.setObjectName(u"pushButtonAddRow")
+        self.pushButtonAddRow.setFont(font2)
+
+        self.horizontalLayoutGridButtons.addWidget(self.pushButtonAddRow)
+
+        self.pushButtonDeleteRow = QPushButton(DialogRunSettings)
+        self.pushButtonDeleteRow.setObjectName(u"pushButtonDeleteRow")
+        self.pushButtonDeleteRow.setFont(font2)
+
+        self.horizontalLayoutGridButtons.addWidget(self.pushButtonDeleteRow)
+
+        self.pushButtonClearGrid = QPushButton(DialogRunSettings)
+        self.pushButtonClearGrid.setObjectName(u"pushButtonClearGrid")
+        self.pushButtonClearGrid.setFont(font2)
+
+        self.horizontalLayoutGridButtons.addWidget(self.pushButtonClearGrid)
+
+        self.horizontalSpacerGridButtons = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayoutGridButtons.addItem(self.horizontalSpacerGridButtons)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayoutGridButtons)
+
+        self.tableWidgetParameterGrid = QTableWidget(DialogRunSettings)
+        if (self.tableWidgetParameterGrid.columnCount() < 3):
+            self.tableWidgetParameterGrid.setColumnCount(3)
+        __qtablewidgetitem = QTableWidgetItem()
+        self.tableWidgetParameterGrid.setHorizontalHeaderItem(0, __qtablewidgetitem)
+        __qtablewidgetitem1 = QTableWidgetItem()
+        self.tableWidgetParameterGrid.setHorizontalHeaderItem(1, __qtablewidgetitem1)
+        __qtablewidgetitem2 = QTableWidgetItem()
+        self.tableWidgetParameterGrid.setHorizontalHeaderItem(2, __qtablewidgetitem2)
+        self.tableWidgetParameterGrid.setObjectName(u"tableWidgetParameterGrid")
+        self.tableWidgetParameterGrid.setFont(font4)
+        self.tableWidgetParameterGrid.setAlternatingRowColors(True)
+        self.tableWidgetParameterGrid.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.tableWidgetParameterGrid.setColumnCount(3)
+        self.tableWidgetParameterGrid.horizontalHeader().setStretchLastSection(False)
+
+        self.verticalLayout_3.addWidget(self.tableWidgetParameterGrid)
 
         self.verticalSpacer_3 = QSpacerItem(648, 15, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
 
@@ -446,10 +502,39 @@ class Ui_DialogRunSettings(object):
         self.spinBoxTimeDelay.setSuffix(QCoreApplication.translate("DialogRunSettings", u" msec(s)", None))
         self.pushButtonRunContinuously.setText(QCoreApplication.translate("DialogRunSettings", u"Run continuously at maximum rate without display or text refresh", None))
         self.label_3.setText(QCoreApplication.translate("DialogRunSettings", u"Device Parameter String", None))
+#if QT_CONFIG(tooltip)
+        self.radioButtonSingleParam.setToolTip(QCoreApplication.translate("DialogRunSettings", u"Use a single parameter string for simulation runs", None))
+#endif // QT_CONFIG(tooltip)
+        self.radioButtonSingleParam.setText(QCoreApplication.translate("DialogRunSettings", u"Single", None))
+#if QT_CONFIG(tooltip)
+        self.radioButtonMultipleParams.setToolTip(QCoreApplication.translate("DialogRunSettings", u"Use multiple parameter strings from the grid for batch simulation runs", None))
+#endif // QT_CONFIG(tooltip)
+        self.radioButtonMultipleParams.setText(QCoreApplication.translate("DialogRunSettings", u"Multiple", None))
 #if QT_CONFIG(whatsthis)
-        self.pushButtonResetParams.setWhatsThis(QCoreApplication.translate("DialogRunSettings", u"<html><head/><body><p><span style=\" font-size:12pt;\">Reset the device parameter string to the device default.</span></p></body></html>", None))
+        self.pushButtonClearParams.setWhatsThis(QCoreApplication.translate("DialogRunSettings", u"<html><head/><body><p><span style=\" font-size:12pt;\">Reset the device parameter string to the device default.</span></p></body></html>", None))
 #endif // QT_CONFIG(whatsthis)
-        self.pushButtonResetParams.setText(QCoreApplication.translate("DialogRunSettings", u"Reset", None))
+        self.pushButtonClearParams.setText(QCoreApplication.translate("DialogRunSettings", u"Clear", None))
+#if QT_CONFIG(tooltip)
+        self.pushButtonAddRow.setToolTip(QCoreApplication.translate("DialogRunSettings", u"Add a new row to the parameter grid", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButtonAddRow.setText(QCoreApplication.translate("DialogRunSettings", u"Add", None))
+#if QT_CONFIG(tooltip)
+        self.pushButtonDeleteRow.setToolTip(QCoreApplication.translate("DialogRunSettings", u"Delete selected rows from the parameter grid", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButtonDeleteRow.setText(QCoreApplication.translate("DialogRunSettings", u"Delete", None))
+#if QT_CONFIG(tooltip)
+        self.pushButtonClearGrid.setToolTip(QCoreApplication.translate("DialogRunSettings", u"Remove all rows from the parameter grid", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButtonClearGrid.setText(QCoreApplication.translate("DialogRunSettings", u"Clear", None))
+        ___qtablewidgetitem = self.tableWidgetParameterGrid.horizontalHeaderItem(0)
+        ___qtablewidgetitem.setText(QCoreApplication.translate("DialogRunSettings", u"Rule", None))
+        ___qtablewidgetitem1 = self.tableWidgetParameterGrid.horizontalHeaderItem(1)
+        ___qtablewidgetitem1.setText(QCoreApplication.translate("DialogRunSettings", u"Parameter String", None))
+        ___qtablewidgetitem2 = self.tableWidgetParameterGrid.horizontalHeaderItem(2)
+        ___qtablewidgetitem2.setText(QCoreApplication.translate("DialogRunSettings", u"Enabled", None))
+#if QT_CONFIG(tooltip)
+        self.tableWidgetParameterGrid.setToolTip(QCoreApplication.translate("DialogRunSettings", u"Parameter grid for batch runs. Double-click Rule cell to select a rule file.", None))
+#endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(whatsthis)
         self.pushButtonDeleteData.setWhatsThis(QCoreApplication.translate("DialogRunSettings", u"<html><head/><body><p><span style=\" font-size:12pt;\">If the current device exposes a method called </span><span style=\" font-size:12pt; font-weight:600;\">delete_data_file()</span><span style=\" font-size:12pt;\">, this button will trigger it. Otherwise, this button will not be shown.</span></p></body></html>", None))
 #endif // QT_CONFIG(whatsthis)

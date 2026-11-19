@@ -46,12 +46,13 @@ from epicpy.epic.epic_simulation import Simulation
 from epicpy.epic.parallel_simulation import (
     OutputSettings,
     ParallelRunWorker,
+    SimulationConfig,
     SimulationResult,
     create_sim_configs_from_permutations,
     expand_permutations,
     has_permutations,
 )
-from epicpy.epic.run_info import RunInfo
+from epicpy.epic.run_info import ParameterGridItem, RunInfo
 from epicpy.tools.normal_output_map.normal_output_map import NormalOutputMapWindow
 from epicpy.tools.process_viewer.process_viewer import ProcessViewerWindow
 from epicpy.tools.rule_flow.rule_flow import RuleFlowWindow
@@ -641,6 +642,11 @@ class MainWin(LayoutMixin, QMainWindow):
             Info_out(hcolor("ERROR: Unable to complete RunNormal action because run_state is not RUNNABLE<font>\n", "red"))
             return
 
+        # Check if parameter grid mode is enabled
+        if config.device_cfg.use_parameter_grid and config.device_cfg.parameter_grid:
+            self._run_with_parameter_grid()
+            return
+
         self.simulation.current_rule_index = 0
         rule_name = Path(self.simulation.rule_files[self.simulation.current_rule_index].rule_file).name
         Normal_out(emoji_box(f"RULE FILE: {rule_name}", line="thick") + "\n")
@@ -795,6 +801,123 @@ class MainWin(LayoutMixin, QMainWindow):
 
         self.normalTextOutput.load(deque(chain.from_iterable(result.outputs["Normal_out"] for result in results[start:])))
         self.traceTextOutput.load(deque(chain.from_iterable(result.outputs["Trace_out"] for result in results[start:])))
+
+    def _run_with_parameter_grid(self):
+        """
+        Run simulations according to the parameter grid.
+        Respects the Allow Parallel Runs setting.
+        """
+        # Build list of enabled grid items with non-empty parameter strings
+        grid_items = [
+            ParameterGridItem.from_dict(item)
+            for item in config.device_cfg.parameter_grid
+            if item.get("enabled", True) and item.get("parameter_string", "").strip()
+        ]
+
+        if not grid_items:
+            Info_out(hcolor("WARNING: No enabled rows with parameter strings in parameter grid. Nothing to run.\n", "gold"))
+            return
+
+        # Get current rule file for comparison
+        current_rule = self.simulation.rule_files[0].rule_file if self.simulation.rule_files else ""
+
+        # Check if parallel runs are allowed
+        allow_parallel = self.actionAllow_Parallel_Runs.isChecked()
+
+        if allow_parallel and len(grid_items) > 1:
+            self._run_grid_parallel(grid_items, current_rule)
+        else:
+            self._run_grid_sequential(grid_items, current_rule)
+
+    def _run_grid_parallel(self, grid_items: list, current_rule: str):
+        """Run parameter grid items in parallel."""
+        device_file = config.app_cfg.last_device_file
+
+        # Create SimulationConfig for each grid item
+        sim_configs = []
+        for item in grid_items:
+            rule_file = current_rule if item.rule_file == "*" else item.rule_file
+            sim_configs.append(
+                SimulationConfig(
+                    device_file=device_file,
+                    rule_file=rule_file,
+                    parameter_string=item.parameter_string,
+                    output_settings=OutputSettings.from_device_config(config.device_cfg),
+                    run_command=config.device_cfg.run_command,
+                    run_command_value=int(config.device_cfg.run_command_value),
+                    visual_encoder_file=config.device_cfg.visual_encoder,
+                    auditory_encoder_file=config.device_cfg.auditory_encoder,
+                )
+            )
+
+        # Build output message (use <br> for line breaks since Info_out renders HTML)
+        lines = [hcolor(f"Running {len(sim_configs)} parameter grid configurations in parallel:<br>", bold=True)]
+        for i, cfg in enumerate(sim_configs, 1):
+            rule_name = Path(cfg.rule_file).stem if cfg.rule_file else "(current)"
+            lines.append(f"&nbsp;&nbsp;{i}. Rule: {rule_name}, Params: {cfg.parameter_string}<br>")
+        lines.append(hcolor("Please wait...<br>", bold=True))
+        Info_out("".join(lines))
+
+        # Mark UI as running so menus are disabled and status bar updates
+        self.run_state = RUNNING
+
+        device_folder = Path(device_file).parent
+        self._parallel_worker = ParallelRunWorker(
+            sim_configs=sim_configs,
+            max_workers=min(len(sim_configs), os.cpu_count() or 4),
+            device_folder=device_folder,
+            overwrite_data=config.device_cfg.overwrite_data,
+        )
+        self._parallel_worker.permutation_done.connect(self._on_parallel_permutation_done)
+        self._parallel_worker.all_done.connect(self._on_parallel_run_finished)
+        self._parallel_worker.start()
+
+    def _run_grid_sequential(self, grid_items: list, current_rule: str):
+        """Run parameter grid items sequentially."""
+        # Delete existing data file if overwrite mode is enabled (once at start)
+        if config.device_cfg.overwrite_data:
+            self.delete_datafile()
+
+        # Convert grid items to RunInfo objects for existing batch run infrastructure
+        run_infos = []
+        for item in grid_items:
+            rule_file = current_rule if item.rule_file == "*" else item.rule_file
+            run_infos.append(
+                RunInfo(
+                    from_script=False,
+                    device_file="",
+                    rule_file=rule_file,
+                    parameter_string=item.parameter_string,
+                    clear_data=False,  # Respect overwrite_data setting already applied
+                    reload_device=False,
+                )
+            )
+
+        # Log what we're about to run (use <br> for line breaks since Info_out renders HTML)
+        lines = [hcolor(f"Running {len(run_infos)} parameter grid configurations sequentially:<br>", bold=True)]
+        for i, ri in enumerate(run_infos, 1):
+            rule_name = Path(ri.rule_file).stem if ri.rule_file else "(current)"
+            lines.append(f"&nbsp;&nbsp;{i}. Rule: {rule_name}, Params: {ri.parameter_string}<br>")
+        Info_out("".join(lines))
+
+        # Set up the rule_files list and start the run
+        self.simulation.rule_files = run_infos
+        self.simulation.current_rule_index = 0
+
+        # Compile and run the first rule
+        first_rule = run_infos[0].rule_file
+        rule_name = Path(first_rule).name if first_rule else "(current)"
+        Normal_out(emoji_box(f"RULE FILE: {rule_name}", line="thick") + "\n")
+
+        if first_rule and first_rule != current_rule:
+            # Need to compile a different rule
+            if not self.simulation.compile_rule(first_rule):
+                Info_out(hcolor(f"ERROR: Failed to compile {rule_name}\n", "red"))
+                return
+
+        # Set the parameter string and run
+        self.simulation.device.set_parameter_string(run_infos[0].parameter_string)
+        self.simulation.run()
 
     def run_next_cycle(self):
         self.simulation.run_next_cycle()

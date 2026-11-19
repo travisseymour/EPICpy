@@ -179,6 +179,10 @@ class DeviceConfig:
     allow_parallel_runs: bool = True
     overwrite_data: bool = True
 
+    # Parameter Grid settings for batch runs
+    use_parameter_grid: bool = False
+    parameter_grid: list = field(default_factory=list)  # List[dict] for JSON serialization
+
     device_config_file: str = ""
 
     # will hold temporary config data, will not be saved to config file
